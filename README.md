@@ -95,18 +95,14 @@ hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888
 
 > See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) on how to customize the experience.
 
-### Verify Installation
-
-```bash
-# Test server health
-curl http://localhost:8888/health
-```
-
 ### Use Hexstrike
 
-#### Installation & Demo Video
+<details>
+<summary>Installation & Demo Video</summary>
 
 Watch the full installation and setup walkthrough here: [YouTube - HexStrike AI Installation & Demo](https://www.youtube.com/watch?v=pSoftCagCm8)
+
+</details>
 
 <details>
 <summary>Supported AI Clients for Running & Integration</summary>
@@ -142,7 +138,7 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
         "--profile",
         "full"
       ],
-      "description": "HexStrike AI Community Edition",
+      "description": "HexStrike AI Community Edition — change 'full' to web/network/bugbounty/ctf/cloud/redteam/minimal",
       "timeout": 300,
       "disabled": false
     }
@@ -191,9 +187,7 @@ Configure OpenCode settings in `~/.config/opencode/opencode.json`:
       "command": ["/path/to/hexstrike-ai/hexstrike_env/bin/python3",
         "/path/to/hexstrike-ai/hexstrike_mcp.py",
         "--server",
-        "http://localhost:8888",
-        "--profile",
-        "full"
+        "http://localhost:8888"
       ],
       "enabled": true
     }
@@ -203,6 +197,18 @@ Configure OpenCode settings in `~/.config/opencode/opencode.json`:
 </details>
 
 ---
+
+### Verify Installation
+
+```bash
+# Test server health
+curl http://localhost:8888/health
+
+# Test AI agent capabilities
+curl -X POST http://localhost:8888/api/intelligence/analyze-target \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "analysis_type": "comprehensive"}'
+```
 
 ### Security Configuration
 
