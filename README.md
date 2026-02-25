@@ -135,7 +135,7 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
         "--profile",
         "full"
       ],
-      "description": "HexStrike AI Community Edition — change 'full' to web/network/bugbounty/ctf/cloud/redteam/minimal",
+      "description": "HexStrike AI Community Edition",
       "timeout": 300,
       "disabled": false
     }
@@ -184,7 +184,9 @@ Configure OpenCode settings in `~/.config/opencode/opencode.json`:
       "command": ["/path/to/hexstrike-ai/hexstrike_env/bin/python3",
         "/path/to/hexstrike-ai/hexstrike_mcp.py",
         "--server",
-        "http://localhost:8888"
+        "http://localhost:8888",
+        "--profile",
+        "full"
       ],
       "enabled": true
     }
