@@ -76,7 +76,7 @@ app.config['JSON_SORT_KEYS'] = False
 
 # API Configuration
 API_PORT = int(os.environ.get('HEXSTRIKE_PORT', 8888))
-API_HOST = os.environ.get('HEXSTRIKE_HOST', '127.0.0.1')
+API_HOST = os.environ.get('HEXSTRIKE_HOST', '127.0.0.1')  # e.g. export HEXSTRIKE_HOST=0.0.0.0
 API_TOKEN = os.environ.get("HEXSTRIKE_API_TOKEN", None)  # e.g. export API_TOKEN=secret-token
 
 #Wordlists
@@ -8777,7 +8777,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run the HexStrike AI API Server")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-    parser.add_argument("--port", type=int, default=API_PORT, help=f"Port for the API server (default: {API_PORT})")
+    parser.add_argument("--port", type=int, default=API_PORT, help=f"Port for the API server (default: {API_PORT}) i.e export HEXSTRIKE_PORT=8888")
+    parser.add_argument("--host", type=str, default=API_HOST, help=f"Host for the API server (default: {API_HOST}) i.e export HEXSTRIKE_HOST=0.0.0.0")
+
     args = parser.parse_args()
 
     if args.debug:
@@ -8786,6 +8788,9 @@ if __name__ == "__main__":
 
     if args.port != API_PORT:
         API_PORT = args.port
+
+    if args.host != API_HOST:
+        API_HOST = args.host
 
     # Enhanced startup messages with beautiful formatting
     startup_info = f"""
