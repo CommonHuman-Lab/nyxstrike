@@ -5565,8 +5565,6 @@ def http_framework_endpoint():
         headers = params.get("headers", {})
         cookies = params.get("cookies", {})
 
-        logger.info(f"{ModernVisualEngine.create_section_header('HTTP FRAMEWORK', '🔥', 'FIRE_RED')}")
-
         if action == "request":
             if not url:
                 return jsonify({"error": "URL parameter is required for request action"}), 400
