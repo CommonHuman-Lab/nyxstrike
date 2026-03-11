@@ -42,3 +42,4 @@ from .web_framework import *
 from .web_fuzz import *
 from .web_probe import *
 from .web_scan import *
+from .wifi_pentest import *
