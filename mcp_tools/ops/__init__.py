@@ -5,3 +5,4 @@ from .system_monitoring import *
 from .process_management import *
 from .vulnerability_intelligence import *
 from .visual_output_tools import *
+from .auto_install import *

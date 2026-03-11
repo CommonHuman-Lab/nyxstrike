@@ -873,18 +873,11 @@ def get_telemetry():
 app.register_blueprint(api_database_bp)
 
 # ============================================================================
-# PROCESS MANAGEMENT API ENDPOINTS
-# ============================================================================
-app.register_blueprint(api_process_management_bp)
-
-# ============================================================================
-# VISUALIZATION API ENDPOINTS
+# OPS API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_visual_bp)
-
-# ============================================================================
-# MEMORY STORE API ENDPOINTS
-# ============================================================================
+app.register_blueprint(api_auto_tool_bp)
+app.register_blueprint(api_process_management_bp)
 app.register_blueprint(api_wordlist_store_bp)
 
 # ============================================================================
