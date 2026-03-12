@@ -2,10 +2,11 @@
 
 
 from typing import Dict, Any
+import asyncio
 
 def register_patator_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def patator_attack(
+    async def patator_attack(
         module: str,
         target: str,
         username: str = "",
@@ -43,7 +44,10 @@ def register_patator_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔑 Starting Patator attack: {target}:{module}")
-        result = hexstrike_client.safe_post("api/tools/patator", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/patator", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Patator attack completed for {target}")
         else:

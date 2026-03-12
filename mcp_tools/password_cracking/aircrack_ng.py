@@ -1,11 +1,12 @@
 # mcp_tools/password_cracking/aircrack_ng.py
 
 from typing import Dict, Any, Optional, List
+import asyncio
 
 def register_aircrack_ng_tools(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def aircrack_ng_analysis(
+    async def aircrack_ng_analysis(
         capture_files: List[str],
         wordlist: Optional[str] = None,
         bssid: Optional[str] = None
@@ -35,7 +36,10 @@ def register_aircrack_ng_tools(mcp, hexstrike_client, logger):
             "wordlist": wordlist
         }
 
-        result = hexstrike_client.safe_post("api/tools/password_cracking/aircrack_ng", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/password_cracking/aircrack_ng", payload)
+        )
         if result.get("success"):
             logger.info("✅ Aircrack-ng analysis completed")
         else:

@@ -1,11 +1,12 @@
 # mcp_tools/api_scan/jwt_analyzer.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_jwt_analyzer_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def jwt_analyzer(jwt_token: str, target_url: str = "") -> Dict[str, Any]:
+    async def jwt_analyzer(jwt_token: str, target_url: str = "") -> Dict[str, Any]:
         """
         Advanced JWT token analysis and vulnerability testing.
 
@@ -22,7 +23,10 @@ def register_jwt_analyzer_tool(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🔍 Starting JWT security analysis")
-        result = hexstrike_client.safe_post("api/tools/jwt_analyzer", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/jwt_analyzer", data)
+        )
 
         if result.get("success"):
             analysis = result.get("jwt_analysis_results", {})

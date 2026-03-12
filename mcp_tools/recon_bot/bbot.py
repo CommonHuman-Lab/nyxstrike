@@ -1,8 +1,9 @@
+import asyncio
 # mcp_tools/recon_bot/bot.py
 
 def register_bbot_tools(mcp, hexstrike_client):
     @mcp.tool()
-    def bbot_scan(target: str, parameters: dict) -> dict:
+    async def bbot_scan(target: str, parameters: dict) -> dict:
         """
         Run BBot scan via HexStrike server.
 
@@ -39,7 +40,11 @@ def register_bbot_tools(mcp, hexstrike_client):
             - Combine flags for advanced control.
             - Returns JSON with BBot response or error details.
         """
-        return hexstrike_client.safe_post("api/bot/bbot", {
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bot/bbot", {
             "target": target,
             "parameters": parameters
         })
+        )
+        return result

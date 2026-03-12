@@ -1,11 +1,12 @@
 # mcp_tools/crypto_attack/hashpump.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_hashpump_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def hashpump_attack(signature: str, data: str, key_length: str, append_data: str, additional_args: str = "") -> Dict[str, Any]:
+    async def hashpump_attack(signature: str, data: str, key_length: str, append_data: str, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute HashPump for hash length extension attacks with enhanced logging.
 
@@ -27,7 +28,10 @@ def register_hashpump_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔐 Starting HashPump attack")
-        result = hexstrike_client.safe_post("api/tools/hashpump", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/hashpump", payload)
+        )
         if result.get("success"):
             logger.info(f"✅ HashPump attack completed")
         else:

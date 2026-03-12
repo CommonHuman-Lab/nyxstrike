@@ -1,8 +1,9 @@
+import asyncio
 # mcp_tools/wordlist.py
 
 def register_wordlist_tools(mcp, hexstrike_client):
     @mcp.tool()
-    def wordlist_get(wordlist_id: str) -> dict:
+    async def wordlist_get(wordlist_id: str) -> dict:
         """
         Retrieve a specific wordlist entry by its ID.
 
@@ -12,20 +13,28 @@ def register_wordlist_tools(mcp, hexstrike_client):
         Returns:
             dict: Wordlist information if found, or error message with 404 status.
         """
-        return hexstrike_client.safe_get(f"api/wordlists/{wordlist_id}")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get(f"api/wordlists/{wordlist_id}")
+        )
+        return result
 
     @mcp.tool()
-    def wordlist_get_all() -> dict:
+    async def wordlist_get_all() -> dict:
         """
         Retrieve all wordlist entries.
 
         Returns:
             dict: JSON array containing all wordlist entries.
         """
-        return hexstrike_client.safe_get("api/wordlists")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/wordlists")
+        )
+        return result
 
     @mcp.tool()
-    def wordlist_get_path(wordlist_id: str) -> dict:
+    async def wordlist_get_path(wordlist_id: str) -> dict:
         """
         Retrieve the file path for a specific wordlist by its ID.
 
@@ -35,10 +44,14 @@ def register_wordlist_tools(mcp, hexstrike_client):
         Returns:
             dict: File path if found, or error message with 404 status.
         """
-        return hexstrike_client.safe_get(f"api/wordlists/{wordlist_id}/path")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get(f"api/wordlists/{wordlist_id}/path")
+        )
+        return result
 
     @mcp.tool()
-    def wordlist_find_best(criteria: dict) -> dict:
+    async def wordlist_find_best(criteria: dict) -> dict:
         """
         Find the best matching wordlist based on provided criteria.
 
@@ -77,10 +90,14 @@ def register_wordlist_tools(mcp, hexstrike_client):
                 "speed": "fast"
             })
         """
-        return hexstrike_client.safe_post("api/wordlists/bestmatch", criteria)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/wordlists/bestmatch", criteria)
+        )
+        return result
 
     @mcp.tool()
-    def wordlist_save(wordlist_id: str, wordlist_info: dict) -> dict:
+    async def wordlist_save(wordlist_id: str, wordlist_info: dict) -> dict:
         """
         Save or update a wordlist entry.
 
@@ -120,10 +137,14 @@ def register_wordlist_tools(mcp, hexstrike_client):
                 }
             )
         """
-        return hexstrike_client.safe_post(f"api/wordlists/{wordlist_id}", wordlist_info)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post(f"api/wordlists/{wordlist_id}", wordlist_info)
+        )
+        return result
 
     @mcp.tool()
-    def wordlist_delete(wordlist_id: str) -> dict:
+    async def wordlist_delete(wordlist_id: str) -> dict:
         """
         Delete a specific wordlist entry by its ID.
 

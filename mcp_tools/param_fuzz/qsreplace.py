@@ -1,10 +1,11 @@
 # mcp_tools/param_fuzz/qsreplace.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_qsreplace_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def qsreplace_parameter_replacement(urls: str, replacement: str = "FUZZ",
+    async def qsreplace_parameter_replacement(urls: str, replacement: str = "FUZZ",
                                        additional_args: str = "") -> Dict[str, Any]:
         """
         Execute qsreplace for query string parameter replacement.
@@ -23,7 +24,10 @@ def register_qsreplace_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info("🔄 Starting qsreplace parameter replacement")
-        result = hexstrike_client.safe_post("api/tools/qsreplace", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/qsreplace", data)
+        )
         if result.get("success"):
             logger.info("✅ qsreplace parameter replacement completed")
         else:

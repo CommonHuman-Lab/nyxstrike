@@ -1,10 +1,11 @@
 # mcp_tools/process_management.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_process_management_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def list_active_processes() -> Dict[str, Any]:
+    async def list_active_processes() -> Dict[str, Any]:
         """
         List all active processes on the HexStrike AI server.
 
@@ -12,7 +13,10 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
             List of active processes with their status and progress
         """
         logger.info("📊 Listing active processes")
-        result = hexstrike_client.safe_get("api/processes/list")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/processes/list")
+        )
         if result.get("success"):
             logger.info(f"✅ Found {result.get('total_count', 0)} active processes")
         else:
@@ -20,7 +24,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def get_process_status(pid: int) -> Dict[str, Any]:
+    async def get_process_status(pid: int) -> Dict[str, Any]:
         """
         Get the status of a specific process.
 
@@ -31,7 +35,10 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
             Process status information including progress and runtime
         """
         logger.info(f"🔍 Checking status of process {pid}")
-        result = hexstrike_client.safe_get(f"api/processes/status/{pid}")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get(f"api/processes/status/{pid}")
+        )
         if result.get("success"):
             logger.info(f"✅ Process {pid} status retrieved")
         else:
@@ -39,7 +46,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def terminate_process(pid: int) -> Dict[str, Any]:
+    async def terminate_process(pid: int) -> Dict[str, Any]:
         """
         Terminate a specific running process.
 
@@ -50,7 +57,10 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
             Success status of the termination operation
         """
         logger.info(f"🛑 Terminating process {pid}")
-        result = hexstrike_client.safe_post(f"api/processes/terminate/{pid}", {})
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post(f"api/processes/terminate/{pid}", {})
+        )
         if result.get("success"):
             logger.info(f"✅ Process {pid} terminated successfully")
         else:
@@ -58,7 +68,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def pause_process(pid: int) -> Dict[str, Any]:
+    async def pause_process(pid: int) -> Dict[str, Any]:
         """
         Pause a specific running process.
 
@@ -69,7 +79,10 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
             Success status of the pause operation
         """
         logger.info(f"⏸️ Pausing process {pid}")
-        result = hexstrike_client.safe_post(f"api/processes/pause/{pid}", {})
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post(f"api/processes/pause/{pid}", {})
+        )
         if result.get("success"):
             logger.info(f"✅ Process {pid} paused successfully")
         else:
@@ -77,7 +90,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def resume_process(pid: int) -> Dict[str, Any]:
+    async def resume_process(pid: int) -> Dict[str, Any]:
         """
         Resume a paused process.
 
@@ -88,7 +101,10 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
             Success status of the resume operation
         """
         logger.info(f"▶️ Resuming process {pid}")
-        result = hexstrike_client.safe_post(f"api/processes/resume/{pid}", {})
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post(f"api/processes/resume/{pid}", {})
+        )
         if result.get("success"):
             logger.info(f"✅ Process {pid} resumed successfully")
         else:
@@ -96,7 +112,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def get_process_dashboard() -> Dict[str, Any]:
+    async def get_process_dashboard() -> Dict[str, Any]:
         """
         Get enhanced process dashboard with visual status indicators.
 
@@ -104,7 +120,10 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
             Real-time dashboard with progress bars, system metrics, and process status
         """
         logger.info("📊 Getting process dashboard")
-        result = hexstrike_client.safe_get("api/processes/dashboard")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/processes/dashboard")
+        )
         if result.get("success", True) and "total_processes" in result:
             total = result.get("total_processes", 0)
             logger.info(f"✅ Dashboard retrieved: {total} active processes")
@@ -119,7 +138,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def execute_command(command: str, use_cache: bool = True) -> Dict[str, Any]:
+    async def execute_command(command: str, use_cache: bool = True) -> Dict[str, Any]:
         """
         Execute an arbitrary command on the HexStrike AI server with enhanced logging.
 

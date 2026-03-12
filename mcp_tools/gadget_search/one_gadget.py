@@ -1,11 +1,12 @@
 # mcp_tools/gadget_search/one_gadget.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_one_gadget_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def one_gadget_search(libc_path: str, level: int = 1, additional_args: str = "") -> Dict[str, Any]:
+    async def one_gadget_search(libc_path: str, level: int = 1, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute one_gadget to find one-shot RCE gadgets in libc.
 
@@ -23,7 +24,10 @@ def register_one_gadget_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting one_gadget analysis: {libc_path}")
-        result = hexstrike_client.safe_post("api/tools/one-gadget", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/one-gadget", data)
+        )
         if result.get("success"):
             logger.info(f"✅ one_gadget analysis completed")
         else:

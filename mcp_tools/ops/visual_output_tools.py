@@ -1,10 +1,11 @@
 # mcp_tools/visual_output_tools.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_visual_output_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def get_live_dashboard() -> Dict[str, Any]:
+    async def get_live_dashboard() -> Dict[str, Any]:
         """
         Get a beautiful live dashboard showing all active processes with enhanced visual formatting.
 
@@ -12,7 +13,10 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
             Live dashboard with visual process monitoring and system metrics
         """
         logger.info("📊 Fetching live process dashboard")
-        result = hexstrike_client.safe_get("api/processes/dashboard")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/processes/dashboard")
+        )
         if result.get("success", True):
             logger.info("✅ Live dashboard retrieved successfully")
         else:
@@ -20,7 +24,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def create_vulnerability_report(vulnerabilities: str, target: str = "", scan_type: str = "comprehensive") -> Dict[str, Any]:
+    async def create_vulnerability_report(vulnerabilities: str, target: str = "", scan_type: str = "comprehensive") -> Dict[str, Any]:
         """
         Create a beautiful vulnerability report with severity-based styling and visual indicators.
 
@@ -46,7 +50,10 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
             # Create individual vulnerability cards
             vulnerability_cards = []
             for vuln in vuln_data:
-                card_result = hexstrike_client.safe_post("api/visual/vulnerability-card", vuln)
+                loop = asyncio.get_running_loop()
+                card_result = await loop.run_in_executor(
+                    None, lambda: hexstrike_client.safe_post("api/visual/vulnerability-card", vuln)
+                )
                 if card_result.get("success"):
                     vulnerability_cards.append(card_result.get("vulnerability_card", ""))
 
@@ -58,7 +65,10 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
                 "execution_time": 0
             }
 
-            summary_result = hexstrike_client.safe_post("api/visual/summary-report", summary_data)
+            loop = asyncio.get_running_loop()
+            summary_result = await loop.run_in_executor(
+                None, lambda: hexstrike_client.safe_post("api/visual/summary-report", summary_data)
+            )
 
             logger.info("✅ Vulnerability report created successfully")
             return {
@@ -74,7 +84,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
             return {"success": False, "error": str(e)}
 
     @mcp.tool()
-    def format_tool_output_visual(tool_name: str, output: str, success: bool = True) -> Dict[str, Any]:
+    async def format_tool_output_visual(tool_name: str, output: str, success: bool = True) -> Dict[str, Any]:
         """
         Format tool output with beautiful visual styling, syntax highlighting, and structure.
 
@@ -94,7 +104,10 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
             "success": success
         }
 
-        result = hexstrike_client.safe_post("api/visual/tool-output", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/visual/tool-output", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Tool output formatted successfully for {tool_name}")
         else:
@@ -103,7 +116,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def create_scan_summary(target: str, tools_used: str, vulnerabilities_found: int = 0,
+    async def create_scan_summary(target: str, tools_used: str, vulnerabilities_found: int = 0,
                            execution_time: float = 0.0, findings: str = "") -> Dict[str, Any]:
         """
         Create a comprehensive scan summary report with beautiful visual formatting.
@@ -130,7 +143,10 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
             "findings": findings
         }
 
-        result = hexstrike_client.safe_post("api/visual/summary-report", summary_data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/visual/summary-report", summary_data)
+        )
         if result.get("success"):
             logger.info("✅ Scan summary created successfully")
         else:
@@ -139,7 +155,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def display_system_metrics() -> Dict[str, Any]:
+    async def display_system_metrics() -> Dict[str, Any]:
         """
         Display current system metrics and performance indicators with visual formatting.
 
@@ -149,7 +165,10 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
         logger.info("📈 Fetching system metrics")
 
         # Get telemetry data
-        telemetry_result = hexstrike_client.safe_get("api/telemetry")
+        loop = asyncio.get_running_loop()
+        telemetry_result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/telemetry")
+        )
 
         if telemetry_result.get("success", True):
             logger.info("✅ System metrics retrieved successfully")

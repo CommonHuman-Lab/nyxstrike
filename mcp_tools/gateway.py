@@ -2,10 +2,11 @@
 
 from typing import Dict, Any
 import json
+import asyncio
 
 def register_gateway_tools(mcp, hexstrike_client):
     @mcp.tool()
-    def classify_task(description: str) -> Dict[str, Any]:
+    async def classify_task(description: str) -> Dict[str, Any]:
         """
         Classify a security task and return recommended tools.
         Call this FIRST before running security tools to discover which ones are relevant.
@@ -16,13 +17,16 @@ def register_gateway_tools(mcp, hexstrike_client):
         Returns:
             Task category, recommended tools with parameters, and usage instructions
         """
-        result = hexstrike_client.safe_post("api/intelligence/classify-task", {"description": description})
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/classify-task", {"description": description})
+        )
         if result.get("success"):
             result["usage"] = "Use run_tool with a tool name and params from the recommended list"
         return result
 
     @mcp.tool()
-    def run_tool(tool_name: str, params: str) -> Dict[str, Any]:
+    async def run_tool(tool_name: str, params: str) -> Dict[str, Any]:
         """
         Execute any security tool by name with parameters.
         Use classify_task first to discover available tools.
@@ -55,4 +59,8 @@ def register_gateway_tools(mcp, hexstrike_client):
                 parsed_params[k] = v
 
         endpoint = tool_def["endpoint"].lstrip("/")
-        return hexstrike_client.safe_post(endpoint, parsed_params)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post(endpoint, parsed_params)
+        )
+        return result

@@ -1,10 +1,11 @@
 # mcp_tools/error_handling/error_handling_statistics.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_error_handling_statistics_tool(mcp, hexstrike_client, logger, HexStrikeColors):
     @mcp.tool()
-    def error_handling_statistics() -> Dict[str, Any]:
+    async def error_handling_statistics() -> Dict[str, Any]:
         """
         Get intelligent error handling system statistics and recent error patterns.
 
@@ -12,7 +13,10 @@ def register_error_handling_statistics_tool(mcp, hexstrike_client, logger, HexSt
             Error handling statistics and patterns
         """
         logger.info(f"{HexStrikeColors.ELECTRIC_PURPLE}📊 Retrieving error handling statistics{HexStrikeColors.RESET}")
-        result = hexstrike_client.safe_get("api/error-handling/statistics")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/error-handling/statistics")
+        )
 
         if result.get("success"):
             stats = result.get("statistics", {})

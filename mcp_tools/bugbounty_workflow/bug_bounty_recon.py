@@ -2,11 +2,12 @@
 
 from typing import Dict, Any
 from datetime import datetime
+import asyncio
 
 def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def bugbounty_reconnaissance_workflow(domain: str, scope: str = "", out_of_scope: str = "",
+    async def bugbounty_reconnaissance_workflow(domain: str, scope: str = "", out_of_scope: str = "",
                                         program_type: str = "web") -> Dict[str, Any]:
         """
         Create comprehensive reconnaissance workflow for bug bounty hunting.
@@ -28,7 +29,10 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🎯 Creating reconnaissance workflow for {domain}")
-        result = hexstrike_client.safe_post("api/bugbounty/reconnaissance-workflow", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bugbounty/reconnaissance-workflow", data)
+        )
 
         if result.get("success"):
             workflow = result.get("workflow", {})
@@ -39,7 +43,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def bugbounty_vulnerability_hunting(domain: str, priority_vulns: str = "rce,sqli,xss,idor,ssrf",
+    async def bugbounty_vulnerability_hunting(domain: str, priority_vulns: str = "rce,sqli,xss,idor,ssrf",
                                        bounty_range: str = "unknown") -> Dict[str, Any]:
         """
         Create vulnerability hunting workflow prioritized by impact and bounty potential.
@@ -59,7 +63,10 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🎯 Creating vulnerability hunting workflow for {domain}")
-        result = hexstrike_client.safe_post("api/bugbounty/vulnerability-hunting-workflow", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bugbounty/vulnerability-hunting-workflow", data)
+        )
 
         if result.get("success"):
             workflow = result.get("workflow", {})
@@ -70,7 +77,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def bugbounty_business_logic_testing(domain: str, program_type: str = "web") -> Dict[str, Any]:
+    async def bugbounty_business_logic_testing(domain: str, program_type: str = "web") -> Dict[str, Any]:
         """
         Create business logic testing workflow for advanced bug bounty hunting.
 
@@ -87,7 +94,10 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🎯 Creating business logic testing workflow for {domain}")
-        result = hexstrike_client.safe_post("api/bugbounty/business-logic-workflow", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bugbounty/business-logic-workflow", data)
+        )
 
         if result.get("success"):
             workflow = result.get("workflow", {})
@@ -99,7 +109,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def bugbounty_osint_gathering(domain: str) -> Dict[str, Any]:
+    async def bugbounty_osint_gathering(domain: str) -> Dict[str, Any]:
         """
         Create OSINT (Open Source Intelligence) gathering workflow for bug bounty reconnaissance.
 
@@ -112,7 +122,10 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         data = {"domain": domain}
 
         logger.info(f"🎯 Creating OSINT gathering workflow for {domain}")
-        result = hexstrike_client.safe_post("api/bugbounty/osint-workflow", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bugbounty/osint-workflow", data)
+        )
 
         if result.get("success"):
             workflow = result.get("workflow", {})
@@ -124,7 +137,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def bugbounty_file_upload_testing(target_url: str) -> Dict[str, Any]:
+    async def bugbounty_file_upload_testing(target_url: str) -> Dict[str, Any]:
         """
         Create file upload vulnerability testing workflow with bypass techniques.
 
@@ -137,7 +150,10 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         data = {"target_url": target_url}
 
         logger.info(f"🎯 Creating file upload testing workflow for {target_url}")
-        result = hexstrike_client.safe_post("api/bugbounty/file-upload-testing", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bugbounty/file-upload-testing", data)
+        )
 
         if result.get("success"):
             workflow = result.get("workflow", {})
@@ -149,7 +165,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def bugbounty_comprehensive_assessment(domain: str, scope: str = "",
+    async def bugbounty_comprehensive_assessment(domain: str, scope: str = "",
                                          priority_vulns: str = "rce,sqli,xss,idor,ssrf",
                                          include_osint: bool = True,
                                          include_business_logic: bool = True) -> Dict[str, Any]:
@@ -175,7 +191,10 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🎯 Creating comprehensive bug bounty assessment for {domain}")
-        result = hexstrike_client.safe_post("api/bugbounty/comprehensive-assessment", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/bugbounty/comprehensive-assessment", data)
+        )
 
         if result.get("success"):
             assessment = result.get("assessment", {})
@@ -187,7 +206,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def bugbounty_authentication_bypass_testing(target_url: str, auth_type: str = "form") -> Dict[str, Any]:
+    async def bugbounty_authentication_bypass_testing(target_url: str, auth_type: str = "form") -> Dict[str, Any]:
         """
         Create authentication bypass testing workflow for bug bounty hunting.
 

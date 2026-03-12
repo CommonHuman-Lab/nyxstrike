@@ -1,10 +1,11 @@
 # mcp_tools/web_probe/httpx.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_httpx_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def httpx_probe(target: str, probe: bool = True, tech_detect: bool = False,
+    async def httpx_probe(target: str, probe: bool = True, tech_detect: bool = False,
                    status_code: bool = False, content_length: bool = False,
                    title: bool = False, web_server: bool = False, threads: int = 50,
                    additional_args: str = "") -> Dict[str, Any]:
@@ -37,7 +38,10 @@ def register_httpx_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🌍 Starting httpx probe: {target}")
-        result = hexstrike_client.safe_post("api/tools/httpx", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/httpx", data)
+        )
         if result.get("success"):
             logger.info(f"✅ httpx probe completed for {target}")
         else:

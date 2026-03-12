@@ -1,11 +1,12 @@
 # mcp_tools/web_scan/dalfox.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_dalfox_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def dalfox_xss_scan(url: str, pipe_mode: bool = False, blind: bool = False,
+    async def dalfox_xss_scan(url: str, pipe_mode: bool = False, blind: bool = False,
                        mining_dom: bool = True, mining_dict: bool = True,
                        custom_payload: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -33,7 +34,10 @@ def register_dalfox_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🎯 Starting Dalfox XSS scan: {url if url else 'pipe mode'}")
-        result = hexstrike_client.safe_post("api/tools/dalfox", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/dalfox", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Dalfox XSS scan completed")
         else:

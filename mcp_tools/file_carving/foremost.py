@@ -1,11 +1,12 @@
 # mcp_tools/file_carving/foremost.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_foremost_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def foremost_carving(input_file: str, output_dir: str = "/tmp/foremost_output", file_types: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def foremost_carving(input_file: str, output_dir: str = "/tmp/foremost_output", file_types: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Foremost for file carving with enhanced logging.
 
@@ -25,7 +26,10 @@ def register_foremost_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"📁 Starting Foremost file carving: {input_file}")
-        result = hexstrike_client.safe_post("api/tools/foremost", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/foremost", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Foremost carving completed")
         else:

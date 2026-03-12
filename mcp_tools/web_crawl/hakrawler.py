@@ -1,11 +1,12 @@
 # mcp_tools/web_crawl/hakrawler.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_hakrawler_tools(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def hakrawler_crawl(url: str, depth: int = 2, forms: bool = True, robots: bool = True, sitemap: bool = True, wayback: bool = False, additional_args: str = "") -> Dict[str, Any]:
+    async def hakrawler_crawl(url: str, depth: int = 2, forms: bool = True, robots: bool = True, sitemap: bool = True, wayback: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Hakrawler for web endpoint discovery with enhanced logging.
 
@@ -38,7 +39,10 @@ def register_hakrawler_tools(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🕷️ Starting Hakrawler crawling: {url}")
-        result = hexstrike_client.safe_post("api/tools/hakrawler", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/hakrawler", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Hakrawler crawling completed")
         else:

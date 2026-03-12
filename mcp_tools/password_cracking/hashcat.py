@@ -1,10 +1,11 @@
 # mcp_tools/password_cracking/hashcat.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_hashcat_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def hashcat_crack(hash_file: str, hash_type: str, attack_mode: str = "0", wordlist: str = "/usr/share/wordlists/rockyou.txt", mask: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def hashcat_crack(hash_file: str, hash_type: str, attack_mode: str = "0", wordlist: str = "/usr/share/wordlists/rockyou.txt", mask: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Hashcat for advanced password cracking with enhanced logging.
 
@@ -28,7 +29,10 @@ def register_hashcat_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔐 Starting Hashcat attack: mode {attack_mode}")
-        result = hexstrike_client.safe_post("api/tools/hashcat", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/hashcat", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Hashcat attack completed")
         else:

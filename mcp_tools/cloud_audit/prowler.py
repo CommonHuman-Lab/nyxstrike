@@ -1,10 +1,11 @@
 # mcp_tools/cloud_audit/prowler.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_prowler_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def prowler_scan(provider: str = "aws", profile: str = "default", region: str = "", checks: str = "", output_dir: str = "/tmp/prowler_output", output_format: str = "json", additional_args: str = "") -> Dict[str, Any]:
+    async def prowler_scan(provider: str = "aws", profile: str = "default", region: str = "", checks: str = "", output_dir: str = "/tmp/prowler_output", output_format: str = "json", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Prowler for comprehensive cloud security assessment.
 
@@ -30,7 +31,10 @@ def register_prowler_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"☁️  Starting Prowler {provider} security assessment")
-        result = hexstrike_client.safe_post("api/tools/prowler", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/prowler", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Prowler assessment completed")
         else:

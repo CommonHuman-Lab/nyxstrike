@@ -1,10 +1,11 @@
 # mcp_tools/smb_enum/smbmap.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_smbmap_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def smbmap_scan(target: str, username: str = "", password: str = "", domain: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def smbmap_scan(target: str, username: str = "", password: str = "", domain: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute SMBMap for SMB share enumeration with enhanced logging.
 
@@ -26,7 +27,10 @@ def register_smbmap_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting SMBMap: {target}")
-        result = hexstrike_client.safe_post("api/tools/smbmap", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/smbmap", data)
+        )
         if result.get("success"):
             logger.info(f"✅ SMBMap completed for {target}")
         else:

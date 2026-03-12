@@ -1,11 +1,12 @@
 # mcp_tools/web_framework/browser_agent.py
 
 from typing import Dict, Any, Optional
+import asyncio
 
 def register_browser_agent_tool(mcp, hexstrike_client, logger, HexStrikeColors):
 
     @mcp.tool()
-    def browser_agent_inspect(url: str, headless: bool = True, wait_time: int = 5,
+    async def browser_agent_inspect(url: str, headless: bool = True, wait_time: int = 5,
                              action: str = "navigate", proxy_port: Optional[int] = None, active_tests: bool = False) -> Dict[str, Any]:
         """
         AI-powered browser agent for comprehensive web application inspection and security analysis.
@@ -31,7 +32,10 @@ def register_browser_agent_tool(mcp, hexstrike_client, logger, HexStrikeColors):
         }
 
         logger.info(f"{HexStrikeColors.CRIMSON}🌐 Starting Browser Agent {action}: {url}{HexStrikeColors.RESET}")
-        result = hexstrike_client.safe_post("api/tools/browser-agent", data_payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/browser-agent", data_payload)
+        )
 
         if result.get("success"):
             logger.info(f"{HexStrikeColors.SUCCESS}✅ Browser Agent {action} completed for {url}{HexStrikeColors.RESET}")

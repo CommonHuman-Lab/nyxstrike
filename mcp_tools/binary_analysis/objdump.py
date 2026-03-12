@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/objdump.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_objdump_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def objdump_analyze(binary: str, disassemble: bool = True, additional_args: str = "") -> Dict[str, Any]:
+    async def objdump_analyze(binary: str, disassemble: bool = True, additional_args: str = "") -> Dict[str, Any]:
         """
         Analyze a binary using objdump with enhanced logging.
 
@@ -23,7 +24,10 @@ def register_objdump_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting Objdump analysis: {binary}")
-        result = hexstrike_client.safe_post("api/tools/objdump", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/objdump", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Objdump analysis completed for {binary}")
         else:

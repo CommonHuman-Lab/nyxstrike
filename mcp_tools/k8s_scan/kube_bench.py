@@ -1,11 +1,12 @@
 # mcp_tools/k8s_scan/kube_bench.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_kube_bench_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def kube_bench_cis(targets: str = "", version: str = "", config_dir: str = "",
+    async def kube_bench_cis(targets: str = "", version: str = "", config_dir: str = "",
                       output_format: str = "json", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute kube-bench for CIS Kubernetes benchmark checks.
@@ -28,7 +29,10 @@ def register_kube_bench_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"☁️  Starting kube-bench CIS benchmark")
-        result = hexstrike_client.safe_post("api/tools/kube-bench", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/kube-bench", data)
+        )
         if result.get("success"):
             logger.info(f"✅ kube-bench benchmark completed")
         else:

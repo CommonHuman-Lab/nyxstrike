@@ -1,11 +1,12 @@
 # mcp_tools/web_fuzz/gobuster.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_gobuster(mcp, hexstrike_client, logger, HexStrikeColors):
 
     @mcp.tool()
-    def gobuster_scan(url: str, mode: str = "dir", wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> Dict[str, Any]:
+    async def gobuster_scan(url: str, mode: str = "dir", wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Gobuster to find directories, DNS subdomains, or virtual hosts with enhanced logging.
 
@@ -28,7 +29,10 @@ def register_gobuster(mcp, hexstrike_client, logger, HexStrikeColors):
 
         # Use enhanced error handling by default
         data["use_recovery"] = True
-        result = hexstrike_client.safe_post("api/tools/gobuster", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/gobuster", data)
+        )
 
         if result.get("success"):
             logger.info(f"{HexStrikeColors.SUCCESS}✅ Gobuster scan completed for {url}{HexStrikeColors.RESET}")

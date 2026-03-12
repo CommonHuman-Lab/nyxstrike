@@ -1,10 +1,11 @@
 # mcp_tools/python_env.py
 
 from typing import Any, Dict
+import asyncio
 
 def register_python_env_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def install_python_package(package: str, env_name: str = "default") -> Dict[str, Any]:
+    async def install_python_package(package: str, env_name: str = "default") -> Dict[str, Any]:
         """
         Install a Python package in a virtual environment on the HexStrike server.
 
@@ -20,7 +21,10 @@ def register_python_env_tools(mcp, hexstrike_client, logger):
             "env_name": env_name
         }
         logger.info(f"📦 Installing Python package: {package} in env {env_name}")
-        result = hexstrike_client.safe_post("api/python/install", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/python/install", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Package {package} installed successfully")
         else:
@@ -28,7 +32,7 @@ def register_python_env_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def execute_python_script(script: str, env_name: str = "default", filename: str = "") -> Dict[str, Any]:
+    async def execute_python_script(script: str, env_name: str = "default", filename: str = "") -> Dict[str, Any]:
         """
         Execute a Python script in a virtual environment on the HexStrike server.
 
@@ -48,7 +52,10 @@ def register_python_env_tools(mcp, hexstrike_client, logger):
             data["filename"] = filename
 
         logger.info(f"🐍 Executing Python script in env {env_name}")
-        result = hexstrike_client.safe_post("api/python/execute", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/python/execute", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Python script executed successfully")
         else:

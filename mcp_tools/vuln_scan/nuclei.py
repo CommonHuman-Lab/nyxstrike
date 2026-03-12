@@ -1,11 +1,12 @@
 # mcp_tools/vuln_scan/nuclei.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_nuclei(mcp, hexstrike_client, logger, HexStrikeColors):
     
     @mcp.tool()
-    def nuclei_scan(target: str, severity: str = "", tags: str = "", template: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def nuclei_scan(target: str, severity: str = "", tags: str = "", template: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Nuclei vulnerability scanner with enhanced logging and real-time progress.
 
@@ -30,7 +31,10 @@ def register_nuclei(mcp, hexstrike_client, logger, HexStrikeColors):
 
         # Use enhanced error handling by default
         data["use_recovery"] = True
-        result = hexstrike_client.safe_post("api/tools/nuclei", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/nuclei", data)
+        )
 
         if result.get("success"):
             logger.info(f"{HexStrikeColors.SUCCESS}✅ Nuclei scan completed for {target}{HexStrikeColors.RESET}")

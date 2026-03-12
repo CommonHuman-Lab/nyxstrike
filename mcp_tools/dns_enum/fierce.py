@@ -1,11 +1,12 @@
 # mcp_tools/dns_enum/fierce.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_fierce_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def fierce_scan(domain: str, dns_server: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def fierce_scan(domain: str, dns_server: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute fierce for DNS reconnaissance with enhanced logging.
 
@@ -23,7 +24,10 @@ def register_fierce_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Fierce DNS recon: {domain}")
-        result = hexstrike_client.safe_post("api/tools/fierce", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/fierce", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Fierce completed for {domain}")
         else:

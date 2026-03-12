@@ -1,10 +1,11 @@
 # mcp_tools/net_lookup/whois.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_whois(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def whois_lookup(target: str) -> Dict[str, Any]:
+    async def whois_lookup(target: str) -> Dict[str, Any]:
         """
         Perform a WHOIS lookup for a domain or IP address.
 
@@ -15,7 +16,10 @@ def register_whois(mcp, hexstrike_client, logger):
             WHOIS lookup results
         """
         try:
-            response = hexstrike_client.safe_post("api/tools/whois", {"target": target})
+            loop = asyncio.get_running_loop()
+            response = await loop.run_in_executor(
+                None, lambda: hexstrike_client.safe_post("api/tools/whois", {"target": target})
+            )
             return response
         except Exception as e:
             logger.error(f"WHOIS lookup failed: {e}")

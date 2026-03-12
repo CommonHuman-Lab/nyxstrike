@@ -1,11 +1,12 @@
 # mcp_tools/dns_enum/dnsenum.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_dnsenum_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def dnsenum_scan(domain: str, dns_server: str = "", wordlist: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def dnsenum_scan(domain: str, dns_server: str = "", wordlist: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute dnsenum for DNS enumeration with enhanced logging.
 
@@ -25,7 +26,10 @@ def register_dnsenum_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting DNSenum: {domain}")
-        result = hexstrike_client.safe_post("api/tools/dnsenum", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/dnsenum", data)
+        )
         if result.get("success"):
             logger.info(f"✅ DNSenum completed for {domain}")
         else:

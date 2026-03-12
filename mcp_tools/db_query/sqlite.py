@@ -1,10 +1,11 @@
 # mcp_tools/db_query/sqlite.py
 
 from typing import Any, Dict
+import asyncio
 
 def register_sqlite_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def sqlite_query(db_path: str, query: str) -> Dict[str, Any]:
+    async def sqlite_query(db_path: str, query: str) -> Dict[str, Any]:
         """
         Query a SQLite database using the HexStrike server endpoint.
 
@@ -30,7 +31,11 @@ def register_sqlite_tools(mcp, hexstrike_client, logger):
             "query": query
         }
         try:
-            return hexstrike_client.safe_post("api/tools/sqlite", data)
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                None, lambda: hexstrike_client.safe_post("api/tools/sqlite", data)
+            )
+            return result
         except Exception as e:
             logger.error(f"SQLite query failed: {e}")
             return {"error": str(e)}

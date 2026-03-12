@@ -1,11 +1,12 @@
 # mcp_tools/net_scan/arp_scan.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_arp_scan_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def arp_scan_discovery(target: str = "", interface: str = "", local_network: bool = False,
+    async def arp_scan_discovery(target: str = "", interface: str = "", local_network: bool = False,
                           timeout: int = 500, retry: int = 3, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute arp-scan for network discovery with enhanced logging.
@@ -30,7 +31,10 @@ def register_arp_scan_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting arp-scan: {target if target else 'local network'}")
-        result = hexstrike_client.safe_post("api/tools/arp-scan", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/arp-scan", data)
+        )
         if result.get("success"):
             logger.info(f"✅ arp-scan completed")
         else:

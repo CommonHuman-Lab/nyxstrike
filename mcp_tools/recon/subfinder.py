@@ -1,10 +1,11 @@
 # mcp_tools/recon/subfinder.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_subfinder_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def subfinder_scan(domain: str, silent: bool = True, all_sources: bool = False, additional_args: str = "") -> Dict[str, Any]:
+    async def subfinder_scan(domain: str, silent: bool = True, all_sources: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Subfinder for passive subdomain enumeration with enhanced logging.
 
@@ -24,7 +25,10 @@ def register_subfinder_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Subfinder: {domain}")
-        result = hexstrike_client.safe_post("api/tools/subfinder", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/subfinder", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Subfinder completed for {domain}")
         else:
