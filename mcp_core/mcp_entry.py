@@ -46,7 +46,7 @@ def run_mcp(args, logger):
 
         # stdio fallback for MCP clients that don't support the run() method
         try:
-            mcp.run()
+            mcp.run(show_banner=False)
         except AttributeError:
             import asyncio
             if hasattr(mcp, "run_stdio"):
