@@ -42,6 +42,7 @@ from mitmproxy.options import Options as MitmOptions
 import server_core.config_core as config_core
 from server_core import *
 from server_api import *
+from shared.target_types import TechnologyStack
 
 # ============================================================================
 # LOGGING CONFIGURATION (MUST BE FIRST)
@@ -88,7 +89,6 @@ wordlist_store = WordlistStore()
 # ============================================================================
 # INTELLIGENT DECISION ENGINE (v6.0 ENHANCEMENT)
 # ============================================================================
-from shared.target_types import TechnologyStack
 
 # Global decision engine instance
 decision_engine = IntelligentDecisionEngine()
@@ -131,8 +131,6 @@ ctf_coordinator = CTFTeamCoordinator()
 active_processes = {}  # pid -> process info
 process_lock = threading.Lock()
 
-from server_core.python_env_manager import env_manager
-
 # ============================================================================
 # ADVANCED VULNERABILITY INTELLIGENCE SYSTEM (v6.0 ENHANCEMENT)
 # ============================================================================
@@ -150,136 +148,10 @@ cache = HexStrikeCache()
 # Global telemetry collector
 telemetry = TelemetryCollector()
 
-from server_core.enhanced_command_executor import EnhancedCommandExecutor
-from server_core.ai_exploit_generator import AIExploitGenerator
-
-class VulnerabilityCorrelator:
-    """Correlate vulnerabilities for multi-stage attack chain discovery"""
-
-    def __init__(self):
-        self.attack_patterns = {
-            "privilege_escalation": ["local", "kernel", "suid", "sudo"],
-            "remote_execution": ["remote", "network", "rce", "code execution"],
-            "persistence": ["service", "registry", "scheduled", "startup"],
-            "lateral_movement": ["smb", "wmi", "ssh", "rdp"],
-            "data_exfiltration": ["file", "database", "memory", "network"]
-        }
-
-        self.software_relationships = {
-            "windows": ["iis", "office", "exchange", "sharepoint"],
-            "linux": ["apache", "nginx", "mysql", "postgresql"],
-            "web": ["php", "nodejs", "python", "java"],
-            "database": ["mysql", "postgresql", "oracle", "mssql"]
-        }
-
-    def find_attack_chains(self, target_software, max_depth=3):
-        """Find multi-vulnerability attack chains"""
-        try:
-            # This is a simplified implementation
-            # Real version would use graph algorithms and ML
-
-            chains = []
-
-            # Example attack chain discovery logic
-            base_software = target_software.lower()
-
-            # Find initial access vulnerabilities
-            initial_vulns = self._find_vulnerabilities_by_pattern(base_software, "remote_execution")
-
-            for initial_vuln in initial_vulns[:3]:  # Limit for demo
-                chain = {
-                    "chain_id": f"chain_{len(chains) + 1}",
-                    "target": target_software,
-                    "stages": [
-                        {
-                            "stage": 1,
-                            "objective": "Initial Access",
-                            "vulnerability": initial_vuln,
-                            "success_probability": 0.75
-                        }
-                    ],
-                    "overall_probability": 0.75,
-                    "complexity": "MEDIUM"
-                }
-
-                # Find privilege escalation
-                priv_esc_vulns = self._find_vulnerabilities_by_pattern(base_software, "privilege_escalation")
-                if priv_esc_vulns:
-                    chain["stages"].append({
-                        "stage": 2,
-                        "objective": "Privilege Escalation",
-                        "vulnerability": priv_esc_vulns[0],
-                        "success_probability": 0.60
-                    })
-                    chain["overall_probability"] *= 0.60
-
-                # Find persistence
-                persistence_vulns = self._find_vulnerabilities_by_pattern(base_software, "persistence")
-                if persistence_vulns and len(chain["stages"]) < max_depth:
-                    chain["stages"].append({
-                        "stage": 3,
-                        "objective": "Persistence",
-                        "vulnerability": persistence_vulns[0],
-                        "success_probability": 0.80
-                    })
-                    chain["overall_probability"] *= 0.80
-
-                chains.append(chain)
-
-            return {
-                "success": True,
-                "target_software": target_software,
-                "total_chains": len(chains),
-                "attack_chains": chains,
-                "recommendation": self._generate_chain_recommendations(chains)
-            }
-
-        except Exception as e:
-            logger.error(f"Error finding attack chains: {str(e)}")
-            return {"success": False, "error": str(e)}
-
-    def _find_vulnerabilities_by_pattern(self, software, pattern_type):
-        """Find vulnerabilities matching attack pattern"""
-        # Simplified mock data - real implementation would query CVE database
-        mock_vulnerabilities = [
-            {
-                "cve_id": "CVE-2024-1234",
-                "description": f"Remote code execution in {software}",
-                "cvss_score": 9.8,
-                "exploitability": "HIGH"
-            },
-            {
-                "cve_id": "CVE-2024-5678",
-                "description": f"Privilege escalation in {software}",
-                "cvss_score": 7.8,
-                "exploitability": "MEDIUM"
-            }
-        ]
-
-        return mock_vulnerabilities
-
-    def _generate_chain_recommendations(self, chains):
-        """Generate recommendations for attack chains"""
-        if not chains:
-            return "No viable attack chains found for target"
-
-        recommendations = [
-            f"Found {len(chains)} potential attack chains",
-            f"Highest probability chain: {max(chains, key=lambda x: x['overall_probability'])['overall_probability']:.2%}",
-            "Recommendations:",
-            "- Test chains in order of probability",
-            "- Prepare fallback methods for each stage",
-            "- Consider detection evasion at each stage"
-        ]
-
-        return "\n".join(recommendations)
-
 # Global intelligence managers
 cve_intelligence = CVEIntelligenceManager()
 exploit_generator = AIExploitGenerator()
 vulnerability_correlator = VulnerabilityCorrelator()
-
-from server_core.command_executor import execute_command
 
 def execute_command_with_recovery(
   tool_name: str,
@@ -294,7 +166,7 @@ def execute_command_with_recovery(
     parameters=parameters,
     use_cache=use_cache,
     max_attempts=max_attempts,
-    execute_command_fn=execute_command,
+    execute_command_fn=_execute_command,
     error_handler=error_handler,
     degradation_manager=degradation_manager,
     rebuild_command_with_params_fn= _rebuild_command_with_params,
@@ -1546,7 +1418,6 @@ def whois():
         return jsonify({"error": "Missing 'target' parameter"}), 400
 
     try:
-        import subprocess
         result = subprocess.run(
             ["whois", target],
             stdout=subprocess.PIPE,
@@ -4609,7 +4480,6 @@ class HTTPTestingFramework:
         if not self.scope:
             return True
         try:
-            from urllib.parse import urlparse
             h = urlparse(url).hostname or ''
             target = self.scope.get('host','')
             if not h or not target:
@@ -4623,8 +4493,7 @@ class HTTPTestingFramework:
         return False
 
     def _apply_match_replace(self, url: str, data, headers: dict):
-        import re
-        from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+        from urllib.parse import parse_qsl, urlencode, urlunparse
         original_url = url
         out_headers = dict(headers)
         out_data = data
@@ -4674,7 +4543,7 @@ class HTTPTestingFramework:
                         params: Optional[list] = None, payloads: Optional[list] = None, base_data: Optional[dict] = None,
                         max_requests: int = 100) -> dict:
         """Simple fuzzing: iterate payloads over each parameter individually (Sniper)."""
-        from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+        from urllib.parse import parse_qsl, urlencode, urlunparse
         params = params or []
         payloads = payloads or ["'\"<>`, ${7*7}"]
         base_data = base_data or {}
@@ -5094,7 +4963,6 @@ class BrowserAgent:
                 # relative
                 base = page_info.get('url','')
                 try:
-                    from urllib.parse import urljoin
                     action = urljoin(base, action)
                 except Exception:
                     pass

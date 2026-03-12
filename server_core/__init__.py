@@ -11,15 +11,16 @@ from .modern_visual_engine import ModernVisualEngine
 from .operation_types import determine_operation_type as _determine_operation_type
 from .command_params import rebuild_command_with_params as _rebuild_command_with_params
 from .file_ops import file_manager
+from .command_executor import execute_command as _execute_command
 from .recovery_executor import execute_command_with_recovery as _execute_command_with_recovery
-
+from .vulnerability_correlator import VulnerabilityCorrelator
 from .enhanced_process_manager import EnhancedProcessManager
 from .technology_detector import TechnologyDetector
 from .parameter_optimizer import ParameterOptimizer
 from .rate_limit_detector import RateLimitDetector
 from .failure_recovery_system import FailureRecoverySystem
 from .performance_monitor import PerformanceMonitor
-
+from .ai_exploit_generator import AIExploitGenerator
 from .intelligence.cve_intelligence_manager import CVEIntelligenceManager
 from .intelligence.intelligent_decision_engine import IntelligentDecisionEngine
 
@@ -32,6 +33,8 @@ from .workflows.ctf.toolManager import CTFToolManager
 from .workflows.ctf.automator import CTFChallengeAutomator
 from .workflows.ctf.coordinator import CTFTeamCoordinator
 
+from .python_env_manager import env_manager
+
 from .error_handling import (
     ErrorType,
     RecoveryAction,
@@ -41,6 +44,7 @@ from .error_handling import (
 )
 
 __all__ = [
+    "env_manager",
     "ModernVisualEngine",
     "HexStrikeCache",
     "TelemetryCollector",
@@ -70,5 +74,8 @@ __all__ = [
     "_determine_operation_type",
     "file_manager",
     "_rebuild_command_with_params",
+    "_execute_command",
     "_execute_command_with_recovery",
+    "VulnerabilityCorrelator",
+    "AIExploitGenerator",
 ]
