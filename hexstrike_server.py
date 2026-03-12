@@ -501,6 +501,22 @@ app.register_blueprint(api_exploit_framework_exploit_db_bp)
 # ============================================================================
 app.register_blueprint(api_binary_analysis_autopsy_bp)
 
+# ============================================================================
+# WIFI PENTEST API ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_wifi_pentest_aircrack_ng_bp)
+app.register_blueprint(api_wifi_pentest_airmon_ng_bp)
+app.register_blueprint(api_wifi_pentest_airodump_ng_bp)
+app.register_blueprint(api_wifi_pentest_aireplay_ng_bp)
+app.register_blueprint(api_wifi_pentest_airbase_ng_bp)
+app.register_blueprint(api_wifi_pentest_airdecap_ng_bp)
+app.register_blueprint(api_wifi_pentest_hcxpcapngtool_bp)
+app.register_blueprint(api_wifi_pentest_hcxdumptool_bp)
+app.register_blueprint(api_wifi_pentest_eaphammer_bp)
+app.register_blueprint(api_wifi_pentest_wifite2_bp)
+app.register_blueprint(api_wifi_pentest_bettercap_wifi_bp)
+app.register_blueprint(api_wifi_pentest_mdk4_bp)
+
 # !NEW BLUEPRINTS GOES HERE!
 
 # ============================================================================
