@@ -17,7 +17,7 @@ def is_tool_installed(tool):
     from shutil import which
     return which(tool) is not None
 
-api_auto_tool_bp.route("/api/tools/auto-install-missing-apt", methods=["POST"])
+@api_auto_tool_bp.route("/api/tools/auto-install-missing-apt", methods=["POST"])
 def auto_install_missing_tools():
     """Detect missing apt-installable tools and attempt installation."""
     missing_tools = [tool for tool in APT_TOOLS if not is_tool_installed(tool)]
