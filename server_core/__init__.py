@@ -8,6 +8,9 @@ from .session_store import SessionStore
 from .wordlist_store import WordlistStore
 from .telemetry_collector import TelemetryCollector
 from .modern_visual_engine import ModernVisualEngine
+from .operation_types import determine_operation_type
+from .command_params import rebuild_command_with_params
+from .file_ops import file_manager
 
 from .enhanced_process_manager import EnhancedProcessManager
 from .technology_detector import TechnologyDetector
@@ -63,4 +66,7 @@ __all__ = [
     "ErrorContext",
     "IntelligentErrorHandler",
     "GracefulDegradation",
+    "determine_operation_type",
+    "file_manager",
+    "rebuild_command_with_params",
 ]

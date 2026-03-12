@@ -363,7 +363,7 @@ def execute_command_with_recovery(tool_name: str, command: str, parameters: Opti
                 )
 
                 # Rebuild command with adjusted parameters
-                command = _rebuild_command_with_params(tool_name, command, adjusted_params)
+                command = rebuild_command_with_params(tool_name, command, adjusted_params)
                 logger.info(f"🔧 Retrying {tool_name} with reduced scope")
                 continue
 
@@ -392,7 +392,7 @@ def execute_command_with_recovery(tool_name: str, command: str, parameters: Opti
                 adjusted_params = error_handler.auto_adjust_parameters(tool_name, error_type, parameters)
 
                 # Rebuild command with adjusted parameters
-                command = _rebuild_command_with_params(tool_name, command, adjusted_params)
+                command = rebuild_command_with_params(tool_name, command, adjusted_params)
                 logger.info(f"🔧 Retrying {tool_name} with adjusted parameters")
                 continue
 
@@ -426,7 +426,7 @@ def execute_command_with_recovery(tool_name: str, command: str, parameters: Opti
 
             elif recovery_strategy.action == RecoveryAction.GRACEFUL_DEGRADATION:
                 # Apply graceful degradation
-                operation = _determine_operation_type(tool_name)
+                operation = determine_operation_type(tool_name)
                 degraded_result = degradation_manager.handle_partial_failure(
                     operation,
                     result,
@@ -497,56 +497,6 @@ def execute_command_with_recovery(tool_name: str, command: str, parameters: Opti
             "final_action": "all_attempts_exhausted"
         }
     }
-
-def _rebuild_command_with_params(tool_name: str, original_command: str, new_params: Dict[str, Any]) -> str:
-    """Rebuild command with new parameters"""
-    # This is a simplified implementation - in practice, you'd need tool-specific logic
-    # For now, we'll just append new parameters
-    additional_args = []
-
-    for key, value in new_params.items():
-        if key == "timeout" and tool_name in ["nmap", "gobuster", "nuclei"]:
-            additional_args.append(f"--timeout {value}")
-        elif key == "threads" and tool_name in ["gobuster", "feroxbuster", "ffuf"]:
-            additional_args.append(f"-t {value}")
-        elif key == "delay" and tool_name in ["gobuster", "feroxbuster"]:
-            additional_args.append(f"--delay {value}")
-        elif key == "timing" and tool_name == "nmap":
-            additional_args.append(f"{value}")
-        elif key == "concurrency" and tool_name == "nuclei":
-            additional_args.append(f"-c {value}")
-        elif key == "rate-limit" and tool_name == "nuclei":
-            additional_args.append(f"-rl {value}")
-
-    if additional_args:
-        return f"{original_command} {' '.join(additional_args)}"
-
-    return original_command
-
-def _determine_operation_type(tool_name: str) -> str:
-    """Determine operation type based on tool name"""
-    operation_mapping = {
-        "nmap": "network_discovery",
-        "rustscan": "network_discovery",
-        "masscan": "network_discovery",
-        "gobuster": "web_discovery",
-        "feroxbuster": "web_discovery",
-        "dirsearch": "web_discovery",
-        "ffuf": "web_discovery",
-        "nuclei": "vulnerability_scanning",
-        "jaeles": "vulnerability_scanning",
-        "nikto": "vulnerability_scanning",
-        "subfinder": "subdomain_enumeration",
-        "amass": "subdomain_enumeration",
-        "assetfinder": "subdomain_enumeration",
-        "arjun": "parameter_discovery",
-        "paramspider": "parameter_discovery",
-        "x8": "parameter_discovery"
-    }
-
-    return operation_mapping.get(tool_name, "unknown_operation")
-
-from server_core.file_ops import file_manager
 
 # API Routes
 
