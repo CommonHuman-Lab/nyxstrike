@@ -27,10 +27,12 @@
 ## 🚀 Differences from HexStrike V6
 
 - Increased toolings from **150** to over **170**
-- New Tools: BBot, database querying, and more.
+- New Tools: BBot, database querying, and more
+- Skills: 9 LLM skills now included
+- Refactored all MCP tools to run async
 - Refactored Codebase: Improved clarity, maintainability, and performance.
-- Updated Dependencies: All packages upgraded for security and compatibility.
-- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references.
+- Updated Dependencies: All packages upgraded for security and compatibility
+- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references
 - AI Integration: Upgraded MCP compatibility and agent orchestration (FastMCP v3).
 
 <details>
