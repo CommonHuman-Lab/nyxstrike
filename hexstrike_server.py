@@ -18,7 +18,7 @@ import sys
 import traceback
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
@@ -145,8 +145,8 @@ CACHE_TTL = config_core.get("CACHE_TTL", 3600)  # 1 hour default TTL
 # Global cache instance
 cache = HexStrikeCache()
 
-# Global telemetry collector
-telemetry = TelemetryCollector()
+# Global telemetry collector — reuse the instance from enhanced_command_executor
+from server_core.enhanced_command_executor import telemetry
 
 # Global intelligence managers
 cve_intelligence = CVEIntelligenceManager()
@@ -861,7 +861,7 @@ def intelligent_smart_scan():
             }
 
             # Collect results as they complete
-            for future in future_to_tool:
+            for future in as_completed(future_to_tool):
                 tool_result = future.result()
                 scan_results["tools_executed"].append(tool_result)
 
