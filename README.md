@@ -29,7 +29,8 @@
 - Increased toolings from **150** to over **170**
 - New Tools: BBot, database querying, and more
 - Skills: 9 LLM skills now included
-- Refactored all MCP tools to run async
+- Compact Mode: Great for running with smaller, local LLMs.
+- Profile Mode: Specify one or more profiles to load only the relevant ones for your workflow.
 - Refactored Codebase: Improved clarity, maintainability, and performance.
 - Updated Dependencies: All packages upgraded for security and compatibility
 - Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references
