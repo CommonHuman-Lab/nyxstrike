@@ -106,7 +106,22 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_patator_tool(mcp, client, logger),
         lambda mcp, client, logger: register_hashid_tool(mcp, client, logger),
         lambda mcp, client, logger: register_ophcrack_tool(mcp, client, logger),
+    ],
+
+       # WiFi penetration testing and wireless security assessment
+    "wifi_pentest": [
         lambda mcp, client, logger: register_aircrack_ng_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_airmon_ng_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_airodump_ng_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_aireplay_ng_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_airbase_ng_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_airdecap_ng_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_hcxpcapngtool_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_hcxdumptool_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_eaphammer_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_wifite2_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_bettercap_wifi_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_mdk4_tools(mcp, client, logger),
     ],
 
     #Tools for SMB and network share enumeration (e.g., Enum4linux, NetExec, SMBMap, NBTSCan, RPCClient).
@@ -371,6 +386,7 @@ DEFAULT_PROFILE = [
     "url_recon",
     "data_processing",
     "error_handling",
+    "wifi_pentest",
 
     # System tools"
     "monitoring",
