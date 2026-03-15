@@ -144,7 +144,7 @@ exploit_generator = AIExploitGenerator()
 vulnerability_correlator = VulnerabilityCorrelator()
 
 
-def execute_command(command: str, use_cache: bool = True, cache=None, timeout: int = COMMAND_TIMEOUT) -> Dict[str, Any]:
+def execute_command(command: str, use_cache: bool = True, cache=cache, timeout: int = COMMAND_TIMEOUT) -> Dict[str, Any]:
     """Server-level execute_command wrapper that passes the global cache instance."""
     return _execute_command(command, use_cache=use_cache, cache=cache, timeout=timeout)
 
