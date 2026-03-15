@@ -5,11 +5,11 @@
 # HexStrike AI - Community Edition
 ### AI-Powered MCP Cybersecurity Automation Platform
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Penetration%20Testing-red.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
-[![Tools](https://img.shields.io/badge/Security%20Tools-170%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
+[![Tools](https://img.shields.io/badge/Security%20Tools-180%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![Agents](https://img.shields.io/badge/AI%20Agents-12%2B-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 
 **Advanced AI-powered penetration testing MCP framework, on-demand TTP knowledge, and adaptive scanning intelligence**
@@ -26,7 +26,7 @@
 
 ## 🚀 Differences from HexStrike V6
 
-- Increased toolings from **150** to over **170**
+- Increased toolings from **150** to over **180**
 - New Tools: BBot, database querying, and more
 - Skills: 9 LLM skills now included
 - Compact Mode: Great for running with smaller, local LLMs.

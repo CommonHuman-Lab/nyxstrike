@@ -2451,13 +2451,8 @@ def amass():
                 "error": "Domain parameter is required"
             }), 400
 
-        command = f"amass {mode}"
-
-        if mode == "enum":
-            command += f" -d {domain}"
-        else:
-            command += f" -d {domain}"
-
+        command = f"amass {mode} -d {domain}"
+        
         if additional_args:
             command += f" {additional_args}"
 
