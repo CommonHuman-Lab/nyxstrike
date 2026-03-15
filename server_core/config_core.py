@@ -11,12 +11,15 @@ Functions:
     find_best_wordlist(criteria): Find the best wordlist matching criteria.
     get_word_list_path(name): Get the filesystem path for a wordlist.
     get(key, default): Get a config value by key.
-    set(key, value): Set a config value by key.
+    set_value(key, value): Set a config value by key.
 """
 
 from typing import Any, Optional
+import logging
 import threading
 import config
+
+logger = logging.getLogger(__name__)
 
 _config = config._config
 _config_lock = threading.Lock()
@@ -78,6 +81,10 @@ def find_best_wordlist(criteria: dict) -> Optional[dict]:
 
     # 3. Fallback: return any wordlist
     for name, wl in wordlists.items():
+        logger.warning(
+            "find_best_wordlist: no match for criteria %r — falling back to first available wordlist %r",
+            criteria, name,
+        )
         return {"name": name, "wordlist": wl}
     return None
 
@@ -109,7 +116,7 @@ def get(key: str, default: Optional[Any] = None) -> Any:
     """
     return _config.get(key, default)
 
-def set(key: str, value: Any) -> None:
+def set_value(key: str, value: Any) -> None:
     """
     Set a configuration value by key.
 
