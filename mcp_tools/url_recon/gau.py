@@ -1,10 +1,11 @@
 # mcp_tools/url_recon/gau.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_gau_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def gau_discovery(domain: str, providers: str = "wayback,commoncrawl,otx,urlscan",
+    async def gau_discovery(domain: str, providers: str = "wayback,commoncrawl,otx,urlscan",
                      include_subs: bool = True, blacklist: str = "png,jpg,gif,jpeg,swf,woff,svg,pdf,css,ico",
                      additional_args: str = "") -> Dict[str, Any]:
         """
@@ -28,7 +29,10 @@ def register_gau_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"📡 Starting Gau URL discovery: {domain}")
-        result = hexstrike_client.safe_post("api/tools/gau", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/gau", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Gau URL discovery completed for {domain}")
         else:

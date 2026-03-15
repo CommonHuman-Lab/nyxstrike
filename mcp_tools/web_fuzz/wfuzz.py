@@ -1,11 +1,12 @@
 # mcp_tools/web_fuzz/wfuzz.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_wfuzz_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def wfuzz_scan(url: str, wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> Dict[str, Any]:
+    async def wfuzz_scan(url: str, wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Wfuzz for web application fuzzing with enhanced logging.
 
@@ -23,7 +24,10 @@ def register_wfuzz_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Wfuzz scan: {url}")
-        result = hexstrike_client.safe_post("api/tools/wfuzz", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/wfuzz", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Wfuzz scan completed for {url}")
         else:

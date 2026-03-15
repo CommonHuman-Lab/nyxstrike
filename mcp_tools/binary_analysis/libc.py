@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/libc.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_libc_tools(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def libc_database_lookup(action: str = "find", symbols: str = "",
+    async def libc_database_lookup(action: str = "find", symbols: str = "",
                             libc_id: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute libc-database for libc identification and offset lookup.
@@ -26,7 +27,10 @@ def register_libc_tools(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting libc-database {action}: {symbols or libc_id}")
-        result = hexstrike_client.safe_post("api/tools/libc-database", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/libc-database", data)
+        )
         if result.get("success"):
             logger.info(f"✅ libc-database {action} completed")
         else:

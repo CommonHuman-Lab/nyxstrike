@@ -1,11 +1,12 @@
 # mcp_tools/metadata_extract/exiftool.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_exiftool_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def exiftool_extract(file_path: str, output_format: str = "", tags: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def exiftool_extract(file_path: str, output_format: str = "", tags: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute ExifTool for metadata extraction with enhanced logging.
 
@@ -25,7 +26,10 @@ def register_exiftool_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"📷 Starting ExifTool analysis: {file_path}")
-        result = hexstrike_client.safe_post("api/tools/exiftool", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/exiftool", data)
+        )
         if result.get("success"):
             logger.info(f"✅ ExifTool analysis completed")
         else:

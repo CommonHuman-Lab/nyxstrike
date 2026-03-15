@@ -1,10 +1,11 @@
 # mcp_tools/param_discovery/arjun.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_arjun_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def arjun_parameter_discovery(url: str, method: str = "GET", wordlist: str = "",
+    async def arjun_parameter_discovery(url: str, method: str = "GET", wordlist: str = "",
                                  delay: int = 0, threads: int = 25, stable: bool = False,
                                  additional_args: str = "") -> Dict[str, Any]:
         """
@@ -32,7 +33,10 @@ def register_arjun_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🎯 Starting Arjun parameter discovery: {url}")
-        result = hexstrike_client.safe_post("api/tools/arjun", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/arjun", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Arjun parameter discovery completed for {url}")
         else:
@@ -40,7 +44,7 @@ def register_arjun_tool(mcp, hexstrike_client, logger):
         return result
     
     @mcp.tool()
-    def arjun_scan(url: str, method: str = "GET", data: str = "", headers: str = "", timeout: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def arjun_scan(url: str, method: str = "GET", data: str = "", headers: str = "", timeout: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Arjun for parameter discovery with enhanced logging.
 
@@ -66,7 +70,10 @@ def register_arjun_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Arjun parameter discovery: {url}")
-        result = hexstrike_client.safe_post("api/tools/arjun", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/arjun", payload)
+        )
         if result.get("success"):
             logger.info(f"✅ Arjun completed for {url}")
         else:

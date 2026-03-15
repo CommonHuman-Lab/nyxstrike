@@ -1,10 +1,11 @@
 # mcp_tools/file_ops_and_payload_gen.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def create_file(filename: str, content: str, binary: bool = False) -> Dict[str, Any]:
+    async def create_file(filename: str, content: str, binary: bool = False) -> Dict[str, Any]:
         """
         Create a file with specified content on the HexStrike server.
 
@@ -22,7 +23,10 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
             "binary": binary
         }
         logger.info(f"📄 Creating file: {filename}")
-        result = hexstrike_client.safe_post("api/files/create", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/files/create", data)
+        )
         if result.get("success"):
             logger.info(f"✅ File created successfully: {filename}")
         else:
@@ -30,7 +34,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def modify_file(filename: str, content: str, append: bool = False) -> Dict[str, Any]:
+    async def modify_file(filename: str, content: str, append: bool = False) -> Dict[str, Any]:
         """
         Modify an existing file on the HexStrike server.
 
@@ -48,7 +52,10 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
             "append": append
         }
         logger.info(f"✏️  Modifying file: {filename}")
-        result = hexstrike_client.safe_post("api/files/modify", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/files/modify", data)
+        )
         if result.get("success"):
             logger.info(f"✅ File modified successfully: {filename}")
         else:
@@ -56,7 +63,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def delete_file(filename: str) -> Dict[str, Any]:
+    async def delete_file(filename: str) -> Dict[str, Any]:
         """
         Delete a file or directory on the HexStrike server.
 
@@ -70,7 +77,10 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
             "filename": filename
         }
         logger.info(f"🗑️  Deleting file: {filename}")
-        result = hexstrike_client.safe_post("api/files/delete", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/files/delete", data)
+        )
         if result.get("success"):
             logger.info(f"✅ File deleted successfully: {filename}")
         else:
@@ -78,7 +88,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def list_files(directory: str = ".") -> Dict[str, Any]:
+    async def list_files(directory: str = ".") -> Dict[str, Any]:
         """
         List files in a directory on the HexStrike server.
 
@@ -89,7 +99,10 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
             Directory listing results
         """
         logger.info(f"📂 Listing files in directory: {directory}")
-        result = hexstrike_client.safe_get("api/files/list", {"directory": directory})
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/files/list", {"directory": directory})
+        )
         if result.get("success"):
             file_count = len(result.get("files", []))
             logger.info(f"✅ Listed {file_count} files in {directory}")
@@ -98,7 +111,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def generate_payload(payload_type: str = "buffer", size: int = 1024, pattern: str = "A", filename: str = "") -> Dict[str, Any]:
+    async def generate_payload(payload_type: str = "buffer", size: int = 1024, pattern: str = "A", filename: str = "") -> Dict[str, Any]:
         """
         Generate large payloads for testing and exploitation.
 
@@ -120,7 +133,10 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
             data["filename"] = filename
 
         logger.info(f"🎯 Generating {payload_type} payload: {size} bytes")
-        result = hexstrike_client.safe_post("api/payloads/generate", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/payloads/generate", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Payload generated successfully")
         else:

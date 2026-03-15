@@ -1,11 +1,12 @@
 # mcp_tools/web_framework/http_framework.py
 
 from typing import Dict, Any, Optional
+import asyncio
 
 def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors):
 
     @mcp.tool()
-    def http_framework_test(url: str, method: str = "GET", data: dict = {},
+    async def http_framework_test(url: str, method: str = "GET", data: dict = {},
                            headers: dict = {}, cookies: dict = {}, action: str = "request") -> Dict[str, Any]:
         """
         Enhanced HTTP testing framework (Burp Suite alternative) for comprehensive web security testing.
@@ -31,7 +32,10 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
         }
 
         logger.info(f"{HexStrikeColors.FIRE_RED}🔥 Starting HTTP Framework {action}: {url}{HexStrikeColors.RESET}")
-        result = hexstrike_client.safe_post("api/tools/http-framework", data_payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", data_payload)
+        )
 
         if result.get("success"):
             logger.info(f"{HexStrikeColors.SUCCESS}✅ HTTP Framework {action} completed for {url}{HexStrikeColors.RESET}")
@@ -46,26 +50,38 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
         return result
 
     @mcp.tool()
-    def http_set_rules(rules: list) -> Dict[str, Any]:
+    async def http_set_rules(rules: list) -> Dict[str, Any]:
         """Set match/replace rules used to rewrite parts of URL/query/headers/body before sending.
         Rule format: {'where':'url|query|headers|body','pattern':'regex','replacement':'string'}"""
         payload = {"action": "set_rules", "rules": rules}
-        return hexstrike_client.safe_post("api/tools/http-framework", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+        )
+        return result
 
     @mcp.tool()
-    def http_set_scope(host: str, include_subdomains: bool = True) -> Dict[str, Any]:
+    async def http_set_scope(host: str, include_subdomains: bool = True) -> Dict[str, Any]:
         """Define in-scope host (and optionally subdomains) so out-of-scope requests are skipped."""
         payload = {"action": "set_scope", "host": host, "include_subdomains": include_subdomains}
-        return hexstrike_client.safe_post("api/tools/http-framework", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+        )
+        return result
 
     @mcp.tool()
-    def http_repeater(request_spec: dict) -> Dict[str, Any]:
+    async def http_repeater(request_spec: dict) -> Dict[str, Any]:
         """Send a crafted request (Burp Repeater equivalent). request_spec keys: url, method, headers, cookies, data."""
         payload = {"action": "repeater", "request": request_spec}
-        return hexstrike_client.safe_post("api/tools/http-framework", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+        )
+        return result
 
     @mcp.tool()
-    def http_intruder(url: str, method: str = "GET", location: str = "query", params: Optional[list] = None,
+    async def http_intruder(url: str, method: str = "GET", location: str = "query", params: Optional[list] = None,
                       payloads: Optional[list] = None, base_data: Optional[dict] = None, max_requests: int = 100) -> Dict[str, Any]:
         """Simple Intruder (sniper) fuzzing. Iterates payloads over each param individually.
         location: query|body|headers|cookie."""
@@ -79,4 +95,8 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
             "base_data": base_data or {},
             "max_requests": max_requests
         }
-        return hexstrike_client.safe_post("api/tools/http-framework", payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+        )
+        return result

@@ -1,10 +1,11 @@
 # mcp_tools/web_scan/nikto.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_nikto_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def nikto_scan(target: str, additional_args: str = "") -> Dict[str, Any]:
+    async def nikto_scan(target: str, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Nikto web vulnerability scanner with enhanced logging.
 
@@ -20,7 +21,10 @@ def register_nikto_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔬 Starting Nikto scan: {target}")
-        result = hexstrike_client.safe_post("api/tools/nikto", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/nikto", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Nikto scan completed for {target}")
         else:

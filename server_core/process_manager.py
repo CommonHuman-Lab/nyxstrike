@@ -122,18 +122,3 @@ class ProcessManager:
                     logger.error(f"💥 Error resuming process {pid}: {str(e)}")
             return False
 
-# Enhanced color codes and visual elements for modern terminal output
-# All color references consolidated to ModernVisualEngine.COLORS for consistency
-    BG_GREEN = '\033[42m'
-    BG_YELLOW = '\033[43m'
-    BG_BLUE = '\033[44m'
-    BG_MAGENTA = '\033[45m'
-    BG_CYAN = '\033[46m'
-    BG_WHITE = '\033[47m'
-
-    # Text effects
-    DIM = '\033[2m'
-    UNDERLINE = '\033[4m'
-    BLINK = '\033[5m'
-    REVERSE = '\033[7m'
-    STRIKETHROUGH = '\033[9m'

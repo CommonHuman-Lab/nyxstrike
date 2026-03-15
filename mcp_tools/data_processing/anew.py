@@ -1,10 +1,11 @@
 # mcp_tools/data_processing/anew.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_anew_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def anew_data_processing(input_data: str, output_file: str = "",
+    async def anew_data_processing(input_data: str, output_file: str = "",
                             additional_args: str = "") -> Dict[str, Any]:
         """
         Execute anew for appending new lines to files (useful for data processing).
@@ -23,7 +24,10 @@ def register_anew_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info("📝 Starting anew data processing")
-        result = hexstrike_client.safe_post("api/tools/anew", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/anew", data)
+        )
         if result.get("success"):
             logger.info("✅ anew data processing completed")
         else:

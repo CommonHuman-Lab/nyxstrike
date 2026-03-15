@@ -1,10 +1,11 @@
 # mcp_tools/password_cracking/john.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_john_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def john_crack(
+    async def john_crack(
         hash_file: str,
         wordlist: str = "/usr/share/wordlists/rockyou.txt",
         format_type: str = "",
@@ -29,7 +30,10 @@ def register_john_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔐 Starting John the Ripper: {hash_file}")
-        result = hexstrike_client.safe_post("api/tools/john", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/john", data)
+        )
         if result.get("success"):
             logger.info(f"✅ John the Ripper completed")
         else:

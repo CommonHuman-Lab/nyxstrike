@@ -1,11 +1,12 @@
 # mcp_tools/api_fuzz/api_fuzzer.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_api_fuzzer_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def api_fuzzer(base_url: str, endpoints: str = "", methods: str = "GET,POST,PUT,DELETE", wordlist: str = "/usr/share/wordlists/api/api-endpoints.txt") -> Dict[str, Any]:
+    async def api_fuzzer(base_url: str, endpoints: str = "", methods: str = "GET,POST,PUT,DELETE", wordlist: str = "/usr/share/wordlists/api/api-endpoints.txt") -> Dict[str, Any]:
         """
         Advanced API endpoint fuzzing with intelligent parameter discovery.
 
@@ -26,7 +27,10 @@ def register_api_fuzzer_tool(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🔍 Starting API fuzzing: {base_url}")
-        result = hexstrike_client.safe_post("api/tools/api_fuzzer", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/api_fuzzer", data)
+        )
 
         if result.get("success"):
             fuzzing_type = result.get("fuzzing_type", "unknown")

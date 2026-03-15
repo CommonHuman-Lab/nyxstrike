@@ -1,10 +1,11 @@
 # mcp_tools/password_cracking/hashid.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_hashid_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def hashid(
+    async def hashid(
         hash_value: str,
         additional_args: str = ""
     ) -> Dict[str, Any]:
@@ -33,7 +34,10 @@ def register_hashid_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting hash identification for: {hash_value}")
-        result = hexstrike_client.safe_post("api/tools/password_cracking/hashid", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/password_cracking/hashid", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Hash identification completed for {hash_value}")
         else:

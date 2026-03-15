@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/xxd.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_xxd_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def xxd_hexdump(file_path: str, offset: str = "0", length: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def xxd_hexdump(file_path: str, offset: str = "0", length: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Create a hex dump of a file using xxd with enhanced logging.
 
@@ -25,7 +26,10 @@ def register_xxd_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting XXD hex dump: {file_path}")
-        result = hexstrike_client.safe_post("api/tools/xxd", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/xxd", data)
+        )
         if result.get("success"):
             logger.info(f"✅ XXD hex dump completed for {file_path}")
         else:

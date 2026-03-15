@@ -1,10 +1,11 @@
 # mcp_tools/web_crawl/katana.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_katana_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def katana_crawl(url: str, depth: int = 3, js_crawl: bool = True,
+    async def katana_crawl(url: str, depth: int = 3, js_crawl: bool = True,
                     form_extraction: bool = True, output_format: str = "json",
                     additional_args: str = "") -> Dict[str, Any]:
         """
@@ -30,7 +31,10 @@ def register_katana_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"⚔️  Starting Katana crawl: {url}")
-        result = hexstrike_client.safe_post("api/tools/katana", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/katana", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Katana crawl completed for {url}")
         else:

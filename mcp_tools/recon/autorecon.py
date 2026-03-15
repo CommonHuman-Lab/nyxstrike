@@ -1,11 +1,12 @@
 # mcp_tools/recon/autorecon.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_autorecon_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def autorecon_scan(
+    async def autorecon_scan(
         target: str = "",
         target_file: str = "",
         ports: str = "",
@@ -135,7 +136,10 @@ def register_autorecon_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting AutoRecon comprehensive enumeration: {target}")
-        result = hexstrike_client.safe_post("api/tools/autorecon", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/autorecon", data)
+        )
         if result.get("success"):
             logger.info(f"✅ AutoRecon comprehensive enumeration completed for {target}")
         else:
@@ -143,7 +147,7 @@ def register_autorecon_tool(mcp, hexstrike_client, logger):
         return result
     
     @mcp.tool()
-    def autorecon_comprehensive(target: str, output_dir: str = "/tmp/autorecon",
+    async def autorecon_comprehensive(target: str, output_dir: str = "/tmp/autorecon",
                                port_scans: str = "top-100-ports", service_scans: str = "default",
                                heartbeat: int = 60, timeout: int = 300,
                                additional_args: str = "") -> Dict[str, Any]:
@@ -172,7 +176,10 @@ def register_autorecon_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔄 Starting AutoRecon: {target}")
-        result = hexstrike_client.safe_post("api/tools/autorecon", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/autorecon", data)
+        )
         if result.get("success"):
             logger.info(f"✅ AutoRecon completed for {target}")
         else:

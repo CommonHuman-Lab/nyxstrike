@@ -1,9 +1,7 @@
-import time
 from flask import Blueprint, jsonify, request
 from datetime import datetime
-from server_core.process_manager import ProcessManager
-from visual.modern_visual_engine import ModernVisualEngine
-from intelligence.cve_intelligence_manager import CVEIntelligenceManager
+from server_core.modern_visual_engine import ModernVisualEngine
+from server_core.intelligence.cve_intelligence_manager import CVEIntelligenceManager
 
 import logging
 logger = logging.getLogger(__name__)

@@ -1,10 +1,11 @@
 # mcp_tools/password_cracking/medusa.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_medusa_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def medusa_attack(
+    async def medusa_attack(
         target: str,
         module: str,
         username: str = "",
@@ -52,7 +53,10 @@ def register_medusa_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔑 Starting Medusa attack: {target}:{module}")
-        result = hexstrike_client.safe_post("api/tools/medusa", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/medusa", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Medusa attack completed for {target}")
         else:

@@ -1,6 +1,7 @@
 import logging
 import requests
 import time
+import threading
 from typing import Dict, Any, Optional
 
 import server_core.config_core as config_core
@@ -12,10 +13,12 @@ MAX_RETRIES = config_core.get("MAX_RETRIES", 3)
 class HexStrikeClient:
     """Enhanced client for communicating with the HexStrike AI API Server"""
 
-    def __init__(self, server_url: str,auth_token: str = "",  timeout: int = DEFAULT_REQUEST_TIMEOUT, verify_ssl: bool = True):
+    def __init__(self, server_url: str, auth_token: str = "", timeout: int = DEFAULT_REQUEST_TIMEOUT, verify_ssl: bool = True):
         self.server_url = server_url.rstrip("/")
         self.timeout = timeout
         self.session = requests.Session()
+        self._connected = False
+        self._connect_lock = threading.Lock()
 
         if not verify_ssl:
             self.session.verify = False  # Disable SSL verification for self-signed certs
@@ -23,30 +26,33 @@ class HexStrikeClient:
         if auth_token:
             self.session.headers.update({
                 "Authorization": f"Bearer {auth_token}"
-        })
+            })
 
-        connected = False
+        # Verify connectivity in a background thread so MCP server startup is non-blocking.
+        threading.Thread(target=self._verify_connection, daemon=True).start()
+
+    def _verify_connection(self) -> None:
+        """Attempt to reach the Flask server; log the outcome but never block callers."""
         for i in range(MAX_RETRIES):
             try:
-                logging.info(f"🔗 Attempting to connect to HexStrike AI API at {server_url} (attempt {i+1}/{MAX_RETRIES})")
-                try:
-                    test_response = self.session.get(f"{self.server_url}/ping", timeout=5)
-                    test_response.raise_for_status()
-                    connected = True
-                    break
-                except requests.exceptions.ConnectionError:
-                    logging.warning(f"🔌 Connection refused to {server_url}. Make sure the HexStrike AI server is running.")
-                    time.sleep(2)
-                except Exception as e:
-                    logging.warning(f"⚠️  Connection test failed: {str(e)}")
-                    time.sleep(2)
+                logging.info(f"🔗 Attempting to connect to HexStrike AI API at {self.server_url} (attempt {i+1}/{MAX_RETRIES})")
+                test_response = self.session.get(f"{self.server_url}/ping", timeout=5)
+                test_response.raise_for_status()
+                with self._connect_lock:
+                    self._connected = True
+                logging.info(f"✅ Connected to HexStrike AI API at {self.server_url}")
+                return
+            except requests.exceptions.ConnectionError:
+                logging.warning(f"🔌 Connection refused to {self.server_url}. Make sure the HexStrike AI server is running.")
             except Exception as e:
-                logging.warning(f"❌ Connection attempt {i+1} failed: {str(e)}")
+                logging.warning(f"⚠️  Connection attempt {i+1} failed: {str(e)}")
+            if i < MAX_RETRIES - 1:
                 time.sleep(2)
 
-        if not connected:
-            error_msg = f"Failed to establish connection to HexStrike AI API Server at {server_url} after {MAX_RETRIES} attempts"
-            logging.error(error_msg)
+        logging.error(
+            f"❌ Failed to establish connection to HexStrike AI API Server at {self.server_url} "
+            f"after {MAX_RETRIES} attempts"
+        )
 
     def safe_get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if params is None:

@@ -1,11 +1,12 @@
 # mcp_tools/smb_enum/nbtscan.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_nbtscan_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def nbtscan_netbios(target: str, verbose: bool = False, timeout: int = 2,
+    async def nbtscan_netbios(target: str, verbose: bool = False, timeout: int = 2,
                        additional_args: str = "") -> Dict[str, Any]:
         """
         Execute nbtscan for NetBIOS name scanning with enhanced logging.
@@ -26,7 +27,10 @@ def register_nbtscan_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting nbtscan: {target}")
-        result = hexstrike_client.safe_post("api/tools/nbtscan", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/nbtscan", data)
+        )
         if result.get("success"):
             logger.info(f"✅ nbtscan completed for {target}")
         else:

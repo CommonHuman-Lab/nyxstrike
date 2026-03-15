@@ -28,7 +28,7 @@ class TelemetryCollector:
     def get_system_metrics(self) -> Dict[str, Any]:
         """Get current system metrics"""
         return {
-            "cpu_percent": psutil.cpu_percent(interval=1),
+            "cpu_percent": psutil.cpu_percent(interval=None),
             "memory_percent": psutil.virtual_memory().percent,
             "disk_usage": psutil.disk_usage('/').percent,
             "network_io": psutil.net_io_counters()._asdict() if psutil.net_io_counters() else {}

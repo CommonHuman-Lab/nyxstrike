@@ -44,3 +44,4 @@ from mcp_tools.file_carving import *
 from mcp_tools.stego_analysis import *
 from mcp_tools.metadata_extract import *
 from mcp_tools.crypto_attack import *
+from mcp_tools.wifi_pentest import *

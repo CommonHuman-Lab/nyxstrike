@@ -1,11 +1,12 @@
 # mcp_tools/stego_analysis/steghide.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_steghide_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def steghide_analysis(action: str, cover_file: str, embed_file: str = "", passphrase: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def steghide_analysis(action: str, cover_file: str, embed_file: str = "", passphrase: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Steghide for steganography analysis with enhanced logging.
 
@@ -29,7 +30,10 @@ def register_steghide_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🖼️ Starting Steghide {action}: {cover_file}")
-        result = hexstrike_client.safe_post("api/tools/steghide", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/steghide", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Steghide {action} completed")
         else:

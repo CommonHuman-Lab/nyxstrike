@@ -1,11 +1,12 @@
 # mcp_tools/net_scan/masscan.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_masscan_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def masscan_high_speed(target: str, ports: str = "1-65535", rate: int = 1000,
+    async def masscan_high_speed(target: str, ports: str = "1-65535", rate: int = 1000,
                           interface: str = "", router_mac: str = "", source_ip: str = "",
                           banners: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
@@ -35,7 +36,10 @@ def register_masscan_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🚀 Starting Masscan: {target} at rate {rate}")
-        result = hexstrike_client.safe_post("api/tools/masscan", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/masscan", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Masscan completed for {target}")
         else:

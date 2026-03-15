@@ -1,10 +1,11 @@
 # mcp_tools/iac_scan/terrascan.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_terrascan_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def terrascan_iac_scan(scan_type: str = "all", iac_dir: str = ".",
+    async def terrascan_iac_scan(scan_type: str = "all", iac_dir: str = ".",
                           policy_type: str = "", output_format: str = "json",
                           severity: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -30,7 +31,10 @@ def register_terrascan_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Terrascan IaC scan: {iac_dir}")
-        result = hexstrike_client.safe_post("api/tools/terrascan", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/terrascan", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Terrascan scan completed")
         else:

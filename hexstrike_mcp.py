@@ -11,7 +11,7 @@ Framework: FastMCP integration for tool orchestration
 
 import sys
 import logging
-from mcp_core.colored_formatter import ColoredFormatter
+from shared.colored_formatter import ColoredFormatter
 from mcp_core.mcp_entry import run_mcp
 from mcp_core.args import parse_args
 

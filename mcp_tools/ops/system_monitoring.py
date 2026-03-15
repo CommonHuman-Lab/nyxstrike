@@ -1,10 +1,11 @@
 # mcp_tools/system_monitoring.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_system_monitoring_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def server_health() -> Dict[str, Any]:
+    async def server_health() -> Dict[str, Any]:
         """
         Check the health status of the HexStrike AI server.
 
@@ -20,7 +21,7 @@ def register_system_monitoring_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def get_cache_stats() -> Dict[str, Any]:
+    async def get_cache_stats() -> Dict[str, Any]:
         """
         Get cache statistics from the HexStrike AI server.
 
@@ -28,13 +29,16 @@ def register_system_monitoring_tools(mcp, hexstrike_client, logger):
             Cache performance statistics
         """
         logger.info(f"💾 Getting cache statistics")
-        result = hexstrike_client.safe_get("api/cache/stats")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/cache/stats")
+        )
         if "hit_rate" in result:
             logger.info(f"📊 Cache hit rate: {result.get('hit_rate', 'unknown')}")
         return result
 
     @mcp.tool()
-    def clear_cache() -> Dict[str, Any]:
+    async def clear_cache() -> Dict[str, Any]:
         """
         Clear the cache on the HexStrike AI server.
 
@@ -42,7 +46,10 @@ def register_system_monitoring_tools(mcp, hexstrike_client, logger):
             Cache clear operation results
         """
         logger.info(f"🧹 Clearing server cache")
-        result = hexstrike_client.safe_post("api/cache/clear", {})
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/cache/clear", {})
+        )
         if result.get("success"):
             logger.info(f"✅ Cache cleared successfully")
         else:
@@ -50,7 +57,7 @@ def register_system_monitoring_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def get_telemetry() -> Dict[str, Any]:
+    async def get_telemetry() -> Dict[str, Any]:
         """
         Get system telemetry from the HexStrike AI server.
 
@@ -58,7 +65,10 @@ def register_system_monitoring_tools(mcp, hexstrike_client, logger):
             System performance and usage telemetry
         """
         logger.info(f"📈 Getting system telemetry")
-        result = hexstrike_client.safe_get("api/telemetry")
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_get("api/telemetry")
+        )
         if "commands_executed" in result:
             logger.info(f"📊 Commands executed: {result.get('commands_executed', 0)}")
         return result

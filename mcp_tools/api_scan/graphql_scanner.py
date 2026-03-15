@@ -1,11 +1,12 @@
 # mcp_tools/api_scan/graphql_scanner.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_graphql_scanner_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def graphql_scanner(endpoint: str, introspection: bool = True, query_depth: int = 10, test_mutations: bool = True) -> Dict[str, Any]:
+    async def graphql_scanner(endpoint: str, introspection: bool = True, query_depth: int = 10, test_mutations: bool = True) -> Dict[str, Any]:
         """
         Advanced GraphQL security scanning and introspection.
 
@@ -26,7 +27,10 @@ def register_graphql_scanner_tool(mcp, hexstrike_client, logger):
         }
 
         logger.info(f"🔍 Starting GraphQL security scan: {endpoint}")
-        result = hexstrike_client.safe_post("api/tools/graphql_scanner", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/graphql_scanner", data)
+        )
 
         if result.get("success"):
             scan_results = result.get("graphql_scan_results", {})

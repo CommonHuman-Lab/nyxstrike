@@ -7,6 +7,9 @@ Can be increased or decreased as needed, but focus on the most effective tools f
 """
 
 from typing import Dict, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Tool definitions - each entry is intentionally compact so the full category
@@ -421,6 +424,187 @@ TOOLS: Dict[str, dict] = {
         "optional": {"additional_args": ""},
         "effectiveness": 0.80,
     },
+ # ---- WiFi Pentest ----
+    "hcxdumptool": {
+        "desc": "Clientless PMKID capture and WPA/WPA2 handshake collection via hcxdumptool. Output feeds hashcat -m 22000.",
+        "endpoint": "/api/tools/wifi_pentest/hcxdumptool",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"interface": {"required": True}},
+        "optional": {
+            "output_file": "pmkid_capture.pcapng",
+            "target_bssid": "",
+            "duration": 60,
+            "additional_args": "",
+        },
+        "effectiveness": 0.93,
+    },
+    "eaphammer": {
+        "desc": "WPA-Enterprise Evil Twin attack. Harvests MSCHAPV2/GTC credentials from 802.1X clients via rogue AP.",
+        "endpoint": "/api/tools/wifi_pentest/eaphammer",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "interface": {"required": True},
+            "essid":     {"required": True},
+        },
+        "optional": {
+            "channel":       6,
+            "auth_mode":     "wpa-eap",
+            "attack_type":   "creds",
+            "negotiate":     "gtc-downgrade",
+            "cert_path":     "",
+            "additional_args": "",
+        },
+        "effectiveness": 0.87,
+    },
+    "wifite2": {
+        "desc": "Automated WiFi auditing. Orchestrates PMKID, 4-way handshake deauth, and WPS Pixie-Dust attacks.",
+        "endpoint": "/api/tools/wifi_pentest/wifite2",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"interface": {"required": True}},
+        "optional": {
+            "target_essid":     "",
+            "target_bssid":     "",
+            "attack_wps":       False,
+            "attack_pmkid":     True,
+            "attack_handshake": True,
+            "wordlist":         "",
+            "timeout":          300,
+            "additional_args":  "",
+        },
+        "effectiveness": 0.90,
+    },
+    "bettercap_wifi": {
+        "desc": "Wireless recon and deauth using Bettercap wifi module. Discovers APs, clients, and probe requests.",
+        "endpoint": "/api/tools/wifi_pentest/bettercap_wifi",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"interface": {"required": True}},
+        "optional": {
+            "mode":          "recon",
+            "target_bssid":  "",
+            "deauth_all":    False,
+            "channel_hop":   True,
+            "caplet":        "",
+            "additional_args": "",
+        },
+        "effectiveness": 0.88,
+    },
+    "mdk4": {
+        "desc": "802.11 protocol stress testing. Beacon flood, deauth flood, auth DoS for WIDS/WIPS validation.",
+        "endpoint": "/api/tools/wifi_pentest/mdk4",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "interface":   {"required": True},
+            "attack_mode": {"required": True},
+        },
+        "optional": {
+            "target_bssid":  "",
+            "ssid_wordlist": "",
+            "burst_rate":    50,
+            "additional_args": "",
+        },
+        "effectiveness": 0.82,
+    },
+    "aircrack_ng": {
+        "desc": "Crack WPA/WPA2 PSK from captured handshake files using a wordlist.",
+        "endpoint": "/api/tools/wifi_pentest/aircrack_ng",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "capture_files": {"required": True},
+            "wordlist":      {"required": True},
+        },
+        "optional": {"bssid": ""},
+        "effectiveness": 0.91,
+    },
+    "airmon_ng": {
+        "desc": "Enable or disable monitor mode on a wireless interface.",
+        "endpoint": "/api/tools/wifi_pentest/airmon_ng",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "interface": {"required": True},
+            "action":    {"required": True},
+        },
+        "optional": {"channel": ""},
+        "effectiveness": 0.95,
+    },
+    "airodump_ng": {
+        "desc": "Passive 802.11 capture — discovers APs/clients, captures WPA handshakes.",
+        "endpoint": "/api/tools/wifi_pentest/airodump_ng",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"interface": {"required": True}},
+        "optional": {
+            "output_prefix": "capture",
+            "bssid":         "",
+            "channel":       "",
+            "essid":         "",
+        },
+        "effectiveness": 0.93,
+    },
+    "aireplay_ng": {
+        "desc": "Packet injection — deauth, fake auth, ARP replay, injection test.",
+        "endpoint": "/api/tools/wifi_pentest/aireplay_ng",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "interface":   {"required": True},
+            "attack_mode": {"required": True},
+        },
+        "optional": {
+            "bssid":      "",
+            "client_mac": "",
+            "count":      0,
+        },
+        "effectiveness": 0.90,
+    },
+    "airbase_ng": {
+        "desc": "Create a rogue/soft access point for Evil Twin or client capture.",
+        "endpoint": "/api/tools/wifi_pentest/airbase_ng",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "interface": {"required": True},
+            "essid":     {"required": True},
+        },
+        "optional": {
+            "channel":  6,
+            "bssid":    "",
+            "wpa_mode": "",
+        },
+        "effectiveness": 0.85,
+    },
+    "airdecap_ng": {
+        "desc": "Decrypt WEP/WPA/WPA2 encrypted pcap capture files.",
+        "endpoint": "/api/tools/wifi_pentest/airdecap_ng",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"capture_file": {"required": True}},
+        "optional": {
+            "password": "",
+            "wep_key":  "",
+            "bssid":    "",
+            "essid":    "",
+        },
+        "effectiveness": 0.88,
+    },
+    "hcxpcapngtool": {
+        "desc": "Convert hcxdumptool pcapng captures to hashcat -m 22000 format.",
+        "endpoint": "/api/tools/wifi_pentest/hcxpcapngtool",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {
+            "input_file":  {"required": True},
+            "output_file": {"required": True},
+        },
+        "optional": {},
+        "effectiveness": 0.92,
+    },
 
     # ---- Binary Analysis ----
     "checksec": {
@@ -530,6 +714,8 @@ CATEGORIES = {
     "osint": "Subdomain enumeration, DNS recon, URL harvesting",
     "binary": "Binary analysis, reverse engineering, ROP gadgets",
     "cloud": "Cloud security auditing (AWS, containers, Kubernetes)",
+    "wifi_pentest": "Wifi Pentesting Tools"
+
 }
 
 # ---------------------------------------------------------------------------
@@ -575,11 +761,17 @@ _INTENT_KEYWORDS: Dict[str, List[str]] = {
         "cloud", "aws", "azure", "gcp", "container", "docker", "kubernetes",
         "k8s", "trivy", "prowler",
     ],
+    "wifi_pentest": [
+        "wifi", "wireless", "wpa", "wpa2", "wep", "handshake", "pmkid",
+        "aircrack", "airmon", "airodump", "aireplay", "deauth", "beacon",
+        "bssid", "essid", "ssid", "monitor", "eap", "evil twin", "rogue ap",
+        "hcxdumptool", "wifite", "bettercap", "mdk4", "eaphammer",
+    ],
 }
 
 
 _CLASSIFY_PROMPT = """Classify this security task into exactly one category.
-Categories: network_recon, web_recon, web_vuln, exploitation, brute_force, osint, binary, cloud
+Categories: network_recon, web_recon, web_vuln, exploitation, brute_force, osint, binary, cloud, wifi_pentest
 Task: {input}
 Category:"""
 
@@ -594,7 +786,8 @@ def _classify_with_llm(user_input: str, llm_client) -> str:
         )
         final_resp = response.lower().split("category:")[1].strip() 
         return final_resp
-    except Exception:
+    except Exception as exc:
+        logger.warning("LLM intent classification failed for input %r: %s", user_input, exc)
         return ""
 
 

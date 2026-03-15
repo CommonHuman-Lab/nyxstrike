@@ -1,10 +1,11 @@
 # mcp_tools/param_discovery/x8.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_x8_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def x8_parameter_discovery(url: str, wordlist: str = "/usr/share/wordlists/x8/params.txt",
+    async def x8_parameter_discovery(url: str, wordlist: str = "/usr/share/wordlists/x8/params.txt",
                               method: str = "GET", body: str = "", headers: str = "",
                               additional_args: str = "") -> Dict[str, Any]:
         """
@@ -30,7 +31,10 @@ def register_x8_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting x8 parameter discovery: {url}")
-        result = hexstrike_client.safe_post("api/tools/x8", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/x8", data)
+        )
         if result.get("success"):
             logger.info(f"✅ x8 parameter discovery completed for {url}")
         else:

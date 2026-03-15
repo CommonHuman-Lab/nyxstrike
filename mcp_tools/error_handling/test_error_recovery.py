@@ -1,11 +1,12 @@
 # mcp_tools/error_handling/test_error_recovery.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_test_error_recovery_tool(mcp, hexstrike_client, logger, HexStrikeColors):
 
     @mcp.tool()
-    def test_error_recovery(tool_name: str, error_type: str = "timeout",
+    async def test_error_recovery(tool_name: str, error_type: str = "timeout",
                            target: str = "example.com") -> Dict[str, Any]:
         """
         Test the intelligent error recovery system with simulated failures.
@@ -25,7 +26,10 @@ def register_test_error_recovery_tool(mcp, hexstrike_client, logger, HexStrikeCo
         }
 
         logger.info(f"{HexStrikeColors.RUBY}🧪 Testing error recovery for {tool_name} with {error_type}{HexStrikeColors.RESET}")
-        result = hexstrike_client.safe_post("api/error-handling/test-recovery", data_payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/error-handling/test-recovery", data_payload)
+        )
 
         if result.get("success"):
             recovery_strategy = result.get("recovery_strategy", {})

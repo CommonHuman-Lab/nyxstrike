@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/checksec.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_checksec_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def checksec_analyze(binary: str) -> Dict[str, Any]:
+    async def checksec_analyze(binary: str) -> Dict[str, Any]:
         """
         Check security features of a binary with enhanced logging.
 
@@ -19,7 +20,10 @@ def register_checksec_tool(mcp, hexstrike_client, logger):
             "binary": binary
         }
         logger.info(f"🔧 Starting Checksec analysis: {binary}")
-        result = hexstrike_client.safe_post("api/tools/checksec", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/checksec", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Checksec analysis completed for {binary}")
         else:

@@ -1,10 +1,11 @@
 # mcp_tools/password_cracking/ophcrack.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_ophcrack_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def ophcrack_crack(
+    async def ophcrack_crack(
         hash_file: str,
         tables_dir: str = "",
         tables: str = "",
@@ -41,7 +42,10 @@ def register_ophcrack_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔑 Starting Ophcrack crack with hash file: {hash_file}")
-        result = hexstrike_client.safe_post("api/tools/password-cracking/ophcrack", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/password-cracking/ophcrack", data)
+        )
         if result.get("success"):
             logger.info("✅ Ophcrack crack completed successfully")
         else:

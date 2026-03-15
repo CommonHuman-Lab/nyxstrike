@@ -1,5 +1,6 @@
+from pathlib import Path
 from typing import Optional
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from mcp_tools.gateway import register_gateway_tools
 from mcp_core.tool_profiles import (
     TOOL_PROFILES,
@@ -7,6 +8,23 @@ from mcp_core.tool_profiles import (
     FULL_PROFILE,
     resolve_profile_dependencies,
 )
+
+try:
+    from fastmcp.server.providers.skills import SkillsDirectoryProvider
+except ImportError:
+    SkillsDirectoryProvider = None
+
+def _register_skills(mcp: FastMCP, logger) -> None:
+    """Mount the local skills/ directory as MCP resources if it exists."""
+    if SkillsDirectoryProvider is None:
+        logger.warning("fastmcp SkillsDirectoryProvider not available; skipping skills registration")
+        return
+    skills_dir = Path(__file__).parent.parent / "skills"
+    if not skills_dir.exists():
+        return
+    
+    mcp.add_provider(SkillsDirectoryProvider(roots=skills_dir))
+    logger.info(f"Skills provider registered from {skills_dir}")
 
 def setup_mcp_server(hexstrike_client, logger, compact: bool = False, profiles: Optional[list] = None) -> FastMCP:
     """
@@ -16,12 +34,14 @@ def setup_mcp_server(hexstrike_client, logger, compact: bool = False, profiles: 
         hexstrike_client: Initialized HexStrikeClient
         logger: Logger instance for logging
         compact: If True, register only classify_task and run_tool gateway tools
-        profile: Optional list of tool profiles to load (e.g., ["core_network", "web_app"])
+        profiles: Optional list of tool profiles to load (e.g., ["core_network", "web_app"])
 
     Returns:
         Configured FastMCP instance
     """
     mcp = FastMCP("hexstrike-ai-mcp")
+
+    _register_skills(mcp, logger)
 
     if compact:
         # Register gateway tools for task classification and tool execution

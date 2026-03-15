@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify
 from datetime import datetime
 import psutil
 from server_core.process_manager import ProcessManager
-from visual.modern_visual_engine import ModernVisualEngine
+from server_core.modern_visual_engine import ModernVisualEngine
 
 import logging
 logger = logging.getLogger(__name__)

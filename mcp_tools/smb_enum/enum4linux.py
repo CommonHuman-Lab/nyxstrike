@@ -1,10 +1,11 @@
 # mcp_tools/smb_enum/enum4linux.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_enum4linux_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def enum4linux_scan(target: str, additional_args: str = "-a") -> Dict[str, Any]:
+    async def enum4linux_scan(target: str, additional_args: str = "-a") -> Dict[str, Any]:
         """
         Execute Enum4linux for SMB enumeration with enhanced logging.
 
@@ -20,7 +21,10 @@ def register_enum4linux_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Enum4linux: {target}")
-        result = hexstrike_client.safe_post("api/tools/enum4linux", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/enum4linux", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Enum4linux completed for {target}")
         else:
@@ -28,7 +32,7 @@ def register_enum4linux_tool(mcp, hexstrike_client, logger):
         return result
     
     @mcp.tool()
-    def enum4linux_ng_advanced(target: str, username: str = "", password: str = "",
+    async def enum4linux_ng_advanced(target: str, username: str = "", password: str = "",
                                domain: str = "", shares: bool = True, users: bool = True,
                                groups: bool = True, policy: bool = True,
                                additional_args: str = "") -> Dict[str, Any]:
@@ -61,7 +65,10 @@ def register_enum4linux_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Enum4linux-ng: {target}")
-        result = hexstrike_client.safe_post("api/tools/enum4linux-ng", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/enum4linux-ng", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Enum4linux-ng completed for {target}")
         else:

@@ -9,6 +9,7 @@ Framework: FastMCP integration for AI agent communication
 """
 
 import argparse
+import base64
 import json
 import logging
 import os
@@ -17,7 +18,7 @@ import sys
 import traceback
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pathlib import Path
@@ -27,23 +28,12 @@ import re
 from tool_registry import classify_intent, get_tools_for_category, format_tools_for_prompt, get_all_categories
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
-import selenium
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, WebDriverException
-import mitmproxy
-from mitmproxy import http as mitmhttp
-from mitmproxy.tools.dump import DumpMaster
-from mitmproxy.options import Options as MitmOptions
-
+# selenium and mitmproxy are optional heavy dependencies — imported lazily
+# inside the functions/classes that use them to avoid hard startup failures.
 import server_core.config_core as config_core
-
-from workflows.ctf.CTFChallenge import CTFChallenge
 from server_core import *
 from server_api import *
+from shared.target_types import TechnologyStack
 
 # ============================================================================
 # LOGGING CONFIGURATION (MUST BE FIRST)
@@ -90,8 +80,6 @@ wordlist_store = WordlistStore()
 # ============================================================================
 # INTELLIGENT DECISION ENGINE (v6.0 ENHANCEMENT)
 # ============================================================================
-from shared.target_types import TechnologyStack
-from intelligence.intelligent_decision_engine import IntelligentDecisionEngine
 
 # Global decision engine instance
 decision_engine = IntelligentDecisionEngine()
@@ -100,21 +88,10 @@ decision_engine = IntelligentDecisionEngine()
 # INTELLIGENT ERROR HANDLING AND RECOVERY SYSTEM (v11.0 ENHANCEMENT)
 # ============================================================================
 
-from server_core.error_handling import (
-    ErrorType,
-    RecoveryAction,
-    ErrorContext,
-    IntelligentErrorHandler,
-    GracefulDegradation,
-)
-
 # Global error handler and degradation manager instances
 error_handler = IntelligentErrorHandler()
 degradation_manager = GracefulDegradation()
 
-from workflows.bugbounty.target import BugBountyTarget
-from workflows.bugbounty.workflow import BugBountyWorkflowManager
-from workflows.bugbounty.testing import FileUploadTestingFramework
 # Global bug bounty workflow manager
 bugbounty_manager = BugBountyWorkflowManager()
 fileupload_framework = FileUploadTestingFramework()
@@ -123,13 +100,6 @@ fileupload_framework = FileUploadTestingFramework()
 # ADVANCED PROCESS MANAGEMENT AND MONITORING
 # ============================================================================
 
-from server_core.enhanced_process_manager import EnhancedProcessManager
-from server_core.technology_detector import TechnologyDetector
-from server_core.parameter_optimizer import ParameterOptimizer
-from server_core.rate_limit_detector import RateLimitDetector
-from server_core.failure_recovery_system import FailureRecoverySystem
-from server_core.performance_monitor import PerformanceMonitor
-
 # Global instances
 tech_detector = TechnologyDetector()
 rate_limiter = RateLimitDetector()
@@ -137,11 +107,6 @@ failure_recovery = FailureRecoverySystem()
 performance_monitor = PerformanceMonitor()
 parameter_optimizer = ParameterOptimizer()
 enhanced_process_manager = EnhancedProcessManager()
-
-from workflows.ctf.workflowManager import CTFWorkflowManager
-from workflows.ctf.toolManager import CTFToolManager
-from workflows.ctf.automator import CTFChallengeAutomator
-from workflows.ctf.coordinator import CTFTeamCoordinator
 
 # Global CTF framework instances
 ctf_manager = CTFWorkflowManager()
@@ -153,20 +118,12 @@ ctf_coordinator = CTFTeamCoordinator()
 # PROCESS MANAGEMENT FOR COMMAND TERMINATION
 # ============================================================================
 
-# Process management for command termination
-active_processes = {}  # pid -> process info
-process_lock = threading.Lock()
-
-from server_core.process_manager import ProcessManager
-from server_core.python_env_manager import env_manager
-
+# Use the canonical registry from process_manager to avoid a duplicate dict
+from server_core.process_manager import active_processes, process_lock
 
 # ============================================================================
 # ADVANCED VULNERABILITY INTELLIGENCE SYSTEM (v6.0 ENHANCEMENT)
 # ============================================================================
-
-from intelligence.cve_intelligence_manager import CVEIntelligenceManager
-
 from server_core.setup_logging import setup_logging
 
 # Configuration (using existing API_PORT from top of file)
@@ -178,405 +135,40 @@ CACHE_TTL = config_core.get("CACHE_TTL", 3600)  # 1 hour default TTL
 # Global cache instance
 cache = HexStrikeCache()
 
-# Global telemetry collector
-telemetry = TelemetryCollector()
-
-from server_core.enhanced_command_executor import EnhancedCommandExecutor
-from server_core.ai_exploit_generator import AIExploitGenerator
-
-class VulnerabilityCorrelator:
-    """Correlate vulnerabilities for multi-stage attack chain discovery"""
-
-    def __init__(self):
-        self.attack_patterns = {
-            "privilege_escalation": ["local", "kernel", "suid", "sudo"],
-            "remote_execution": ["remote", "network", "rce", "code execution"],
-            "persistence": ["service", "registry", "scheduled", "startup"],
-            "lateral_movement": ["smb", "wmi", "ssh", "rdp"],
-            "data_exfiltration": ["file", "database", "memory", "network"]
-        }
-
-        self.software_relationships = {
-            "windows": ["iis", "office", "exchange", "sharepoint"],
-            "linux": ["apache", "nginx", "mysql", "postgresql"],
-            "web": ["php", "nodejs", "python", "java"],
-            "database": ["mysql", "postgresql", "oracle", "mssql"]
-        }
-
-    def find_attack_chains(self, target_software, max_depth=3):
-        """Find multi-vulnerability attack chains"""
-        try:
-            # This is a simplified implementation
-            # Real version would use graph algorithms and ML
-
-            chains = []
-
-            # Example attack chain discovery logic
-            base_software = target_software.lower()
-
-            # Find initial access vulnerabilities
-            initial_vulns = self._find_vulnerabilities_by_pattern(base_software, "remote_execution")
-
-            for initial_vuln in initial_vulns[:3]:  # Limit for demo
-                chain = {
-                    "chain_id": f"chain_{len(chains) + 1}",
-                    "target": target_software,
-                    "stages": [
-                        {
-                            "stage": 1,
-                            "objective": "Initial Access",
-                            "vulnerability": initial_vuln,
-                            "success_probability": 0.75
-                        }
-                    ],
-                    "overall_probability": 0.75,
-                    "complexity": "MEDIUM"
-                }
-
-                # Find privilege escalation
-                priv_esc_vulns = self._find_vulnerabilities_by_pattern(base_software, "privilege_escalation")
-                if priv_esc_vulns:
-                    chain["stages"].append({
-                        "stage": 2,
-                        "objective": "Privilege Escalation",
-                        "vulnerability": priv_esc_vulns[0],
-                        "success_probability": 0.60
-                    })
-                    chain["overall_probability"] *= 0.60
-
-                # Find persistence
-                persistence_vulns = self._find_vulnerabilities_by_pattern(base_software, "persistence")
-                if persistence_vulns and len(chain["stages"]) < max_depth:
-                    chain["stages"].append({
-                        "stage": 3,
-                        "objective": "Persistence",
-                        "vulnerability": persistence_vulns[0],
-                        "success_probability": 0.80
-                    })
-                    chain["overall_probability"] *= 0.80
-
-                chains.append(chain)
-
-            return {
-                "success": True,
-                "target_software": target_software,
-                "total_chains": len(chains),
-                "attack_chains": chains,
-                "recommendation": self._generate_chain_recommendations(chains)
-            }
-
-        except Exception as e:
-            logger.error(f"Error finding attack chains: {str(e)}")
-            return {"success": False, "error": str(e)}
-
-    def _find_vulnerabilities_by_pattern(self, software, pattern_type):
-        """Find vulnerabilities matching attack pattern"""
-        # Simplified mock data - real implementation would query CVE database
-        mock_vulnerabilities = [
-            {
-                "cve_id": "CVE-2024-1234",
-                "description": f"Remote code execution in {software}",
-                "cvss_score": 9.8,
-                "exploitability": "HIGH"
-            },
-            {
-                "cve_id": "CVE-2024-5678",
-                "description": f"Privilege escalation in {software}",
-                "cvss_score": 7.8,
-                "exploitability": "MEDIUM"
-            }
-        ]
-
-        return mock_vulnerabilities
-
-    def _generate_chain_recommendations(self, chains):
-        """Generate recommendations for attack chains"""
-        if not chains:
-            return "No viable attack chains found for target"
-
-        recommendations = [
-            f"Found {len(chains)} potential attack chains",
-            f"Highest probability chain: {max(chains, key=lambda x: x['overall_probability'])['overall_probability']:.2%}",
-            "Recommendations:",
-            "- Test chains in order of probability",
-            "- Prepare fallback methods for each stage",
-            "- Consider detection evasion at each stage"
-        ]
-
-        return "\n".join(recommendations)
+# Global telemetry collector — reuse the instance from enhanced_command_executor
+from server_core.enhanced_command_executor import telemetry
 
 # Global intelligence managers
 cve_intelligence = CVEIntelligenceManager()
 exploit_generator = AIExploitGenerator()
 vulnerability_correlator = VulnerabilityCorrelator()
 
-from server_core.command_executor import execute_command
 
-def execute_command_with_recovery(tool_name: str, command: str, parameters: Optional[Dict[str, Any]] = None,
-                                 use_cache: bool = True, max_attempts: int = 3) -> Dict[str, Any]:
-    """
-    Execute a command with intelligent error handling and recovery
+def execute_command(command: str, use_cache: bool = True, cache=cache, timeout: int = COMMAND_TIMEOUT) -> Dict[str, Any]:
+    """Server-level execute_command wrapper that passes the global cache instance."""
+    return _execute_command(command, use_cache=use_cache, cache=cache, timeout=timeout)
 
-    Args:
-        tool_name: Name of the tool being executed
-        command: The command to execute
-        parameters: Tool parameters for context
-        use_cache: Whether to use caching
-        max_attempts: Maximum number of recovery attempts
-
-    Returns:
-        A dictionary containing execution results with recovery information
-    """
-    if parameters is None:
-        parameters = {}
-
-    attempt_count = 0
-    last_error = None
-    recovery_history = []
-
-    while attempt_count < max_attempts:
-        attempt_count += 1
-
-        try:
-            # Execute the command
-            result = execute_command(command, use_cache)
-
-            # Check if execution was successful
-            if result.get("success", False):
-                # Add recovery information to successful result
-                result["recovery_info"] = {
-                    "attempts_made": attempt_count,
-                    "recovery_applied": len(recovery_history) > 0,
-                    "recovery_history": recovery_history
-                }
-                return result
-
-            # Command failed, determine if we should attempt recovery
-            error_message = result.get("stderr", "Unknown error")
-            exception = Exception(error_message)
-
-            # Create context for error handler
-            context = {
-                "target": parameters.get("target", "unknown"),
-                "parameters": parameters,
-                "attempt_count": attempt_count,
-                "command": command
-            }
-
-            # Get recovery strategy from error handler
-            recovery_strategy = error_handler.handle_tool_failure(tool_name, exception, context)
-            recovery_history.append({
-                "attempt": attempt_count,
-                "error": error_message,
-                "recovery_action": recovery_strategy.action.value,
-                "timestamp": datetime.now().isoformat()
-            })
-
-            # Apply recovery strategy
-            if recovery_strategy.action == RecoveryAction.RETRY_WITH_BACKOFF:
-                delay = recovery_strategy.parameters.get("initial_delay", 5)
-                backoff = recovery_strategy.parameters.get("max_delay", 60)
-                actual_delay = min(delay * (recovery_strategy.backoff_multiplier ** (attempt_count - 1)), backoff)
-
-                retry_info = f'Retrying in {actual_delay}s (attempt {attempt_count}/{max_attempts})'
-                logger.info(f"{ModernVisualEngine.format_tool_status(tool_name, 'RECOVERY', retry_info)}")
-                time.sleep(actual_delay)
-                continue
-
-            elif recovery_strategy.action == RecoveryAction.RETRY_WITH_REDUCED_SCOPE:
-                # Adjust parameters to reduce scope
-                adjusted_params = error_handler.auto_adjust_parameters(
-                    tool_name,
-                    error_handler.classify_error(error_message, exception),
-                    parameters
-                )
-
-                # Rebuild command with adjusted parameters
-                command = _rebuild_command_with_params(tool_name, command, adjusted_params)
-                logger.info(f"🔧 Retrying {tool_name} with reduced scope")
-                continue
-
-            elif recovery_strategy.action == RecoveryAction.SWITCH_TO_ALTERNATIVE_TOOL:
-                # Get alternative tool
-                alternative_tool = error_handler.get_alternative_tool(tool_name, recovery_strategy.parameters)
-
-                if alternative_tool:
-                    switch_info = f'Switching to alternative: {alternative_tool}'
-                    logger.info(f"{ModernVisualEngine.format_tool_status(tool_name, 'RECOVERY', switch_info)}")
-                    # This would require the calling function to handle tool switching
-                    result["alternative_tool_suggested"] = alternative_tool
-                    result["recovery_info"] = {
-                        "attempts_made": attempt_count,
-                        "recovery_applied": True,
-                        "recovery_history": recovery_history,
-                        "final_action": "tool_switch_suggested"
-                    }
-                    return result
-                else:
-                    logger.warning(f"⚠️  No alternative tool found for {tool_name}")
-
-            elif recovery_strategy.action == RecoveryAction.ADJUST_PARAMETERS:
-                # Adjust parameters based on error type
-                error_type = error_handler.classify_error(error_message, exception)
-                adjusted_params = error_handler.auto_adjust_parameters(tool_name, error_type, parameters)
-
-                # Rebuild command with adjusted parameters
-                command = _rebuild_command_with_params(tool_name, command, adjusted_params)
-                logger.info(f"🔧 Retrying {tool_name} with adjusted parameters")
-                continue
-
-            elif recovery_strategy.action == RecoveryAction.ESCALATE_TO_HUMAN:
-                # Create error context for escalation
-                error_context = ErrorContext(
-                    tool_name=tool_name,
-                    target=parameters.get("target", "unknown"),
-                    parameters=parameters,
-                    error_type=error_handler.classify_error(error_message, exception),
-                    error_message=error_message,
-                    attempt_count=attempt_count,
-                    timestamp=datetime.now(),
-                    stack_trace="",
-                    system_resources=error_handler._get_system_resources()
-                )
-
-                escalation_data = error_handler.escalate_to_human(
-                    error_context,
-                    recovery_strategy.parameters.get("urgency", "medium")
-                )
-
-                result["human_escalation"] = escalation_data
-                result["recovery_info"] = {
-                    "attempts_made": attempt_count,
-                    "recovery_applied": True,
-                    "recovery_history": recovery_history,
-                    "final_action": "human_escalation"
-                }
-                return result
-
-            elif recovery_strategy.action == RecoveryAction.GRACEFUL_DEGRADATION:
-                # Apply graceful degradation
-                operation = _determine_operation_type(tool_name)
-                degraded_result = degradation_manager.handle_partial_failure(
-                    operation,
-                    result,
-                    [tool_name]
-                )
-
-                degraded_result["recovery_info"] = {
-                    "attempts_made": attempt_count,
-                    "recovery_applied": True,
-                    "recovery_history": recovery_history,
-                    "final_action": "graceful_degradation"
-                }
-                return degraded_result
-
-            elif recovery_strategy.action == RecoveryAction.ABORT_OPERATION:
-                logger.error(f"🛑 Aborting {tool_name} operation after {attempt_count} attempts")
-                result["recovery_info"] = {
-                    "attempts_made": attempt_count,
-                    "recovery_applied": True,
-                    "recovery_history": recovery_history,
-                    "final_action": "operation_aborted"
-                }
-                return result
-
-            last_error = exception
-
-        except Exception as e:
-            last_error = e
-            logger.error(f"💥 Unexpected error in recovery attempt {attempt_count}: {str(e)}")
-
-            # If this is the last attempt, escalate to human
-            if attempt_count >= max_attempts:
-                error_context = ErrorContext(
-                    tool_name=tool_name,
-                    target=parameters.get("target", "unknown"),
-                    parameters=parameters,
-                    error_type=ErrorType.UNKNOWN,
-                    error_message=str(e),
-                    attempt_count=attempt_count,
-                    timestamp=datetime.now(),
-                    stack_trace=traceback.format_exc(),
-                    system_resources=error_handler._get_system_resources()
-                )
-
-                escalation_data = error_handler.escalate_to_human(error_context, "high")
-
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "human_escalation": escalation_data,
-                    "recovery_info": {
-                        "attempts_made": attempt_count,
-                        "recovery_applied": True,
-                        "recovery_history": recovery_history,
-                        "final_action": "human_escalation_after_failure"
-                    }
-                }
-
-    # All attempts exhausted
-    logger.error(f"🚫 All recovery attempts exhausted for {tool_name}")
-    return {
-        "success": False,
-        "error": f"All recovery attempts exhausted: {str(last_error)}",
-        "recovery_info": {
-            "attempts_made": attempt_count,
-            "recovery_applied": True,
-            "recovery_history": recovery_history,
-            "final_action": "all_attempts_exhausted"
-        }
-    }
-
-def _rebuild_command_with_params(tool_name: str, original_command: str, new_params: Dict[str, Any]) -> str:
-    """Rebuild command with new parameters"""
-    # This is a simplified implementation - in practice, you'd need tool-specific logic
-    # For now, we'll just append new parameters
-    additional_args = []
-
-    for key, value in new_params.items():
-        if key == "timeout" and tool_name in ["nmap", "gobuster", "nuclei"]:
-            additional_args.append(f"--timeout {value}")
-        elif key == "threads" and tool_name in ["gobuster", "feroxbuster", "ffuf"]:
-            additional_args.append(f"-t {value}")
-        elif key == "delay" and tool_name in ["gobuster", "feroxbuster"]:
-            additional_args.append(f"--delay {value}")
-        elif key == "timing" and tool_name == "nmap":
-            additional_args.append(f"{value}")
-        elif key == "concurrency" and tool_name == "nuclei":
-            additional_args.append(f"-c {value}")
-        elif key == "rate-limit" and tool_name == "nuclei":
-            additional_args.append(f"-rl {value}")
-
-    if additional_args:
-        return f"{original_command} {' '.join(additional_args)}"
-
-    return original_command
-
-def _determine_operation_type(tool_name: str) -> str:
-    """Determine operation type based on tool name"""
-    operation_mapping = {
-        "nmap": "network_discovery",
-        "rustscan": "network_discovery",
-        "masscan": "network_discovery",
-        "gobuster": "web_discovery",
-        "feroxbuster": "web_discovery",
-        "dirsearch": "web_discovery",
-        "ffuf": "web_discovery",
-        "nuclei": "vulnerability_scanning",
-        "jaeles": "vulnerability_scanning",
-        "nikto": "vulnerability_scanning",
-        "subfinder": "subdomain_enumeration",
-        "amass": "subdomain_enumeration",
-        "assetfinder": "subdomain_enumeration",
-        "arjun": "parameter_discovery",
-        "paramspider": "parameter_discovery",
-        "x8": "parameter_discovery"
-    }
-
-    return operation_mapping.get(tool_name, "unknown_operation")
-
-from server_core.file_ops import file_manager
-
+def execute_command_with_recovery(
+  tool_name: str,
+  command: str,
+  parameters: Optional[Dict[str, Any]] = None,
+  use_cache: bool = True,
+  max_attempts: int = 3
+) -> Dict[str, Any]:
+  return _execute_command_with_recovery(
+    tool_name=tool_name,
+    command=command,
+    parameters=parameters,
+    use_cache=use_cache,
+    max_attempts=max_attempts,
+    execute_command_fn=execute_command,
+    error_handler=error_handler,
+    degradation_manager=degradation_manager,
+    rebuild_command_with_params_fn= _rebuild_command_with_params,
+    determine_operation_type_fn= _determine_operation_type,
+    recovery_action_enum=RecoveryAction,
+    logger=logger,
+  )
 # API Routes
 
 @app.before_request
@@ -595,105 +187,97 @@ def optional_bearer_auth():
     if token != API_TOKEN:
         abort(401, description="Unauthorized!")
 
+# ============================================================================
+# TOOL AVAILABILITY CACHE — populated once at startup, refreshed every 5 min
+# ============================================================================
+
+_HEALTH_TOOL_CATEGORIES = {
+    "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
+    "network": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
+                "nxc", "enum4linux-ng", "rpcclient", "enum4linux"],
+    "web_security": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
+                     "gau", "waybackurls", "arjun", "paramspider", "x8", "jaeles", "dalfox",
+                     "httpx", "wafw00f", "burpsuite", "zaproxy", "katana", "hakrawler"],
+    "vuln_scanning": ["nuclei", "wpscan", "graphql-scanner", "jwt-analyzer"],
+    "password": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
+    "binary": ["gdb", "radare2", "binwalk", "ropgadget", "checksec", "objdump",
+               "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database", "pwninit"],
+    "forensics": ["vol", "steghide", "hashpump", "foremost", "exiftool",
+                  "strings", "xxd", "file", "photorec", "testdisk", "scalpel",
+                  "bulk-extractor", "stegsolve", "zsteg", "outguess"],
+    "cloud": ["prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
+              "docker-bench-security", "checkov", "terrascan", "falco", "clair"],
+    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theharvester", "sherlock",
+              "social-analyzer", "recon-ng", "maltego", "spiderfoot", "shodan-cli",
+              "censys-cli", "have-i-been-pwned", "whois", "bbot"],
+    "exploitation": ["msfconsole", "msfvenom", "searchsploit"],
+    "api": ["api-schema-analyzer", "postman", "insomnia", "curl", "httpie", "anew", "qsreplace", "uro"],
+    "wireless": ["kismet", "wireshark", "tshark", "tcpdump"],
+    "additional": ["smbmap", "volatility", "sleuthkit", "autopsy", "evil-winrm",
+                   "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
+}
+
+_tool_availability_cache: Dict[str, bool] = {}
+_tool_availability_lock = threading.Lock()
+_tool_availability_last_refresh: float = 0.0
+
+def _refresh_tool_availability() -> None:
+    """Probe all tools with `which` and update the module-level cache."""
+    global _tool_availability_last_refresh
+    all_tools: Dict[str, bool] = {}
+    for tools in _HEALTH_TOOL_CATEGORIES.values():
+        for tool in tools:
+            if tool in all_tools:
+                continue
+            try:
+                result = execute_command(f"which {tool}", use_cache=False)
+                all_tools[tool] = bool(result.get("success"))
+            except Exception:
+                all_tools[tool] = False
+    with _tool_availability_lock:
+        _tool_availability_cache.update(all_tools)
+        _tool_availability_last_refresh = time.time()
+    logger.info(
+        "Tool availability refreshed: %d/%d available",
+        sum(all_tools.values()), len(all_tools),
+    )
+
+
+def _get_tool_availability() -> Dict[str, bool]:
+    """Return cached tool availability, refreshing in a background thread if stale."""
+    now = time.time()
+    with _tool_availability_lock:
+        stale = (now - _tool_availability_last_refresh) > config_core.get("TOOL_AVAILABILITY_TTL", 3600)
+        empty = not _tool_availability_cache
+
+    if empty:
+        # First call — block until we have data
+        _refresh_tool_availability()
+    elif stale:
+        # Stale — refresh asynchronously so the request returns immediately
+        threading.Thread(target=_refresh_tool_availability, daemon=True).start()
+
+    with _tool_availability_lock:
+        return dict(_tool_availability_cache)
+
+
 @app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint with comprehensive tool detection"""
+    tools_status = _get_tool_availability()
 
-    essential_tools = [
-        "nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"
-    ]
-
-    network_tools = [
-        "rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
-        "nxc", "enum4linux-ng", "rpcclient", "enum4linux"
-    ]
-
-    web_security_tools = [
-        "ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
-        "gau", "waybackurls", "arjun", "paramspider", "x8", "jaeles", "dalfox",
-        "httpx", "wafw00f", "burpsuite", "zaproxy", "katana", "hakrawler"
-    ]
-
-    vuln_scanning_tools = [
-        "nuclei", "wpscan", "graphql-scanner", "jwt-analyzer"
-    ]
-
-    password_tools = [
-        "medusa", "patator", "hashid", "ophcrack", "hashcat-utils"
-    ]
-
-    binary_tools = [
-        "gdb", "radare2", "binwalk", "ropgadget", "checksec", "objdump",
-        "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database",
-        "pwninit"
-    ]
-
-    forensics_tools = [
-        "volatility3", "vol", "steghide", "hashpump", "foremost", "exiftool",
-        "strings", "xxd", "file", "photorec", "testdisk", "scalpel", "bulk-extractor",
-        "stegsolve", "zsteg", "outguess"
-    ]
-
-    cloud_tools = [
-        "prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
-        "docker-bench-security", "checkov", "terrascan", "falco", "clair"
-    ]
-
-    osint_tools = [
-        "amass", "subfinder", "fierce", "dnsenum", "theharvester", "sherlock",
-        "social-analyzer", "recon-ng", "maltego", "spiderfoot", "shodan-cli",
-        "censys-cli", "have-i-been-pwned", "whois", "bbot"
-    ]
-
-    exploitation_tools = [
-        "msfconsole", "msfvenom", "searchsploit"
-    ]
-
-    api_tools = [
-        "api-schema-analyzer", "postman", "insomnia", "curl", "httpie", "anew", "qsreplace", "uro"
-    ]
-
-    wireless_tools = [
-        "kismet", "wireshark", "tshark", "tcpdump"
-    ]
-
-    additional_tools = [
-        "smbmap", "volatility", "sleuthkit", "autopsy", "evil-winrm",
-        "paramspider", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng",
-        "graphql-scanner", "jwt-analyzer"
-    ]
-
-    all_tools = (
-        essential_tools + network_tools + web_security_tools + vuln_scanning_tools +
-        password_tools + binary_tools + forensics_tools + cloud_tools +
-        osint_tools + exploitation_tools + api_tools + wireless_tools + additional_tools
-    )
-    tools_status = {}
-
-    for tool in all_tools:
-        try:
-            result = execute_command(f"which {tool}", use_cache=True)
-            tools_status[tool] = result["success"]
-        except:
-            tools_status[tool] = False
-
-    all_essential_tools_available = all(tools_status[tool] for tool in essential_tools)
+    essential_tools = _HEALTH_TOOL_CATEGORIES["essential"]
+    all_essential_tools_available = all(tools_status.get(t, False) for t in essential_tools)
 
     category_stats = {
-        "essential": {"total": len(essential_tools), "available": sum(1 for tool in essential_tools if tools_status.get(tool, False))},
-        "network": {"total": len(network_tools), "available": sum(1 for tool in network_tools if tools_status.get(tool, False))},
-        "web_security": {"total": len(web_security_tools), "available": sum(1 for tool in web_security_tools if tools_status.get(tool, False))},
-        "vuln_scanning": {"total": len(vuln_scanning_tools), "available": sum(1 for tool in vuln_scanning_tools if tools_status.get(tool, False))},
-        "password": {"total": len(password_tools), "available": sum(1 for tool in password_tools if tools_status.get(tool, False))},
-        "binary": {"total": len(binary_tools), "available": sum(1 for tool in binary_tools if tools_status.get(tool, False))},
-        "forensics": {"total": len(forensics_tools), "available": sum(1 for tool in forensics_tools if tools_status.get(tool, False))},
-        "cloud": {"total": len(cloud_tools), "available": sum(1 for tool in cloud_tools if tools_status.get(tool, False))},
-        "osint": {"total": len(osint_tools), "available": sum(1 for tool in osint_tools if tools_status.get(tool, False))},
-        "exploitation": {"total": len(exploitation_tools), "available": sum(1 for tool in exploitation_tools if tools_status.get(tool, False))},
-        "api": {"total": len(api_tools), "available": sum(1 for tool in api_tools if tools_status.get(tool, False))},
-        "wireless": {"total": len(wireless_tools), "available": sum(1 for tool in wireless_tools if tools_status.get(tool, False))},
-        "additional": {"total": len(additional_tools), "available": sum(1 for tool in additional_tools if tools_status.get(tool, False))}
+        cat: {
+            "total": len(tools),
+            "available": sum(1 for t in tools if tools_status.get(t, False)),
+        }
+        for cat, tools in _HEALTH_TOOL_CATEGORIES.items()
     }
+
+    all_tools_count = len(tools_status)
 
     return jsonify({
         "status": "healthy",
@@ -701,12 +285,13 @@ def health_check():
         "version": config_core.get("VERSION", "unknown"),
         "tools_status": tools_status,
         "all_essential_tools_available": all_essential_tools_available,
-        "total_tools_available": sum(1 for tool, available in tools_status.items() if available),
-        "total_tools_count": len(all_tools),
+        "total_tools_available": sum(1 for available in tools_status.values() if available),
+        "total_tools_count": all_tools_count,
         "category_stats": category_stats,
         "cache_stats": cache.get_stats(),
         "telemetry": telemetry.get_stats(),
-        "uptime": time.time() - telemetry.stats["start_time"]
+        "uptime": time.time() - telemetry.stats["start_time"],
+        "tool_availability_age_seconds": round(time.time() - _tool_availability_last_refresh, 1),
     })
 
 @app.route("/ping", methods=["GET"])
@@ -856,8 +441,7 @@ def cache_stats():
 @app.route("/api/cache/clear", methods=["POST"])
 def clear_cache():
     """Clear the cache"""
-    cache.cache.clear()
-    cache.stats = {"hits": 0, "misses": 0, "evictions": 0}
+    cache.clear()
     logger.info("🧹 Cache cleared")
     return jsonify({"success": True, "message": "Cache cleared"})
 
@@ -903,6 +487,22 @@ app.register_blueprint(api_exploit_framework_exploit_db_bp)
 # BINARY ANALYSIS API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_binary_analysis_autopsy_bp)
+
+# ============================================================================
+# WIFI PENTEST API ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_wifi_pentest_aircrack_ng_bp)
+app.register_blueprint(api_wifi_pentest_airmon_ng_bp)
+app.register_blueprint(api_wifi_pentest_airodump_ng_bp)
+app.register_blueprint(api_wifi_pentest_aireplay_ng_bp)
+app.register_blueprint(api_wifi_pentest_airbase_ng_bp)
+app.register_blueprint(api_wifi_pentest_airdecap_ng_bp)
+app.register_blueprint(api_wifi_pentest_hcxpcapngtool_bp)
+app.register_blueprint(api_wifi_pentest_hcxdumptool_bp)
+app.register_blueprint(api_wifi_pentest_eaphammer_bp)
+app.register_blueprint(api_wifi_pentest_wifite2_bp)
+app.register_blueprint(api_wifi_pentest_bettercap_wifi_bp)
+app.register_blueprint(api_wifi_pentest_mdk4_bp)
 
 # !NEW BLUEPRINTS GOES HERE!
 
@@ -1264,7 +864,7 @@ def intelligent_smart_scan():
             }
 
             # Collect results as they complete
-            for future in future_to_tool:
+            for future in as_completed(future_to_tool):
                 tool_result = future.result()
                 scan_results["tools_executed"].append(tool_result)
 
@@ -1821,7 +1421,6 @@ def whois():
         return jsonify({"error": "Missing 'target' parameter"}), 400
 
     try:
-        import subprocess
         result = subprocess.run(
             ["whois", target],
             stdout=subprocess.PIPE,
@@ -2850,13 +2449,8 @@ def amass():
                 "error": "Domain parameter is required"
             }), 400
 
-        command = f"amass {mode}"
-
-        if mode == "enum":
-            command += f" -d {domain}"
-        else:
-            command += f" -d {domain}"
-
+        command = f"amass {mode} -d {domain}"
+        
         if additional_args:
             command += f" {additional_args}"
 
@@ -4809,8 +4403,8 @@ class HTTPTestingFramework:
             'https': f'http://127.0.0.1:{proxy_port}'
         }
 
-    def intercept_request(self, url: str, method: str = 'GET', data: dict = None,
-                         headers: dict = None, cookies: dict = None) -> dict:
+    def intercept_request(self, url: str, method: str = 'GET', data: Any = None,
+                         headers: Optional[Dict[str, Any]] = None, cookies: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Intercept and analyze HTTP requests"""
         try:
             if headers:
@@ -4884,7 +4478,6 @@ class HTTPTestingFramework:
         if not self.scope:
             return True
         try:
-            from urllib.parse import urlparse
             h = urlparse(url).hostname or ''
             target = self.scope.get('host','')
             if not h or not target:
@@ -4898,8 +4491,7 @@ class HTTPTestingFramework:
         return False
 
     def _apply_match_replace(self, url: str, data, headers: dict):
-        import re
-        from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+        from urllib.parse import parse_qsl, urlencode, urlunparse
         original_url = url
         out_headers = dict(headers)
         out_data = data
@@ -4946,10 +4538,10 @@ class HTTPTestingFramework:
 
     # ----------------- Intruder (Sniper mode) -----------------
     def intruder_sniper(self, url: str, method: str = 'GET', location: str = 'query',
-                        params: list = None, payloads: list = None, base_data: dict = None,
+                        params: Optional[list] = None, payloads: Optional[list] = None, base_data: Optional[dict] = None,
                         max_requests: int = 100) -> dict:
         """Simple fuzzing: iterate payloads over each parameter individually (Sniper)."""
-        from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
+        from urllib.parse import parse_qsl, urlencode, urlunparse
         params = params or []
         payloads = payloads or ["'\"<>`, ${7*7}"]
         base_data = base_data or {}
@@ -5089,7 +4681,15 @@ class HTTPTestingFramework:
 
                         # Find all links
                         for link in soup.find_all('a', href=True):
-                            href = link['href']
+                            href_attr = link.get('href')
+                            if isinstance(href_attr, list):
+                                href = href_attr[0] if href_attr else ""
+                            elif isinstance(href_attr, str):
+                                href = href_attr
+                            else:
+                                href = ""
+                            if not href:
+                                continue
                             full_url = urljoin(current_url, href)
 
                             if urlparse(full_url).netloc == urlparse(base_url).netloc:
@@ -5098,10 +4698,18 @@ class HTTPTestingFramework:
 
                         # Find all forms
                         for form in soup.find_all('form'):
+                            action_attr = form.get('action')
+                            if isinstance(action_attr, list):
+                                action_value = action_attr[0] if action_attr else ''
+                            elif isinstance(action_attr, str):
+                                action_value = action_attr
+                            else:
+                                action_value = ''
+
                             form_data = {
                                 'url': current_url,
-                                'action': urljoin(current_url, form.get('action', '')),
-                                'method': form.get('method', 'GET').upper(),
+                                'action': urljoin(current_url, action_value),
+                                'method': str(form.get('method') or 'GET').upper(),
                                 'inputs': []
                             }
 
@@ -5139,9 +4747,12 @@ class BrowserAgent:
         self.page_sources = []
         self.network_logs = []
 
-    def setup_browser(self, headless: bool = True, proxy_port: int = None):
+    def setup_browser(self, headless: bool = True, proxy_port: Optional[int] = None):
         """Setup Chrome browser with security testing options"""
         try:
+            from selenium.webdriver.chrome.options import Options
+            from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
+
             chrome_options = Options()
 
             if headless:
@@ -5169,7 +4780,7 @@ class BrowserAgent:
             # Enable network logging
             chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
 
-            self.driver = webdriver.Chrome(options=chrome_options)
+            self.driver = ChromeWebDriver(options=chrome_options)
             self.driver.set_page_load_timeout(30)
 
             logger.info(f"{ModernVisualEngine.format_tool_status('BrowserAgent', 'RUNNING', 'Chrome Browser Initialized')}")
@@ -5182,24 +4793,28 @@ class BrowserAgent:
     def navigate_and_inspect(self, url: str, wait_time: int = 5) -> dict:
         """Navigate to URL and perform comprehensive inspection"""
         try:
-            if not self.driver:
+            if self.driver is None:
                 if not self.setup_browser():
                     return {'success': False, 'error': 'Failed to setup browser'}
+
+            driver = self.driver
+            if driver is None:
+                return {'success': False, 'error': 'Browser driver is not initialized'}
 
             nav_command = f'Navigate to {url}'
             logger.info(f"{ModernVisualEngine.format_command_execution(nav_command, 'STARTING')}")
 
             # Navigate to URL
-            self.driver.get(url)
+            driver.get(url)
             time.sleep(wait_time)
 
             # Take screenshot
             screenshot_path = f"/tmp/hexstrike_screenshot_{int(time.time())}.png"
-            self.driver.save_screenshot(screenshot_path)
+            driver.save_screenshot(screenshot_path)
             self.screenshots.append(screenshot_path)
 
             # Get page source
-            page_source = self.driver.page_source
+            page_source = driver.page_source
             self.page_sources.append({
                 'url': url,
                 'source': page_source[:50000],  # Limit size
@@ -5208,10 +4823,10 @@ class BrowserAgent:
 
             # Extract page information
             page_info = {
-                'title': self.driver.title,
-                'url': self.driver.current_url,
+                'title': driver.title,
+                'url': driver.current_url,
                 'cookies': [{'name': c['name'], 'value': c['value'], 'domain': c['domain']}
-                           for c in self.driver.get_cookies()],
+                           for c in driver.get_cookies()],
                 'local_storage': self._get_local_storage(),
                 'session_storage': self._get_session_storage(),
                 'forms': self._extract_forms(),
@@ -5249,7 +4864,11 @@ class BrowserAgent:
     def _get_console_errors(self) -> list:
         """Collect console errors & warnings (if supported)"""
         try:
-            logs = self.driver.get_log('browser')
+            driver = self.driver
+            if driver is None:
+                return []
+
+            logs = driver.get_log('browser')
             out = []
             for entry in logs[-100:]:
                 lvl = entry.get('level', '')
@@ -5345,7 +4964,6 @@ class BrowserAgent:
                 # relative
                 base = page_info.get('url','')
                 try:
-                    from urllib.parse import urljoin
                     action = urljoin(base, action)
                 except Exception:
                     pass
@@ -5364,7 +4982,11 @@ class BrowserAgent:
     def _get_local_storage(self) -> dict:
         """Extract local storage data"""
         try:
-            return self.driver.execute_script("""
+            driver = self.driver
+            if driver is None:
+                return {}
+
+            return driver.execute_script("""
                 var storage = {};
                 for (var i = 0; i < localStorage.length; i++) {
                     var key = localStorage.key(i);
@@ -5378,7 +5000,11 @@ class BrowserAgent:
     def _get_session_storage(self) -> dict:
         """Extract session storage data"""
         try:
-            return self.driver.execute_script("""
+            driver = self.driver
+            if driver is None:
+                return {}
+
+            return driver.execute_script("""
                 var storage = {};
                 for (var i = 0; i < sessionStorage.length; i++) {
                     var key = sessionStorage.key(i);
@@ -5391,9 +5017,14 @@ class BrowserAgent:
 
     def _extract_forms(self) -> list:
         """Extract all forms from the page"""
+        from selenium.webdriver.common.by import By
         forms = []
         try:
-            form_elements = self.driver.find_elements(By.TAG_NAME, 'form')
+            driver = self.driver
+            if driver is None:
+                return forms
+
+            form_elements = driver.find_elements(By.TAG_NAME, 'form')
             for form in form_elements:
                 form_data = {
                     'action': form.get_attribute('action') or '',
@@ -5417,9 +5048,14 @@ class BrowserAgent:
 
     def _extract_links(self) -> list:
         """Extract all links from the page"""
+        from selenium.webdriver.common.by import By
         links = []
         try:
-            link_elements = self.driver.find_elements(By.TAG_NAME, 'a')
+            driver = self.driver
+            if driver is None:
+                return links
+
+            link_elements = driver.find_elements(By.TAG_NAME, 'a')
             for link in link_elements[:50]:  # Limit to 50 links
                 href = link.get_attribute('href')
                 if href:
@@ -5434,9 +5070,14 @@ class BrowserAgent:
 
     def _extract_inputs(self) -> list:
         """Extract all input elements"""
+        from selenium.webdriver.common.by import By
         inputs = []
         try:
-            input_elements = self.driver.find_elements(By.TAG_NAME, 'input')
+            driver = self.driver
+            if driver is None:
+                return inputs
+
+            input_elements = driver.find_elements(By.TAG_NAME, 'input')
             for input_elem in input_elements:
                 inputs.append({
                     'name': input_elem.get_attribute('name') or '',
@@ -5451,9 +5092,14 @@ class BrowserAgent:
 
     def _extract_scripts(self) -> list:
         """Extract script sources and inline scripts"""
+        from selenium.webdriver.common.by import By
         scripts = []
         try:
-            script_elements = self.driver.find_elements(By.TAG_NAME, 'script')
+            driver = self.driver
+            if driver is None:
+                return scripts
+
+            script_elements = driver.find_elements(By.TAG_NAME, 'script')
             for script in script_elements[:20]:  # Limit to 20 scripts
                 src = script.get_attribute('src')
                 if src:
@@ -5473,7 +5119,11 @@ class BrowserAgent:
     def _get_network_logs(self) -> list:
         """Get network request logs"""
         try:
-            logs = self.driver.get_log('performance')
+            driver = self.driver
+            if driver is None:
+                return []
+
+            logs = driver.get_log('performance')
             network_requests = []
 
             for log in logs[-50:]:  # Last 50 logs
@@ -6538,8 +6188,6 @@ def jwt_analyzer():
             parts = jwt_token.split('.')
             if len(parts) >= 2:
                 # Decode header
-                import base64
-                import json
 
                 # Add padding if needed
                 header_b64 = parts[0] + '=' * (4 - len(parts[0]) % 4)
@@ -6665,9 +6313,7 @@ def api_schema_analyzer():
 
         # Parse schema based on type
         try:
-            import json
             schema_data = json.loads(schema_content)
-
             if schema_type.lower() in ["openapi", "swagger"]:
                 # OpenAPI/Swagger analysis
                 paths = schema_data.get("paths", {})
@@ -6762,7 +6408,7 @@ def volatility3():
                 "error": "Plugin parameter is required"
             }), 400
 
-        command = f"vol.py -f {memory_file} {plugin}"
+        command = f"vol -f {memory_file} {plugin}"
 
         if output_file:
             command += f" -o {output_file}"
@@ -7832,13 +7478,13 @@ def ctf_cryptography_solver():
 
         # Frequency analysis for substitution ciphers
         if cipher_type in ["substitution", "caesar", "vigenere"] or "substitution" in results["analysis_results"]:
-            char_freq = {}
+            char_freq: Dict[str, int] = {}
             for char in cipher_text.upper():
                 if char.isalpha():
                     char_freq[char] = char_freq.get(char, 0) + 1
 
             if char_freq:
-                most_common = max(char_freq, key=char_freq.get)
+                most_common = max(char_freq.keys(), key=lambda key: char_freq[key])
                 results["analysis_results"].append(f"Most frequent character: {most_common} ({char_freq[most_common]} occurrences)")
                 results["next_steps"].append("Try substituting most frequent character with 'E'")
 

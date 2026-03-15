@@ -7,7 +7,7 @@ import re
 import json
 import psutil
 import os
-from visual.modern_visual_engine import ModernVisualEngine
+from server_core.modern_visual_engine import ModernVisualEngine
 import logging
 import socket
 import requests

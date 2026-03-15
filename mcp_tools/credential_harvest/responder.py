@@ -1,11 +1,12 @@
 # mcp_tools/credential_harvest/responder.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_responder_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def responder_credential_harvest(interface: str = "eth0", analyze: bool = False,
+    async def responder_credential_harvest(interface: str = "eth0", analyze: bool = False,
                                    wpad: bool = True, force_wpad_auth: bool = False,
                                    fingerprint: bool = False, duration: int = 300,
                                    additional_args: str = "") -> Dict[str, Any]:
@@ -34,7 +35,10 @@ def register_responder_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Responder on interface: {interface}")
-        result = hexstrike_client.safe_post("api/tools/responder", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/responder", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Responder completed")
         else:

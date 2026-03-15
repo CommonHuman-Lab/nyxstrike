@@ -1,12 +1,13 @@
 # mcp_tools/web_scan/burpsuite.py
 
 from typing import Dict, Any
+import asyncio
 
 
 def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
 
     @mcp.tool()
-    def burpsuite_scan(project_file: str = "", config_file: str = "", target: str = "", headless: bool = False, scan_type: str = "", scan_config: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def burpsuite_scan(project_file: str = "", config_file: str = "", target: str = "", headless: bool = False, scan_type: str = "", scan_config: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Burp Suite with enhanced logging.
 
@@ -34,7 +35,10 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Burp Suite scan")
-        result = hexstrike_client.safe_post("api/tools/burpsuite", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/burpsuite", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Burp Suite scan completed")
         else:
@@ -42,7 +46,7 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
         return result
     
     @mcp.tool()
-    def burpsuite_alternative_scan(target: str, scan_type: str = "comprehensive",
+    async def burpsuite_alternative_scan(target: str, scan_type: str = "comprehensive",
                                   headless: bool = True, max_depth: int = 3,
                                   max_pages: int = 50) -> Dict[str, Any]:
         """
@@ -67,7 +71,10 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
         }
 
         logger.info(f"{HexStrikeColors.BLOOD_RED}🔥 Starting Burp Suite Alternative {scan_type} scan: {target}{HexStrikeColors.RESET}")
-        result = hexstrike_client.safe_post("api/tools/burpsuite-alternative", data_payload)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/burpsuite-alternative", data_payload)
+        )
 
         if result.get("success"):
             logger.info(f"{HexStrikeColors.SUCCESS}✅ Burp Suite Alternative scan completed for {target}{HexStrikeColors.RESET}")

@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/binwalk.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_binwalk_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def binwalk_analyze(file_path: str, extract: bool = False, additional_args: str = "") -> Dict[str, Any]:
+    async def binwalk_analyze(file_path: str, extract: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute Binwalk for firmware and file analysis with enhanced logging.
 
@@ -23,7 +24,10 @@ def register_binwalk_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting Binwalk analysis: {file_path}")
-        result = hexstrike_client.safe_post("api/tools/binwalk", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/binwalk", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Binwalk analysis completed for {file_path}")
         else:

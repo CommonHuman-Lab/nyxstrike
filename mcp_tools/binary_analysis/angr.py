@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/angr.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_angr_tools(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def angr_symbolic_execution(binary: str, script_content: str = "",
+    async def angr_symbolic_execution(binary: str, script_content: str = "",
                                find_address: str = "", avoid_addresses: str = "",
                                analysis_type: str = "symbolic", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -31,7 +32,10 @@ def register_angr_tools(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting angr analysis: {binary}")
-        result = hexstrike_client.safe_post("api/tools/angr", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/angr", data)
+        )
         if result.get("success"):
             logger.info(f"✅ angr analysis completed")
         else:

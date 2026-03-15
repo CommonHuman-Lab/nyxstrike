@@ -1,11 +1,12 @@
 # mcp_tools/binary_analysis/ghidra.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_ghidra_tools(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def ghidra_analysis(binary: str, project_name: str = "hexstrike_analysis",
+    async def ghidra_analysis(binary: str, project_name: str = "hexstrike_analysis",
                        script_file: str = "", analysis_timeout: int = 300,
                        output_format: str = "xml", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -31,7 +32,10 @@ def register_ghidra_tools(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting Ghidra analysis: {binary}")
-        result = hexstrike_client.safe_post("api/tools/ghidra", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/ghidra", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Ghidra analysis completed for {binary}")
         else:

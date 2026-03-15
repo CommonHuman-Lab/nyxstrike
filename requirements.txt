@@ -12,7 +12,7 @@
 flask>=2.3.0,<4.0.0             # Web framework for API server (flask import)
 requests>=2.31.0,<3.0.0         # HTTP library (requests import)
 psutil>=5.9.0,<6.0.0            # System utilities (psutil import)
-fastmcp>=3.0.0           # MCP framework (from mcp.server.fastmcp import FastMCP)
+fastmcp>=3.1.0           # MCP framework (from mcp.server.fastmcp import FastMCP)
 
 # ============================================================================
 # WEB SCRAPING & AUTOMATION (ACTUALLY USED)
@@ -32,23 +32,31 @@ aiohttp>=3.8.0,<4.0.0           # Async HTTP (aiohttp import)
 mitmproxy>=12.1.2        # HTTP proxy (mitmproxy imports)
 
 # ============================================================================
-# BINARY ANALYSIS (CONDITIONALLY USED)
+# CONDITIONALLY USED
 # ============================================================================
-pwntools>=4.10.0,<5.0.0         # Binary exploitation (from pwn import *)
-angr>=9.2.0,<10.0.0             # Binary analysis (import angr)
-bcrypt==4.0.1                   # Pin bcrypt version for passlib compatibility (fixes pwntools dependency issue)
+bbot>=2.8.3                  # Bot framework for OSINT
+httpx>=0.28.1                # Fast HTTP client for OSINT
+uro>=1.0.2                   # Unified Reconnaissance OSINT tool
+dirsearch>=0.4.3             # Web path scanner for OSINT
+chardet>=3.0.2,<6.0.0        # Pin chardet; dirsearch pulls 7.x which breaks requests
+theHarvester>=0.0.1          # Email and domain OSINT tool
+volatility3>=2.27.0          # Memory forensics framework 
+PyMySQL>=1.1.2,<2.0.0        # MySQL database connector (conditionally used for database interactions)
+psycopg2>=2.9.11,<3.0.0      # PostgreSQL database connector (conditionally used for database interactions)
+pwntools>=4.15.0,<5.0.0      # Binary exploitation (from pwn import *)
+angr>=9.2.205,<10.0.0        # Binary analysis (import angr)
+bcrypt==4.0.1                # Pin bcrypt version for passlib compatibility (fixes pwntools dependency issue)
+checkov>=3.0.0               # Infrastructure as code security scanner
+
+#kube-hunter>=0.6.8           # Kubernetes security scanner
+#ScoutSuite>=5.14.0           # Cloud security auditing tool
+#shodan>=1.31.0               # Shodan API client for OSINT
 
 # ============================================================================
-# DATABASE CONNECTORS (CONDITIONALLY USED)
-# ============================================================================
-PyMySQL>=1.0.0,<2.0.0
-psycopg2>=2.9.0,<3.0.0
-
-# ============================================================================
-# EXTERNAL SECURITY TOOLS (150+ Tools - Install separately)
+# EXTERNAL SECURITY TOOLS (Install separately)
 # ============================================================================
 #
-# HexStrike v6.0 integrates with 150+ external security tools that must be
+# HexStrike integrates with 170+ external security tools that must be
 # installed separately from their official sources:
 #
 # 🔍 Network & Reconnaissance (25+ tools):

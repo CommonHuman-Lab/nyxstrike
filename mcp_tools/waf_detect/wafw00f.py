@@ -1,11 +1,12 @@
 # mcp_tools/waf_detect/wafw00f.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_wafw00f_tool(mcp, hexstrike_client, logger):
 
     @mcp.tool()
-    def wafw00f_scan(target: str, additional_args: str = "") -> Dict[str, Any]:
+    async def wafw00f_scan(target: str, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute wafw00f to identify and fingerprint WAF products with enhanced logging.
 
@@ -21,7 +22,10 @@ def register_wafw00f_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🛡️ Starting Wafw00f WAF detection: {target}")
-        result = hexstrike_client.safe_post("api/tools/wafw00f", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/wafw00f", data)
+        )
         if result.get("success"):
             logger.info(f"✅ Wafw00f completed for {target}")
         else:

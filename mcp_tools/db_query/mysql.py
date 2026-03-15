@@ -1,10 +1,11 @@
 # mcp_tools/db_query/mysql.py
 
 from typing import Any, Dict
+import asyncio
 
 def register_mysql_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def mysql_query(
+    async def mysql_query(
         host: str,
         user: str,
         password: str = "",
@@ -32,7 +33,11 @@ def register_mysql_tools(mcp, hexstrike_client, logger):
             "query": query
         }
         try:
-            return hexstrike_client.safe_post("api/tools/mysql", data)
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                None, lambda: hexstrike_client.safe_post("api/tools/mysql", data)
+            )
+            return result
         except Exception as e:
             logger.error(f"MySQL query failed: {e}")
             return {"error": str(e)}

@@ -7,7 +7,7 @@ from typing import Dict, Any
 from datetime import datetime
 import server_core.config_core as config_core
 from server_core.process_manager import ProcessManager
-from visual.modern_visual_engine import ModernVisualEngine
+from server_core.modern_visual_engine import ModernVisualEngine
 
 # Global telemetry collector
 from server_core.telemetry_collector import TelemetryCollector
@@ -24,6 +24,8 @@ class EnhancedCommandExecutor:
         self.process = None
         self.stdout_data = ""
         self.stderr_data = ""
+        self._stdout_chunks: list = []
+        self._stderr_chunks: list = []
         self.stdout_thread = None
         self.stderr_thread = None
         self.return_code = None
@@ -38,11 +40,13 @@ class EnhancedCommandExecutor:
         try:
             for line in iter(self.process.stdout.readline, ''):
                 if line:
-                    self.stdout_data += line
+                    self._stdout_chunks.append(line)
                     # Real-time output display
                     logger.info(f"📤 STDOUT: {line.strip()}")
         except Exception as e:
             logger.error(f"Error reading stdout: {e}")
+        finally:
+            self.stdout_data = "".join(self._stdout_chunks)
 
     def _read_stderr(self):
         """Thread function to continuously read and display stderr"""
@@ -51,11 +55,13 @@ class EnhancedCommandExecutor:
         try:
             for line in iter(self.process.stderr.readline, ''):
                 if line:
-                    self.stderr_data += line
+                    self._stderr_chunks.append(line)
                     # Real-time error output display
                     logger.warning(f"📥 STDERR: {line.strip()}")
         except Exception as e:
             logger.error(f"Error reading stderr: {e}")
+        finally:
+            self.stderr_data = "".join(self._stderr_chunks)
 
     def _show_progress(self, duration: float):
         """Show enhanced progress indication for long-running commands"""
@@ -77,7 +83,7 @@ class EnhancedCommandExecutor:
                     eta = ((elapsed / progress_percent) * 100) - elapsed
 
                 # Calculate speed
-                bytes_processed = len(self.stdout_data) + len(self.stderr_data)
+                bytes_processed = sum(len(c) for c in self._stdout_chunks) + sum(len(c) for c in self._stderr_chunks)
                 speed = f"{bytes_processed/elapsed:.0f} B/s" if elapsed > 0 else "0 B/s"
 
                 # Update process manager with progress

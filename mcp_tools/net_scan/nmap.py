@@ -1,11 +1,12 @@
 # mcp_tools/net_scan/nmap.py
 
+import asyncio
 from typing import Dict, Any
 
 def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
-    
+
     @mcp.tool()
-    def nmap_scan(target: str, scan_type: str = "-sV", ports: str = "", additional_args: str = "") -> Dict[str, Any]:
+    async def nmap_scan(target: str, scan_type: str = "-sV", ports: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
         Execute an enhanced Nmap scan against a target with real-time logging.
 
@@ -28,7 +29,13 @@ def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
 
         # Use enhanced error handling by default
         data["use_recovery"] = True
-        result = hexstrike_client.safe_post("api/tools/nmap", data)
+
+        # Offload the blocking HTTP+subprocess call to a thread pool so the
+        # asyncio event loop remains responsive
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/nmap", data)
+        )
 
         if result.get("success"):
             logger.info(f"{HexStrikeColors.SUCCESS}✅ Nmap scan completed successfully for {target}{HexStrikeColors.RESET}")
@@ -48,10 +55,10 @@ def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
         return result
 
     @mcp.tool()
-    def nmap_advanced_scan(target: str, scan_type: str = "-sS", ports: str = "",
-                          timing: str = "T4", nse_scripts: str = "", os_detection: bool = False,
-                          version_detection: bool = False, aggressive: bool = False,
-                          stealth: bool = False, additional_args: str = "") -> Dict[str, Any]:
+    async def nmap_advanced_scan(target: str, scan_type: str = "-sS", ports: str = "",
+                                 timing: str = "T4", nse_scripts: str = "", os_detection: bool = False,
+                                 version_detection: bool = False, aggressive: bool = False,
+                                 stealth: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute advanced Nmap scans with custom NSE scripts and optimized timing.
 
@@ -83,7 +90,14 @@ def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting Advanced Nmap: {target}")
-        result = hexstrike_client.safe_post("api/tools/nmap-advanced", data)
+
+        # Offload the blocking HTTP+subprocess call to a thread pool so the
+        # asyncio event loop remains responsive
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/nmap-advanced", data)
+        )
+
         if result.get("success"):
             logger.info(f"✅ Advanced Nmap completed for {target}")
         else:

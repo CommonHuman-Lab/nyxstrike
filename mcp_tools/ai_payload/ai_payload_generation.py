@@ -2,10 +2,11 @@
 
 from typing import Dict, Any
 import time
+import asyncio
 
 def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def ai_generate_payload(attack_type: str, complexity: str = "basic", technology: str = "", url: str = "") -> Dict[str, Any]:
+    async def ai_generate_payload(attack_type: str, complexity: str = "basic", technology: str = "", url: str = "") -> Dict[str, Any]:
         """
         Generate AI-powered contextual payloads for security testing.
 
@@ -25,7 +26,10 @@ def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
             "url": url
         }
         logger.info(f"🤖 Generating AI payloads for {attack_type} attack")
-        result = hexstrike_client.safe_post("api/ai/generate_payload", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/ai/generate_payload", data)
+        )
 
         if result.get("success"):
             payload_data = result.get("ai_payload_generation", {})
@@ -46,7 +50,7 @@ def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def ai_test_payload(payload: str, target_url: str, method: str = "GET") -> Dict[str, Any]:
+    async def ai_test_payload(payload: str, target_url: str, method: str = "GET") -> Dict[str, Any]:
         """
         Test generated payload against target with AI analysis.
 
@@ -64,7 +68,10 @@ def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
             "method": method
         }
         logger.info(f"🧪 Testing AI payload against {target_url}")
-        result = hexstrike_client.safe_post("api/ai/test_payload", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/ai/test_payload", data)
+        )
 
         if result.get("success"):
             analysis = result.get("ai_analysis", {})
@@ -81,7 +88,7 @@ def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
         return result
 
     @mcp.tool()
-    def ai_generate_attack_suite(target_url: str, attack_types: str = "xss,sqli,lfi") -> Dict[str, Any]:
+    async def ai_generate_attack_suite(target_url: str, attack_types: str = "xss,sqli,lfi") -> Dict[str, Any]:
         """
         Generate comprehensive attack suite with multiple payload types.
 

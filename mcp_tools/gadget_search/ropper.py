@@ -1,11 +1,12 @@
 # mcp_tools/gadget_search/ropper.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_ropper_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def ropper_gadget_search(binary: str, gadget_type: str = "rop", quality: int = 1,
+    async def ropper_gadget_search(binary: str, gadget_type: str = "rop", quality: int = 1,
                             arch: str = "", search_string: str = "",
                             additional_args: str = "") -> Dict[str, Any]:
         """
@@ -31,7 +32,10 @@ def register_ropper_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔧 Starting ropper analysis: {binary}")
-        result = hexstrike_client.safe_post("api/tools/ropper", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/ropper", data)
+        )
         if result.get("success"):
             logger.info(f"✅ ropper analysis completed")
         else:

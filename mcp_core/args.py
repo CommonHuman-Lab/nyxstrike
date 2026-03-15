@@ -1,5 +1,4 @@
 import argparse
-from html import parser
 from mcp_core.hexstrike_client import DEFAULT_HEXSTRIKE_SERVER, DEFAULT_REQUEST_TIMEOUT
 
 def parse_args():

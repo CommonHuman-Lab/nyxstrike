@@ -1,6 +1,6 @@
 import logging
 import sys
-from visual.colored_formatter import ColoredFormatter
+from shared.colored_formatter import ColoredFormatter
 
 def setup_logging():
     """Setup enhanced logging with colors and formatting"""

@@ -1,11 +1,12 @@
 # mcp_tools/k8s_scan/kube_hunter.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_kube_hunter_tool(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def kube_hunter_scan(target: str = "", remote: str = "", cidr: str = "",
+    async def kube_hunter_scan(target: str = "", remote: str = "", cidr: str = "",
                         interface: str = "", active: bool = False, report: str = "json",
                         additional_args: str = "") -> Dict[str, Any]:
         """
@@ -33,7 +34,10 @@ def register_kube_hunter_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"☁️  Starting kube-hunter Kubernetes scan")
-        result = hexstrike_client.safe_post("api/tools/kube-hunter", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/kube-hunter", data)
+        )
         if result.get("success"):
             logger.info(f"✅ kube-hunter scan completed")
         else:

@@ -5,13 +5,12 @@
 # HexStrike AI - Community Edition
 ### AI-Powered MCP Cybersecurity Automation Platform
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Penetration%20Testing-red.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
-[![Tools](https://img.shields.io/badge/Security%20Tools-170%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
+[![Tools](https://img.shields.io/badge/Security%20Tools-180%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![Agents](https://img.shields.io/badge/AI%20Agents-12%2B-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
-
 
 **Advanced AI-powered penetration testing MCP framework, on-demand TTP knowledge, and adaptive scanning intelligence**
 
@@ -27,17 +26,22 @@
 
 ## 🚀 Differences from HexStrike V6
 
-- Increased toolings from **150** to over **170**
-- New Tools: BBot, database querying, and more.
+- Increased toolings from **150** to over **180**
+- New Tools: BBot, database querying, and more
+- Skills: 9 LLM skills now included
+- Compact Mode: Great for running with smaller, local LLMs.
+- Profile Mode: Specify one or more profiles to load only the relevant ones for your workflow.
 - Refactored Codebase: Improved clarity, maintainability, and performance.
-- Updated Dependencies: All packages upgraded for security and compatibility.
-- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references.
+- Updated Dependencies: All packages upgraded for security and compatibility
+- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references
 - AI Integration: Upgraded MCP compatibility and agent orchestration (FastMCP v3).
 
 <details>
-<summary>Minimal Mode (--compact)</summary>
+<summary>Compact Mode (--compact)</summary>
 
-> Activate Minimal Mode for the MCP server using the `--compact` flag:
+> Activate Compact Mode for the MCP server using the `--compact` flag.
+> See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) for more info
+
 - 🚦 Only the two essential gateway tools are loaded—perfect for lightweight deployments, automation pipelines, or running on resource-constrained systems.
 - 🏃 Great for running with smaller, local LLMs or when you want minimal overhead.
 
@@ -46,11 +50,12 @@
 <details>
 <summary>Profile Mode (--profile)</summary>
 
-> Specify one or more tool profiles to load only the relevant categories for your workflow:
+> Specify one or more profiles to load only the relevant ones for your workflow.
+> See [Profile flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Profile-Flags) for more info
+
 - 🚀 Select profiles for targeted workflows to speed up scans and reduce resource usage.
 - 🌐 Use --profile full to enable the complete arsenal, it's on default out-the-box for the recommended set.
 
-> See [Profile flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Profile-Flags) for more info
 </details>
 
 <details>
@@ -59,6 +64,7 @@
 - The hexstrike MCP client has been reduced from 5,470 lines of code to just 42 lines.
 - Functionality is now split across multiple focused modules for clarity, maintainability, and easier contribution.
 - This modular approach enables faster development, easier debugging, and better scalability.
+- All tools run async now.
 
 </details>
 
@@ -82,15 +88,12 @@ source hexstrike-env/bin/activate        # Linux/Mac
 # 3. Install Python dependencies
 pip3 install -r requirements.txt
 
-# 4. Install Extra Python dependencies
-pip3 install -r requirements-tools.txt
-
-# 5. Start the API server
+# 4. Start the API server
 python3 hexstrike_server.py
 
-# 6. In a separate terminal, start the MCP client
+# 5. In a separate terminal, start the MCP client
 # (use the venv python to ensure dependencies are available)
-hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888
+hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --profile full
 ```
 
 > See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) on how to customize the experience.
@@ -543,12 +546,6 @@ We welcome contributions from the cybersecurity and AI community!
 - **⚡ Performance Optimizations** - Caching improvements and scalability enhancements
 - **📖 Documentation** - AI usage examples and integration guides
 - **🧪 Testing Frameworks** - Automated testing for AI agent interactions
-
----
-
-## License
-
-see LICENSE file for details.
 
 ---
 

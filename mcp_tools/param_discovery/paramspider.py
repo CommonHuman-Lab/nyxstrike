@@ -1,10 +1,11 @@
 # mcp_tools/param_discovery/paramspider.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_paramspider_tool(mcp, hexstrike_client, logger):
     @mcp.tool()
-    def paramspider_mining(domain: str, level: int = 2,
+    async def paramspider_mining(domain: str, level: int = 2,
                           exclude: str = "png,jpg,gif,jpeg,swf,woff,svg,pdf,css,ico",
                           output: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -28,7 +29,10 @@ def register_paramspider_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🕷️  Starting ParamSpider mining: {domain}")
-        result = hexstrike_client.safe_post("api/tools/paramspider", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/paramspider", data)
+        )
         if result.get("success"):
             logger.info(f"✅ ParamSpider mining completed for {domain}")
         else:
@@ -36,7 +40,7 @@ def register_paramspider_tool(mcp, hexstrike_client, logger):
         return result
     
     @mcp.tool()
-    def paramspider_discovery(domain: str, exclude: str = "", output_file: str = "", level: int = 2, additional_args: str = "") -> Dict[str, Any]:
+    async def paramspider_discovery(domain: str, exclude: str = "", output_file: str = "", level: int = 2, additional_args: str = "") -> Dict[str, Any]:
         """
         Execute ParamSpider for parameter discovery with enhanced logging.
 
@@ -58,7 +62,10 @@ def register_paramspider_tool(mcp, hexstrike_client, logger):
             "additional_args": additional_args
         }
         logger.info(f"🔍 Starting ParamSpider discovery: {domain}")
-        result = hexstrike_client.safe_post("api/tools/paramspider", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/tools/paramspider", data)
+        )
         if result.get("success"):
             logger.info(f"✅ ParamSpider discovery completed")
         else:

@@ -2,10 +2,11 @@
 
 from typing import Dict, Any
 from datetime import datetime
+import asyncio
 
 def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, HexStrikeColors):
     @mcp.tool()
-    def analyze_target_intelligence(target: str) -> Dict[str, Any]:
+    async def analyze_target_intelligence(target: str) -> Dict[str, Any]:
         """
         Analyze target using AI-powered intelligence to create comprehensive profile.
 
@@ -18,7 +19,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         logger.info(f"🧠 Analyzing target intelligence for: {target}")
 
         data = {"target": target}
-        result = hexstrike_client.safe_post("api/intelligence/analyze-target", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", data)
+        )
 
         if result.get("success"):
             profile = result.get("target_profile", {})
@@ -29,7 +33,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
-    def select_optimal_tools_ai(target: str, objective: str = "comprehensive") -> Dict[str, Any]:
+    async def select_optimal_tools_ai(target: str, objective: str = "comprehensive") -> Dict[str, Any]:
         """
         Use AI to select optimal security tools based on target analysis and testing objective.
 
@@ -46,7 +50,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             "target": target,
             "objective": objective
         }
-        result = hexstrike_client.safe_post("api/intelligence/select-tools", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/select-tools", data)
+        )
 
         if result.get("success"):
             tools = result.get("selected_tools", [])
@@ -57,7 +64,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
-    def optimize_tool_parameters_ai(target: str, tool: str, context: str = "{}") -> Dict[str, Any]:
+    async def optimize_tool_parameters_ai(target: str, tool: str, context: str = "{}") -> Dict[str, Any]:
         """
         Use AI to optimize tool parameters based on target profile and context.
 
@@ -83,7 +90,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             "tool": tool,
             "context": context_dict
         }
-        result = hexstrike_client.safe_post("api/intelligence/optimize-parameters", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/optimize-parameters", data)
+        )
 
         if result.get("success"):
             params = result.get("optimized_parameters", {})
@@ -94,7 +104,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
-    def create_attack_chain_ai(target: str, objective: str = "comprehensive") -> Dict[str, Any]:
+    async def create_attack_chain_ai(target: str, objective: str = "comprehensive") -> Dict[str, Any]:
         """
         Create an intelligent attack chain using AI-driven tool sequencing and optimization.
 
@@ -111,7 +121,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             "target": target,
             "objective": objective
         }
-        result = hexstrike_client.safe_post("api/intelligence/create-attack-chain", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/create-attack-chain", data)
+        )
 
         if result.get("success"):
             chain = result.get("attack_chain", {})
@@ -126,7 +139,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
-    def intelligent_smart_scan(target: str, objective: str = "comprehensive", max_tools: int = 5) -> Dict[str, Any]:
+    async def intelligent_smart_scan(target: str, objective: str = "comprehensive", max_tools: int = 5) -> Dict[str, Any]:
         """
         Execute an intelligent scan using AI-driven tool selection and parameter optimization.
 
@@ -145,7 +158,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             "objective": objective,
             "max_tools": max_tools
         }
-        result = hexstrike_client.safe_post("api/intelligence/smart-scan", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", data)
+        )
 
         if result.get("success"):
             scan_results = result.get("scan_results", {})
@@ -179,7 +195,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
-    def detect_technologies_ai(target: str) -> Dict[str, Any]:
+    async def detect_technologies_ai(target: str) -> Dict[str, Any]:
         """
         Use AI to detect technologies and provide technology-specific testing recommendations.
 
@@ -192,7 +208,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         logger.info(f"🔍 Detecting technologies for {target}")
 
         data = {"target": target}
-        result = hexstrike_client.safe_post("api/intelligence/technology-detection", data)
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/technology-detection", data)
+        )
 
         if result.get("success"):
             technologies = result.get("detected_technologies", [])
@@ -211,7 +230,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
-    def ai_reconnaissance_workflow(target: str, depth: str = "standard") -> Dict[str, Any]:
+    async def ai_reconnaissance_workflow(target: str, depth: str = "standard") -> Dict[str, Any]:
         """
         Execute AI-driven reconnaissance workflow with intelligent tool chaining.
 
@@ -225,27 +244,36 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         logger.info(f"🕵️  Starting AI reconnaissance workflow for {target} (depth: {depth})")
 
         # First analyze the target
-        analysis_result = hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+        loop = asyncio.get_running_loop()
+        analysis_result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+        )
 
         if not analysis_result.get("success"):
             return analysis_result
 
         # Create attack chain for reconnaissance
         objective = "comprehensive" if depth == "deep" else "quick" if depth == "surface" else "comprehensive"
-        chain_result = hexstrike_client.safe_post("api/intelligence/create-attack-chain", {
+        loop = asyncio.get_running_loop()
+        chain_result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/create-attack-chain", {
             "target": target,
             "objective": objective
         })
+        )
 
         if not chain_result.get("success"):
             return chain_result
 
         # Execute the reconnaissance
-        scan_result = hexstrike_client.safe_post("api/intelligence/smart-scan", {
+        loop = asyncio.get_running_loop()
+        scan_result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", {
             "target": target,
             "objective": objective,
             "max_tools": 8 if depth == "deep" else 3 if depth == "surface" else 5
         })
+        )
 
         logger.info(f"✅ AI reconnaissance workflow completed for {target}")
 
@@ -260,7 +288,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         }
 
     @mcp.tool()
-    def ai_vulnerability_assessment(target: str, focus_areas: str = "all") -> Dict[str, Any]:
+    async def ai_vulnerability_assessment(target: str, focus_areas: str = "all") -> Dict[str, Any]:
         """
         Perform AI-driven vulnerability assessment with intelligent prioritization.
 
@@ -274,7 +302,10 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         logger.info(f"🔬 Starting AI vulnerability assessment for {target}")
 
         # Analyze target first
-        analysis_result = hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+        loop = asyncio.get_running_loop()
+        analysis_result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+        )
 
         if not analysis_result.get("success"):
             return analysis_result
@@ -293,11 +324,14 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             objective = "quick"
 
         # Execute vulnerability assessment
-        scan_result = hexstrike_client.safe_post("api/intelligence/smart-scan", {
+        loop = asyncio.get_running_loop()
+        scan_result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", {
             "target": target,
             "objective": objective,
             "max_tools": 6
         })
+        )
 
         logger.info(f"✅ AI vulnerability assessment completed for {target}")
 

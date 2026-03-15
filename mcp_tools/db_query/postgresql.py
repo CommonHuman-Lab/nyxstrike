@@ -1,11 +1,12 @@
 # mcp_tools/db_query/postgresql.py
 
 from typing import Dict, Any
+import asyncio
 
 def register_postgresql_tools(mcp, hexstrike_client, logger):
     
     @mcp.tool()
-    def postgresql_query(host: str, user: str, password: str = "", database: str = "", query: str = "") -> Dict[str, Any]:
+    async def postgresql_query(host: str, user: str, password: str = "", database: str = "", query: str = "") -> Dict[str, Any]:
         """
         Query a PostgreSQL database using the HexStrike server endpoint.
 
@@ -40,7 +41,11 @@ def register_postgresql_tools(mcp, hexstrike_client, logger):
             "query": query
         }
         try:
-            return hexstrike_client.safe_post("api/tools/postgresql", data)    
+            loop = asyncio.get_running_loop()
+            result = await loop.run_in_executor(
+                None, lambda: hexstrike_client.safe_post("api/tools/postgresql", data)    
+            )
+            return result
         except Exception as e:
             logger.error(f"PostgreSQL query failed: {e}")
             return {"error": str(e)}
