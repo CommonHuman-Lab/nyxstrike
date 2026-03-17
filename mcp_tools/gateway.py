@@ -3,6 +3,7 @@
 from typing import Dict, Any
 import json
 import asyncio
+from fastmcp.dependencies import Progress
 
 def register_gateway_tools(mcp, hexstrike_client):
     @mcp.tool()
@@ -25,11 +26,19 @@ def register_gateway_tools(mcp, hexstrike_client):
             result["usage"] = "Use run_tool with a tool name and params from the recommended list"
         return result
 
-    @mcp.tool()
-    async def run_tool(tool_name: str, params: str) -> Dict[str, Any]:
+    @mcp.tool(task=True)
+    async def run_tool(
+        tool_name: str,
+        params: str,
+        progress: Progress = Progress(),
+    ) -> Dict[str, Any]:
         """
         Execute any security tool by name with parameters.
         Use classify_task first to discover available tools.
+
+        Supports background execution: MCP clients may request this as a background
+        task to receive a task ID immediately and poll for results, which is useful
+        for long-running security scans (nmap, nuclei, sqlmap, etc.).
 
         Args:
             tool_name: Tool name from classify_task results (e.g., "nmap", "nuclei")
@@ -59,8 +68,11 @@ def register_gateway_tools(mcp, hexstrike_client):
                 parsed_params[k] = v
 
         endpoint = tool_def["endpoint"].lstrip("/")
+        await progress.set_message(f"Running {tool_name}...")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
             None, lambda: hexstrike_client.safe_post(endpoint, parsed_params)
         )
+        await progress.set_message(f"{tool_name} complete")
+
         return result
