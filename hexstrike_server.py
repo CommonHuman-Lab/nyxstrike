@@ -240,6 +240,40 @@ app.register_blueprint(api_wifi_pentest_mdk4_bp)
 # !NEW BLUEPRINTS GOES HERE!
 
 # ============================================================================
+# EXPLOIT FRAMEWORK API ENDPOINTS (EXTENDED)
+# ============================================================================
+app.register_blueprint(api_exploit_framework_pwninit_bp)
+
+# ============================================================================
+# WEB FUZZ API ENDPOINTS (EXTENDED)
+# ============================================================================
+app.register_blueprint(api_web_fuzz_feroxbuster_bp)
+app.register_blueprint(api_web_fuzz_dotdotpwn_bp)
+app.register_blueprint(api_web_fuzz_wfuzz_bp)
+app.register_blueprint(api_web_fuzz_dirsearch_bp)
+
+# ============================================================================
+# WEB SCAN API ENDPOINTS (EXTENDED)
+# ============================================================================
+app.register_blueprint(api_web_scan_xsser_bp)
+
+# ============================================================================
+# WEB CRAWL API ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_web_crawl_katana_bp)
+
+# ============================================================================
+# URL RECON API ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_url_recon_gau_bp)
+app.register_blueprint(api_url_recon_waybackurls_bp)
+
+# ============================================================================
+# PARAM DISCOVERY API ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_param_discovery_arjun_bp)
+
+# ============================================================================
 # SMB ENUM API ENDPOINTS (EXTENDED)
 # ============================================================================
 app.register_blueprint(api_smb_enum_nbtscan_bp)
@@ -414,356 +448,6 @@ app.register_blueprint(api_net_scan_rustscan_bp)
 app.register_blueprint(api_net_scan_masscan_bp)
 app.register_blueprint(api_net_scan_nmap_advanced_bp)
 
-
-@app.route("/api/tools/pwninit", methods=["POST"])
-def pwninit():
-    """Execute pwninit for CTF binary exploitation setup"""
-    try:
-        params = request.json
-        binary = params.get("binary", "")
-        libc = params.get("libc", "")
-        ld = params.get("ld", "")
-        template_type = params.get("template_type", "python")  # python, c
-        additional_args = params.get("additional_args", "")
-
-        if not binary:
-            logger.warning("🔧 pwninit called without binary parameter")
-            return jsonify({"error": "Binary parameter is required"}), 400
-
-        command = f"pwninit --bin {binary}"
-
-        if libc:
-            command += f" --libc {libc}"
-
-        if ld:
-            command += f" --ld {ld}"
-
-        if template_type:
-            command += f" --template {template_type}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🔧 Starting pwninit setup: {binary}")
-        result = execute_command(command)
-        logger.info(f"📊 pwninit setup completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in pwninit endpoint: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-# ============================================================================
-# ADDITIONAL WEB SECURITY TOOLS
-# ============================================================================
-
-@app.route("/api/tools/feroxbuster", methods=["POST"])
-def feroxbuster():
-    """Execute Feroxbuster for recursive content discovery with enhanced logging"""
-    try:
-        params = request.json
-        url = params.get("url", "")
-        wordlist = params.get("wordlist", COMMON_DIRB_PATH)
-        threads = params.get("threads", 10)
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🌐 Feroxbuster called without URL parameter")
-            return jsonify({
-                "error": "URL parameter is required"
-            }), 400
-
-        command = f"feroxbuster -u {url} -w {wordlist} -t {threads}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🔍 Starting Feroxbuster scan: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 Feroxbuster scan completed for {url}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in feroxbuster endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/dotdotpwn", methods=["POST"])
-def dotdotpwn():
-    """Execute DotDotPwn for directory traversal testing with enhanced logging"""
-    try:
-        params = request.json
-        target = params.get("target", "")
-        module = params.get("module", "http")
-        additional_args = params.get("additional_args", "")
-
-        if not target:
-            logger.warning("🎯 DotDotPwn called without target parameter")
-            return jsonify({
-                "error": "Target parameter is required"
-            }), 400
-
-        command = f"dotdotpwn -m {module} -h {target}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        command += " -b"
-
-        logger.info(f"🔍 Starting DotDotPwn scan: {target}")
-        result = execute_command(command)
-        logger.info(f"📊 DotDotPwn scan completed for {target}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in dotdotpwn endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/xsser", methods=["POST"])
-def xsser():
-    """Execute XSSer for XSS vulnerability testing with enhanced logging"""
-    try:
-        params = request.json
-        url = params.get("url", "")
-        params_str = params.get("params", "")
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🌐 XSSer called without URL parameter")
-            return jsonify({
-                "error": "URL parameter is required"
-            }), 400
-
-        command = f"xsser --url '{url}'"
-
-        if params_str:
-            command += f" --param='{params_str}'"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🔍 Starting XSSer scan: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 XSSer scan completed for {url}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in xsser endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/wfuzz", methods=["POST"])
-def wfuzz():
-    """Execute Wfuzz for web application fuzzing with enhanced logging"""
-    try:
-        params = request.json
-        url = params.get("url", "")
-        wordlist = params.get("wordlist", COMMON_DIRB_PATH)
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🌐 Wfuzz called without URL parameter")
-            return jsonify({
-                "error": "URL parameter is required"
-            }), 400
-
-        command = f"wfuzz -w {wordlist} '{url}'"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🔍 Starting Wfuzz scan: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 Wfuzz scan completed for {url}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in wfuzz endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-# ============================================================================
-# ENHANCED WEB APPLICATION SECURITY TOOLS (v6.0)
-# ============================================================================
-
-@app.route("/api/tools/dirsearch", methods=["POST"])
-def dirsearch():
-    """Execute Dirsearch for advanced directory and file discovery with enhanced logging"""
-    try:
-        params = request.json
-        url = params.get("url", "")
-        extensions = params.get("extensions", "php,html,js,txt,xml,json")
-        wordlist = params.get("wordlist", COMMON_DIRSEARCH_PATH)
-        threads = params.get("threads", 30)
-        recursive = params.get("recursive", False)
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🌐 Dirsearch called without URL parameter")
-            return jsonify({"error": "URL parameter is required"}), 400
-
-        command = f"dirsearch -u {url} -e {extensions} -w {wordlist} -t {threads}"
-
-        if recursive:
-            command += " -r"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"📁 Starting Dirsearch scan: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 Dirsearch scan completed for {url}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in dirsearch endpoint: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-@app.route("/api/tools/katana", methods=["POST"])
-def katana():
-    """Execute Katana for next-generation crawling and spidering with enhanced logging"""
-    try:
-        params = request.json
-        url = params.get("url", "")
-        depth = params.get("depth", 3)
-        js_crawl = params.get("js_crawl", True)
-        form_extraction = params.get("form_extraction", True)
-        output_format = params.get("output_format", "json")
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🌐 Katana called without URL parameter")
-            return jsonify({"error": "URL parameter is required"}), 400
-
-        command = f"katana -u {url} -d {depth}"
-
-        if js_crawl:
-            command += " -jc"
-
-        if form_extraction:
-            command += " -fx"
-
-        if output_format == "json":
-            command += " -jsonl"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"⚔️  Starting Katana crawl: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 Katana crawl completed for {url}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in katana endpoint: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-@app.route("/api/tools/gau", methods=["POST"])
-def gau():
-    """Execute Gau (Get All URLs) for URL discovery from multiple sources with enhanced logging"""
-    try:
-        params = request.json
-        domain = params.get("domain", "")
-        providers = params.get("providers", "wayback,commoncrawl,otx,urlscan")
-        include_subs = params.get("include_subs", True)
-        blacklist = params.get("blacklist", "png,jpg,gif,jpeg,swf,woff,svg,pdf,css,ico")
-        additional_args = params.get("additional_args", "")
-
-        if not domain:
-            logger.warning("🌐 Gau called without domain parameter")
-            return jsonify({"error": "Domain parameter is required"}), 400
-
-        command = f"gau {domain}"
-
-        if providers != "wayback,commoncrawl,otx,urlscan":
-            command += f" --providers {providers}"
-
-        if include_subs:
-            command += " --subs"
-
-        if blacklist:
-            command += f" --blacklist {blacklist}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"📡 Starting Gau URL discovery: {domain}")
-        result = execute_command(command)
-        logger.info(f"📊 Gau URL discovery completed for {domain}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in gau endpoint: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-@app.route("/api/tools/waybackurls", methods=["POST"])
-def waybackurls():
-    """Execute Waybackurls for historical URL discovery with enhanced logging"""
-    try:
-        params = request.json
-        domain = params.get("domain", "")
-        get_versions = params.get("get_versions", False)
-        no_subs = params.get("no_subs", False)
-        additional_args = params.get("additional_args", "")
-
-        if not domain:
-            logger.warning("🌐 Waybackurls called without domain parameter")
-            return jsonify({"error": "Domain parameter is required"}), 400
-
-        command = f"waybackurls {domain}"
-
-        if get_versions:
-            command += " --get-versions"
-
-        if no_subs:
-            command += " --no-subs"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🕰️  Starting Waybackurls discovery: {domain}")
-        result = execute_command(command)
-        logger.info(f"📊 Waybackurls discovery completed for {domain}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in waybackurls endpoint: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
-
-@app.route("/api/tools/arjun", methods=["POST"])
-def arjun():
-    """Execute Arjun for HTTP parameter discovery with enhanced logging"""
-    try:
-        params = request.json
-        url = params.get("url", "")
-        method = params.get("method", "GET")
-        wordlist = params.get("wordlist", "")
-        delay = params.get("delay", 0)
-        threads = params.get("threads", 25)
-        stable = params.get("stable", False)
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🌐 Arjun called without URL parameter")
-            return jsonify({"error": "URL parameter is required"}), 400
-
-        command = f"arjun -u {url} -m {method} -t {threads}"
-
-        if wordlist:
-            command += f" -w {wordlist}"
-
-        if delay > 0:
-            command += f" -d {delay}"
-
-        if stable:
-            command += " --stable"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🎯 Starting Arjun parameter discovery: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 Arjun parameter discovery completed for {url}")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in arjun endpoint: {str(e)}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route("/api/tools/paramspider", methods=["POST"])
 def paramspider():
