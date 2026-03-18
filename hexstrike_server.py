@@ -11,11 +11,9 @@ Framework: FastMCP integration for AI agent communication
 import argparse
 import logging
 import os
-from typing import Dict, Any, Optional
 from flask import Flask, request, abort
 import server_core.config_core as config_core
-from server_core import *
-from server_core.singletons import cache, error_handler, degradation_manager
+from server_core.modern_visual_engine import ModernVisualEngine
 from server_api import register_blueprints
 
 # ============================================================================
@@ -41,33 +39,6 @@ COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # 5 minutes default t
 CACHE_SIZE = config_core.get("CACHE_SIZE", 1000)
 CACHE_TTL = config_core.get("CACHE_TTL", 3600)  # 1 hour default TTL
 
-
-def execute_command(command: str, use_cache: bool = True, cache=cache, timeout: int = COMMAND_TIMEOUT) -> Dict[str, Any]:
-    """Server-level execute_command wrapper that passes the shared cache instance."""
-    return _execute_command(command, use_cache=use_cache, cache=cache, timeout=timeout)
-
-
-def execute_command_with_recovery(
-    tool_name: str,
-    command: str,
-    parameters: Optional[Dict[str, Any]] = None,
-    use_cache: bool = True,
-    max_attempts: int = 3,
-) -> Dict[str, Any]:
-    return _execute_command_with_recovery(
-        tool_name=tool_name,
-        command=command,
-        parameters=parameters,
-        use_cache=use_cache,
-        max_attempts=max_attempts,
-        execute_command_fn=execute_command,
-        error_handler=error_handler,
-        degradation_manager=degradation_manager,
-        rebuild_command_with_params_fn=_rebuild_command_with_params,
-        determine_operation_type_fn=_determine_operation_type,
-        recovery_action_enum=RecoveryAction,
-        logger=logger,
-    )
 
 @app.before_request
 def optional_bearer_auth():

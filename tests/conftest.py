@@ -3,9 +3,8 @@ Pytest configuration and shared fixtures for HexStrike test suite.
 
 The Flask app is imported once and a test client is provided to every test
 via the `client` fixture.  No real external tools are invoked — the
-`mock_execute_command` fixture patches the server-level `execute_command`
-function so that tool endpoints can be exercised without any binaries
-being present on the host.
+`mock_execute_command` fixture patches `server_core.command_executor.execute_command`
+so that tool endpoints can be exercised without any binaries being present on the host.
 """
 
 import pytest
@@ -17,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import the Flask app object *after* path setup
 import hexstrike_server as _server
+import server_core.command_executor as _command_executor
 
 APP = _server.app
 
@@ -43,8 +43,8 @@ def client(app):
 @pytest.fixture()
 def mock_execute_command(monkeypatch):
     """
-    Replace hexstrike_server.execute_command with a lightweight stub that
-    returns a successful result without running any real subprocess.
+    Replace server_core.command_executor.execute_command with a lightweight stub
+    that returns a successful result without running any real subprocess.
 
     Individual tests can customise the return value via the returned helper:
 
@@ -70,7 +70,5 @@ def mock_execute_command(monkeypatch):
             return dict(self._result, command=command)
 
     stub = _MockExecute()
-    monkeypatch.setattr(_server, "execute_command", stub)
-    monkeypatch.setattr(_server, "execute_command_with_recovery",
-                        lambda tool, cmd, params=None, use_cache=True, max_attempts=3: stub(cmd))
+    monkeypatch.setattr(_command_executor, "execute_command", stub)
     return stub
