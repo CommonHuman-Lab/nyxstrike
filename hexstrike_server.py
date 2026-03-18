@@ -11,11 +11,8 @@ Framework: FastMCP integration for AI agent communication
 import argparse
 import logging
 import os
-import subprocess
-from datetime import datetime
 from typing import Dict, Any, Optional
-from flask import Flask, request, jsonify, abort
-import re
+from flask import Flask, request, abort
 import server_core.config_core as config_core
 from server_core import *
 from server_api import *
@@ -112,7 +109,6 @@ def execute_command_with_recovery(
     recovery_action_enum=RecoveryAction,
     logger=logger,
   )
-# API Routes
 
 @app.before_request
 def optional_bearer_auth():
