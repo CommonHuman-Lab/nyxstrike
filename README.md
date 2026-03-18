@@ -28,6 +28,7 @@
 
 - Increased toolings from **150** to over **180**
 - **HTB CTF Multi-Agent System**: A full autonomous kill-chain agent suite for Hack The Box and CTF competitions — with a single command.
+- **Bug Bounty Multi-Agent System**: A scope-aware autonomous bug bounty agent suite and a P1–P4 triaged report with PoC per finding.
 - **Compact Mode**: Great for running with smaller, local LLMs.
 - **Profile Mode**: Specify one or more profiles to load only the relevant ones for your workflow.
 - LLM Skills: 9 LLM skills now included.
@@ -45,10 +46,28 @@ A 14-specialist agent system built natively for **OpenCode**, designed to autono
 
 - Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tool runs.
 - Full kill chain: recon → enumeration → foothold → privilege escalation → flag capture → loot report.
-- 14 specialist subagents: `recon`, `web`, `api`, `service-enum` and more.
+- 14 specialist subagents: `recon`, `web`, `api`, `service-enum`, and more.
 - Shared state machine via `/tmp/htb-<target>/state.json` — all agents coordinate through a single canonical file.
 - Anti-loop rules prevent duplicate tool runs, blind wordlist exhaustion, and credential spray.
 - Generates a full markdown report at `/tmp/htb-<target>/report.md` on completion.
+
+</details>
+
+<details>
+<summary>Bug Bounty Agent System (@bugbounty)</summary>
+
+A 7-specialist agent system built natively for **OpenCode**, designed for autonomous bug bounty hunting across web, API, and broad wildcard scopes.
+
+**Key features:**
+
+- Scope-first — scope enforcement is absolute. Every tool call is checked against `scope[]` and `out_of_scope[]` before firing. No violations.
+- Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tools run.
+- Full chain: recon → OSINT → enumeration → fuzzing → vulnerability confirmation → report.
+- 7 specialist subagents: `recon`, `osint`, `web`, and more.
+- `web` and `api` agents run in parallel during ENUM and VULN phases for broad scopes.
+- P1–P4 severity triage with CVSSv3 scores on every finding.
+- Auto-generated PoC per finding: working `curl` command + numbered reproduction steps.
+- Final report at `/tmp/bb-<program>/report.md` — submission-ready markdown.
 
 </details>
 
