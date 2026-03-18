@@ -9,32 +9,16 @@ Framework: FastMCP integration for AI agent communication
 """
 
 import argparse
-import base64
-import json
 import logging
 import os
-import shlex
 import subprocess
-import sys
-import traceback
-import threading
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Dict, Any, Optional
-from pathlib import Path
 from flask import Flask, request, jsonify, abort
-import requests
 import re
-from tool_registry import classify_intent, get_tools_for_category, format_tools_for_prompt, get_all_categories
-from urllib.parse import urljoin, urlparse
-from bs4 import BeautifulSoup
-# selenium and mitmproxy are optional heavy dependencies — imported lazily
-# inside the functions/classes that use them to avoid hard startup failures.
 import server_core.config_core as config_core
 from server_core import *
 from server_api import *
-from shared.target_types import TechnologyStack
 
 # ============================================================================
 # LOGGING CONFIGURATION (MUST BE FIRST)
@@ -61,16 +45,8 @@ COMMON_DIRSEARCH_PATH = config_core.get_word_list_path("common_dirsearch")
 session_store = SessionStore()
 wordlist_store = WordlistStore()
 
-# ============================================================================
-# INTELLIGENT DECISION ENGINE (v6.0 ENHANCEMENT)
-# ============================================================================
-
 # Global decision engine instance
 decision_engine = IntelligentDecisionEngine()
-
-# ============================================================================
-# INTELLIGENT ERROR HANDLING AND RECOVERY SYSTEM (v11.0 ENHANCEMENT)
-# ============================================================================
 
 # Global error handler and degradation manager instances
 error_handler = IntelligentErrorHandler()
@@ -79,10 +55,6 @@ degradation_manager = GracefulDegradation()
 # Global bug bounty workflow manager
 bugbounty_manager = BugBountyWorkflowManager()
 fileupload_framework = FileUploadTestingFramework()
-
-# ============================================================================
-# ADVANCED PROCESS MANAGEMENT AND MONITORING
-# ============================================================================
 
 # Global instances
 tech_detector = TechnologyDetector()
@@ -97,17 +69,6 @@ ctf_manager = CTFWorkflowManager()
 ctf_tools = CTFToolManager()
 ctf_automator = CTFChallengeAutomator()
 ctf_coordinator = CTFTeamCoordinator()
-
-# ============================================================================
-# PROCESS MANAGEMENT FOR COMMAND TERMINATION
-# ============================================================================
-
-# Use the canonical registry from process_manager to avoid a duplicate dict
-from server_core.process_manager import active_processes, process_lock
-
-# ============================================================================
-# ADVANCED VULNERABILITY INTELLIGENCE SYSTEM (v6.0 ENHANCEMENT)
-# ============================================================================
 
 # Configuration (using existing API_PORT from top of file)
 DEBUG_MODE = os.environ.get("DEBUG_MODE", "0").lower() in ("1", "true", "yes", "y")
@@ -125,7 +86,6 @@ from server_core.enhanced_command_executor import telemetry
 cve_intelligence = CVEIntelligenceManager()
 exploit_generator = AIExploitGenerator()
 vulnerability_correlator = VulnerabilityCorrelator()
-
 
 def execute_command(command: str, use_cache: bool = True, cache=cache, timeout: int = COMMAND_TIMEOUT) -> Dict[str, Any]:
     """Server-level execute_command wrapper that passes the global cache instance."""
@@ -169,6 +129,8 @@ def optional_bearer_auth():
     token = auth_header[len(prefix):]
     if token != API_TOKEN:
         abort(401, description="Unauthorized!")
+        
+# !NEW BLUEPRINTS GOES BELOW HERE IN FITTING CATEGORIES! #
 
 # ============================================================================
 # OPS — SYSTEM MONITORING & FILE OPS BLUEPRINTS
@@ -237,15 +199,13 @@ app.register_blueprint(api_wifi_pentest_wifite2_bp)
 app.register_blueprint(api_wifi_pentest_bettercap_wifi_bp)
 app.register_blueprint(api_wifi_pentest_mdk4_bp)
 
-# !NEW BLUEPRINTS GOES HERE!
-
 # ============================================================================
-# EXPLOIT FRAMEWORK API ENDPOINTS (EXTENDED)
+# EXPLOIT FRAMEWORK API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_exploit_framework_pwninit_bp)
 
 # ============================================================================
-# WEB FUZZ API ENDPOINTS (EXTENDED)
+# WEB FUZZ API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_web_fuzz_feroxbuster_bp)
 app.register_blueprint(api_web_fuzz_dotdotpwn_bp)
@@ -253,7 +213,7 @@ app.register_blueprint(api_web_fuzz_wfuzz_bp)
 app.register_blueprint(api_web_fuzz_dirsearch_bp)
 
 # ============================================================================
-# WEB SCAN API ENDPOINTS (EXTENDED)
+# WEB SCAN API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_web_scan_xsser_bp)
 
@@ -341,12 +301,12 @@ app.register_blueprint(api_ai_payload_test_payload_bp)
 app.register_blueprint(api_api_fuzz_api_fuzzer_bp)
 
 # ============================================================================
-# SMB ENUM API ENDPOINTS (EXTENDED)
+# SMB ENUM API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_smb_enum_nbtscan_bp)
 
 # ============================================================================
-# NET SCAN API ENDPOINTS (EXTENDED)
+# NET SCAN API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_net_scan_arp_scan_bp)
 
@@ -361,7 +321,7 @@ app.register_blueprint(api_credential_harvest_responder_bp)
 app.register_blueprint(api_memory_forensics_volatility_bp)
 
 # ============================================================================
-# EXPLOIT FRAMEWORK API ENDPOINTS (EXTENDED)
+# EXPLOIT FRAMEWORK API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_exploit_framework_msfvenom_bp)
 
@@ -373,7 +333,7 @@ app.register_blueprint(api_binary_debug_gdb_peda_bp)
 app.register_blueprint(api_binary_debug_radare2_bp)
 
 # ============================================================================
-# BINARY ANALYSIS API ENDPOINTS (EXTENDED)
+# BINARY ANALYSIS API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_binary_analysis_binwalk_bp)
 app.register_blueprint(api_binary_analysis_checksec_bp)
@@ -391,7 +351,7 @@ app.register_blueprint(api_container_scan_docker_bench_bp)
 app.register_blueprint(api_container_scan_clair_bp)
 
 # ============================================================================
-# CLOUD AUDIT API ENDPOINTS (EXTENDED)
+# CLOUD AUDIT API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_cloud_audit_scout_suite_bp)
 
@@ -459,7 +419,7 @@ app.register_blueprint(api_vulnerability_intelligence_bp)
 app.register_blueprint(api_bugbounty_workflow_bug_bounty_recon_bp)
 
 # ============================================================================
-# WEB FUZZ API ENDPOINTS (EXTENDED)
+# WEB FUZZ API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_web_fuzz_dirb_bp)
 app.register_blueprint(api_web_fuzz_ffuf_bp)
@@ -472,13 +432,13 @@ app.register_blueprint(api_web_scan_sqlmap_bp)
 app.register_blueprint(api_web_scan_wpscan_bp)
 
 # ============================================================================
-# EXPLOIT FRAMEWORK API ENDPOINTS (EXTENDED)
+# EXPLOIT FRAMEWORK API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_exploit_framework_metasploit_bp)
 app.register_blueprint(api_exploit_framework_pwntools_bp)
 
 # ============================================================================
-# PASSWORD CRACKING API ENDPOINTS (EXTENDED)
+# PASSWORD CRACKING API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_password_cracking_hydra_bp)
 app.register_blueprint(api_password_cracking_john_bp)
@@ -490,684 +450,72 @@ app.register_blueprint(api_smb_enum_enum4linux_bp)
 app.register_blueprint(api_smb_enum_netexec_bp)
 
 # ============================================================================
-# RECON API ENDPOINTS (EXTENDED)
+# RECON API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_recon_amass_bp)
 app.register_blueprint(api_recon_subfinder_bp)
 app.register_blueprint(api_recon_autorecon_bp)
 
 # ============================================================================
-# PASSWORD CRACKING API ENDPOINTS (EXTENDED)
+# PASSWORD CRACKING API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_password_cracking_hashcat_bp)
 
 # ============================================================================
-# SMB ENUM API ENDPOINTS (EXTENDED)
+# SMB ENUM API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_smb_enum_smbmap_bp)
 app.register_blueprint(api_smb_enum_enum4linux_ng_bp)
 app.register_blueprint(api_smb_enum_rpcclient_bp)
 
 # ============================================================================
-# NET SCAN API ENDPOINTS (EXTENDED)
+# NET SCAN API ENDPOINTS
 # ============================================================================
 app.register_blueprint(api_net_scan_rustscan_bp)
 app.register_blueprint(api_net_scan_masscan_bp)
 app.register_blueprint(api_net_scan_nmap_advanced_bp)
 
+# ============================================================================
+# API SCAN ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_api_scan_graphql_scanner_bp)
+app.register_blueprint(api_api_scan_jwt_analyzer_bp)
+app.register_blueprint(api_api_scan_api_schema_analyzer_bp)
 
 # ============================================================================
-# ADVANCED WEB SECURITY TOOLS CONTINUED
+# MEMORY FORENSICS ENDPOINTS
 # ============================================================================
-
-
-@app.route("/api/tools/graphql_scanner", methods=["POST"])
-def graphql_scanner():
-    """Advanced GraphQL security scanning and introspection"""
-    try:
-        params = request.json
-        endpoint = params.get("endpoint", "")
-        introspection = params.get("introspection", True)
-        query_depth = params.get("query_depth", 10)
-        mutations = params.get("test_mutations", True)
-
-        if not endpoint:
-            logger.warning("🌐 GraphQL Scanner called without endpoint parameter")
-            return jsonify({
-                "error": "GraphQL endpoint parameter is required"
-            }), 400
-
-        logger.info(f"🔍 Starting GraphQL security scan: {endpoint}")
-
-        results = {
-            "endpoint": endpoint,
-            "tests_performed": [],
-            "vulnerabilities": [],
-            "recommendations": []
-        }
-
-        # Test 1: Introspection query
-        if introspection:
-            introspection_query = '''
-            {
-                __schema {
-                    types {
-                        name
-                        fields {
-                            name
-                            type {
-                                name
-                            }
-                        }
-                    }
-                }
-            }
-            '''
-
-            clean_query = introspection_query.replace('\n', ' ').replace('  ', ' ').strip()
-            command = f"curl -s -X POST -H 'Content-Type: application/json' -d '{{\"query\":\"{clean_query}\"}}' '{endpoint}'"
-            result = execute_command(command, use_cache=False)
-
-            results["tests_performed"].append("introspection_query")
-
-            if "data" in result.get("stdout", ""):
-                results["vulnerabilities"].append({
-                    "type": "introspection_enabled",
-                    "severity": "MEDIUM",
-                    "description": "GraphQL introspection is enabled"
-                })
-
-        # Test 2: Query depth analysis
-        deep_query = "{ " * query_depth + "field" + " }" * query_depth
-        command = f"curl -s -X POST -H 'Content-Type: application/json' -d '{{\"query\":\"{deep_query}\"}}' {endpoint}"
-        depth_result = execute_command(command, use_cache=False)
-
-        results["tests_performed"].append("query_depth_analysis")
-
-        if "error" not in depth_result.get("stdout", "").lower():
-            results["vulnerabilities"].append({
-                "type": "no_query_depth_limit",
-                "severity": "HIGH",
-                "description": f"No query depth limiting detected (tested depth: {query_depth})"
-            })
-
-        # Test 3: Batch query testing
-        batch_query = '[' + ','.join(['{\"query\":\"{field}\"}' for _ in range(10)]) + ']'
-        command = f"curl -s -X POST -H 'Content-Type: application/json' -d '{batch_query}' {endpoint}"
-        batch_result = execute_command(command, use_cache=False)
-
-        results["tests_performed"].append("batch_query_testing")
-
-        if "data" in batch_result.get("stdout", "") and batch_result.get("success"):
-            results["vulnerabilities"].append({
-                "type": "batch_queries_allowed",
-                "severity": "MEDIUM",
-                "description": "Batch queries are allowed without rate limiting"
-            })
-
-        # Generate recommendations
-        if results["vulnerabilities"]:
-            results["recommendations"] = [
-                "Disable introspection in production",
-                "Implement query depth limiting",
-                "Add rate limiting for batch queries",
-                "Implement query complexity analysis",
-                "Add authentication for sensitive operations"
-            ]
-
-        logger.info(f"📊 GraphQL scan completed | Vulnerabilities found: {len(results['vulnerabilities'])}")
-
-        return jsonify({
-            "success": True,
-            "graphql_scan_results": results
-        })
-
-    except Exception as e:
-        logger.error(f"💥 Error in GraphQL scanner: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/jwt_analyzer", methods=["POST"])
-def jwt_analyzer():
-    """Advanced JWT token analysis and vulnerability testing"""
-    try:
-        params = request.json
-        jwt_token = params.get("jwt_token", "")
-        target_url = params.get("target_url", "")
-
-        if not jwt_token:
-            logger.warning("🔐 JWT Analyzer called without jwt_token parameter")
-            return jsonify({
-                "error": "JWT token parameter is required"
-            }), 400
-
-        logger.info(f"🔍 Starting JWT security analysis")
-
-        results = {
-            "token": jwt_token[:50] + "..." if len(jwt_token) > 50 else jwt_token,
-            "vulnerabilities": [],
-            "token_info": {},
-            "attack_vectors": []
-        }
-
-        # Decode JWT header and payload (basic analysis)
-        try:
-            parts = jwt_token.split('.')
-            if len(parts) >= 2:
-                # Decode header
-
-                # Add padding if needed
-                header_b64 = parts[0] + '=' * (4 - len(parts[0]) % 4)
-                payload_b64 = parts[1] + '=' * (4 - len(parts[1]) % 4)
-
-                try:
-                    header = json.loads(base64.b64decode(header_b64))
-                    payload = json.loads(base64.b64decode(payload_b64))
-
-                    results["token_info"] = {
-                        "header": header,
-                        "payload": payload,
-                        "algorithm": header.get("alg", "unknown")
-                    }
-
-                    # Check for vulnerabilities
-                    algorithm = header.get("alg", "").lower()
-
-                    if algorithm == "none":
-                        results["vulnerabilities"].append({
-                            "type": "none_algorithm",
-                            "severity": "CRITICAL",
-                            "description": "JWT uses 'none' algorithm - no signature verification"
-                        })
-
-                    if algorithm in ["hs256", "hs384", "hs512"]:
-                        results["attack_vectors"].append("hmac_key_confusion")
-                        results["vulnerabilities"].append({
-                            "type": "hmac_algorithm",
-                            "severity": "MEDIUM",
-                            "description": "HMAC algorithm detected - vulnerable to key confusion attacks"
-                        })
-
-                    # Check token expiration
-                    exp = payload.get("exp")
-                    if not exp:
-                        results["vulnerabilities"].append({
-                            "type": "no_expiration",
-                            "severity": "HIGH",
-                            "description": "JWT token has no expiration time"
-                        })
-
-                except Exception as decode_error:
-                    results["vulnerabilities"].append({
-                        "type": "malformed_token",
-                        "severity": "HIGH",
-                        "description": f"Token decoding failed: {str(decode_error)}"
-                    })
-
-        except Exception as e:
-            results["vulnerabilities"].append({
-                "type": "invalid_format",
-                "severity": "HIGH",
-                "description": "Invalid JWT token format"
-            })
-
-        # Test token manipulation if target URL provided
-        if target_url:
-            # Test none algorithm attack
-            none_token_parts = jwt_token.split('.')
-            if len(none_token_parts) >= 2:
-                # Create none algorithm token
-                none_header = base64.b64encode('{"alg":"none","typ":"JWT"}'.encode()).decode().rstrip('=')
-                none_token = f"{none_header}.{none_token_parts[1]}."
-
-                command = f"curl -s -H 'Authorization: Bearer {none_token}' '{target_url}'"
-                none_result = execute_command(command, use_cache=False)
-
-                if "200" in none_result.get("stdout", "") or "success" in none_result.get("stdout", "").lower():
-                    results["vulnerabilities"].append({
-                        "type": "none_algorithm_accepted",
-                        "severity": "CRITICAL",
-                        "description": "Server accepts tokens with 'none' algorithm"
-                    })
-
-        logger.info(f"📊 JWT analysis completed | Vulnerabilities found: {len(results['vulnerabilities'])}")
-
-        return jsonify({
-            "success": True,
-            "jwt_analysis_results": results
-        })
-
-    except Exception as e:
-        logger.error(f"💥 Error in JWT analyzer: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/api_schema_analyzer", methods=["POST"])
-def api_schema_analyzer():
-    """Analyze API schemas and identify potential security issues"""
-    try:
-        params = request.json
-        schema_url = params.get("schema_url", "")
-        schema_type = params.get("schema_type", "openapi")  # openapi, swagger, graphql
-
-        if not schema_url:
-            logger.warning("📋 API Schema Analyzer called without schema_url parameter")
-            return jsonify({
-                "error": "Schema URL parameter is required"
-            }), 400
-
-        logger.info(f"🔍 Starting API schema analysis: {schema_url}")
-
-        # Fetch schema
-        command = f"curl -s '{schema_url}'"
-        result = execute_command(command, use_cache=True)
-
-        if not result.get("success"):
-            return jsonify({
-                "error": "Failed to fetch API schema"
-            }), 400
-
-        schema_content = result.get("stdout", "")
-
-        analysis_results = {
-            "schema_url": schema_url,
-            "schema_type": schema_type,
-            "endpoints_found": [],
-            "security_issues": [],
-            "recommendations": []
-        }
-
-        # Parse schema based on type
-        try:
-            schema_data = json.loads(schema_content)
-            if schema_type.lower() in ["openapi", "swagger"]:
-                # OpenAPI/Swagger analysis
-                paths = schema_data.get("paths", {})
-
-                for path, methods in paths.items():
-                    for method, details in methods.items():
-                        if isinstance(details, dict):
-                            endpoint_info = {
-                                "path": path,
-                                "method": method.upper(),
-                                "summary": details.get("summary", ""),
-                                "parameters": details.get("parameters", []),
-                                "security": details.get("security", [])
-                            }
-                            analysis_results["endpoints_found"].append(endpoint_info)
-
-                            # Check for security issues
-                            if not endpoint_info["security"]:
-                                analysis_results["security_issues"].append({
-                                    "endpoint": f"{method.upper()} {path}",
-                                    "issue": "no_authentication",
-                                    "severity": "MEDIUM",
-                                    "description": "Endpoint has no authentication requirements"
-                                })
-
-                            # Check for sensitive data in parameters
-                            for param in endpoint_info["parameters"]:
-                                param_name = param.get("name", "").lower()
-                                if any(sensitive in param_name for sensitive in ["password", "token", "key", "secret"]):
-                                    analysis_results["security_issues"].append({
-                                        "endpoint": f"{method.upper()} {path}",
-                                        "issue": "sensitive_parameter",
-                                        "severity": "HIGH",
-                                        "description": f"Sensitive parameter detected: {param_name}"
-                                    })
-
-            # Generate recommendations
-            if analysis_results["security_issues"]:
-                analysis_results["recommendations"] = [
-                    "Implement authentication for all endpoints",
-                    "Use HTTPS for all API communications",
-                    "Validate and sanitize all input parameters",
-                    "Implement rate limiting",
-                    "Add proper error handling",
-                    "Use secure headers (CORS, CSP, etc.)"
-                ]
-
-        except json.JSONDecodeError:
-            analysis_results["security_issues"].append({
-                "endpoint": "schema",
-                "issue": "invalid_json",
-                "severity": "HIGH",
-                "description": "Schema is not valid JSON"
-            })
-
-        logger.info(f"📊 Schema analysis completed | Issues found: {len(analysis_results['security_issues'])}")
-
-        return jsonify({
-            "success": True,
-            "schema_analysis_results": analysis_results
-        })
-
-    except Exception as e:
-        logger.error(f"💥 Error in API schema analyzer: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
+app.register_blueprint(api_memory_forensics_volatility3_bp)
 
 # ============================================================================
-# ADVANCED CTF TOOLS (v5.0 ENHANCEMENT)
+# FILE CARVING ENDPOINTS
 # ============================================================================
-
-@app.route("/api/tools/volatility3", methods=["POST"])
-def volatility3():
-    """Execute Volatility3 for advanced memory forensics with enhanced logging"""
-    try:
-        params = request.json
-        memory_file = params.get("memory_file", "")
-        plugin = params.get("plugin", "")
-        output_file = params.get("output_file", "")
-        additional_args = params.get("additional_args", "")
-
-        if not memory_file:
-            logger.warning("🧠 Volatility3 called without memory_file parameter")
-            return jsonify({
-                "error": "Memory file parameter is required"
-            }), 400
-
-        if not plugin:
-            logger.warning("🧠 Volatility3 called without plugin parameter")
-            return jsonify({
-                "error": "Plugin parameter is required"
-            }), 400
-
-        command = f"vol -f {memory_file} {plugin}"
-
-        if output_file:
-            command += f" -o {output_file}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🧠 Starting Volatility3 analysis: {plugin}")
-        result = execute_command(command)
-        logger.info(f"📊 Volatility3 analysis completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in volatility3 endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/foremost", methods=["POST"])
-def foremost():
-    """Execute Foremost for file carving with enhanced logging"""
-    try:
-        params = request.json
-        input_file = params.get("input_file", "")
-        output_dir = params.get("output_dir", "/tmp/foremost_output")
-        file_types = params.get("file_types", "")
-        additional_args = params.get("additional_args", "")
-
-        if not input_file:
-            logger.warning("📁 Foremost called without input_file parameter")
-            return jsonify({
-                "error": "Input file parameter is required"
-            }), 400
-
-        # Ensure output directory exists
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-        command = f"foremost -o {output_dir}"
-
-        if file_types:
-            command += f" -t {file_types}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        command += f" {input_file}"
-
-        logger.info(f"📁 Starting Foremost file carving: {input_file}")
-        result = execute_command(command)
-        result["output_directory"] = output_dir
-        logger.info(f"📊 Foremost carving completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in foremost endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/steghide", methods=["POST"])
-def steghide():
-    """Execute Steghide for steganography analysis with enhanced logging"""
-    try:
-        params = request.json
-        action = params.get("action", "extract")  # extract, embed, info
-        cover_file = params.get("cover_file", "")
-        embed_file = params.get("embed_file", "")
-        passphrase = params.get("passphrase", "")
-        output_file = params.get("output_file", "")
-        additional_args = params.get("additional_args", "")
-
-        if not cover_file:
-            logger.warning("🖼️ Steghide called without cover_file parameter")
-            return jsonify({
-                "error": "Cover file parameter is required"
-            }), 400
-
-        if action == "extract":
-            command = f"steghide extract -sf {cover_file}"
-            if output_file:
-                command += f" -xf {output_file}"
-        elif action == "embed":
-            if not embed_file:
-                return jsonify({"error": "Embed file required for embed action"}), 400
-            command = f"steghide embed -cf {cover_file} -ef {embed_file}"
-        elif action == "info":
-            command = f"steghide info {cover_file}"
-        else:
-            return jsonify({"error": "Invalid action. Use: extract, embed, info"}), 400
-
-        if passphrase:
-            command += f" -p {passphrase}"
-        else:
-            command += " -p ''"  # Empty passphrase
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🖼️ Starting Steghide {action}: {cover_file}")
-        result = execute_command(command)
-        logger.info(f"📊 Steghide {action} completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in steghide endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/exiftool", methods=["POST"])
-def exiftool():
-    """Execute ExifTool for metadata extraction with enhanced logging"""
-    try:
-        params = request.json
-        file_path = params.get("file_path", "")
-        output_format = params.get("output_format", "")  # json, xml, csv
-        tags = params.get("tags", "")
-        additional_args = params.get("additional_args", "")
-
-        if not file_path:
-            logger.warning("📷 ExifTool called without file_path parameter")
-            return jsonify({
-                "error": "File path parameter is required"
-            }), 400
-
-        command = f"exiftool"
-
-        if output_format:
-            command += f" -{output_format}"
-
-        if tags:
-            command += f" -{tags}"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        command += f" {file_path}"
-
-        logger.info(f"📷 Starting ExifTool analysis: {file_path}")
-        result = execute_command(command)
-        logger.info(f"📊 ExifTool analysis completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in exiftool endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
-
-@app.route("/api/tools/hashpump", methods=["POST"])
-def hashpump():
-    """Execute HashPump for hash length extension attacks with enhanced logging"""
-    try:
-        params = request.json
-        signature = params.get("signature", "")
-        data = params.get("data", "")
-        key_length = params.get("key_length", "")
-        append_data = params.get("append_data", "")
-        additional_args = params.get("additional_args", "")
-
-        if not all([signature, data, key_length, append_data]):
-            logger.warning("🔐 HashPump called without required parameters")
-            return jsonify({
-                "error": "Signature, data, key_length, and append_data parameters are required"
-            }), 400
-
-        command = f"hashpump -s {signature} -d '{data}' -k {key_length} -a '{append_data}'"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🔐 Starting HashPump attack")
-        result = execute_command(command)
-        logger.info(f"📊 HashPump attack completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in hashpump endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
+app.register_blueprint(api_file_carving_foremost_bp)
 
 # ============================================================================
-# BUG BOUNTY RECONNAISSANCE TOOLS (v5.0 ENHANCEMENT)
+# STEGO ANALYSIS ENDPOINTS
 # ============================================================================
-
-@app.route("/api/tools/hakrawler", methods=["POST"])
-def hakrawler():
-    """
-    Execute Hakrawler for web endpoint discovery with enhanced logging
-
-    Note: This implementation uses the standard Kali Linux hakrawler (hakluke/hakrawler)
-    command line arguments, NOT the Elsfa7-110 fork. The standard version uses:
-    - echo URL | hakrawler (stdin input)
-    - -d for depth (not -depth)
-    - -s for showing sources (not -forms)
-    - -u for unique URLs
-    - -subs for subdomain inclusion
-    """
-    try:
-        params = request.json
-        url = params.get("url", "")
-        depth = params.get("depth", 2)
-        forms = params.get("forms", True)
-        robots = params.get("robots", True)
-        sitemap = params.get("sitemap", True)
-        wayback = params.get("wayback", False)
-        additional_args = params.get("additional_args", "")
-
-        if not url:
-            logger.warning("🕷️ Hakrawler called without URL parameter")
-            return jsonify({
-                "error": "URL parameter is required"
-            }), 400
-
-        # Build command for standard Kali Linux hakrawler (hakluke version)
-        command = f"echo '{url}' | hakrawler -d {depth}"
-
-        if forms:
-            command += " -s"  # Show sources (includes forms)
-        if robots or sitemap or wayback:
-            command += " -subs"  # Include subdomains for better coverage
-
-        # Add unique URLs flag for cleaner output
-        command += " -u"
-
-        if additional_args:
-            command += f" {additional_args}"
-
-        logger.info(f"🕷️ Starting Hakrawler crawling: {url}")
-        result = execute_command(command)
-        logger.info(f"📊 Hakrawler crawling completed")
-        return jsonify(result)
-    except Exception as e:
-        logger.error(f"💥 Error in hakrawler endpoint: {str(e)}")
-        return jsonify({
-            "error": f"Server error: {str(e)}"
-        }), 500
+app.register_blueprint(api_stego_analysis_steghide_bp)
 
 # ============================================================================
-# ADVANCED VULNERABILITY INTELLIGENCE API ENDPOINTS (v6.0 ENHANCEMENT)
+# METADATA EXTRACT ENDPOINTS
 # ============================================================================
+app.register_blueprint(api_metadata_extract_exiftool_bp)
 
-@app.route("/api/vuln-intel/cve-monitor", methods=["POST"])
-def cve_monitor():
-    """Monitor CVE databases for new vulnerabilities with AI analysis"""
-    try:
-        params = request.json
-        hours = params.get("hours", 24)
-        severity_filter = params.get("severity_filter", "HIGH,CRITICAL")
-        keywords = params.get("keywords", "")
+# ============================================================================
+# CRYPTO ATTACK ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_crypto_attack_hashpump_bp)
 
-        logger.info(f"🔍 Monitoring CVE feeds for last {hours} hours with severity filter: {severity_filter}")
+# ============================================================================
+# WEB CRAWL ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_web_crawl_hakrawler_bp)
 
-        # Fetch latest CVEs
-        cve_results = cve_intelligence.fetch_latest_cves(hours, severity_filter)
-
-        # Filter by keywords if provided
-        if keywords and cve_results.get("success"):
-            keyword_list = [k.strip().lower() for k in keywords.split(",")]
-            filtered_cves = []
-
-            for cve in cve_results.get("cves", []):
-                description = cve.get("description", "").lower()
-                if any(keyword in description for keyword in keyword_list):
-                    filtered_cves.append(cve)
-
-            cve_results["cves"] = filtered_cves
-            cve_results["filtered_by_keywords"] = keywords
-            cve_results["total_after_filter"] = len(filtered_cves)
-
-        # Analyze exploitability for top CVEs
-        exploitability_analysis = []
-        for cve in cve_results.get("cves", [])[:5]:  # Analyze top 5 CVEs
-            cve_id = cve.get("cve_id", "")
-            if cve_id:
-                analysis = cve_intelligence.analyze_cve_exploitability(cve_id)
-                if analysis.get("success"):
-                    exploitability_analysis.append(analysis)
-
-        result = {
-            "success": True,
-            "cve_monitoring": cve_results,
-            "exploitability_analysis": exploitability_analysis,
-            "timestamp": datetime.now().isoformat()
-        }
-
-        logger.info(f"📊 CVE monitoring completed | Found: {len(cve_results.get('cves', []))} CVEs")
-        return jsonify(result)
-
-    except Exception as e:
-        logger.error(f"💥 Error in CVE monitoring: {str(e)}")
-        return jsonify({
-            "success": False,
-            "error": f"Server error: {str(e)}"
-        }), 500
+# ============================================================================
+# VULNERABILITY INTELLIGENCE ENDPOINTS
+# ============================================================================
+app.register_blueprint(api_vuln_intel_cve_monitor_bp)
 
 @app.route("/api/vuln-intel/exploit-generate", methods=["POST"])
 def exploit_generate():

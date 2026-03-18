@@ -36,6 +36,7 @@ from .smb_enum import *
 from .stego_analysis import *
 from .url_filter import *
 from .url_recon import *
+from .vuln_intel import *
 from .vuln_scan import *
 from .waf_detect import *
 from .web_crawl import *
