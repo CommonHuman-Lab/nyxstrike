@@ -44,7 +44,7 @@ If no preset specified, default to `bb-broad`.
 ### Step 1.2 — Invoke Planner
 
 ```
-Task(agent="planner", prompt="
+Task(agent="bb-planner", prompt="
   program: <program>
   target: <target>
   scope: <scope>
@@ -72,12 +72,12 @@ Present this to the user and **stop**. Wait for explicit `yes` before proceeding
 
 | Phase | Agent(s) | Objective | Key Tools |
 |-------|----------|-----------|-----------|
-| RECON | recon | Subdomain enum, live hosts, port scan | subfinder, amass, httpx, rustscan |
-| OSINT | osint | Emails, JS secrets, historical URLs | theharvester, gau, katana |
-| ENUM | web + api (parallel) | Endpoint + schema discovery | feroxbuster, ffuf, api_schema_analyzer |
-| FUZZ | fuzz | Hidden parameter discovery | arjun, x8_discover, paramspider |
-| VULN | web + api (parallel) | Confirm and exploit vulnerabilities | nuclei, sqlmap, dalfox, jwt_analyzer |
-| REPORT | report | Triage P1–P4, write PoC report | file_operations |
+| RECON | bb-recon | Subdomain enum, live hosts, port scan | subfinder, amass, httpx, rustscan |
+| OSINT | bb-osint | Emails, JS secrets, historical URLs | theharvester, gau, katana |
+| ENUM | bb-web-specialist + bb-api-specialist (parallel) | Endpoint + schema discovery | feroxbuster, ffuf, api_schema_analyzer |
+| FUZZ | bb-fuzz | Hidden parameter discovery | arjun, x8_discover, paramspider |
+| VULN | bb-web-specialist + bb-api-specialist (parallel) | Confirm and exploit vulnerabilities | nuclei, sqlmap, dalfox, jwt_analyzer |
+| REPORT | bb-report | Triage P1–P4, write PoC report | file_operations |
 
 **Likely attack paths:**
 1. Subdomain takeover on dangling CNAME → account or data exposure
@@ -143,7 +143,7 @@ run_tool("file_operations", {
 
 ```
 state.phase = "RECON"
-result = Task(agent="recon", prompt=f"session_dir: {session_dir}, target: {target}, scope: {scope}, out_of_scope: {out_of_scope}, preset: {preset}")
+result = Task(agent="bb-recon", prompt=f"session_dir: {session_dir}, target: {target}, scope: {scope}, out_of_scope: {out_of_scope}, preset: {preset}")
 ```
 
 Read result → update `state.json` with `state_updates` from result → advance phase.
@@ -152,7 +152,7 @@ Read result → update `state.json` with `state_updates` from result → advance
 
 ```
 state.phase = "OSINT"
-result = Task(agent="osint", prompt=f"session_dir: {session_dir}, live_hosts: {state.assets.urls}, root_domain: {root_domain}, scope: {scope}, out_of_scope: {out_of_scope}")
+result = Task(agent="bb-osint", prompt=f"session_dir: {session_dir}, live_hosts: {state.assets.urls}, root_domain: {root_domain}, scope: {scope}, out_of_scope: {out_of_scope}")
 ```
 
 ### Step 2.4 — ENUM Phase (parallel)
@@ -160,7 +160,7 @@ result = Task(agent="osint", prompt=f"session_dir: {session_dir}, live_hosts: {s
 For `bb-broad` and `bb-web` presets, invoke web and api simultaneously:
 ```
 state.phase = "ENUM"
-[web_result, api_result] = Task(agent="web", mode="enum", ...) AND Task(agent="api", mode="enum", ...)  # parallel
+[web_result, api_result] = Task(agent="bb-web-specialist", mode="enum", ...) AND Task(agent="bb-api-specialist", mode="enum", ...)  # parallel
 ```
 
 For `bb-web` preset: web only.
@@ -172,14 +172,14 @@ Merge both result `state_updates` into `state.json`.
 
 ```
 state.phase = "FUZZ"
-result = Task(agent="fuzz", prompt=f"session_dir: {session_dir}")
+result = Task(agent="bb-fuzz", prompt=f"session_dir: {session_dir}")
 ```
 
 ### Step 2.6 — VULN Phase (parallel)
 
 ```
 state.phase = "VULN"
-[web_result, api_result] = Task(agent="web", mode="exploit", ...) AND Task(agent="api", mode="vuln", ...)  # parallel
+[web_result, api_result] = Task(agent="bb-web-specialist", mode="exploit", ...) AND Task(agent="bb-api-specialist", mode="vuln", ...)  # parallel
 ```
 
 After each result, immediately append new findings to `state.findings[]`.
@@ -188,7 +188,7 @@ After each result, immediately append new findings to `state.findings[]`.
 
 ```
 state.phase = "REPORT"
-result = Task(agent="report", prompt=f"session_dir: {session_dir}")
+result = Task(agent="bb-report", prompt=f"session_dir: {session_dir}")
 ```
 
 ---

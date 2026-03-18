@@ -55,7 +55,7 @@ If no target or goal is provided, ask the user for them before proceeding.
 ### Step 1.1 — Invoke the planner
 
 ```
-Task(agent="planner", prompt="target: <target>, goal: <goal>, preset: <preset>, notes: <notes>")
+Task(agent="htb-planner", prompt="target: <target>, goal: <goal>, preset: <preset>, notes: <notes>")
 ```
 
 The planner returns a structured JSON attack plan.
@@ -135,7 +135,7 @@ run_tool("file_operations", {
 ### Step 2.2 — RECON phase
 
 ```
-Task(agent="recon", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
+Task(agent="htb-recon", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
 ```
 
 Read the recon result. Update `state.json` with open ports and services. Set `phase = ENUM`.
@@ -146,17 +146,17 @@ Based on services discovered in recon:
 
 **If HTTP/HTTPS found:**
 ```
-Task(agent="web", prompt="mode: enum, target: <target>, state_file: /tmp/htb-<target>/state.json")
+Task(agent="htb-web", prompt="mode: enum, target: <target>, state_file: /tmp/htb-<target>/state.json")
 ```
 
 **If SMB/RPC/NetBIOS found (simultaneously):**
 ```
-Task(agent="service-enum", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
+Task(agent="htb-service-enum", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
 ```
 
 **If API endpoints detected (simultaneously):**
 ```
-Task(agent="api", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
+Task(agent="htb-api", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
 ```
 
 You may invoke web + service-enum + api in a single message with multiple Task calls for parallelism.
@@ -169,13 +169,13 @@ Based on ENUM findings, choose the most promising vector:
 
 | Finding | Action |
 |---------|--------|
-| SQLi confirmed | `Task(agent="web", prompt="mode: exploit, vuln: sqli, ...")` |
-| Public exploit exists (CVE) | `Task(agent="foothold", prompt="exploit: CVE-XXXX, ...")` |
-| Valid credentials found | `Task(agent="foothold", prompt="method: ssh/winrm, creds: ..., ...")` |
-| Usernames found, no creds | `Task(agent="creds", prompt="usernames: ..., services: ..., ...")` |
-| Hash found | `Task(agent="crypto", prompt="hashes: ..., ...")` |
-| Binary/SUID to analyze | `Task(agent="binary", prompt="binary: ..., ...")` |
-| JWT token found | `Task(agent="api", prompt="mode: jwt_attack, token: ..., ...")` |
+| SQLi confirmed | `Task(agent="htb-web", prompt="mode: exploit, vuln: sqli, ...")` |
+| Public exploit exists (CVE) | `Task(agent="htb-foothold", prompt="exploit: CVE-XXXX, ...")` |
+| Valid credentials found | `Task(agent="htb-foothold", prompt="method: ssh/winrm, creds: ..., ...")` |
+| Usernames found, no creds | `Task(agent="htb-creds", prompt="usernames: ..., services: ..., ...")` |
+| Hash found | `Task(agent="htb-crypto", prompt="hashes: ..., ...")` |
+| Binary/SUID to analyze | `Task(agent="htb-binary", prompt="binary: ..., ...")` |
+| JWT token found | `Task(agent="htb-api", prompt="mode: jwt_attack, token: ..., ...")` |
 
 If foothold attempt fails: pivot to next vector. Track attempts to enforce anti-loop Rule 2.
 
@@ -185,10 +185,10 @@ Once shell confirmed in `state.json` → `shells[]`: set `phase = PRIVESC`.
 
 ```
 # Linux target
-Task(agent="privesc-linux", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json, current_user: <user>")
+Task(agent="htb-privesc-linux", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json, current_user: <user>")
 
 # Windows target
-Task(agent="privesc-windows", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json, current_user: <user>")
+Task(agent="htb-privesc-windows", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json, current_user: <user>")
 
 # Unknown OS — invoke both in parallel, use whichever succeeds
 ```
@@ -198,7 +198,7 @@ Once root/SYSTEM shell confirmed: set `phase = FLAG`.
 ### Step 2.6 — FLAG phase
 
 ```
-Task(agent="flag", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json, goal: <goal>")
+Task(agent="htb-flag", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json, goal: <goal>")
 ```
 
 Flag agent writes flags to `state.json` → `flags{}`.
@@ -214,7 +214,7 @@ If goal is met: set `phase = LOOT`.
 ### Step 2.7 — LOOT phase
 
 ```
-Task(agent="loot", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
+Task(agent="htb-loot", prompt="target: <target>, state_file: /tmp/htb-<target>/state.json")
 ```
 
 Set `phase = DONE`.
