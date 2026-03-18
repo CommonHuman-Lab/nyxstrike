@@ -4,3 +4,5 @@ from .wpscan import *
 from .xsser import *
 from .jaeles import *
 from .dalfox import *
+from .burpsuite import *
+from .zap import *
