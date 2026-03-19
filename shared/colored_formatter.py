@@ -26,5 +26,8 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         emoji = self.EMOJIS.get(record.levelname, '📝')
         color = self.COLORS.get(record.levelname, _BRIGHT_WHITE)
-        record.msg = f"{color}{emoji} {record.msg}{_RESET}"
+        if emoji is not None and emoji != '':
+            record.msg = f"{color}{emoji} {record.msg}{_RESET}"
+        else:
+            record.msg = f"{color}{record.msg}{_RESET}"
         return super().format(record)
