@@ -118,7 +118,7 @@ if __name__ == "__main__":
     _hr  = '─' * BOX_WIDTH
     lines = [
         f"{C['MATRIX_GREEN']}{C['BOLD']}╭{_hr}╮{C['RESET']}",
-        _box_row(f" {C['RUBY']}🌐 Running on:{C['RESET']} {API_HOST}:{API_PORT}"),
+        _box_row(f" {C['RUBY']}🌐 Running on:{C['RESET']} http://{API_HOST}:{API_PORT}"),
         _box_row(f" {C['WARNING']}🔧 Debug Mode:{C['RESET']} {DEBUG_MODE}"),
         _box_row(f" {C['ELECTRIC_PURPLE']}💾 Cache Size:{C['RESET']} {CACHE_SIZE} | TTL: {CACHE_TTL}s"),
         _box_row(f" {C['SCARLET']}⏰ Command Timeout:{C['RESET']} {COMMAND_TIMEOUT}s"),
