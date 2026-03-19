@@ -18,7 +18,7 @@ from mcp_core.args import parse_args
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format="[🔥 HexStrike MCP] %(asctime)s [%(levelname)s] %(message)s",
+    format="[%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stderr)
     ]
@@ -27,7 +27,7 @@ logging.basicConfig(
 # Apply colored formatter
 for handler in logging.getLogger().handlers:
     handler.setFormatter(ColoredFormatter(
-        "[🔥 HexStrike MCP] %(asctime)s [%(levelname)s] %(message)s",
+        "[%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     ))
 
