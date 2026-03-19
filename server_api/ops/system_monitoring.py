@@ -3,12 +3,14 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Dict
 import logging
+import subprocess
 import threading
 import time
 import traceback
 
 import server_core.config_core as config_core
 from server_core.command_executor import execute_command
+from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import cache, telemetry
 
 logger = logging.getLogger(__name__)
@@ -61,8 +63,12 @@ def _refresh_tool_availability() -> None:
 
     def probe(tool: str) -> tuple:
         try:
-            result = execute_command(f"which {tool}", use_cache=False)
-            return tool, bool(result.get("success"))
+            result = subprocess.run(
+                ["which", tool],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            return tool, result.returncode == 0
         except Exception:
             return tool, False
 
@@ -72,10 +78,18 @@ def _refresh_tool_availability() -> None:
     with _tool_availability_lock:
         _tool_availability_cache.update(results)
         _tool_availability_last_refresh = time.time()
-    logger.info(
-        "Tool availability refreshed: %d/%d available",
-        sum(results.values()), len(results),
-    )
+
+    installed = sorted(t for t, ok in results.items() if ok)
+    missing = sorted(t for t, ok in results.items() if not ok)
+    GREEN = ModernVisualEngine.COLORS['MATRIX_GREEN']
+    RED = ModernVisualEngine.COLORS['HACKER_RED']
+    RESET = ModernVisualEngine.COLORS['RESET']
+    lines = ["Tool availability refreshed: %d/%d available" % (len(installed), len(results))]
+    for tool in installed:
+        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
+    for tool in missing:
+        lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
+    logger.info("\n".join(lines))
 
 
 def _get_tool_availability() -> Dict[str, bool]:
