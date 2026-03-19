@@ -1,12 +1,9 @@
 from typing import Dict, Any
 from server_core import config_core
 from server_core.enhanced_command_executor import EnhancedCommandExecutor
-from server_core.cache import HexStrikeCache
+from server_core.singletons import cache as _cache
 
 COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # Default to 5 minutes if not set
-
-# Module-level cache singleton — shared across all blueprint calls
-_cache = HexStrikeCache()
 
 def execute_command(command: str, use_cache: bool = True, cache=None, timeout: int = COMMAND_TIMEOUT) -> Dict[str, Any]:
     """
