@@ -1,13 +1,28 @@
 import time
 import threading
 import logging
+import re as _re
 import subprocess
 import traceback
 from typing import Dict, Any
 from datetime import datetime
+from wcwidth import wcswidth as _wcswidth
 import server_core.config_core as config_core
 from server_core.process_manager import ProcessManager
 from server_core.modern_visual_engine import ModernVisualEngine
+
+_ANSI = _re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+_BOX_WIDTH = 66  # visible columns between the two │ borders
+
+
+def _box_row(content_with_ansi: str) -> str:
+    C = ModernVisualEngine.COLORS
+    visible = _ANSI.sub('', content_with_ansi)
+    w = _wcswidth(visible)
+    if w < 0:
+        w = len(visible)
+    padding = ' ' * (_BOX_WIDTH - w)
+    return f"{C['MATRIX_GREEN']}{C['BOLD']}│{C['RESET']}{content_with_ansi}{padding}{C['MATRIX_GREEN']}{C['BOLD']}│{C['RESET']}"
 
 # Global telemetry collector
 from server_core.telemetry_collector import TelemetryCollector
@@ -211,22 +226,20 @@ class EnhancedCommandExecutor:
             timeout_status = f" {ModernVisualEngine.COLORS['WARNING']}[TIMEOUT]{ModernVisualEngine.COLORS['RESET']}" if self.timed_out else ""
 
             # Create beautiful results summary
-            results_summary = f"""
-{ModernVisualEngine.COLORS['MATRIX_GREEN']}{ModernVisualEngine.COLORS['BOLD']}╭─────────────────────────────────────────────────────────────────────────────╮{ModernVisualEngine.COLORS['RESET']}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {status_color}📊 FINAL RESULTS {status_icon}{ModernVisualEngine.COLORS['RESET']}
-{ModernVisualEngine.COLORS['BOLD']}├─────────────────────────────────────────────────────────────────────────────┤{ModernVisualEngine.COLORS['RESET']}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['NEON_BLUE']}🚀 Command:{ModernVisualEngine.COLORS['RESET']} {self.command[:55]}{'...' if len(self.command) > 55 else ''}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['CYBER_ORANGE']}⏱️  Duration:{ModernVisualEngine.COLORS['RESET']} {execution_time:.2f}s{timeout_status}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['WARNING']}📊 Output Size:{ModernVisualEngine.COLORS['RESET']} {output_size} bytes
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['ELECTRIC_PURPLE']}🔢 Exit Code:{ModernVisualEngine.COLORS['RESET']} {self.return_code}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {status_color}📈 Status:{ModernVisualEngine.COLORS['RESET']} {'SUCCESS' if success else 'FAILED'} | Cached: Yes
-{ModernVisualEngine.COLORS['MATRIX_GREEN']}{ModernVisualEngine.COLORS['BOLD']}╰─────────────────────────────────────────────────────────────────────────────╯{ModernVisualEngine.COLORS['RESET']}
-"""
-
-            # Log the beautiful summary
-            for line in results_summary.strip().split('\n'):
-                if line.strip():
-                    logger.info(line)
+            C = ModernVisualEngine.COLORS
+            _hr = '─' * _BOX_WIDTH
+            box_lines = [
+                f"{C['MATRIX_GREEN']}{C['BOLD']}╭{_hr}╮{C['RESET']}",
+                _box_row(f" {status_color}📊 FINAL RESULTS {status_icon}{C['RESET']}"),
+                f"{C['MATRIX_GREEN']}{C['BOLD']}├{_hr}┤{C['RESET']}",
+                _box_row(f" {C['NEON_BLUE']}🚀 Command:{C['RESET']} {self.command[:55]}{'...' if len(self.command) > 55 else ''}"),
+                _box_row(f" {C['CYBER_ORANGE']}⏰ Duration:{C['RESET']} {execution_time:.2f}s{timeout_status}"),
+                _box_row(f" {C['WARNING']}📊 Output Size:{C['RESET']} {output_size} bytes"),
+                _box_row(f" {C['ELECTRIC_PURPLE']}🔢 Exit Code:{C['RESET']} {self.return_code}"),
+                _box_row(f" {status_color}📈 Status:{C['RESET']} {'SUCCESS' if success else 'FAILED'} | Cached: Yes"),
+                f"{C['MATRIX_GREEN']}{C['BOLD']}╰{_hr}╯{C['RESET']}",
+            ]
+            print('\n'.join(box_lines), flush=True)
 
             return {
                 "stdout": self.stdout_data,
