@@ -11,7 +11,7 @@ Framework: FastMCP integration for AI agent communication
 import argparse
 import logging
 import os
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 import server_core.config_core as config_core
 from server_core.modern_visual_engine import ModernVisualEngine
 from server_api import register_blueprints
@@ -57,6 +57,12 @@ def optional_bearer_auth():
         abort(401, description="Unauthorized!")
 
 register_blueprints(app)
+
+
+@app.errorhandler(Exception)
+def handle_unhandled_exception(e):
+    logger.exception("Unhandled exception")
+    return jsonify({"error": str(e), "success": False}), 500
 
 if __name__ == "__main__":
     BANNER = ModernVisualEngine.create_banner()

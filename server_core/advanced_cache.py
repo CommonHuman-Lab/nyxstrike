@@ -17,10 +17,7 @@ class AdvancedCache:
         self.cache_lock = threading.RLock()
         self.hit_count = 0
         self.miss_count = 0
-
-        # Start cleanup thread
-        self.cleanup_thread = threading.Thread(target=self._cleanup_expired, daemon=True)
-        self.cleanup_thread.start()
+        self._cleanup_thread_started = False
 
     def get(self, key: str) -> Any:
         """Get value from cache"""
@@ -44,6 +41,10 @@ class AdvancedCache:
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """Set value in cache with optional TTL"""
+        if not self._cleanup_thread_started:
+            self._cleanup_thread_started = True
+            threading.Thread(target=self._cleanup_expired, daemon=True).start()
+
         with self.cache_lock:
             current_time = time.time()
 
