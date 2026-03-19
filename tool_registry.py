@@ -784,7 +784,8 @@ def _classify_with_llm(user_input: str, llm_client) -> str:
             [{"role": "user", "content": prompt}],
             stop=["\n"],
         )
-        final_resp = response.lower().split("category:")[1].strip() 
+        parts = response.lower().split("category:")
+        final_resp = parts[1].strip() if len(parts) > 1 else response.lower().strip()
         return final_resp
     except Exception as exc:
         logger.warning("LLM intent classification failed for input %r: %s", user_input, exc)
