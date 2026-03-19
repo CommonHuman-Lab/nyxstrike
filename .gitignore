@@ -2,3 +2,7 @@ __pycache__
 *.pyc
 hexstrike.log
 .hexstrike_data/
+
+# Web UI build output
+server_static/
+ui/node_modules/
