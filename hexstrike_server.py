@@ -98,6 +98,7 @@ if __name__ == "__main__":
         API_HOST = args.host
 
     # Enhanced startup messages with beautiful formatting
+    # Printed directly so the logger prefix doesn't break box alignment
     startup_info = f"""
 {ModernVisualEngine.COLORS['MATRIX_GREEN']}{ModernVisualEngine.COLORS['BOLD']}╭─────────────────────────────────────────────────────────────────────────────╮{ModernVisualEngine.COLORS['RESET']}
 {ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['NEON_BLUE']}🚀 Starting HexStrike AI Tools API Server{ModernVisualEngine.COLORS['RESET']}
@@ -109,9 +110,6 @@ if __name__ == "__main__":
 {ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['MATRIX_GREEN']}✨ Enhanced Visual Engine:{ModernVisualEngine.COLORS['RESET']} Active
 {ModernVisualEngine.COLORS['MATRIX_GREEN']}{ModernVisualEngine.COLORS['BOLD']}╰─────────────────────────────────────────────────────────────────────────────╯{ModernVisualEngine.COLORS['RESET']}
 """
-
-    for line in startup_info.strip().split('\n'):
-        if line.strip():
-            logger.info(line)
+    print(startup_info.strip(), flush=True)
 
     app.run(host=API_HOST, port=API_PORT, debug=DEBUG_MODE)
