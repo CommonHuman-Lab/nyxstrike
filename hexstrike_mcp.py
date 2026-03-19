@@ -24,6 +24,11 @@ logging.basicConfig(
     ]
 )
 
+# Suppress low-level MCP protocol noise (e.g. "Processing request of type ...")
+logging.getLogger("mcp.server.lowlevel.server").setLevel(logging.WARNING)
+# Suppress FastMCP's own "Starting MCP server" banner (redundant with our own startup logs)
+logging.getLogger("fastmcp").setLevel(logging.WARNING)
+
 # Apply colored formatter
 for handler in logging.getLogger().handlers:
     fmt = ColoredFormatter(
