@@ -35,7 +35,7 @@ def setup_logging(log_file: str = 'hexstrike.log') -> logging.Logger:
     # Console handler with colors
     console_handler = logging.StreamHandler(sys.stdout)
     fmt = ColoredFormatter(
-        "[HexStrike AI] %(asctime)s [%(levelname)s] %(message)s",
+        "%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
     fmt._stream = console_handler.stream
