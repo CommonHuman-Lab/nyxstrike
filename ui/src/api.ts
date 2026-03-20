@@ -133,6 +133,17 @@ export interface PatchSettingsResponse {
   error?: string;
 }
 
+export interface ToolExecResponse {
+  stdout: string;
+  stderr: string;
+  return_code: number;
+  success: boolean;
+  timed_out: boolean;
+  partial_results: boolean;
+  execution_time: number;
+  timestamp: string;
+}
+
 export const api = {
   health: () => apiFetch<HealthResponse>('/health'),
   resources: () => apiFetch<ResourceUsageResponse>('/api/process/resource-usage'),
@@ -144,4 +155,9 @@ export const api = {
       body: JSON.stringify({ runtime }),
     }),
   logStream: (lines = 100): EventSource => new EventSource(`/api/logs/stream?lines=${lines}`),
+  runTool: (endpoint: string, params: Record<string, unknown>) =>
+    apiFetch<ToolExecResponse>(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
 };
