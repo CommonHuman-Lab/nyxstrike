@@ -27,6 +27,7 @@
 ## 🚀 Differences from HexStrike V6
 
 - Increased toolings from **150** to over **180**
+- **Web Dashboard**: A real-time web UI — monitor server health, tool availability, system resources, live logs, and much more without touching the terminal.
 - **HTB CTF Multi-Agent System**: A full autonomous kill-chain agent suite for Hack The Box and CTF competitions — with a single command.
 - **Bug Bounty Multi-Agent System**: A scope-aware autonomous bug bounty agent suite and a P1–P4 triaged report with PoC per finding.
 - **Recon Multi-Agent System**: A no-exploit recon agent suite for domains, IPs, web apps, and APIs — outputs a structured markdown report.
@@ -107,6 +108,21 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 
 - 🚀 Select profiles for targeted workflows to speed up scans and reduce resource usage.
 - 🌐 Use --profile full to enable the complete arsenal, it's on default out-the-box for the recommended set.
+
+</details>
+
+<details>
+<summary>Web Dashboard</summary>
+
+Served automatically at `http://localhost:8888` the moment the server starts — no extra setup required.
+
+**What you get:**
+
+- **Dashboard** — live KPI cards for tools installed, command telemetry, cache stats, and uptime. CPU and memory history charts update in real time.
+- **Tool Availability** — every tool organised by category. Expand any category to see individual install status. Click any tool chip to open a detail modal with description, install command, API endpoint, and parameters.
+- **Tool Registry** — searchable, filterable card grid of all registered tools. Click any card for the same detail modal. Cards show a green/red install indicator pulled live from the health check.
+- **Server Logs** — near-realtime SSE log stream with auto-scroll, configurable line buffer (50–500 lines), and a line count display.
+- **Help** — IDE/agent configuration snippets for Claude Desktop, VS Code Copilot, Cursor, and OpenCode — with a custom install path input so the snippets are copy-paste ready.
 
 </details>
 
