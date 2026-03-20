@@ -6,3 +6,4 @@ from .system_monitoring import *
 from .file_ops_and_payload_gen import *
 from .vulnerability_intelligence import *
 from .python_env import *
+from .logs import *

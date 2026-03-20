@@ -649,7 +649,7 @@ function SettingsField({ label, unit, hint, value, onChange }: {
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 
 const POLL_MS = 10_000
-type Page = 'dashboard' | 'settings' | 'help'
+type Page = 'dashboard' | 'settings' | 'help' | 'logs'
 
 export default function App() {
   const [authed, setAuthed] = useState(hasToken())
@@ -665,6 +665,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [dashCacheSize, setDashCacheSize] = useState<number | null>(null)
   const [dashCacheTtl, setDashCacheTtl] = useState<number | null>(null)
+  const [logLines, setLogLines] = useState<string[]>([])
+  const [logAutoScroll, setLogAutoScroll] = useState(true)
+  const [logLimit, setLogLimit] = useState(500)
+  const logEndRef = useRef<HTMLDivElement>(null)
+  const sseRef = useRef<EventSource | null>(null)
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -736,6 +741,24 @@ export default function App() {
     })
   }, [])
 
+  // SSE log stream
+  useEffect(() => {
+    const es = api.logStream(150)
+    sseRef.current = es
+    es.onmessage = (e) => {
+      setLogLines(prev => {
+        const next = [...prev, e.data]
+        return next.length > 500 ? next.slice(-500) : next
+      })
+    }
+    return () => { es.close() }
+  }, [])
+
+  // Auto-scroll log to bottom (only when on logs page and autoscroll enabled)
+  useEffect(() => {
+    if (page === 'logs' && logAutoScroll) logEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [logLines, page, logAutoScroll])
+
   if (needsAuth && !authed) {
     return <TokenGate onUnlocked={() => { setAuthed(true); setNeedsAuth(false) }} />
   }
@@ -756,6 +779,9 @@ export default function App() {
         <nav className="topbar-nav">
           <button className={`nav-tab ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
             <LayoutDashboard size={13} /> Dashboard
+          </button>
+          <button className={`nav-tab ${page === 'logs' ? 'active' : ''}`} onClick={() => setPage('logs')}>
+            <Terminal size={13} /> Logs
           </button>
           <button className={`nav-tab ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
             <SettingsIcon size={13} /> Settings
@@ -790,6 +816,55 @@ export default function App() {
 
         {/* ── Help Page ── */}
         {page === 'help' && <HelpPage />}
+
+        {/* ── Logs Page ── */}
+        {page === 'logs' && (
+          <div className="page-content">
+            <section className="section">
+              <div className="section-header">
+                <h3>Server Log</h3>
+                <div className="log-toolbar">
+                  <label className="log-toggle">
+                    <input
+                      type="checkbox"
+                      checked={logAutoScroll}
+                      onChange={e => setLogAutoScroll(e.target.checked)}
+                    />
+                    Auto-scroll
+                  </label>
+                  <label className="log-limit-label">
+                    Show last
+                    <select
+                      className="log-limit-select"
+                      value={logLimit}
+                      onChange={e => setLogLimit(Number(e.target.value))}
+                    >
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={200}>200</option>
+                      <option value={500}>500</option>
+                    </select>
+                    lines
+                  </label>
+                  <span className="section-meta mono">{logLines.length} buffered</span>
+                </div>
+              </div>
+              <div className="log-viewer log-viewer--full">
+                {logLines.length === 0
+                  ? <span className="log-empty">Waiting for log data…</span>
+                  : logLines.slice(-logLimit).map((line, i) => {
+                      const lvl = /\bERROR\b/.test(line) ? 'error'
+                        : /\bWARN(ING)?\b/.test(line) ? 'warn'
+                        : /\bDEBUG\b/.test(line) ? 'debug'
+                        : ''
+                      return <div key={i} className={`log-line ${lvl}`}>{line}</div>
+                    })
+                }
+                <div ref={logEndRef} />
+              </div>
+            </section>
+          </div>
+        )}
 
         {/* ── Dashboard Page ── */}
         {page === 'dashboard' && (

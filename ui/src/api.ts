@@ -144,4 +144,5 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ runtime }),
     }),
+  logStream: (lines = 100): EventSource => new EventSource(`/api/logs/stream?lines=${lines}`),
 };
