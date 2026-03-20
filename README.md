@@ -151,6 +151,25 @@ hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --prof
 
 > See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) on how to customize the experience.
 
+### Web Dashboard Installation
+
+The dashboard is a React/Vite app located in `ui/`. Pre-built static files are
+already included in `server_static/`, so no build step is required for normal
+use — the server serves the dashboard automatically at `http://localhost:8888`.
+
+If you modify the frontend source and need to rebuild:
+
+```bash
+# Prerequisites: Node.js 18+ and npm
+cd ui
+npm install        # first time only
+npm run build      # outputs to ../server_static/
+#Once the server is running, open your browser at:
+http://localhost:8888
+```
+
+The dashboard provides a real-time view of server health, installed tools, cache config, request telemetry, system resources, and tool execution history.
+
 ### Verify Installation
 
 ```bash

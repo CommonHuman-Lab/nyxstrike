@@ -944,15 +944,19 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
     'strings', 'xxd', 'file', 'photorec', 'testdisk', 'scalpel',
     'bulk-extractor', 'stegsolve', 'zsteg', 'outguess'],
   cloud: ['prowler', 'scout-suite', 'trivy', 'kube-hunter', 'kube-bench',
-    'docker-bench-security', 'checkov', 'terrascan', 'falco', 'clair'],
+    'docker-bench-security', 'checkov', 'terrascan', 'falco', 'clair',
+    'cloudmapper', 'pacu'],
   osint: ['amass', 'subfinder', 'fierce', 'dnsenum', 'theharvester', 'sherlock',
     'social-analyzer', 'recon-ng', 'maltego', 'spiderfoot', 'shodan-cli',
     'censys-cli', 'have-i-been-pwned', 'whois', 'bbot'],
   exploitation: ['msfconsole', 'msfvenom', 'searchsploit'],
   api: ['api-schema-analyzer', 'postman', 'insomnia', 'curl', 'httpie', 'anew', 'qsreplace', 'uro'],
-  wireless: ['kismet', 'wireshark', 'tshark', 'tcpdump'],
+  wireless: ['kismet', 'wireshark', 'tshark', 'tcpdump',
+    'airbase-ng', 'airdecap-ng', 'hcxdumptool', 'hcxpcapngtool',
+    'mdk4', 'eaphammer', 'wifite', 'bettercap'],
   additional: ['smbmap', 'volatility', 'sleuthkit', 'autopsy', 'evil-winrm',
     'airmon-ng', 'airodump-ng', 'aireplay-ng', 'aircrack-ng'],
+  database: ['mysql', 'sqlite3'],
 }
 
 function getCatTools(cat: string, allStatuses: Record<string, boolean>): string[] {
