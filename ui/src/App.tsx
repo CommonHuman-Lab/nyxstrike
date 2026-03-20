@@ -178,51 +178,309 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   additional: <Server size={14} />,
 }
 
-function ToolCategoryRow({ category, stats, toolStatuses }: {
+function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
   category: string
   stats: { total: number; available: number }
   toolStatuses: Record<string, boolean>
+  toolsByName: Record<string, Tool>
 }) {
   const [open, setOpen] = useState(false)
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null)
   const pct = stats.total > 0 ? (stats.available / stats.total) * 100 : 0
   const color = pct === 100 ? 'var(--green)' : pct > 50 ? 'var(--amber)' : 'var(--red)'
 
   const toolsInCat = Object.entries(toolStatuses)
 
   return (
-    <div className="cat-row">
-      <button className="cat-header" onClick={() => setOpen(o => !o)}>
-        <span className="cat-icon" style={{ color }}>{CATEGORY_ICONS[category] || <Shield size={14} />}</span>
-        <span className="cat-name">{category.replace(/_/g, ' ')}</span>
-        <span className="cat-badge" style={{ background: color + '22', color }}>
-          {stats.available}/{stats.total}
-        </span>
-        <div className="cat-bar-bg">
-          <div className="cat-bar-fill" style={{ width: `${pct}%`, background: color }} />
-        </div>
-        <span className="cat-chevron">{open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
-      </button>
-      {open && (
-        <div className="cat-tools-grid">
-          {toolsInCat.map(([name, avail]) => (
-            <div key={name} className={`tool-chip ${avail ? 'available' : 'missing'}`}>
-              {avail
-                ? <CheckCircle size={10} color="var(--green)" />
-                : <XCircle size={10} color="var(--red)" />}
-              <span className="mono">{name}</span>
-            </div>
-          ))}
-        </div>
+    <>
+      {selectedTool && (
+        <ToolModal
+          tool={selectedTool}
+          onClose={() => setSelectedTool(null)}
+          installed={toolStatuses[selectedTool.name]}
+        />
       )}
+      <div className="cat-row">
+        <button className="cat-header" onClick={() => setOpen(o => !o)}>
+          <span className="cat-icon" style={{ color }}>{CATEGORY_ICONS[category] || <Shield size={14} />}</span>
+          <span className="cat-name">{category.replace(/_/g, ' ')}</span>
+          <span className="cat-badge" style={{ background: color + '22', color }}>
+            {stats.available}/{stats.total}
+          </span>
+          <div className="cat-bar-bg">
+            <div className="cat-bar-fill" style={{ width: `${pct}%`, background: color }} />
+          </div>
+          <span className="cat-chevron">{open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
+        </button>
+        {open && (
+          <div className="cat-tools-grid">
+            {toolsInCat.map(([name, avail]) => {
+              const toolObj = toolsByName[name]
+              return (
+                <div
+                  key={name}
+                  className={`tool-chip ${avail ? 'available' : 'missing'}${toolObj ? ' tool-chip--clickable' : ''}`}
+                  onClick={toolObj ? () => setSelectedTool(toolObj) : undefined}
+                  title={toolObj ? `Click for details on ${name}` : undefined}
+                >
+                  {avail
+                    ? <CheckCircle size={10} color="var(--green)" />
+                    : <XCircle size={10} color="var(--red)" />}
+                  <span className="mono">{name}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </>
+  )
+}
+
+// ─── Tool Install Hints ───────────────────────────────────────────────────────
+
+const INSTALL_HINTS: Record<string, string> = {
+  nmap:              'sudo apt install nmap',
+  masscan:           'sudo apt install masscan',
+  rustscan:          'cargo install rustscan  # or: sudo apt install rustscan',
+  autorecon:         'pip3 install autorecon',
+  gobuster:          'sudo apt install gobuster',
+  ffuf:              'sudo apt install ffuf',
+  feroxbuster:       'sudo apt install feroxbuster',
+  dirb:              'sudo apt install dirb',
+  dirsearch:         'pip3 install dirsearch',
+  nikto:             'sudo apt install nikto',
+  nuclei:            'go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest',
+  sqlmap:            'sudo apt install sqlmap',
+  wpscan:            'sudo apt install wpscan  # or: gem install wpscan',
+  hydra:             'sudo apt install hydra',
+  john:              'sudo apt install john',
+  hashcat:           'sudo apt install hashcat',
+  medusa:            'sudo apt install medusa',
+  patator:           'sudo apt install patator',
+  hashid:            'pip3 install hashid',
+  ophcrack:          'sudo apt install ophcrack',
+  amass:             'sudo apt install amass',
+  subfinder:         'go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest',
+  fierce:            'pip3 install fierce',
+  dnsenum:           'sudo apt install dnsenum',
+  theharvester:      'sudo apt install theharvester',
+  sherlock:          'pip3 install sherlock-project',
+  whois:             'sudo apt install whois',
+  httpx:             'go install github.com/projectdiscovery/httpx/cmd/httpx@latest',
+  katana:            'go install github.com/projectdiscovery/katana/cmd/katana@latest',
+  hakrawler:         'go install github.com/hakluke/hakrawler@latest',
+  gau:               'go install github.com/lc/gau/v2/cmd/gau@latest',
+  waybackurls:       'go install github.com/tomnomnom/waybackurls@latest',
+  wafw00f:           'pip3 install wafw00f',
+  dalfox:            'go install github.com/hahwul/dalfox/v2@latest',
+  jaeles:            'go install github.com/jaeles-project/jaeles@latest',
+  arjun:             'pip3 install arjun',
+  paramspider:       'pip3 install paramspider',
+  x8:                'cargo install x8',
+  gdb:               'sudo apt install gdb',
+  radare2:           'sudo apt install radare2',
+  binwalk:           'sudo apt install binwalk',
+  ropgadget:         'pip3 install ropgadget',
+  checksec:          'sudo apt install checksec  # or: pip3 install checksec',
+  objdump:           'sudo apt install binutils',
+  ghidra:            'sudo apt install ghidra  # or download from ghidra.re',
+  pwntools:          'pip3 install pwntools',
+  ropper:            'pip3 install ropper',
+  angr:              'pip3 install angr',
+  pwninit:           'cargo install pwninit',
+  'one-gadget':      'gem install one_gadget',
+  'libc-database':   'git clone https://github.com/niklasb/libc-database',
+  vol:               'pip3 install volatility3',
+  volatility:        'pip3 install volatility3',
+  steghide:          'sudo apt install steghide',
+  foremost:          'sudo apt install foremost',
+  exiftool:          'sudo apt install libimage-exiftool-perl',
+  strings:           'sudo apt install binutils',
+  xxd:               'sudo apt install xxd',
+  photorec:          'sudo apt install testdisk',
+  testdisk:          'sudo apt install testdisk',
+  scalpel:           'sudo apt install scalpel',
+  zsteg:             'gem install zsteg',
+  outguess:          'sudo apt install outguess',
+  hashpump:          'sudo apt install hashpump  # or: git clone https://github.com/bwall/HashPump',
+  prowler:           'pip3 install prowler',
+  'scout-suite':     'pip3 install scoutsuite',
+  trivy:             'sudo apt install trivy',
+  'kube-hunter':     'pip3 install kube-hunter',
+  'kube-bench':      'sudo apt install kube-bench',
+  'docker-bench-security': 'git clone https://github.com/docker/docker-bench-security',
+  checkov:           'pip3 install checkov',
+  terrascan:         'brew install terrascan  # or download from github.com/tenable/terrascan',
+  falco:             'sudo apt install falco',
+  clair:             'docker pull quay.io/projectquay/clair',
+  msfconsole:        'sudo apt install metasploit-framework',
+  msfvenom:          'sudo apt install metasploit-framework',
+  searchsploit:      'sudo apt install exploitdb',
+  smbmap:            'pip3 install smbmap',
+  enum4linux:        'sudo apt install enum4linux',
+  'enum4linux-ng':   'pip3 install enum4linux-ng',
+  nbtscan:           'sudo apt install nbtscan',
+  rpcclient:         'sudo apt install samba-common-bin',
+  responder:         'sudo apt install responder',
+  nxc:               'pip3 install netexec',
+  'evil-winrm':      'gem install evil-winrm',
+  'airmon-ng':       'sudo apt install aircrack-ng',
+  'aircrack-ng':     'sudo apt install aircrack-ng',
+  'airodump-ng':     'sudo apt install aircrack-ng',
+  'aireplay-ng':     'sudo apt install aircrack-ng',
+  'airbase-ng':      'sudo apt install aircrack-ng',
+  'airdecap-ng':     'sudo apt install aircrack-ng',
+  kismet:            'sudo apt install kismet',
+  wireshark:         'sudo apt install wireshark',
+  tshark:            'sudo apt install tshark',
+  tcpdump:           'sudo apt install tcpdump',
+  wifite:            'sudo apt install wifite',
+  bettercap:         'sudo apt install bettercap',
+  mdk4:              'sudo apt install mdk4',
+  bbot:              'pip3 install bbot',
+  curl:              'sudo apt install curl',
+  httpie:            'pip3 install httpie',
+  anew:              'go install github.com/tomnomnom/anew@latest',
+  qsreplace:         'go install github.com/tomnomnom/qsreplace@latest',
+  uro:               'pip3 install uro',
+  'graphql-scanner': 'npm install -g graphql-voyager',
+  'jwt-analyzer':    'pip3 install jwt-tool',
+  'api-schema-analyzer': 'npm install -g @stoplight/spectral-cli',
+  wfuzz:             'pip3 install wfuzz',
+  dotdotpwn:         'sudo apt install dotdotpwn',
+  xsser:             'sudo apt install xsser',
+  commix:            'sudo apt install commix',
+  tplmap:            'git clone https://github.com/epinna/tplmap',
+  nosqlmap:          'git clone https://github.com/codingo/NoSQLMap',
+  whatweb:           'sudo apt install whatweb',
+  testssl:           'sudo apt install testssl.sh',
+  sslscan:           'sudo apt install sslscan',
+  sslyze:            'pip3 install sslyze',
+  'recon-ng':        'sudo apt install recon-ng',
+  maltego:           'Download from maltego.com',
+  spiderfoot:        'pip3 install spiderfoot',
+  'social-analyzer': 'pip3 install social-analyzer',
+  sleuthkit:         'sudo apt install sleuthkit',
+  autopsy:           'sudo apt install autopsy',
+  'bulk-extractor':  'sudo apt install bulk-extractor',
+  'hashcat-utils':   'sudo apt install hashcat-utils',
+}
+
+function installHint(name: string): string {
+  return INSTALL_HINTS[name] ?? `sudo apt install ${name}  # check project docs for exact install`
+}
+
+// ─── Tool Detail Modal ────────────────────────────────────────────────────────
+
+function ToolModal({ tool, onClose, installed }: { tool: Tool; onClose: () => void; installed: boolean | undefined }) {
+  const eff = Math.round(tool.effectiveness * 100)
+  const effColor = eff >= 90 ? 'var(--green)' : eff >= 75 ? 'var(--amber)' : 'var(--red)'
+  const requiredParams = Object.entries(tool.params).filter(([, v]) => v.required)
+  const optionalParams = Object.entries(tool.optional)
+
+  // Close on backdrop click
+  function onBackdrop(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose()
+  }
+
+  // Close on Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  return (
+    <div className="modal-backdrop" onClick={onBackdrop}>
+      <div className="modal">
+        <div className="modal-header">
+          <div className="modal-title-row">
+            <span className="modal-name mono">{tool.name}</span>
+            <span className="modal-cat">{tool.category.replace(/_/g, ' ')}</span>
+            {installed === true && (
+              <span className="modal-status modal-status--installed">
+                <CheckCircle size={11} /> installed
+              </span>
+            )}
+            {installed === false && (
+              <span className="modal-status modal-status--missing">
+                <XCircle size={11} /> not installed
+              </span>
+            )}
+          </div>
+          <button className="modal-close" onClick={onClose}><XCircle size={18} /></button>
+        </div>
+
+        <div className="modal-body">
+          <p className="modal-desc">{tool.desc}</p>
+
+          {/* Effectiveness */}
+          <div className="modal-eff-row">
+            <span className="modal-label">Effectiveness</span>
+            <div className="modal-eff-bar">
+              <div className="modal-eff-fill" style={{ width: `${eff}%`, background: effColor }} />
+            </div>
+            <span className="modal-eff-pct" style={{ color: effColor }}>{eff}%</span>
+          </div>
+
+          {/* Install — only shown when tool is not installed (or status unknown) */}
+          {installed !== true && (
+            <div className="modal-section">
+              <span className="modal-label">Install</span>
+              <div className="modal-code mono">{installHint(tool.name)}</div>
+            </div>
+          )}
+
+          {/* API Endpoint */}
+          <div className="modal-section">
+            <span className="modal-label">API Endpoint</span>
+            <div className="modal-code mono">{tool.method} {tool.endpoint}</div>
+          </div>
+
+          {/* Required params */}
+          {requiredParams.length > 0 && (
+            <div className="modal-section">
+              <span className="modal-label">Required Parameters</span>
+              <div className="modal-params">
+                {requiredParams.map(([k]) => (
+                  <span key={k} className="modal-param modal-param--required mono">{k}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Optional params */}
+          {optionalParams.length > 0 && (
+            <div className="modal-section">
+              <span className="modal-label">Optional Parameters</span>
+              <table className="modal-table">
+                <thead>
+                  <tr><th>Parameter</th><th>Default</th></tr>
+                </thead>
+                <tbody>
+                  {optionalParams.map(([k, v]) => (
+                    <tr key={k}>
+                      <td className="mono">{k}</td>
+                      <td className="mono">{String(v) || <em>—</em>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
 
 // ─── Tool Registry Section ────────────────────────────────────────────────────
 
-function ToolRegistrySection({ tools }: { tools: Tool[] }) {
+function ToolRegistrySection({ tools, toolsStatus }: { tools: Tool[]; toolsStatus: Record<string, boolean> }) {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState<string>('all')
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null)
 
   const cats = ['all', ...Array.from(new Set(tools.map(t => t.category))).sort()]
   const filtered = tools.filter(t => {
@@ -233,48 +491,62 @@ function ToolRegistrySection({ tools }: { tools: Tool[] }) {
   })
 
   return (
-    <section className="section">
-      <div className="section-header">
-        <h3>Tool Registry <span className="badge">{tools.length}</span></h3>
-      </div>
-      <div className="registry-controls">
-        <input
-          className="search-input mono"
-          placeholder="Search tools…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <div className="cat-tabs">
-          {cats.map(c => (
-            <button
-              key={c}
-              className={`cat-tab ${activeCat === c ? 'active' : ''}`}
-              onClick={() => setActiveCat(c)}
-            >
-              {c.replace(/_/g, ' ')}
-            </button>
-          ))}
+    <>
+      {selectedTool && <ToolModal tool={selectedTool} onClose={() => setSelectedTool(null)} installed={toolsStatus[selectedTool.name]} />}
+      <section className="section">
+        <div className="section-header">
+          <h3>Tool Registry <span className="badge">{tools.length}</span></h3>
         </div>
-      </div>
-      <div className="registry-grid">
-        {filtered.map(t => (
-          <div key={t.name} className="registry-card">
-            <div className="registry-card-top">
-              <span className="registry-name mono">{t.name}</span>
-              <span className="registry-cat">{t.category.replace(/_/g, ' ')}</span>
-            </div>
-            <p className="registry-desc">{t.desc}</p>
-            <div className="registry-footer">
-              <span className="registry-endpoint mono">{t.method} {t.endpoint}</span>
-              <span className="registry-eff" title="Effectiveness">
-                {'█'.repeat(Math.round(t.effectiveness * 5))}{'░'.repeat(5 - Math.round(t.effectiveness * 5))}
-              </span>
-            </div>
+        <div className="registry-controls">
+          <input
+            className="search-input mono"
+            placeholder="Search tools…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          <div className="cat-tabs">
+            {cats.map(c => (
+              <button
+                key={c}
+                className={`cat-tab ${activeCat === c ? 'active' : ''}`}
+                onClick={() => setActiveCat(c)}
+              >
+                {c.replace(/_/g, ' ')}
+              </button>
+            ))}
           </div>
-        ))}
-        {filtered.length === 0 && <p className="empty-state">No tools match your filter.</p>}
-      </div>
-    </section>
+        </div>
+        <div className="registry-grid">
+          {filtered.map(t => (
+            <div
+              key={t.name}
+              className="registry-card registry-card--clickable"
+              onClick={() => setSelectedTool(t)}
+              title={`Click for details on ${t.name}`}
+            >
+              <div className="registry-card-top">
+                <span className="registry-name mono">{t.name}</span>
+                <span className="registry-cat">{t.category.replace(/_/g, ' ')}</span>
+                {toolsStatus[t.name] === true && (
+                  <span className="registry-installed" title="Installed"><CheckCircle size={11} color="var(--green)" /></span>
+                )}
+                {toolsStatus[t.name] === false && (
+                  <span className="registry-installed" title="Not installed"><XCircle size={11} color="var(--red)" /></span>
+                )}
+              </div>
+              <p className="registry-desc">{t.desc}</p>
+              <div className="registry-footer">
+                <span className="registry-endpoint mono">{t.method} {t.endpoint}</span>
+                <span className="registry-eff" title="Effectiveness">
+                  {'█'.repeat(Math.round(t.effectiveness * 5))}{'░'.repeat(5 - Math.round(t.effectiveness * 5))}
+                </span>
+              </div>
+            </div>
+          ))}
+          {filtered.length === 0 && <p className="empty-state">No tools match your filter.</p>}
+        </div>
+      </section>
+    </>
   )
 }
 
@@ -980,12 +1252,14 @@ export default function App() {
                       const catStatuses = Object.fromEntries(
                         catToolNames.map(n => [n, health.tools_status[n] ?? false])
                       )
+                      const toolsByName = Object.fromEntries(tools.map(t => [t.name, t]))
                       return (
                         <ToolCategoryRow
                           key={cat}
                           category={cat}
                           stats={stats}
                           toolStatuses={catStatuses}
+                          toolsByName={toolsByName}
                         />
                       )
                     })}
@@ -993,7 +1267,7 @@ export default function App() {
                 </section>
 
                 {/* ── Tool Registry ── */}
-                {tools.length > 0 && <ToolRegistrySection tools={tools} />}
+                {tools.length > 0 && <ToolRegistrySection tools={tools} toolsStatus={health?.tools_status ?? {}} />}
               </>
             )}
           </>
