@@ -45,6 +45,7 @@ _HEALTH_TOOL_CATEGORIES = {
     "wireless": ["kismet", "wireshark", "tshark", "tcpdump"],
     "additional": ["smbmap", "volatility", "sleuthkit", "autopsy", "evil-winrm",
                    "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
+    "database": ["mysql", "sqlite3"]
 }
 
 _tool_availability_cache: Dict[str, bool] = {}
