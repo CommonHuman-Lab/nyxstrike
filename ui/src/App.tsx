@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import faviconUrl from './favicon-16x16.png'
 import {
   Activity, Cpu, HardDrive, MemoryStick, Shield, Server,
   CheckCircle, XCircle, AlertCircle, RefreshCw, Lock, Eye, EyeOff,
@@ -1022,8 +1023,8 @@ export default function App() {
       {/* ── Top Bar ── */}
       <header className="topbar">
         <div className="topbar-brand">
-          <Shield size={18} color="var(--green)" />
-          <span className="brand-text">HexStrike AI</span>
+          <img src={faviconUrl} width={18} height={18} alt="" />
+          <span className="brand-text">HexStrike Community Edition</span>
           <span className="brand-version mono">{health?.version ?? '…'}</span>
         </div>
 
@@ -1226,11 +1227,18 @@ export default function App() {
 
                 {/* ── Tool Availability ── */}
                 <section className="section">
-                  <div className="section-header">
-                    <h3>Tool Availability</h3>
-                    <span className="section-meta">
-                      age: {health.tool_availability_age_seconds}s
-                    </span>
+                   <div className="section-header">
+                     <h3>Tool Availability</h3>
+                     <span className="section-meta">
+                       {(() => {
+                         const s = health.tool_availability_age_seconds
+                         if (s < 60) return 'just checked'
+                         if (s < 120) return 'checked a minute ago'
+                         if (s < 3600) return `checked ${Math.floor(s / 60)} minutes ago`
+                         if (s < 7200) return 'checked over an hour ago'
+                         return `checked ${Math.floor(s / 3600)} hours ago`
+                       })()}
+                     </span>
                   </div>
                   <div className="cat-list">
                     {Object.entries(health.category_stats).map(([cat, stats]) => {
