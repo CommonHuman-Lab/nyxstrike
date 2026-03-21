@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import faviconUrl from './favicon-16x16.png'
 import {
@@ -457,14 +457,18 @@ function ParamField({
   )
 }
 
-function RunPage({ tools, toolsStatus }: { tools: Tool[]; toolsStatus: Record<string, boolean> }) {
+function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHistory }: {
+  tools: Tool[]
+  toolsStatus: Record<string, boolean>
+  runHistory: RunHistoryEntry[]
+  setRunHistory: React.Dispatch<React.SetStateAction<RunHistoryEntry[]>>
+}) {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [selected, setSelected] = useState<Tool | null>(null)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
   const [showOptional, setShowOptional] = useState(false)
   const [running, setRunning] = useState(false)
-  const [history, setHistory] = useState<RunHistoryEntry[]>([])
   const [viewEntry, setViewEntry] = useState<RunHistoryEntry | null>(null)
   const [modalEntry, setModalEntry] = useState<RunHistoryEntry | null>(null)
   const [runError, setRunError] = useState<string | null>(null)
@@ -1224,6 +1228,7 @@ export default function App() {
   const [health, setHealth] = useState<WebDashboardResponse | null>(null)
   const [tools, setTools] = useState<Tool[]>([])
   const [history, setHistory] = useState<HistoryPoint[]>([])
+  const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>([])
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -1385,7 +1390,7 @@ export default function App() {
 
         {/* ── Run Page ── */}
         {page === 'run' && (
-          <RunPage tools={tools} toolsStatus={health?.tools_status ?? {}} />
+          <RunPage tools={tools} toolsStatus={health?.tools_status ?? {}} runHistory={runHistory} setRunHistory={setRunHistory} />
         )}
 
         {/* ── Logs Page ── */}
