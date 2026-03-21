@@ -1731,3 +1731,30 @@
   line-height: 1.6;
   background: var(--bg);
 }
+
+/* ── Export buttons ──────────────────────────────────────────────────────────── */
+
+.run-export-btns {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.run-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.run-export-btn:hover {
+  color: var(--text-h);
+  border-color: var(--text-dim);
+}

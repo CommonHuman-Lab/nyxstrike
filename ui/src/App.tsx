@@ -6,7 +6,7 @@ import {
   CheckCircle, XCircle, AlertCircle, RefreshCw, Lock, Eye, EyeOff,
   ChevronDown, ChevronRight, Clock, Database, Zap, Wifi,
   Settings as SettingsIcon, HelpCircle, LayoutDashboard,
-  Terminal, Copy, Check, Save, Play, ChevronUp,
+  Terminal, Copy, Check, Save, Play, ChevronUp, Download,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -373,6 +373,52 @@ function installHint(name: string): string {
   return INSTALL_HINTS[name] ?? `sudo apt install ${name}  # check project docs for exact install`
 }
 
+// ─── Export helper ────────────────────────────────────────────────────────────
+
+function exportEntry(entry: RunHistoryEntry, format: 'txt' | 'json') {
+  const r = entry.result
+  const ts = entry.ts.toISOString().replace(/[:.]/g, '-')
+  const filename = `${entry.tool}_${ts}.${format}`
+
+  let content: string
+  if (format === 'json') {
+    content = JSON.stringify({
+      tool: entry.tool,
+      timestamp: entry.ts.toISOString(),
+      params: entry.params,
+      success: r.success,
+      return_code: r.return_code,
+      execution_time: r.execution_time,
+      timed_out: r.timed_out,
+      partial_results: r.partial_results,
+      stdout: r.stdout,
+      stderr: r.stderr,
+    }, null, 2)
+  } else {
+    const paramStr = Object.entries(entry.params).map(([k, v]) => `  ${k}=${v}`).join('\n')
+    content = [
+      `Tool:       ${entry.tool}`,
+      `Timestamp:  ${entry.ts.toISOString()}`,
+      `Success:    ${r.success}`,
+      `Exit code:  ${r.return_code}`,
+      `Time:       ${r.execution_time.toFixed(2)}s`,
+      r.timed_out ? `Timed out:  yes` : '',
+      r.partial_results ? `Partial:    yes` : '',
+      paramStr ? `\nParams:\n${paramStr}` : '',
+      `\n--- stdout ---\n${r.stdout || '(empty)'}`,
+      r.stderr ? `\n--- stderr ---\n${r.stderr}` : '',
+    ].filter(Boolean).join('\n')
+  }
+
+  const blob = new Blob([content], { type: format === 'json' ? 'application/json' : 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ─── Run Result Modal ─────────────────────────────────────────────────────────
 
 function RunResultModal({ entry, onClose }: { entry: RunHistoryEntry; onClose: () => void }) {
@@ -404,6 +450,14 @@ function RunResultModal({ entry, onClose }: { entry: RunHistoryEntry; onClose: (
           <span className="run-output-meta mono">{entry.ts.toLocaleTimeString('en-GB')}</span>
           {r.timed_out && <span className="run-output-meta amber">timed out</span>}
           {r.partial_results && <span className="run-output-meta amber">partial results</span>}
+          <div className="run-export-btns">
+            <button className="run-export-btn" onClick={() => exportEntry(entry, 'txt')} title="Export as .txt">
+              <Download size={11} /> TXT
+            </button>
+            <button className="run-export-btn" onClick={() => exportEntry(entry, 'json')} title="Export as .json">
+              <Download size={11} /> JSON
+            </button>
+          </div>
         </div>
 
         {Object.keys(entry.params).length > 0 && (
@@ -636,6 +690,14 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
                       <span className="run-output-meta mono">{viewEntry.result.execution_time.toFixed(2)}s</span>
                       {viewEntry.result.timed_out && <span className="run-output-meta amber">timed out</span>}
                       {viewEntry.result.partial_results && <span className="run-output-meta amber">partial</span>}
+                      <div className="run-export-btns">
+                        <button className="run-export-btn" onClick={() => exportEntry(viewEntry, 'txt')} title="Export as .txt">
+                          <Download size={11} /> TXT
+                        </button>
+                        <button className="run-export-btn" onClick={() => exportEntry(viewEntry, 'json')} title="Export as .json">
+                          <Download size={11} /> JSON
+                        </button>
+                      </div>
                     </>
                   )}
                 </div>
