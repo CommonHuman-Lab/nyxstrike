@@ -1792,3 +1792,12 @@
   color: var(--text-h);
   border-color: var(--text-dim);
 }
+.run-rerun-btn {
+  color: var(--green);
+  border-color: var(--green);
+}
+.run-rerun-btn:hover {
+  color: var(--text-h);
+  background: var(--green);
+  border-color: var(--green);
+}

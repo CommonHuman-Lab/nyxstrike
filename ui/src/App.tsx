@@ -421,7 +421,7 @@ function exportEntry(entry: RunHistoryEntry, format: 'txt' | 'json') {
 
 // ─── Run Result Modal ─────────────────────────────────────────────────────────
 
-function RunResultModal({ entry, onClose }: { entry: RunHistoryEntry; onClose: () => void }) {
+function RunResultModal({ entry, onClose, onRerun }: { entry: RunHistoryEntry; onClose: () => void; onRerun?: () => void }) {
   const r = entry.result
 
   useEffect(() => {
@@ -451,13 +451,18 @@ function RunResultModal({ entry, onClose }: { entry: RunHistoryEntry; onClose: (
           {r.timed_out && <span className="run-output-meta amber">timed out</span>}
           {r.partial_results && <span className="run-output-meta amber">partial results</span>}
           <div className="run-export-btns">
-            <button className="run-export-btn" onClick={() => exportEntry(entry, 'txt')} title="Export as .txt">
-              <Download size={11} /> TXT
-            </button>
-            <button className="run-export-btn" onClick={() => exportEntry(entry, 'json')} title="Export as .json">
-              <Download size={11} /> JSON
-            </button>
-          </div>
+              {onRerun && (
+                <button className="run-export-btn run-rerun-btn" onClick={onRerun} title="Re-run with same params">
+                  <Play size={11} /> Re-run
+                </button>
+              )}
+              <button className="run-export-btn" onClick={() => exportEntry(entry, 'txt')} title="Export as .txt">
+                <Download size={11} /> TXT
+              </button>
+              <button className="run-export-btn" onClick={() => exportEntry(entry, 'json')} title="Export as .json">
+                <Download size={11} /> JSON
+              </button>
+            </div>
         </div>
 
         {Object.keys(entry.params).length > 0 && (
@@ -524,7 +529,7 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
   const [activeCat, setActiveCat] = useState('all')
   const [selected, setSelected] = useState<Tool | null>(null)
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
-  const [showOptional, setShowOptional] = useState(false)
+  const [showOptional, setShowOptional] = useState(true)
   const [running, setRunning] = useState(false)
   const [viewEntry, setViewEntry] = useState<RunHistoryEntry | null>(null)
   const [modalEntry, setModalEntry] = useState<RunHistoryEntry | null>(null)
@@ -542,7 +547,7 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
 
   function selectTool(t: Tool) {
     setSelected(t)
-    setShowOptional(false)
+    setShowOptional(true)
     setRunError(null)
     setViewEntry(null)
     const defaults: Record<string, string> = {}
@@ -583,7 +588,25 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
 
   return (
     <div className="run-page">
-      {modalEntry && <RunResultModal entry={modalEntry} onClose={() => setModalEntry(null)} />}
+      {modalEntry && (
+        <RunResultModal
+          entry={modalEntry}
+          onClose={() => setModalEntry(null)}
+          onRerun={() => {
+            const t = tools.find(t => t.name === modalEntry.tool)
+            if (t) {
+              selectTool(t)
+              // Pre-fill params from the history entry
+              setFieldValues(prev => {
+                const next = { ...prev }
+                for (const [k, v] of Object.entries(modalEntry.params)) next[k] = String(v)
+                return next
+              })
+            }
+            setModalEntry(null)
+          }}
+        />
+      )}
       {/* ── Left: tool picker ── */}
       <div className="run-picker">
         <div className="run-picker-controls">
