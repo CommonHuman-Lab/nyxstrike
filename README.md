@@ -53,13 +53,13 @@ Served automatically at `http://localhost:8888` the moment the server starts —
 - **Help** — IDE/agent configuration snippets for Claude Desktop, VS Code Copilot, Cursor, and OpenCode — with a custom install path input so the snippets are copy-paste ready.
 - **And much more!**
 
-<img src="assets/screenshots/dashboard.png" alt="dashboard" width="220" style="margin-bottom: 20px;"/>
+<img src="assets/screenshots/dashboard.png" alt="dashboard" style="margin-bottom: 20px;"/>
 
-<img src="assets/screenshots/reports.png" alt="reports" width="220" style="margin-bottom: 20px;"/>
+<img src="assets/screenshots/reports.png" alt="reports" style="margin-bottom: 20px;"/>
 
-<img src="assets/screenshots/tools.png" alt="reports" width="220" style="margin-bottom: 20px;"/>
+<img src="assets/screenshots/tools.png" alt="reports" style="margin-bottom: 20px;"/>
 
-<img src="assets/screenshots/run_tool.png" alt="reports" width="220" style="margin-bottom: 20px;"/>
+<img src="assets/screenshots/run_tool.png" alt="reports" style="margin-bottom: 20px;"/>
 
 </details>
 
