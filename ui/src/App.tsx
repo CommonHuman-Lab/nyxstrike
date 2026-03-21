@@ -6,7 +6,7 @@ import {
   CheckCircle, XCircle, AlertCircle, RefreshCw, Lock, Eye, EyeOff,
   ChevronDown, ChevronRight, Clock, Database, Zap, Wifi,
   Settings as SettingsIcon, HelpCircle, LayoutDashboard,
-  Terminal, Copy, Check, Save, Play, ChevronUp, Download,
+  Terminal, Copy, Check, Save, Play, ChevronUp, Download, Github,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -1572,6 +1572,15 @@ export default function App() {
           <button className="icon-btn" onClick={fetchAll} title="Refresh now">
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
           </button>
+          <a
+            className="icon-btn"
+            href="https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition"
+            target="_blank"
+            rel="noreferrer"
+            title="View on GitHub"
+          >
+            <Github size={14} />
+          </a>
           {hasToken() && (
             <button className="icon-btn" onClick={() => { clearToken(); setAuthed(false); setNeedsAuth(true) }} title="Sign out">
               <Lock size={14} />
