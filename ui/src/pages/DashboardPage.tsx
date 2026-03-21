@@ -51,6 +51,7 @@ function ResourceChart({ data }: { data: HistoryPoint[] }) {
 // ─── Tool Availability Section ────────────────────────────────────────────────
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  // server health category names
   essential: <Shield size={14} />,
   network: <Wifi size={14} />,
   web_security: <Activity size={14} />,
@@ -64,6 +65,12 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   api: <Activity size={14} />,
   wireless: <Wifi size={14} />,
   additional: <Server size={14} />,
+  // tool_registry.py category names (demo mode)
+  network_recon: <Wifi size={14} />,
+  web_recon: <Activity size={14} />,
+  web_vuln: <AlertCircle size={14} />,
+  brute_force: <Lock size={14} />,
+  wifi_pentest: <Wifi size={14} />,
 }
 
 function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
@@ -77,7 +84,7 @@ function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
   const pct = stats.total > 0 ? (stats.available / stats.total) * 100 : 0
   const color = pct === 100 ? 'var(--green)' : pct > 50 ? 'var(--amber)' : 'var(--red)'
 
-  const toolsInCat = Object.entries(toolStatuses)
+  const toolsInCat = Object.entries(toolStatuses).sort(([a], [b]) => a.localeCompare(b))
 
   return (
     <>
@@ -126,7 +133,9 @@ function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
 }
 
 // Map health category names to their tool lists (mirrors _HEALTH_TOOL_CATEGORIES in Python)
+// Also includes tool_registry.py category names used by demo mode.
 const HEALTH_CAT_TOOLS: Record<string, string[]> = {
+  // ── Server health categories ──────────────────────────────────────────────
   essential: ['nmap', 'gobuster', 'dirb', 'nikto', 'sqlmap', 'hydra', 'john', 'hashcat'],
   network: ['rustscan', 'masscan', 'autorecon', 'nbtscan', 'arp-scan', 'responder',
     'nxc', 'enum4linux-ng', 'rpcclient', 'enum4linux'],
@@ -139,14 +148,14 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
     'ghidra', 'pwntools', 'one-gadget', 'ropper', 'angr', 'libc-database', 'pwninit'],
   forensics: ['vol', 'steghide', 'hashpump', 'foremost', 'exiftool',
     'strings', 'xxd', 'file', 'photorec', 'testdisk', 'scalpel',
-    'bulk-extractor', 'stegsolve', 'zsteg', 'outguess'],
+    'bulk-extractor', 'stegsolve', 'zsteg', 'outguess', 'volatility', 'sleuthkit', 'autopsy'],
   cloud: ['prowler', 'scout-suite', 'trivy', 'kube-hunter', 'kube-bench',
     'docker-bench-security', 'checkov', 'terrascan', 'falco', 'clair',
     'cloudmapper', 'pacu'],
   osint: ['amass', 'subfinder', 'fierce', 'dnsenum', 'theharvester', 'sherlock',
     'social-analyzer', 'recon-ng', 'maltego', 'spiderfoot', 'shodan-cli',
     'censys-cli', 'have-i-been-pwned', 'whois', 'bbot'],
-  exploitation: ['msfconsole', 'msfvenom', 'searchsploit'],
+  exploitation: ['msfconsole', 'msfvenom', 'searchsploit', 'pwntools', 'pwninit'],
   api: ['api-schema-analyzer', 'postman', 'insomnia', 'curl', 'httpie', 'anew', 'qsreplace', 'uro'],
   wireless: ['kismet', 'wireshark', 'tshark', 'tcpdump',
     'airbase-ng', 'airdecap-ng', 'hcxdumptool', 'hcxpcapngtool',
@@ -154,6 +163,19 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
   additional: ['smbmap', 'volatility', 'sleuthkit', 'autopsy', 'evil-winrm',
     'airmon-ng', 'airodump-ng', 'aireplay-ng', 'aircrack-ng'],
   database: ['mysql', 'sqlite3'],
+  // ── tool_registry.py categories (used by demo mode) ──────────────────────
+  network_recon: ['nmap', 'masscan', 'rustscan', 'enum4linux', 'smbmap', 'arp-scan',
+    'nbtscan', 'enum4linux-ng', 'rpcclient', 'responder', 'nxc', 'evil-winrm'],
+  web_recon: ['gobuster', 'ffuf', 'feroxbuster', 'katana', 'httpx', 'dirsearch',
+    'wafw00f', 'wpscan', 'dirb', 'hakrawler', 'autorecon', 'arjun',
+    'paramspider', 'x8', 'qsreplace'],
+  web_vuln: ['nuclei', 'nikto', 'sqlmap', 'dalfox', 'xsser', 'dotdotpwn', 'jaeles',
+    'wfuzz', 'graphql-scanner', 'jwt-analyzer', 'api-schema-analyzer',
+    'burpsuite', 'zaproxy', 'curl', 'httpie'],
+  brute_force: ['hydra', 'hashcat', 'john', 'medusa', 'patator', 'ophcrack',
+    'hashid', 'hashcat-utils'],
+  wifi_pentest: ['aircrack-ng', 'airmon-ng', 'airodump-ng', 'aireplay-ng',
+    'wireshark', 'tshark', 'tcpdump', 'kismet'],
 }
 
 function getCatTools(cat: string, allStatuses: Record<string, boolean>): string[] {
@@ -305,7 +327,7 @@ export function DashboardPage({ health, tools, history, dashCacheSize, dashCache
           </span>
         </div>
         <div className="cat-list">
-          {Object.entries(health.category_stats).map(([cat, stats]) => {
+          {Object.entries(health.category_stats).sort(([a], [b]) => a.localeCompare(b)).map(([cat, stats]) => {
             const catToolNames = getCatTools(cat, health.tools_status)
             const catStatuses = Object.fromEntries(
               catToolNames.map(n => [n, health.tools_status[n] ?? false])

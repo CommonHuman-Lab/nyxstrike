@@ -5,12 +5,19 @@ import {
   LayoutDashboard, Terminal, Play,
   Settings as SettingsIcon, HelpCircle,
   ListTodo, Wrench, FileText, Layers,
+  FlaskConical,
 } from 'lucide-react'
 import {
   api, clearToken, hasToken,
   type WebDashboardResponse, type Tool,
   type RunHistoryEntry as ApiRunHistoryEntry,
 } from './api'
+import {
+  isDemoMode, exitDemo,
+  DEMO_HEALTH, DEMO_TOOLS, DEMO_RUN_HISTORY, DEMO_LOG_LINES,
+  DEMO_SESSIONS, DEMO_PROCESSES,
+  demoCpuMemHistory,
+} from './demo'
 import { TokenGate } from './components/TokenGate'
 import { DashboardPage } from './pages/DashboardPage'
 import { RunPage } from './pages/RunPage'
@@ -39,7 +46,8 @@ function pageFromHash(): Page {
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [authed, setAuthed] = useState(hasToken())
+  const [demo] = useState(isDemoMode)
+  const [authed, setAuthed] = useState(demo || hasToken())
   const [needsAuth, setNeedsAuth] = useState(false)
   const [page, setPageState] = useState<Page>(pageFromHash)
 
@@ -55,10 +63,11 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const [health, setHealth] = useState<WebDashboardResponse | null>(null)
-  const [tools, setTools] = useState<Tool[]>([])
-  const [history, setHistory] = useState<HistoryPoint[]>([])
+  const [health, setHealth] = useState<WebDashboardResponse | null>(demo ? DEMO_HEALTH : null)
+  const [tools, setTools] = useState<Tool[]>(demo ? DEMO_TOOLS : [])
+  const [history, setHistory] = useState<HistoryPoint[]>(demo ? demoCpuMemHistory() : [])
   const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>(() => {
+    if (demo) return DEMO_RUN_HISTORY
     try {
       const raw = localStorage.getItem('hexstrike_run_history')
       if (!raw) return []
@@ -66,12 +75,12 @@ export default function App() {
       return parsed.map(e => ({ ...e, ts: new Date(e.ts as unknown as string) }))
     } catch { return [] }
   })
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(demo ? new Date() : null)
+  const [loading, setLoading] = useState(!demo)
   const [error, setError] = useState<string | null>(null)
-  const [dashCacheSize, setDashCacheSize] = useState<number | null>(null)
-  const [dashCacheTtl, setDashCacheTtl] = useState<number | null>(null)
-  const [logLines, setLogLines] = useState<string[]>([])
+  const [dashCacheSize, setDashCacheSize] = useState<number | null>(demo ? 512 : null)
+  const [dashCacheTtl, setDashCacheTtl] = useState<number | null>(demo ? 300 : null)
+  const [logLines, setLogLines] = useState<string[]>(demo ? DEMO_LOG_LINES : [])
   const [logAutoScroll, setLogAutoScroll] = useState(true)
   const [logLimit, setLogLimit] = useState(500)
   const logEndRef = useRef<HTMLDivElement>(null)
@@ -80,6 +89,7 @@ export default function App() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchAll = useCallback(async () => {
+    if (demo) return
     try {
       const h = await api.dashboard()
       setHealth(h)
@@ -105,13 +115,12 @@ export default function App() {
   }, [])
 
   const fetchTools = useCallback(async () => {
-    try {
-      const t = await api.tools()
-      setTools(t.tools)
-    } catch { /* non-critical */ }
-  }, [])
+    if (demo) return
+    try { const t = await api.tools(); setTools(t.tools) } catch { /* non-critical */ }
+  }, [demo])
 
   const fetchDashSettings = useCallback(async () => {
+    if (demo) return
     try {
       const r = await api.getSettings()
       setDashCacheSize(r.settings.runtime.cache_size)
@@ -120,6 +129,7 @@ export default function App() {
   }, [])
 
   const fetchServerRunHistory = useCallback(async () => {
+    if (demo) return
     try {
       const r = await api.runHistory()
       if (!r.success) return
@@ -162,15 +172,16 @@ export default function App() {
     } catch { /* non-critical */ }
   }, [])
 
-  // Persist run history to localStorage whenever it changes
+  // Persist run history to localStorage whenever it changes (not in demo mode)
   useEffect(() => {
+    if (demo) return
     try {
       localStorage.setItem('hexstrike_run_history', JSON.stringify(runHistory.slice(0, 200)))
     } catch { /* quota exceeded — ignore */ }
-  }, [runHistory])
+  }, [demo, runHistory])
 
   useEffect(() => {
-    if (!authed) return
+    if (demo || !authed) return
     setLoading(true)
     fetchAll()
     fetchTools()
@@ -178,11 +189,11 @@ export default function App() {
     fetchServerRunHistory()
     timerRef.current = setInterval(fetchAll, POLL_MS)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [authed, fetchAll, fetchTools, fetchDashSettings])
+  }, [demo, authed, fetchAll, fetchTools, fetchDashSettings])
 
-  // Try without token first
+  // Try without token first (skipped in demo)
   useEffect(() => {
-    if (hasToken()) return
+    if (demo || hasToken()) return
     api.dashboard().then(h => {
       setHealth(h)
       setAuthed(true)
@@ -197,8 +208,9 @@ export default function App() {
     })
   }, [])
 
-  // SSE log stream
+  // SSE log stream (skipped in demo — logs pre-populated from demo data)
   useEffect(() => {
+    if (demo) return
     const es = api.logStream(150)
     sseRef.current = es
     es.onmessage = (e) => {
@@ -220,7 +232,15 @@ export default function App() {
   }
 
   return (
-    <div className="layout">
+    <div className={demo ? 'layout layout--demo' : 'layout'}>
+      {/* ── Demo banner ── */}
+      {demo && (
+        <div className="demo-banner">
+          <FlaskConical size={13} />
+          <span>Demo mode — all data is synthetic</span>
+          <button onClick={() => { exitDemo(); window.location.href = window.location.pathname + window.location.hash }}>Exit demo</button>
+        </div>
+      )}
       {/* ── Top Bar ── */}
       <header className="topbar">
         <div className="topbar-brand">
@@ -300,10 +320,10 @@ export default function App() {
             onRefresh={fetchServerRunHistory}
           />
         )}
-        {page === 'tasks' && <TasksPage />}
+        {page === 'tasks' && <TasksPage demoData={demo ? { processes: DEMO_PROCESSES } : undefined} />}
         {page === 'tools' && <ToolsPage tools={tools} toolsStatus={health?.tools_status ?? {}} />}
         {page === 'reports' && <ReportsPage runHistory={runHistory} />}
-        {page === 'sessions' && <SessionsPage />}
+        {page === 'sessions' && <SessionsPage demoData={demo ? { sessions: DEMO_SESSIONS } : undefined} />}
         {page === 'logs' && (
           <LogsPage
             logLines={logLines}

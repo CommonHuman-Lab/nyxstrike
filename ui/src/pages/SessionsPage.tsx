@@ -7,6 +7,10 @@ import { api, type SessionsResponse, type SessionSummary } from '../api'
 import { StatCard } from '../components/StatCard'
 import './SessionsPage.css'
 
+interface SessionsPageProps {
+  demoData?: { sessions: SessionsResponse }
+}
+
 function fmtTs(ts: number) {
   if (!ts) return '—'
   return new Date(ts * 1000).toLocaleString('en-GB')
@@ -44,19 +48,21 @@ function SessionCard({ s }: { s: SessionSummary }) {
   )
 }
 
-export default function SessionsPage() {
-  const [data, setData] = useState<SessionsResponse | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function SessionsPage({ demoData }: SessionsPageProps) {
+  const [data, setData] = useState<SessionsResponse | null>(demoData?.sessions ?? null)
+  const [loading, setLoading] = useState(!demoData)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (demoData) return
     api.sessions()
       .then(r => { setData(r); setError(null) })
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
-  }, [])
+  }, [demoData])
 
   function refresh() {
+    if (demoData) return
     setLoading(true)
     api.sessions()
       .then(r => { setData(r); setError(null) })

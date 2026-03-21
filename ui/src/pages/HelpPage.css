@@ -144,3 +144,47 @@
 @media (max-width: 768px) {
   .flag-row { grid-template-columns: 1fr; }
 }
+
+/* ── About section ───────────────────────────────────────────────────────── */
+.help-about {
+  padding: 14px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help-about-credit {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.help-about-credit strong {
+  color: var(--text-h);
+}
+
+.help-about-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.help-demo-btn {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--border));
+  border-radius: 6px;
+  color: var(--amber);
+  font-size: 12px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s;
+}
+
+.help-demo-btn:hover {
+  background: color-mix(in srgb, var(--amber) 10%, var(--bg));
+}

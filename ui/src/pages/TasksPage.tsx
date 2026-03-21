@@ -6,15 +6,22 @@ import {
 import { api, type ProcessDashboardResponse } from '../api'
 import './TasksPage.css'
 
-export default function TasksPage() {
-  const [data, setData] = useState<ProcessDashboardResponse | null>(null)
-  const [poolStats, setPoolStats] = useState<Record<string, unknown> | null>(null)
-  const [loading, setLoading] = useState(true)
+interface TasksPageProps {
+  demoData?: { processes: ProcessDashboardResponse }
+}
+
+export default function TasksPage({ demoData }: TasksPageProps) {
+  const [data, setData] = useState<ProcessDashboardResponse | null>(demoData?.processes ?? null)
+  const [poolStats, setPoolStats] = useState<Record<string, unknown> | null>(
+    demoData ? { workers: 4, queued: 2, completed: 38 } : null
+  )
+  const [loading, setLoading] = useState(!demoData)
   const [error, setError] = useState<string | null>(null)
   const [actionMsg, setActionMsg] = useState<string | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   async function fetchData() {
+    if (demoData) return
     try {
       const [dash, pool] = await Promise.all([api.processDashboard(), api.processPoolStats()])
       setData(dash)
@@ -28,10 +35,11 @@ export default function TasksPage() {
   }
 
   useEffect(() => {
+    if (demoData) return
     fetchData()
     pollRef.current = setInterval(fetchData, 3000)
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [])
+  }, [demoData])
 
   async function doAction(fn: () => Promise<{ success: boolean; message?: string; error?: string }>, label: string) {
     try {

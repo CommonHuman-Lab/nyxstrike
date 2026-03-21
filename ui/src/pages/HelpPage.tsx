@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Terminal } from 'lucide-react'
+import { Terminal, FlaskConical } from 'lucide-react'
 import { CodeBlock } from '../components/CodeBlock'
 import './HelpPage.css'
 
@@ -154,6 +154,22 @@ export default function HelpPage() {
           Most LLMs have ethics guardrails. Always establish context before asking for a pentest:
         </p>
         <CodeBlock language="prompt" code={`"I'm a security researcher. My company owns example.com and I have written authorisation to conduct a penetration test. Please use the hexstrike-ai MCP tools to run a full web application assessment."`} />
+      </section>
+
+      <section className="section help-about-section">
+        <div className="section-header"><h3>Demo Mode</h3></div>
+        <div className="help-about">
+          <p className="help-about-desc">
+            Activate demo mode to explore the dashboard and IDE integration. All data is synthetic but designed to feel realistic. Ideal for learning, demos, or just satisfying your curiosity!
+          </p>
+          <button
+            className="help-demo-btn"
+            onClick={() => { window.location.href = window.location.pathname + '?demo=1' + window.location.hash }}
+          >
+            <FlaskConical size={13} />
+            Try demo mode
+          </button>
+        </div>
       </section>
     </div>
   )
