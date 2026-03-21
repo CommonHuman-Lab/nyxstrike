@@ -1,5 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import './LogsPage.css'
+
+// Matches only the specific dashboard polling access log line, e.g.:
+// 127.0.0.1 - "GET /web-dashboard HTTP/1.1" 200
+const HTTP_ACCESS_RE = /\d+\.\d+\.\d+\.\d+.*"GET \/web-dashboard HTTP\/\d/
 
 interface LogsPageProps {
   logLines: string[]
@@ -18,6 +22,12 @@ export default function LogsPage({
   setLogLimit,
   logEndRef,
 }: LogsPageProps) {
+  const [showHttpAccess, setShowHttpAccess] = useState(false)
+
+  const visible = showHttpAccess
+    ? logLines
+    : logLines.filter(line => !HTTP_ACCESS_RE.test(line))
+
   return (
     <div className="page-content">
       <section className="section">
@@ -31,6 +41,14 @@ export default function LogsPage({
                 onChange={e => setLogAutoScroll(e.target.checked)}
               />
               Auto-scroll
+            </label>
+            <label className="log-toggle">
+              <input
+                type="checkbox"
+                checked={showHttpAccess}
+                onChange={e => setShowHttpAccess(e.target.checked)}
+              />
+              Show Dashboard Logs
             </label>
             <label className="log-limit-label">
               Show last
@@ -46,13 +64,13 @@ export default function LogsPage({
               </select>
               lines
             </label>
-            <span className="section-meta mono">{logLines.length} buffered</span>
+            <span className="section-meta mono">{visible.length} / {logLines.length} lines</span>
           </div>
         </div>
         <div className="log-viewer log-viewer--full">
-          {logLines.length === 0
+          {visible.length === 0
             ? <span className="log-empty">Waiting for log data…</span>
-            : logLines.slice(-logLimit).map((line, i) => {
+            : visible.slice(-logLimit).map((line, i) => {
                 const lvl = /\bERROR\b/.test(line) ? 'error'
                   : /\bWARN(ING)?\b/.test(line) ? 'warn'
                   : /\bDEBUG\b/.test(line) ? 'debug'
