@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import {
   CheckCircle, XCircle, RefreshCw, Play, AlertCircle,
-  ChevronUp, ChevronDown, Download, Server,
+  ChevronUp, ChevronDown, Server, Download,
 } from 'lucide-react'
 import { api, type Tool } from '../api'
 import { exportEntry } from '../utils'
 import type { RunHistoryEntry } from '../types'
+import { RunResultModal } from '../components/RunResultModal'
 import './RunPage.css'
 
 // ─── Param Field ──────────────────────────────────────────────────────────────
@@ -32,69 +32,6 @@ function ParamField({
         placeholder={required ? 'required' : 'optional'}
       />
     </div>
-  )
-}
-
-// ─── Run Result Modal ─────────────────────────────────────────────────────────
-
-function RunResultModal({ entry, onClose, onRerun }: { entry: RunHistoryEntry; onClose: () => void; onRerun?: () => void }) {
-  const r = entry.result
-
-  React.useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  return createPortal(
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal run-result-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="modal-title-row">
-            <span className="modal-name mono">{entry.tool}</span>
-            <span className={`run-output-status ${r.success ? 'ok' : 'fail'}`} style={{ fontSize: 12 }}>
-              {r.success ? <CheckCircle size={12} /> : <XCircle size={12} />}
-              {r.success ? 'success' : 'failed'}
-            </span>
-          </div>
-          <button className="modal-close" onClick={onClose}><XCircle size={18} /></button>
-        </div>
-
-        <div className="run-result-modal-meta">
-          <span className="run-output-meta mono">exit {r.return_code}</span>
-          <span className="run-output-meta mono">{r.execution_time.toFixed(2)}s</span>
-          <span className="run-output-meta mono">{entry.ts.toLocaleTimeString('en-GB')}</span>
-          {r.timed_out && <span className="run-output-meta amber">timed out</span>}
-          {r.partial_results && <span className="run-output-meta amber">partial results</span>}
-          <div className="run-export-btns">
-            {onRerun && (
-              <button className="run-export-btn run-rerun-btn" onClick={onRerun} title="Re-run with same params">
-                <Play size={11} /> Re-run
-              </button>
-            )}
-            <button className="run-export-btn" onClick={() => exportEntry(entry, 'txt')} title="Export as .txt">
-              <Download size={11} /> TXT
-            </button>
-            <button className="run-export-btn" onClick={() => exportEntry(entry, 'json')} title="Export as .json">
-              <Download size={11} /> JSON
-            </button>
-          </div>
-        </div>
-
-        {Object.keys(entry.params).length > 0 && (
-          <div className="run-result-modal-params">
-            {Object.entries(entry.params).map(([k, v]) => (
-              <span key={k} className="run-result-param mono">{k}=<em>{String(v)}</em></span>
-            ))}
-          </div>
-        )}
-
-        <pre className="run-result-modal-output mono">
-          {r.stdout || r.stderr || '(no output)'}
-        </pre>
-      </div>
-    </div>,
-    document.body
   )
 }
 
