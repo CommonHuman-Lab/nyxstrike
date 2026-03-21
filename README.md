@@ -197,7 +197,7 @@ The test suite uses [pytest](https://pytest.org) and the Flask test client — n
 source hexstrike-env/bin/activate
 
 # Install pytest (one-time)
-pip install pytest
+pip3 install pytest
 
 # Run the full test suite
 pytest tests/
