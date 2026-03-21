@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { CheckCircle, XCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { CheckCircle, XCircle, Copy, Check } from 'lucide-react'
 import { installHint } from '../constants/installHints'
 import type { Tool } from '../api'
 
@@ -12,6 +12,14 @@ export function ToolModal({ tool, onClose, installed }: {
   const effColor = eff >= 90 ? 'var(--green)' : eff >= 75 ? 'var(--amber)' : 'var(--red)'
   const requiredParams = Object.entries(tool.params).filter(([, v]) => v.required)
   const optionalParams = Object.entries(tool.optional)
+  const [copied, setCopied] = useState(false)
+
+  function copyInstall() {
+    navigator.clipboard.writeText(installHint(tool.name)).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   function onBackdrop(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose()
@@ -60,7 +68,17 @@ export function ToolModal({ tool, onClose, installed }: {
           {installed !== true && (
             <div className="modal-section">
               <span className="modal-label">Install</span>
-              <div className="modal-code mono">{installHint(tool.name)}</div>
+              <div className="modal-code-wrap">
+                <div className="modal-code mono">{installHint(tool.name)}</div>
+                <button
+                  className="modal-copy-btn"
+                  onClick={copyInstall}
+                  title="Copy to clipboard"
+                >
+                  {copied ? <Check size={13} /> : <Copy size={13} />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
             </div>
           )}
 

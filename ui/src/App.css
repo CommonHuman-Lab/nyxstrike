@@ -897,6 +897,35 @@
   color: var(--text-dim);
 }
 
+.modal-code-wrap {
+  position: relative;
+}
+
+.modal-copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.modal-copy-btn:hover {
+  color: var(--text-h);
+  border-color: var(--text-dim);
+}
+
+.modal-code-wrap .modal-code {
+  padding-right: 80px;
+}
+
 .modal-code {
   background: var(--bg);
   border: 1px solid var(--border);
