@@ -471,6 +471,7 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
   const [running, setRunning] = useState(false)
   const [viewEntry, setViewEntry] = useState<RunHistoryEntry | null>(null)
   const [modalEntry, setModalEntry] = useState<RunHistoryEntry | null>(null)
+  const [histSearch, setHistSearch] = useState('')
   const [runError, setRunError] = useState<string | null>(null)
   const runIdRef = useRef(0)
 
@@ -652,11 +653,40 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
       {/* ── Right: history ── */}
       <div className="run-history">
         <div className="run-history-header">
-          History <span className="badge">{history.length}</span>
+          <span>History</span>
+          <span className="badge">{history.length}</span>
+          {history.length > 0 && (
+            <button
+              className="run-history-clear"
+              title="Clear history"
+              onClick={() => { setHistory([]); setHistSearch('') }}
+            >
+              <XCircle size={12} />
+            </button>
+          )}
         </div>
-        {history.length === 0
-          ? <p className="run-history-empty">No runs yet</p>
-          : history.map(e => (
+        {history.length > 0 && (
+          <div className="run-history-search">
+            <input
+              className="run-history-search-input mono"
+              placeholder="Filter…"
+              value={histSearch}
+              onChange={e => setHistSearch(e.target.value)}
+            />
+            {histSearch && (
+              <button className="run-history-search-clear" onClick={() => setHistSearch('')}>
+                <XCircle size={11} />
+              </button>
+            )}
+          </div>
+        )}
+        {(() => {
+          const q = histSearch.toLowerCase()
+          const visible = q
+            ? history.filter(e => e.tool.includes(q) || Object.values(e.params).some(v => String(v).toLowerCase().includes(q)))
+            : history
+          if (visible.length === 0) return <p className="run-history-empty">{histSearch ? 'No matches' : 'No runs yet'}</p>
+          return visible.map(e => (
             <button
               key={e.id}
               className={`run-history-item${viewEntry?.id === e.id ? ' active' : ''}`}
@@ -667,7 +697,7 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
               <span className="run-hist-time">{e.ts.toLocaleTimeString('en-GB')}</span>
             </button>
           ))
-        }
+        })()}
       </div>
     </div>
   )

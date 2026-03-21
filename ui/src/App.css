@@ -1570,7 +1570,7 @@
 }
 
 .run-history-header {
-  padding: 12px 14px;
+  padding: 10px 14px;
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
@@ -1579,6 +1579,55 @@
   align-items: center;
   gap: 6px;
 }
+
+.run-history-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.12s;
+}
+.run-history-clear:hover { color: var(--red); }
+
+.run-history-search {
+  position: relative;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.run-history-search-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-h);
+  font-size: 11px;
+  padding: 5px 24px 5px 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+.run-history-search-input:focus { border-color: var(--green); }
+.run-history-search-input::placeholder { color: var(--text-dim); }
+
+.run-history-search-clear {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+.run-history-search-clear:hover { color: var(--text-h); }
 
 .run-history-empty {
   padding: 16px 14px;
