@@ -1,0 +1,80 @@
+/* ── Reports Page ────────────────────────────────────────────────────────────── */
+
+.reports-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.reports-timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  cursor: default;
+  transition: transform 0.1s;
+}
+.reports-timeline-dot:hover { transform: scale(1.4); }
+.reports-timeline-dot.ok   { background: var(--green); opacity: 0.75; }
+.reports-timeline-dot.fail { background: var(--red);   opacity: 0.75; }
+
+.reports-table {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.reports-thead,
+.reports-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px 60px 80px 1fr;
+  gap: 0;
+  align-items: center;
+  padding: 8px 12px;
+}
+
+.reports-thead {
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.reports-row {
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.reports-row:last-child { border-bottom: none; }
+.reports-row:hover { background: var(--bg-card2); }
+
+.reports-key {
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reports-last-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.reports-pct-bar-bg {
+  display: block;
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.reports-pct-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s;
+}

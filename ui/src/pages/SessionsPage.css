@@ -1,0 +1,94 @@
+/* ── Sessions Page ───────────────────────────────────────────────────────────── */
+
+.sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.session-card {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+.session-card:hover { border-color: var(--text-dim); }
+
+.session-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.session-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  overflow: hidden;
+}
+.session-target .mono {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-status {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.session-status--active    { background: var(--green)22; color: var(--green); }
+.session-status--completed { background: var(--blue)22;  color: var(--blue);  }
+.session-status--failed    { background: var(--red)22;   color: var(--red);   }
+
+.session-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.session-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.session-tool-chip {
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+}
+.session-tool-chip--more {
+  color: var(--text-dim);
+  border-style: dashed;
+}
+
+.session-id {
+  font-size: 10px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,62 @@
+/* TokenGate styles — extracted from App.css */
+
+.token-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.token-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 36px;
+  width: 360px;
+  text-align: center;
+}
+
+.token-card h2 {
+  color: var(--text-h);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.token-card p { color: var(--text); font-size: 13px; }
+.token-card code {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--green);
+}
+
+.token-input-row {
+  display: flex;
+  width: 100%;
+  gap: 6px;
+}
+
+.token-input-row input {
+  flex: 1;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+}
+.token-input-row input:focus { border-color: var(--green); }
+
+.token-err {
+  color: var(--red);
+  font-size: 12px;
+  font-family: var(--mono);
+}

@@ -1,0 +1,171 @@
+/* ── Settings Page ───────────────────────────────────────────────────────── */
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-value {
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-input {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  padding: 6px 10px;
+  font-size: 13px;
+  width: 100px;
+  outline: none;
+}
+.settings-input:focus { border-color: var(--green); }
+
+.settings-unit {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.settings-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 10px 18px 12px;
+  line-height: 1.5;
+}
+
+.settings-hint code {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--green);
+}
+
+.settings-hint-inline {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.settings-actions .btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  padding: 8px 20px;
+}
+
+.save-msg {
+  font-size: 13px;
+  font-family: var(--mono);
+}
+.save-msg.ok  { color: var(--green); }
+.save-msg.err { color: var(--red); }
+
+/* ── Wordlists Table ─────────────────────────────────────────────────────── */
+.wordlist-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.wordlist-head {
+  display: grid;
+  grid-template-columns: 160px 80px 80px 100px 1fr;
+  gap: 10px;
+  padding: 8px 18px;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg-card2);
+  border-bottom: 1px solid var(--border);
+}
+
+.wordlist-row {
+  display: grid;
+  grid-template-columns: 160px 80px 80px 100px 1fr;
+  gap: 10px;
+  padding: 10px 18px;
+  font-size: 12px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.wordlist-row:last-child { border-bottom: none; }
+.wordlist-row:hover { background: var(--bg-card2); }
+
+.wl-path {
+  font-size: 11px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-small {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-grid { grid-template-columns: 1fr; }
+  .wordlist-head, .wordlist-row { grid-template-columns: 120px 70px 1fr; }
+  .wordlist-head span:nth-child(3),
+  .wordlist-row span:nth-child(3),
+  .wordlist-head span:nth-child(4),
+  .wordlist-row span:nth-child(4) { display: none; }
+}
