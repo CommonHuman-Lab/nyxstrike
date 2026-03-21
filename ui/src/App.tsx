@@ -513,12 +513,12 @@ function ParamField({
   )
 }
 
-function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHistory, onMountFetch }: {
+function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHistory, onRefresh }: {
   tools: Tool[]
   toolsStatus: Record<string, boolean>
   runHistory: RunHistoryEntry[]
   setRunHistory: React.Dispatch<React.SetStateAction<RunHistoryEntry[]>>
-  onMountFetch?: () => void
+  onRefresh?: () => void
 }) {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
@@ -531,11 +531,6 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
   const [histSearch, setHistSearch] = useState('')
   const [runError, setRunError] = useState<string | null>(null)
   const runIdRef = useRef(0)
-
-  // On mount, fetch server-side run history
-  useEffect(() => {
-    if (onMountFetch) onMountFetch()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cats = ['all', ...Array.from(new Set(tools.map(t => t.category))).sort()]
   const filtered = tools.filter(t => {
@@ -725,11 +720,11 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
         <div className="run-history-header">
           <span>History</span>
           <span className="badge">{history.length}</span>
-          {onMountFetch && (
+          {onRefresh && (
             <button
               className="run-history-refresh"
               title="Fetch server-side runs"
-              onClick={onMountFetch}
+              onClick={onRefresh}
             >
               <RefreshCw size={12} />
             </button>
@@ -1357,7 +1352,15 @@ export default function App() {
   const [health, setHealth] = useState<WebDashboardResponse | null>(null)
   const [tools, setTools] = useState<Tool[]>([])
   const [history, setHistory] = useState<HistoryPoint[]>([])
-  const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>([])
+  const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>(() => {
+    try {
+      const raw = localStorage.getItem('hexstrike_run_history')
+      if (!raw) return []
+      const parsed = JSON.parse(raw) as RunHistoryEntry[]
+      // Revive ts strings back to Date objects
+      return parsed.map(e => ({ ...e, ts: new Date(e.ts as unknown as string) }))
+    } catch { return [] }
+  })
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -1446,12 +1449,21 @@ export default function App() {
     } catch { /* non-critical */ }
   }, [])
 
+  // Persist run history to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      // Keep at most 200 entries in storage to avoid quota issues
+      localStorage.setItem('hexstrike_run_history', JSON.stringify(runHistory.slice(0, 200)))
+    } catch { /* quota exceeded — ignore */ }
+  }, [runHistory])
+
   useEffect(() => {
     if (!authed) return
     setLoading(true)
     fetchAll()
     fetchTools()
     fetchDashSettings()
+    fetchServerRunHistory()
     timerRef.current = setInterval(fetchAll, POLL_MS)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [authed, fetchAll, fetchTools, fetchDashSettings])
@@ -1554,7 +1566,7 @@ export default function App() {
 
         {/* ── Run Page ── */}
         {page === 'run' && (
-          <RunPage tools={tools} toolsStatus={health?.tools_status ?? {}} runHistory={runHistory} setRunHistory={setRunHistory} onMountFetch={fetchServerRunHistory} />
+          <RunPage tools={tools} toolsStatus={health?.tools_status ?? {}} runHistory={runHistory} setRunHistory={setRunHistory} onRefresh={fetchServerRunHistory} />
         )}
 
         {/* ── Logs Page ── */}
