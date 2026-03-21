@@ -20,10 +20,12 @@ import server_core.config_core as config_core
 from .cache import HexStrikeCache
 from .session_store import SessionStore
 from .wordlist_store import WordlistStore
+from .run_history_store import RunHistoryStore
 
 cache = HexStrikeCache()
 session_store = SessionStore()
 wordlist_store = WordlistStore()
+run_history = RunHistoryStore()
 
 # ── Telemetry (module-level singleton in enhanced_command_executor) ───────────
 from .enhanced_command_executor import telemetry  # noqa: F401 — re-export

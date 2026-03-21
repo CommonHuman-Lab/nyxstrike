@@ -1580,8 +1580,21 @@
   gap: 6px;
 }
 
-.run-history-clear {
+.run-history-refresh {
   margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.12s;
+}
+.run-history-refresh:hover { color: var(--blue); }
+
+.run-history-clear {
   background: none;
   border: none;
   color: var(--text-dim);
@@ -1676,6 +1689,12 @@
   font-size: 10px;
   color: var(--text-dim);
   flex-shrink: 0;
+}
+
+.run-hist-server-icon {
+  flex-shrink: 0;
+  color: var(--blue);
+  opacity: 0.75;
 }
 
 /* ── Run Result Modal ──────────────────────────────────────────────────────── */

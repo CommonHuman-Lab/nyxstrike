@@ -14,7 +14,7 @@ import {
 import {
   api, setToken, clearToken, hasToken,
   type WebDashboardResponse, type Tool,
-  type Settings, type ToolExecResponse,
+  type Settings, type ToolExecResponse, type RunHistoryEntry as ApiRunHistoryEntry,
 } from './api'
 import './App.css'
 
@@ -485,6 +485,8 @@ interface RunHistoryEntry {
   params: Record<string, unknown>
   result: ToolExecResponse
   ts: Date
+  source?: 'browser' | 'server'
+  serverId?: number
 }
 
 function ParamField({
@@ -511,11 +513,12 @@ function ParamField({
   )
 }
 
-function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHistory }: {
+function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHistory, onMountFetch }: {
   tools: Tool[]
   toolsStatus: Record<string, boolean>
   runHistory: RunHistoryEntry[]
   setRunHistory: React.Dispatch<React.SetStateAction<RunHistoryEntry[]>>
+  onMountFetch?: () => void
 }) {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
@@ -528,6 +531,11 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
   const [histSearch, setHistSearch] = useState('')
   const [runError, setRunError] = useState<string | null>(null)
   const runIdRef = useRef(0)
+
+  // On mount, fetch server-side run history
+  useEffect(() => {
+    if (onMountFetch) onMountFetch()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cats = ['all', ...Array.from(new Set(tools.map(t => t.category))).sort()]
   const filtered = tools.filter(t => {
@@ -717,6 +725,15 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
         <div className="run-history-header">
           <span>History</span>
           <span className="badge">{history.length}</span>
+          {onMountFetch && (
+            <button
+              className="run-history-refresh"
+              title="Fetch server-side runs"
+              onClick={onMountFetch}
+            >
+              <RefreshCw size={12} />
+            </button>
+          )}
           {history.length > 0 && (
             <button
               className="run-history-clear"
@@ -756,6 +773,7 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
             >
               <span className={`run-hist-dot ${e.result.success ? 'ok' : 'fail'}`} />
               <span className="run-hist-name mono">{e.tool}</span>
+              {e.source === 'server' && <span title="Recorded server-side" className="run-hist-server-icon"><Server size={10} /></span>}
               <span className="run-hist-time">{e.ts.toLocaleTimeString('en-GB')}</span>
             </button>
           ))
@@ -1374,6 +1392,41 @@ export default function App() {
     } catch { /* non-critical */ }
   }, [])
 
+  const fetchServerRunHistory = useCallback(async () => {
+    try {
+      const r = await api.runHistory()
+      if (!r.success) return
+      setRunHistory(prev => {
+        // Build a set of server IDs already present so we don't duplicate
+        const existingServerIds = new Set(prev.filter(e => e.source === 'server').map(e => e.serverId))
+        const newEntries: RunHistoryEntry[] = r.runs
+          .filter((e: ApiRunHistoryEntry) => !existingServerIds.has(e.id))
+          .map((e: ApiRunHistoryEntry) => ({
+            id: -(e.id),           // negative to avoid collisions with local ids
+            serverId: e.id,
+            source: 'server' as const,
+            tool: e.tool,
+            params: e.params,
+            ts: e.timestamp ? new Date(e.timestamp) : new Date(),
+            result: {
+              stdout: e.stdout,
+              stderr: e.stderr,
+              return_code: e.return_code,
+              success: e.success,
+              timed_out: e.timed_out,
+              partial_results: e.partial_results,
+              execution_time: e.execution_time,
+              timestamp: e.timestamp,
+            },
+          }))
+        if (newEntries.length === 0) return prev
+        // Merge and re-sort by ts descending
+        const merged = [...prev, ...newEntries].sort((a, b) => b.ts.getTime() - a.ts.getTime())
+        return merged
+      })
+    } catch { /* non-critical */ }
+  }, [])
+
   useEffect(() => {
     if (!authed) return
     setLoading(true)
@@ -1482,7 +1535,7 @@ export default function App() {
 
         {/* ── Run Page ── */}
         {page === 'run' && (
-          <RunPage tools={tools} toolsStatus={health?.tools_status ?? {}} runHistory={runHistory} setRunHistory={setRunHistory} />
+          <RunPage tools={tools} toolsStatus={health?.tools_status ?? {}} runHistory={runHistory} setRunHistory={setRunHistory} onMountFetch={fetchServerRunHistory} />
         )}
 
         {/* ── Logs Page ── */}

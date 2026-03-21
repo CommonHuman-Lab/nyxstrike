@@ -60,6 +60,7 @@ def register_blueprints(app):
   app.register_blueprint(api_file_ops_and_payload_gen_bp)
   app.register_blueprint(api_logs_bp)
   app.register_blueprint(api_web_dashboard_bp)
+  app.register_blueprint(api_runs_bp)
 
   # Database
   app.register_blueprint(api_database_bp)

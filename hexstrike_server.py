@@ -10,11 +10,13 @@ Framework: FastMCP integration for AI agent communication
 
 import argparse
 import hmac
+import json
 import logging
 import os
 from flask import Flask, request, abort, jsonify
 import server_core.config_core as config_core
 from server_core.modern_visual_engine import ModernVisualEngine
+from server_core.singletons import run_history
 from server_api import register_blueprints
 
 # ============================================================================
@@ -66,6 +68,34 @@ def require_json_for_post():
         }), 400
 
 register_blueprints(app)
+
+@app.after_request
+def record_tool_run(response):
+  """Record every POST /api/tools/<name> execution into run_history."""
+  if request.method != "POST":
+    return response
+  path = request.path  # e.g. /api/tools/nmap
+  if not path.startswith("/api/tools/"):
+    return response
+  # Derive tool name from the last path segment
+  tool_name = path.split("/api/tools/", 1)[1].strip("/") or "unknown"
+  try:
+    params = request.json or {}
+  except Exception:
+    params = {}
+  try:
+    body = response.get_json(silent=True) or {}
+  except Exception:
+    body = {}
+  # Only record responses that look like tool execution results
+  if "stdout" in body or "stderr" in body or "return_code" in body:
+    run_history.record(
+      tool=tool_name,
+      endpoint=path,
+      params=params,
+      result=body,
+    )
+  return response
 
 @app.errorhandler(Exception)
 def handle_unhandled_exception(e):
