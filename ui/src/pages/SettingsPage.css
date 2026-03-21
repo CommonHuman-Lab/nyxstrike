@@ -29,8 +29,13 @@
 }
 
 .settings-value {
+  word-break: break-word;
   font-size: 13px;
   color: var(--text-h);
+}
+.cache-stat-el {
+  display: inline-block;
+  margin-right: 8px;
 }
 
 .settings-field {

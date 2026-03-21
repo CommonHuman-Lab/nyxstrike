@@ -215,6 +215,15 @@ export interface SessionsResponse {
   total_completed: number;
 }
 
+export interface CacheStatsResponse {
+  total: number;
+  currentsize: number;
+  hits: number;
+  misses: number;
+  evicted: number;
+  [key: string]: number;
+}
+
 export const api = {
   dashboard: () => apiFetch<WebDashboardResponse>('/web-dashboard'),
   tools: () => apiFetch<ToolsCatalogResponse>('/api/tools'),
@@ -238,6 +247,9 @@ export const api = {
   processPoolStats: () => apiFetch<PoolStatsResponse>('/api/process/pool-stats'),
   terminateProcess: (pid: number) =>
     apiFetch<{ success: boolean; message?: string; error?: string }>(`/api/processes/terminate/${pid}`, { method: 'POST' }),
+  cacheStats: () => apiFetch<CacheStatsResponse>('/api/cache/stats'),
+  clearCache: () => apiFetch<{success: boolean, message: string}>(
+    '/api/cache/clear', { method: 'POST' }),
   pauseProcess: (pid: number) =>
     apiFetch<{ success: boolean; message?: string; error?: string }>(`/api/processes/pause/${pid}`, { method: 'POST' }),
   resumeProcess: (pid: number) =>

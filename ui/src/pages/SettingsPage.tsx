@@ -44,6 +44,7 @@ function SettingsField({ label, unit, hint, value, onChange }: {
   )
 }
 
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [loading, setLoading] = useState(true)
@@ -55,6 +56,10 @@ export default function SettingsPage() {
   const [cacheSize, setCacheSize] = useState('')
   const [cacheTtl, setCacheTtl] = useState('')
   const [toolTtl, setToolTtl] = useState('')
+
+  // --- Server Cache Stats ---
+  const [cacheMsg, setCacheMsg] = useState<string|null>(null)
+  const [clearingCache, setClearingCache] = useState(false)
 
   useEffect(() => {
     api.getSettings().then(r => {
@@ -167,6 +172,39 @@ export default function SettingsPage() {
           {saveMsg && (
             <span className={`save-msg ${saveMsg.startsWith('Error') ? 'err' : 'ok'}`}>{saveMsg}</span>
           )}
+        </div>
+      </section>
+
+      {/* ── Server Controls ── */}
+      <section className="section">
+        <div className="section-header">
+          <h3>Server Controls</h3>
+        </div>
+        <div className="settings-grid">
+          <div className="settings-row" style={{alignItems:'flex-start'}}>
+            <button
+              className={"btn-primary"}
+              style={{minWidth:120}}
+              disabled={clearingCache}
+              onClick={async () => {
+                setClearingCache(true)
+                setCacheMsg(null)
+                try {
+                  const res = await api.clearCache()
+                  if(res.success){
+                    setCacheMsg("Cache cleared!")
+                  } else {
+                    setCacheMsg("Cache clear failed: "+(res.message||'unknown error'))
+                  }
+                } catch(e:any){
+                  setCacheMsg("Cache clear error: "+String(e))
+                }
+                setTimeout(()=>setCacheMsg(null),2000)
+                setClearingCache(false)
+              }}
+            >{clearingCache ? "Clearing…" : "Clear Cache"}</button>
+            {cacheMsg && <span style={{marginLeft:10, fontSize:'12px', color: cacheMsg.startsWith('Cache cleared')?'var(--green)':'var(--red)'}}>{cacheMsg}</span>}
+          </div>
         </div>
       </section>
 
