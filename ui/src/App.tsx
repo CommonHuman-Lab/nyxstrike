@@ -1526,7 +1526,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="main">
+      <main className={`main${page === 'run' ? ' main--flush' : ''}`}>
         {/* ── Settings Page ── */}
         {page === 'settings' && <SettingsPage />}
 
