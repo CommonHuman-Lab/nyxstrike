@@ -210,7 +210,7 @@ function buildCategoryStats(): Record<string, { total: number; available: number
 
 export const DEMO_HEALTH: WebDashboardResponse = {
   status: 'healthy',
-  version: '1.4.2',
+  version: '1.0.13',
   uptime: 172843,
   telemetry: {
     commands_executed: 1482,
