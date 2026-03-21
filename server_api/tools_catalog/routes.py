@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 import logging
 
 from tool_registry import TOOLS
+from server_core.singletons import tool_stats
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +14,9 @@ def get_tools():
     """Return the full tool catalog with metadata."""
     tools = []
     for name, meta in TOOLS.items():
+        baseline = meta.get("effectiveness", 0.0)
+        stats = tool_stats.get_stats(name)
+        effective = tool_stats.blended_effectiveness(name, baseline)
         tools.append({
             "name": name,
             "desc": meta.get("desc", ""),
@@ -21,7 +25,9 @@ def get_tools():
             "method": meta.get("method", "POST"),
             "params": meta.get("params", {}),
             "optional": meta.get("optional", {}),
-            "effectiveness": meta.get("effectiveness", 0.0),
+            "effectiveness": effective,
+            "effectiveness_runs": stats["runs"],
+            "effectiveness_live": stats["runs"] >= 5,
         })
 
     categories = sorted({t["category"] for t in tools})

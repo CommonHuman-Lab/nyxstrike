@@ -16,7 +16,7 @@ import os
 from flask import Flask, request, abort, jsonify
 import server_core.config_core as config_core
 from server_core.modern_visual_engine import ModernVisualEngine
-from server_core.singletons import run_history
+from server_core.singletons import run_history, tool_stats
 from server_api import register_blueprints
 
 # ============================================================================
@@ -95,6 +95,9 @@ def record_tool_run(response):
       params=params,
       result=body,
     )
+    # A run is "successful" when the tool reported success AND produced output.
+    ran_ok = bool(body.get("success", False)) and bool(str(body.get("stdout", "")).strip())
+    tool_stats.record(tool=tool_name, success=ran_ok)
   return response
 
 @app.errorhandler(Exception)
