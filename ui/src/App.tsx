@@ -543,7 +543,7 @@ function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHi
     const matchCat = activeCat === 'all' || t.category === activeCat
     const q = search.toLowerCase()
     return matchCat && (!q || t.name.includes(q) || t.desc.toLowerCase().includes(q))
-  })
+  }).sort((a, b) => a.name.localeCompare(b.name))
 
   function selectTool(t: Tool) {
     setSelected(t)
@@ -902,7 +902,7 @@ function ToolRegistrySection({ tools, toolsStatus }: { tools: Tool[]; toolsStatu
     const matchSearch = !q || t.name.includes(q) || t.desc.toLowerCase().includes(q)
     const matchMissing = !missingOnly || toolsStatus[t.name] === false
     return matchCat && matchSearch && matchMissing
-  })
+  }).sort((a, b) => a.name.localeCompare(b.name))
 
   const missingCount = tools.filter(t => toolsStatus[t.name] === false).length
 
