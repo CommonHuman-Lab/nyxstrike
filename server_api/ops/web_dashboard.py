@@ -4,7 +4,8 @@ from datetime import datetime
 from flask import Blueprint, jsonify
 import server_core.config_core as config_core
 from server_core.singletons import cache, telemetry, enhanced_process_manager
-from server_api.ops.system_monitoring import _get_tool_availability, _HEALTH_TOOL_CATEGORIES, _tool_availability_last_refresh
+import server_api.ops.system_monitoring as _sm
+from server_api.ops.system_monitoring import _get_tool_availability, _HEALTH_TOOL_CATEGORIES
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def web_dashboard():
       "total_tools_available": sum(1 for v in tools_status.values() if v),
       "total_tools_count": len(tools_status),
       "category_stats": category_stats,
-      "tool_availability_age_seconds": round(time.time() - _tool_availability_last_refresh, 1),
+      "tool_availability_age_seconds": round(time.time() - _sm._tool_availability_last_refresh, 1) if _sm._tool_availability_last_refresh > 0 else None,
 
       # System resources
       "resources": current_usage,

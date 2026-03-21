@@ -1499,13 +1499,14 @@ export default function App() {
                    <div className="section-header">
                      <h3>Tool Availability</h3>
                      <span className="section-meta">
-                       {(() => {
-                         const s = health.tool_availability_age_seconds
-                         if (s < 60) return 'just checked'
-                         if (s < 120) return 'checked a minute ago'
-                         if (s < 3600) return `checked ${Math.floor(s / 60)} minutes ago`
-                         if (s < 7200) return 'checked over an hour ago'
-                         return `checked ${Math.floor(s / 3600)} hours ago`
+                        {(() => {
+                          const s = health.tool_availability_age_seconds
+                          if (s === null || s === undefined) return 'not yet checked'
+                          if (s < 60) return 'just checked'
+                          if (s < 120) return 'checked a minute ago'
+                          if (s < 3600) return `checked ${Math.floor(s / 60)} minutes ago`
+                          if (s < 7200) return 'checked over an hour ago'
+                          return `checked ${Math.floor(s / 3600)} hours ago`
                        })()}
                      </span>
                   </div>

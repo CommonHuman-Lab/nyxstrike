@@ -19,7 +19,7 @@ export interface WebDashboardResponse {
   total_tools_available: number;
   total_tools_count: number;
   category_stats: Record<string, { total: number; available: number }>;
-  tool_availability_age_seconds: number;
+  tool_availability_age_seconds: number | null;
 
   // System resources
   resources: {
