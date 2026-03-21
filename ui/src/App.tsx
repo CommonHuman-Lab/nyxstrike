@@ -79,7 +79,7 @@ export default function App() {
   const [loading, setLoading] = useState(!demo)
   const [error, setError] = useState<string | null>(null)
   const [dashCacheSize, setDashCacheSize] = useState<number | null>(demo ? 512 : null)
-  const [dashCacheTtl, setDashCacheTtl] = useState<number | null>(demo ? 300 : null)
+  const [dashCacheHits, setDashCacheHits] = useState<number | null>(demo ? 0 : null)
   const [logLines, setLogLines] = useState<string[]>(demo ? DEMO_LOG_LINES : [])
   const [logAutoScroll, setLogAutoScroll] = useState(true)
   const [logLimit, setLogLimit] = useState(500)
@@ -93,6 +93,8 @@ export default function App() {
     try {
       const h = await api.dashboard()
       setHealth(h)
+      setDashCacheSize(h.cache_stats?.size ?? null)
+      setDashCacheHits(h.cache_stats?.hits ?? null)
       setHistory(prev => {
         const next = [
           ...prev.slice(-29),
@@ -118,15 +120,6 @@ export default function App() {
     if (demo) return
     try { const t = await api.tools(); setTools(t.tools) } catch { /* non-critical */ }
   }, [demo])
-
-  const fetchDashSettings = useCallback(async () => {
-    if (demo) return
-    try {
-      const r = await api.getSettings()
-      setDashCacheSize(r.settings.runtime.cache_size)
-      setDashCacheTtl(r.settings.runtime.cache_ttl)
-    } catch { /* non-critical */ }
-  }, [])
 
   const fetchServerRunHistory = useCallback(async () => {
     if (demo) return
@@ -185,11 +178,10 @@ export default function App() {
     setLoading(true)
     fetchAll()
     fetchTools()
-    fetchDashSettings()
     fetchServerRunHistory()
     timerRef.current = setInterval(fetchAll, POLL_MS)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [demo, authed, fetchAll, fetchTools, fetchDashSettings])
+  }, [demo, authed, fetchAll, fetchTools])
 
   // Try without token first (skipped in demo)
   useEffect(() => {
@@ -353,7 +345,7 @@ export default function App() {
                 tools={tools}
                 history={history}
                 dashCacheSize={dashCacheSize}
-                dashCacheTtl={dashCacheTtl}
+                dashCacheHits={dashCacheHits}
                 runHistory={runHistory}
                 loading={loading}
                 error={error}

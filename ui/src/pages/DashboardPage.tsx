@@ -191,13 +191,13 @@ interface DashboardPageProps {
   tools: Tool[]
   history: HistoryPoint[]
   dashCacheSize: number | null
-  dashCacheTtl: number | null
+  dashCacheHits: number | null
   runHistory: RunHistoryEntry[]
   loading: boolean
   error: string | null
 }
 
-export function DashboardPage({ health, tools, history, dashCacheSize, dashCacheTtl, runHistory, loading, error }: DashboardPageProps) {
+export function DashboardPage({ health, tools, history, dashCacheSize, dashCacheHits, runHistory, loading, error }: DashboardPageProps) {
   const cu = health.resources
 
   return (
@@ -234,8 +234,8 @@ export function DashboardPage({ health, tools, history, dashCacheSize, dashCache
         <StatCard
           icon={<Database size={20} />}
           label="Cache"
-          value={dashCacheSize !== null ? `${dashCacheSize} entries` : '—'}
-          sub={dashCacheTtl !== null ? `${dashCacheTtl}s TTL` : 'cache config'}
+          value={dashCacheHits !== null ? `${dashCacheHits} hits` : '—'}
+          sub={dashCacheSize !== null ? `${dashCacheSize} size` : 'cache config'}
           accent="var(--blue)"
         />
         <StatCard
