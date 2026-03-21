@@ -170,7 +170,7 @@ pip3 install -r requirements.txt
 # 4. Start the API server
 python3 hexstrike_server.py
 
-# 5. Dashboard automatically at [http://localhost:8888](http://localhost:8888)
+# 5. Dashboard automatically at http://localhost:8888
 
 # 6. In a separate terminal, start the MCP client
 # (use the venv python to ensure dependencies are available)
@@ -182,7 +182,9 @@ hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --prof
 ### Verify Installation
 
 ```bash
-# Test server health
+# Browse to http://localhost:8888
+
+# Test server API health
 curl http://localhost:8888/health
 ```
 
