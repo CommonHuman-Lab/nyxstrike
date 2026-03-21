@@ -730,14 +730,18 @@ function ToolRegistrySection({ tools, toolsStatus }: { tools: Tool[]; toolsStatu
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState<string>('all')
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null)
+  const [missingOnly, setMissingOnly] = useState(false)
 
   const cats = ['all', ...Array.from(new Set(tools.map(t => t.category))).sort()]
   const filtered = tools.filter(t => {
     const matchCat = activeCat === 'all' || t.category === activeCat
     const q = search.toLowerCase()
     const matchSearch = !q || t.name.includes(q) || t.desc.toLowerCase().includes(q)
-    return matchCat && matchSearch
+    const matchMissing = !missingOnly || toolsStatus[t.name] === false
+    return matchCat && matchSearch && matchMissing
   })
+
+  const missingCount = tools.filter(t => toolsStatus[t.name] === false).length
 
   return (
     <>
@@ -747,12 +751,23 @@ function ToolRegistrySection({ tools, toolsStatus }: { tools: Tool[]; toolsStatu
           <h3>Tool Registry <span className="badge">{tools.length}</span></h3>
         </div>
         <div className="registry-controls">
-          <input
-            className="search-input mono"
-            placeholder="Search tools…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <div className="registry-controls-top">
+            <input
+              className="search-input mono"
+              placeholder="Search tools…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            <button
+              className={`registry-missing-toggle${missingOnly ? ' active' : ''}`}
+              onClick={() => setMissingOnly(o => !o)}
+              title="Show only tools that are not installed"
+            >
+              <XCircle size={12} />
+              Not installed
+              {missingCount > 0 && <span className="badge">{missingCount}</span>}
+            </button>
+          </div>
           <div className="cat-tabs">
             {cats.map(c => (
               <button

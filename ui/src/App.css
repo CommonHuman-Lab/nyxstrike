@@ -445,6 +445,39 @@
   gap: 10px;
 }
 
+.registry-controls-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.registry-missing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.registry-missing-toggle:hover {
+  color: var(--text-h);
+  border-color: var(--text-dim);
+}
+
+.registry-missing-toggle.active {
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
+  color: var(--red);
+}
+
 .search-input {
   background: var(--bg-card2);
   border: 1px solid var(--border);
