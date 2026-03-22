@@ -130,12 +130,12 @@ function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
 // Also includes tool_registry.py category names used by demo mode.
 const HEALTH_CAT_TOOLS: Record<string, string[]> = {
   "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
-  "network": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
+  "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
               "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],
-  "web_security": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
+  "web_recon": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
                     "gau", "waybackurls", "arjun", "paramspider", "x8", "jaeles", "dalfox",
                     "httpx", "wafw00f", "burpsuite", "zaproxy", "katana", "hakrawler"],
-  "vuln_scanning": ["nuclei", "wpscan", "graphql-scanner", "jwt-analyzer"],
+  "web_vuln": ["nuclei", "wpscan", "graphql-scanner", "jwt-analyzer"],
   "password": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
   "binary": ["gdb", "radare2", "binwalk", "ropgadget", "checksec", "objdump",
               "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database", "pwninit"],
