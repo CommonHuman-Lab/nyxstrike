@@ -48,7 +48,8 @@ pwntools>=4.15.0,<5.0.0      # Binary exploitation (from pwn import *)
 angr>=9.2.205,<10.0.0        # Binary analysis (import angr)
 bcrypt==4.0.1                # Pin bcrypt version for passlib compatibility (fixes pwntools dependency issue)
 checkov>=3.0.0               # Infrastructure as code security scanner
-ROPgadget>=7.0.0,<8.0.0      # ROP gadget finder (import ROPgadget)
+ROPgadget>=7.0.0,<8.0.0      # ROP gadget finder
+one_gadget>=1.0.0,<2.0.0     # One-gadget RCE finder
 
 #kube-hunter>=0.6.8           # Kubernetes security scanner
 #ScoutSuite>=5.14.0           # Cloud security auditing tool

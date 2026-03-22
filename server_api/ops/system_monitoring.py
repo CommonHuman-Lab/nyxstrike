@@ -25,7 +25,7 @@ BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner"]
 
 REQUIRE_DPKG_CHECK = ["hashcat-utils"]
 
-REQUIRE_PIP_CHECK = ["pwntools"]
+REQUIRE_PIP_CHECK = ["pwntools", "one-gadget"]
 
 _HEALTH_TOOL_CATEGORIES = {
     "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
