@@ -266,4 +266,6 @@ export const api = {
     apiFetch<{ success: boolean; message?: string; error?: string }>(`/api/processes/resume/${pid}`, { method: 'POST' }),
   sessions: () => apiFetch<SessionsResponse>('/api/sessions'),
   dashboardStream: (): EventSource => new EventSource('/web-dashboard/stream'),
+  processDashboardStream: (): EventSource => new EventSource('/api/processes/dashboard/stream'),
+  processPoolStatsStream: (): EventSource => new EventSource('/api/process/pool-stats/stream'),
 };

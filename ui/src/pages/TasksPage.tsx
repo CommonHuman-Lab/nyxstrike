@@ -6,6 +6,23 @@ import {
 import { api, type ProcessDashboardResponse } from '../api'
 import './TasksPage.css'
 
+function StreamStatusDot({ status }: { status: string }) {
+  let color = 'var(--amber)';
+  if (status === 'streaming') color = 'var(--green)';
+  else if (status === 'polling') color = 'var(--blue)';
+  else if (status === 'error') color = 'var(--red)';
+  return <span
+    className="stream-dot"
+    style={{ display: 'inline-block', marginRight: 5, width: 10, height: 10, borderRadius: '50%', background: color, verticalAlign: 'middle' }}
+    title={
+      status === 'streaming' ? 'Live update (SSE)' :
+      status === 'polling' ? 'Polling (no stream)' :
+      status === 'error' ? 'Offline/error' :
+      'Unknown'
+    }
+  />
+}
+
 interface TasksPageProps {
   demoData?: { processes: ProcessDashboardResponse }
 }
@@ -18,7 +35,48 @@ export default function TasksPage({ demoData }: TasksPageProps) {
   const [loading, setLoading] = useState(!demoData)
   const [error, setError] = useState<string | null>(null)
   const [actionMsg, setActionMsg] = useState<string | null>(null)
+  const [streamStatus, setStreamStatus] = useState<'polling' | 'streaming' | 'error'>(demoData ? 'polling' : 'streaming')
+  const streamRefs = useRef<{ dash: EventSource | null, pool: EventSource | null }>({ dash: null, pool: null })
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Use SSE if not demoData
+  useEffect(() => {
+    if (demoData) return
+    let dashSource: EventSource | null = null
+    let poolSource: EventSource | null = null
+    let fallbackTimer: ReturnType<typeof setInterval> | null = null
+    function cleanup() {
+      dashSource?.close()
+      poolSource?.close()
+      if (fallbackTimer) clearInterval(fallbackTimer)
+    }
+    try {
+      dashSource = api.processDashboardStream()
+      poolSource = api.processPoolStatsStream()
+      streamRefs.current.dash = dashSource
+      streamRefs.current.pool = poolSource
+      let dashOk = false, poolOk = false
+      dashSource.onopen = () => { dashOk = true; if (poolOk) setStreamStatus('streaming') }
+      poolSource.onopen = () => { poolOk = true; if (dashOk) setStreamStatus('streaming') }
+      dashSource.onerror = poolSource.onerror = () => {
+        setStreamStatus('error')
+        cleanup()
+        fallbackTimer = setInterval(fetchData, 3000)
+        setStreamStatus('polling')
+      }
+      dashSource.onmessage = e => {
+        try { setData(JSON.parse(e.data)); setError(null); setLoading(false); } catch { setError('Stream parse error') }
+      }
+      poolSource.onmessage = e => {
+        try { setPoolStats(JSON.parse(e.data)); setError(null) } catch { setError('Pool stats stream error') }
+      }
+    } catch (err) {
+      setStreamStatus('error')
+      fallbackTimer = setInterval(fetchData, 3000)
+      setStreamStatus('polling')
+    }
+    return () => { cleanup() }
+  }, [demoData])
 
   async function fetchData() {
     if (demoData) return
@@ -35,11 +93,15 @@ export default function TasksPage({ demoData }: TasksPageProps) {
   }
 
   useEffect(() => {
-    if (demoData) return
-    fetchData()
-    pollRef.current = setInterval(fetchData, 3000)
-    return () => { if (pollRef.current) clearInterval(pollRef.current) }
-  }, [demoData])
+    if (demoData) return;
+    if (streamStatus !== 'polling') {
+      if (pollRef.current) clearInterval(pollRef.current);
+      return;
+    }
+    fetchData();
+    pollRef.current = setInterval(fetchData, 3000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [demoData, streamStatus]);
 
   async function doAction(fn: () => Promise<{ success: boolean; message?: string; error?: string }>, label: string) {
     try {
@@ -70,7 +132,7 @@ export default function TasksPage({ demoData }: TasksPageProps) {
       {poolStats && (
         <section className="section">
           <div className="section-header">
-            <h3>Worker Pool</h3>
+            <h3>Worker Pool <StreamStatusDot status={streamStatus} /></h3>
             <span className="section-meta mono">{data?.timestamp?.slice(11, 19)}</span>
           </div>
           <div className="tasks-pool-row">

@@ -64,8 +64,12 @@ export default function App() {
   }, [])
 
   const [health, setHealth] = useState<WebDashboardResponse | null>(demo ? DEMO_HEALTH : null)
-  const [tools] = useState<Tool[]>(demo ? DEMO_TOOLS : [])
-  const [history, setHistory] = useState<HistoryPoint[]>(demo ? demoCpuMemHistory() : [])
+   const [tools, setTools] = useState<Tool[]>(demo ? DEMO_TOOLS : [])
+   const [history, setHistory] = useState<HistoryPoint[]>(demo ? demoCpuMemHistory() : [])
+   useEffect(() => {
+     if (demo) return
+     api.tools().then(r => setTools(r.tools)).catch(() => {})
+   }, [demo])
   const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>(() => {
     if (demo) return DEMO_RUN_HISTORY
     try {
