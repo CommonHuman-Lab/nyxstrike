@@ -32,7 +32,7 @@ _HEALTH_TOOL_CATEGORIES = {
                      "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan"],
     "web_vuln": ["nuclei", "graphql-scanner", "jwt-analyzer", "zaproxy"],
     "brute_force": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
-    "binary": ["gdb", "radare2", "binwalk", "ropgadget", "checksec", "objdump",
+    "binary": ["gdb", "radare2", "binwalk", "ROPgadget", "checksec", "objdump",
                "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database", "pwninit"],
     "forensics": ["vol", "steghide", "hashpump", "foremost", "exiftool",
                   "strings", "xxd", "file", "photorec", "testdisk", "scalpel",

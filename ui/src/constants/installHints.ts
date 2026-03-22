@@ -40,7 +40,7 @@ export const INSTALL_HINTS: Record<string, string> = {
   gdb:               'sudo apt install gdb',
   radare2:           'sudo apt install radare2',
   binwalk:           'sudo apt install binwalk',
-  ropgadget:         'pip3 install ropgadget',
+  ROPgadget:         'pip3 install -r requirements.txt',
   checksec:          'sudo apt install checksec  # or: pip3 install checksec',
   objdump:           'sudo apt install binutils',
   ghidra:            'sudo apt install ghidra  # or download from ghidra.re',
