@@ -95,7 +95,7 @@ export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory
     try {
       const result = await api.runTool(selected.endpoint, payload)
       const entry: RunHistoryEntry = { id, tool: selected.name, params: payload, result, ts: new Date(), source: 'browser' }
-      setHistory(h => [entry, ...h])
+      setHistory(h => [entry, ...h].slice(0, 100)) // Limit to last 100 runs
       setViewEntry(entry)
     } catch (e) {
       setRunError(String(e))

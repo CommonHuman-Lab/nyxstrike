@@ -124,7 +124,8 @@ export default function TasksPage({ demoData }: TasksPageProps) {
     <div className="error-banner"><XCircle size={16} /> {error}</div>
   )
 
-  const processes = data?.processes ?? []
+  // Limit to last 100 processes to prevent memory bloat
+const processes = (data?.processes ?? []).slice(-100)
   const load = data?.system_load
 
   return (
