@@ -353,9 +353,11 @@ export default function App() {
           )}
           <div className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}`} />
           <span className="status-label">{health?.status ? health.status.charAt(0).toUpperCase() + health.status.slice(1) : (loading ? 'connecting…' : error ?? 'unknown')}</span>
-          <button className="icon-btn" onClick={fetchAll} title="Refresh now">
-            <RefreshCw size={14} className={loading ? 'spin' : ''} />
-          </button>
+          {!isStreaming && (
+            <button className="icon-btn" onClick={fetchAll} title="Refresh now">
+              <RefreshCw size={14} className={loading ? 'spin' : ''} />
+            </button>
+          )}
           <a
             className="icon-btn"
             href="https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition"
