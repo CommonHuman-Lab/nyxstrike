@@ -265,4 +265,5 @@ export const api = {
   resumeProcess: (pid: number) =>
     apiFetch<{ success: boolean; message?: string; error?: string }>(`/api/processes/resume/${pid}`, { method: 'POST' }),
   sessions: () => apiFetch<SessionsResponse>('/api/sessions'),
+  dashboardStream: (): EventSource => new EventSource('/web-dashboard/stream'),
 };

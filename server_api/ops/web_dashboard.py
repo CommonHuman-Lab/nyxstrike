@@ -61,7 +61,7 @@ def web_dashboard():
     logger.error(f"Error building web dashboard response: {e}")
     return jsonify({"error": f"Server error: {str(e)}"}), 500
 
-# ── Streaming dashboard SSE endpoint (added at the end!) ─────────────
+# ── Streaming dashboard SSE endpoint ─────────────
 @api_web_dashboard_bp.route("/web-dashboard/stream", methods=["GET"])
 def stream_dashboard():
     """SSE endpoint — streams the latest dashboard state every 2 seconds"""

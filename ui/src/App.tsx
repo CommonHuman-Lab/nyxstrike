@@ -64,7 +64,7 @@ export default function App() {
   }, [])
 
   const [health, setHealth] = useState<WebDashboardResponse | null>(demo ? DEMO_HEALTH : null)
-  const [tools, setTools] = useState<Tool[]>(demo ? DEMO_TOOLS : [])
+  const [tools] = useState<Tool[]>(demo ? DEMO_TOOLS : [])
   const [history, setHistory] = useState<HistoryPoint[]>(demo ? demoCpuMemHistory() : [])
   const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>(() => {
     if (demo) return DEMO_RUN_HISTORY
@@ -86,7 +86,12 @@ export default function App() {
   const logEndRef = useRef<HTMLDivElement>(null)
   const sseRef = useRef<EventSource | null>(null)
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Streaming state for dashboard
+  const dashboardStreamRef = useRef<EventSource | null>(null)
+  const dashboardPollTimer = useRef<number | null>(null)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingError, setStreamingError] = useState<string | null>(null)
+
 
   const fetchAll = useCallback(async () => {
     if (demo) return
@@ -116,10 +121,6 @@ export default function App() {
     }
   }, [])
 
-  const fetchTools = useCallback(async () => {
-    if (demo) return
-    try { const t = await api.tools(); setTools(t.tools) } catch { /* non-critical */ }
-  }, [demo])
 
   const fetchServerRunHistory = useCallback(async () => {
     if (demo) return
@@ -173,16 +174,6 @@ export default function App() {
     } catch { /* quota exceeded — ignore */ }
   }, [demo, runHistory])
 
-  useEffect(() => {
-    if (demo || !authed) return
-    setLoading(true)
-    fetchAll()
-    fetchTools()
-    fetchServerRunHistory()
-    timerRef.current = setInterval(fetchAll, POLL_MS)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [demo, authed, fetchAll, fetchTools])
-
   // Try without token first (skipped in demo)
   useEffect(() => {
     if (demo || hasToken()) return
@@ -199,6 +190,66 @@ export default function App() {
       setLoading(false)
     })
   }, [])
+
+  // Dashboard SSE with fallback to polling
+  useEffect(() => {
+    if (demo || !authed) return
+    // Clean up any previous sources or timers
+    if (dashboardStreamRef.current) dashboardStreamRef.current.close()
+    if (dashboardPollTimer.current) {
+      clearInterval(dashboardPollTimer.current)
+      dashboardPollTimer.current = null
+    }
+
+    function startPolling() {
+      // Defensive: clear any previous timers
+      if (dashboardPollTimer.current) clearInterval(dashboardPollTimer.current)
+      dashboardPollTimer.current = window.setInterval(() => {
+        fetchAll()
+      }, POLL_MS)
+    }
+
+    // Connect to SSE stream
+    const es = api.dashboardStream()
+    dashboardStreamRef.current = es
+
+    es.onmessage = (e) => {
+      try {
+        const h = JSON.parse(e.data)
+        setHealth(h)
+        setDashCacheSize(h.cache_stats?.size ?? null)
+        setDashCacheHits(h.cache_stats?.hits ?? null)
+        setHistory(prev => {
+          const next = [
+            ...prev.slice(-29),
+            { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent },
+          ]
+          return next
+        })
+        setLastRefresh(new Date())
+        setLoading(false)
+        setError(null)
+        setIsStreaming(true)
+        setStreamingError(null)
+        if (dashboardPollTimer.current) {
+          clearInterval(dashboardPollTimer.current)
+          dashboardPollTimer.current = null
+        }
+      } catch (err) {
+        setStreamingError('Malformed dashboard data')
+      }
+    }
+    es.onerror = () => {
+      setIsStreaming(false)
+      setStreamingError('Dashboard stream disconnected; using polling.')
+      if (!dashboardPollTimer.current) startPolling()
+    }
+
+    return () => {
+      es.close()
+      if (dashboardPollTimer.current) clearInterval(dashboardPollTimer.current)
+    }
+  }, [demo, authed, fetchAll])
 
   // SSE log stream (skipped in demo — logs pre-populated from demo data)
   useEffect(() => {
@@ -276,6 +327,24 @@ export default function App() {
           {lastRefresh && (
             <span className="topbar-meta">
               <Clock size={12} /> {lastRefresh.toLocaleTimeString('en-GB')}
+            </span>
+          )}
+          {/* Dashboard stream status indicator */}
+          {demo ? null : (
+            <span style={{ marginRight: 8 }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: 10, height: 10,
+                  borderRadius: '50%',
+                  background: isStreaming ? 'var(--green)' : streamingError ? 'var(--orange)' : 'var(--gray4)',
+                  marginRight: 4,
+                }}
+                title={isStreaming ? 'Live (streaming)' : streamingError ? streamingError : 'Idle'}
+              />
+              <span className="status-indicator-label" style={{ fontSize: 12, color: isStreaming ? 'var(--green)' : streamingError ? 'var(--orange)' : undefined }}>
+                {isStreaming ? 'Live' : streamingError ? 'Polling' : 'N/A'}
+              </span>
             </span>
           )}
           <div className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}`} />
