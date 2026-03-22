@@ -335,21 +335,22 @@ export default function App() {
           )}
           {/* Dashboard stream status indicator */}
           {demo ? null : (
-            <span style={{ marginRight: 8 }}>
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: 10, height: 10,
-                  borderRadius: '50%',
-                  background: isStreaming ? 'var(--green)' : streamingError ? 'var(--orange)' : 'var(--gray4)',
-                  marginRight: 4,
-                }}
+            <>
+              <div
+                className={`status-dot ${
+                  isStreaming
+                    ? 'online'
+                    : streamingError
+                      ? 'error'
+                      : 'loading'
+                }`}
                 title={isStreaming ? 'Live (streaming)' : streamingError ? streamingError : 'Idle'}
+                style={{ marginRight: 4 }}
               />
-              <span className="status-indicator-label" style={{ fontSize: 12, color: isStreaming ? 'var(--green)' : streamingError ? 'var(--orange)' : undefined }}>
+              <span className="status-label" style={{ fontSize: 12 }}>
                 {isStreaming ? 'Live' : streamingError ? 'Polling' : 'N/A'}
               </span>
-            </span>
+            </>
           )}
           <div className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}`} />
           <span className="status-label">{health?.status ? health.status.charAt(0).toUpperCase() + health.status.slice(1) : (loading ? 'connecting…' : error ?? 'unknown')}</span>
