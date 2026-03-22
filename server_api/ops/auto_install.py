@@ -4,8 +4,8 @@ api_auto_tool_bp = Blueprint("auto_tool", __name__)
 
 APT_TOOLS = {
     "aircrack-ng", "amass", "arjun", "arp-scan", "autopsy", "binutils", "binwalk", 
-    "bulk-extractor", "checksec", "dirb", "dirsearch", "enum4linux", "enum4linux-ng", 
-    "exiftool", "feroxbuster", "ffuf", "file", "foremost", "gdb", "gobuster", "hashcat", 
+    "bulk-extractor", "bettercap", "checksec", "dirb", "dirsearch", "enum4linux", "enum4linux-ng", 
+    "eaphammer","exiftool", "feroxbuster", "ffuf", "file", "foremost", "gdb", "gobuster", "hashcat", 
     "hashcat-utils", "hashid", "hydra", "john", "kismet", "masscan", "medusa", "nbtscan", 
     "nikto", "nmap", "ophcrack", "outguess", "paramspider", "patator",
     "radare2", "responder", "ropper", "rustscan", "scalpel", "sleuthkit",

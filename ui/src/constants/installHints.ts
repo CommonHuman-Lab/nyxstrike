@@ -1,4 +1,5 @@
 export const INSTALL_HINTS: Record<string, string> = {
+  eaphammer:         'sudo apt install eaphammer',
   nmap:              'sudo apt install nmap',
   masscan:           'sudo apt install masscan',
   rustscan:          'cargo install rustscan  # or: sudo apt install rustscan',
