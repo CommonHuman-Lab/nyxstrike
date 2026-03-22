@@ -37,7 +37,7 @@ export const INSTALL_HINTS: Record<string, string> = {
   jaeles:            'go install github.com/jaeles-project/jaeles@latest',
   arjun:             'pip3 install arjun',
   paramspider:       'pip3 install paramspider',
-  x8:                'cargo install x8',
+  x8:                '# https://github.com/Sh1Yo/x8',
   gdb:               'sudo apt install gdb',
   radare2:           'sudo apt install radare2',
   binwalk:           'sudo apt install binwalk',

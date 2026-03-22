@@ -23,6 +23,8 @@ api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
 # List of tools considered always installed (built-in, code-provided or simulated)
 BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner"]
 
+REQUIRE_DPKG_TOOLS = ["hashcat-utils"]
+
 _HEALTH_TOOL_CATEGORIES = {
     "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
     "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
@@ -70,12 +72,21 @@ def _refresh_tool_availability() -> None:
             # Always report built-ins as available without probing
             return tool, True
         try:
-            result = subprocess.run(
-                ["which", tool],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-            )
-            return tool, result.returncode == 0
+            if tool in REQUIRE_DPKG_TOOLS:
+                # For tools that require dpkg, check if the package is installed
+                result = subprocess.run(
+                    ["dpkg", "-s", tool],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return tool, result.returncode == 0
+            else:
+                result = subprocess.run(
+                    ["which", tool],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return tool, result.returncode == 0
         except Exception:
             return tool, False
 
