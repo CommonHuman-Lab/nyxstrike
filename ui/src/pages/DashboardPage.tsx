@@ -153,7 +153,11 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
                  "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
                  "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
-    "database": ["mysql", "sqlite3"]
+    "database": ["mysql", "sqlite3"],
+    //"active_directory": [
+    //    "impacket-scripts", "bloodhound-ce-python", "ldapdomaindump",
+    //    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
+    //]
 }
 
 function getCatTools(cat: string, allStatuses: Record<string, boolean>): string[] {
