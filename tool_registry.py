@@ -246,7 +246,7 @@ TOOLS: Dict[str, dict] = {
         "desc": "GPU-accelerated password cracker",
         "endpoint": "/api/tools/hashcat",
         "method": "POST",
-        "category": "esstential",
+        "category": "essential",
         "params": {"hash_file": {"required": True}, "hash_type": {"required": True}},
         "optional": {"attack_mode": "0", "wordlist": "/usr/share/wordlists/rockyou.txt", "mask": "", "additional_args": ""},
         "effectiveness": 0.85,
