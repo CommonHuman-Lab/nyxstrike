@@ -72,7 +72,6 @@ export const INSTALL_HINTS: Record<string, string> = {
   'docker-bench-security': 'git clone https://github.com/docker/docker-bench-security',
   checkov:           'pip3 install checkov',
   terrascan:         'brew install terrascan  # or download from github.com/tenable/terrascan',
-  falco:             'sudo apt install falco',
   clair:             'docker pull quay.io/projectquay/clair',
   msfconsole:        'sudo apt install metasploit-framework',
   msfvenom:          'sudo apt install metasploit-framework',
