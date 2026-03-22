@@ -371,6 +371,15 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.80,
     },
     # ---- WiFi Pentest ----
+    "eaphammer" : {
+        "desc": "Rogue access point framework for WiFi pentesting",
+        "endpoint": "/api/tools/wifi_pentest/eaphammer",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"interface": {"required": True}, "essid": {"required": True}},
+        "optional": {"channel": 6, "auth_mode": "", "attack_type": "", "negotiate": "", "cert_path": ""},
+        "effectiveness": 0.88,
+    },
     "aircrack-ng": {
         "desc": "Crack WPA/WPA2 PSK from captured handshake files using a wordlist.",
         "endpoint": "/api/tools/wifi_pentest/aircrack_ng",
@@ -473,6 +482,15 @@ TOOLS: Dict[str, dict] = {
     },
 
     # ---- Cloud ----
+    "cloudmapper" : {
+        "desc": "AWS network visualization and security analysis",
+        "endpoint": "/api/tools/cloudmapper",
+        "method": "POST",
+        "category": "cloud",
+        "params": {"account": {"required": True}, "action": {"required": True}},
+        "optional": {"config": "config.json", "additional_args": ""},
+        "effectiveness": 0.90,
+    },
     "prowler": {
         "desc": "AWS/Azure/GCP security audit",
         "endpoint": "/api/tools/prowler",
@@ -1240,6 +1258,16 @@ TOOLS: Dict[str, dict] = {
         "params": {"capture_file": {"required": True}},
         "optional": {"password": "", "wep_key": "", "bssid": "", "essid": ""},
         "effectiveness": 0.80,
+    },
+
+    "bettercap" : {
+        "desc": "Advanced network attack framework for MITM, sniffing, and spoofing",
+        "endpoint": "/api/tools/wifi_pentest/bettercap_wifi",
+        "method": "POST",
+        "category": "wifi_pentest",
+        "params": {"interface": {"required": True}},
+        "optional": {"mode": "", "target_bssid": "", "caplet": ""},
+        "effectiveness": 0.88,
     },
     "mysql": {
         "desc": "MySQL command-line client for database management and querying",
