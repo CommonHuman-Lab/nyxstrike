@@ -53,17 +53,17 @@ function ResourceChart({ data }: { data: HistoryPoint[] }) {
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   // server health category names
   essential: <Shield size={14} />,
-  network: <Wifi size={14} />,
-  web_security: <Activity size={14} />,
-  vuln_scanning: <AlertCircle size={14} />,
-  password: <Lock size={14} />,
+  network_recon: <Wifi size={14} />,
+  web_recon: <Activity size={14} />,
+  web_vuln: <AlertCircle size={14} />,
+  brute_force: <Lock size={14} />,
   binary: <Cpu size={14} />,
   forensics: <Database size={14} />,
   cloud: <Server size={14} />,
   osint: <Eye size={14} />,
   exploitation: <Zap size={14} />,
   api: <Activity size={14} />,
-  wireless: <Wifi size={14} />,
+  wifi_pentest: <Wifi size={14} />,
   database: <Database size={14} />,
 }
 
