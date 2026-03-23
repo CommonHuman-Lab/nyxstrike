@@ -246,6 +246,14 @@
 }
 
 /* Right: history */
+.run-history-date {
+  font-weight: bold;
+  margin: 0.5em 0 0.2em 0;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
 .run-history {
   border-left: 1px solid var(--border);
   display: flex;

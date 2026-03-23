@@ -298,23 +298,56 @@ export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory
           </div>
         )}
         {(() => {
-          const q = histSearch.toLowerCase()
+          const q = histSearch.toLowerCase();
           const visible = q
-            ? history.filter(e => e.tool.includes(q) || Object.values(e.params).some(v => String(v).toLowerCase().includes(q)))
-            : history
-          if (visible.length === 0) return <p className="run-history-empty">{histSearch ? 'No matches' : 'No runs yet'}</p>
-          return visible.map(e => (
-            <button
-              key={e.id}
-              className={`run-history-item${viewEntry?.id === e.id ? ' active' : ''}`}
-              onClick={() => setModalEntry(e)}
-            >
-              <span className={`run-hist-dot ${e.result.success ? 'ok' : 'fail'}`} />
-              <span className="run-hist-name mono">{e.tool}</span>
-              {e.source === 'server' && <span title="Recorded server-side" className="run-hist-server-icon"><Server size={10} /></span>}
-              <span className="run-hist-time">{e.ts.toLocaleTimeString('en-GB')}</span>
-            </button>
-          ))
+            ? history.filter(e =>
+                e.tool.includes(q) ||
+                Object.values(e.params).some(v => String(v).toLowerCase().includes(q))
+              )
+            : history;
+          if (visible.length === 0)
+            return <p className="run-history-empty">{histSearch ? 'No matches' : 'No runs yet'}</p>;
+
+          // Group by date (YYYY-MM-DD)
+          const groups: Record<string, typeof visible> = {};
+          for (const e of visible) {
+            const d = e.ts instanceof Date
+              ? e.ts
+              : new Date(e.ts);
+            const dateStr = d.toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
+            if (!groups[dateStr]) groups[dateStr] = [];
+            groups[dateStr].push(e);
+          }
+          const sortedDates = Object.keys(groups).sort((a, b) =>
+            // Sort descending (most recent first)
+            new Date(b).getTime() - new Date(a).getTime()
+          );
+
+          return (
+            <>
+              {sortedDates.map(dateStr => (
+                <React.Fragment key={dateStr}>
+                  <div className="run-history-date">{dateStr}</div>
+                  {groups[dateStr].map(e => (
+                    <button
+                      key={e.id}
+                      className={`run-history-item${viewEntry?.id === e.id ? ' active' : ''}`}
+                      onClick={() => setModalEntry(e)}
+                    >
+                      <span className={`run-hist-dot ${e.result.success ? 'ok' : 'fail'}`} />
+                      <span className="run-hist-name mono">{e.tool}</span>
+                      {e.source === 'server' && (
+                        <span title="Recorded server-side" className="run-hist-server-icon">
+                          <Server size={10} />
+                        </span>
+                      )}
+                      <span className="run-hist-time">{e.ts.toLocaleTimeString('en-GB')}</span>
+                    </button>
+                  ))}
+                </React.Fragment>
+              ))}
+            </>
+          );
         })()}
       </div>
     </div>
