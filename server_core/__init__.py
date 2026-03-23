@@ -43,7 +43,32 @@ from .error_handling import (
     GracefulDegradation,
 )
 
+# Shared singletons — import instances directly rather than constructing new ones
+from .singletons import (
+    cache,
+    session_store,
+    wordlist_store,
+    telemetry,
+    enhanced_process_manager,
+    error_handler,
+    degradation_manager,
+    cve_intelligence,
+    exploit_generator,
+    vulnerability_correlator,
+    decision_engine,
+    bugbounty_manager,
+    fileupload_framework,
+    ctf_manager,
+    ctf_tools,
+    ctf_automator,
+    ctf_coordinator,
+    ROCKYOU_PATH,
+    COMMON_DIRB_PATH,
+    COMMON_DIRSEARCH_PATH,
+)
+
 __all__ = [
+    # Classes
     "env_manager",
     "ModernVisualEngine",
     "HexStrikeCache",
@@ -78,4 +103,25 @@ __all__ = [
     "_execute_command_with_recovery",
     "VulnerabilityCorrelator",
     "AIExploitGenerator",
+    # Shared singleton instances
+    "cache",
+    "session_store",
+    "wordlist_store",
+    "telemetry",
+    "enhanced_process_manager",
+    "error_handler",
+    "degradation_manager",
+    "cve_intelligence",
+    "exploit_generator",
+    "vulnerability_correlator",
+    "decision_engine",
+    "bugbounty_manager",
+    "fileupload_framework",
+    "ctf_manager",
+    "ctf_tools",
+    "ctf_automator",
+    "ctf_coordinator",
+    "ROCKYOU_PATH",
+    "COMMON_DIRB_PATH",
+    "COMMON_DIRSEARCH_PATH",
 ]

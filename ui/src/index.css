@@ -1,0 +1,60 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0d0f14;
+  --bg-card: #13161e;
+  --bg-card2: #191c26;
+  --border: #252836;
+  --text: #8b95a8;
+  --text-h: #e2e8f0;
+  --text-dim: #4a5568;
+  --green: #00e676;
+  --green-dim: rgba(0, 230, 118, 0.15);
+  --red: #ff4d4d;
+  --red-dim: rgba(255, 77, 77, 0.15);
+  --amber: #ffc107;
+  --amber-dim: rgba(255, 193, 7, 0.12);
+  --blue: #4fc3f7;
+  --blue-dim: rgba(79, 195, 247, 0.12);
+  --purple: #b39ddb;
+  --purple-dim: rgba(179, 157, 219, 0.12);
+  --accent: #00e676;
+  --radius: 8px;
+  --mono: 'Cascadia Code', 'Fira Code', ui-monospace, 'Courier New', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* Utility */
+.mono { font-family: var(--mono); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-amber { color: var(--amber); }
+.text-blue { color: var(--blue); }
+.text-dim { color: var(--text-dim); }
+.text-h { color: var(--text-h); }

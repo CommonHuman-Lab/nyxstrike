@@ -26,7 +26,10 @@ def register_gateway_tools(mcp, hexstrike_client):
         return result
 
     @mcp.tool()
-    async def run_tool(tool_name: str, params: str) -> Dict[str, Any]:
+    async def run_tool(
+        tool_name: str,
+        params: str,
+    ) -> Dict[str, Any]:
         """
         Execute any security tool by name with parameters.
         Use classify_task first to discover available tools.
@@ -63,4 +66,5 @@ def register_gateway_tools(mcp, hexstrike_client):
         result = await loop.run_in_executor(
             None, lambda: hexstrike_client.safe_post(endpoint, parsed_params)
         )
+
         return result

@@ -35,24 +35,21 @@ class HexStrikeClient:
         """Attempt to reach the Flask server; log the outcome but never block callers."""
         for i in range(MAX_RETRIES):
             try:
-                logging.info(f"🔗 Attempting to connect to HexStrike AI API at {self.server_url} (attempt {i+1}/{MAX_RETRIES})")
+                logging.debug(f"Retrying connection to {self.server_url} (attempt {i+1}/{MAX_RETRIES})")
                 test_response = self.session.get(f"{self.server_url}/ping", timeout=5)
                 test_response.raise_for_status()
                 with self._connect_lock:
                     self._connected = True
-                logging.info(f"✅ Connected to HexStrike AI API at {self.server_url}")
+                logging.info(f"✅ Connected to HexStrike server at {self.server_url}")
                 return
             except requests.exceptions.ConnectionError:
-                logging.warning(f"🔌 Connection refused to {self.server_url}. Make sure the HexStrike AI server is running.")
+                logging.debug(f"Connection refused on attempt {i+1} to {self.server_url}")
             except Exception as e:
-                logging.warning(f"⚠️  Connection attempt {i+1} failed: {str(e)}")
+                logging.debug(f"Connection attempt {i+1} failed: {str(e)}")
             if i < MAX_RETRIES - 1:
                 time.sleep(2)
 
-        logging.error(
-            f"❌ Failed to establish connection to HexStrike AI API Server at {self.server_url} "
-            f"after {MAX_RETRIES} attempts"
-        )
+        logging.critical(f"HexStrike server offline - tool execution will fail until it's reachable.")
 
     def safe_get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if params is None:
@@ -64,10 +61,10 @@ class HexStrikeClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logging.error(f"🚫 Request failed: {str(e)}")
+            logging.debug(f"Request failed: {str(e)}")
             return {"error": f"Request failed: {str(e)}", "success": False}
         except Exception as e:
-            logging.error(f"💥 Unexpected error: {str(e)}")
+            logging.debug(f"Unexpected error: {str(e)}")
             return {"error": f"Unexpected error: {str(e)}", "success": False}
 
     def safe_post(self, endpoint: str, json_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -78,10 +75,10 @@ class HexStrikeClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logging.error(f"🚫 Request failed: {str(e)}")
+            logging.debug(f"Request failed: {str(e)}")
             return {"error": f"Request failed: {str(e)}", "success": False}
         except Exception as e:
-            logging.error(f"💥 Unexpected error: {str(e)}")
+            logging.debug(f"Unexpected error: {str(e)}")
             return {"error": f"Unexpected error: {str(e)}", "success": False}
 
     def execute_command(self, command: str, use_cache: bool = True) -> Dict[str, Any]:

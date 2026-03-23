@@ -17,10 +17,12 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
+import server_core.config_core as config_core
+
 logger = logging.getLogger(__name__)
 
 # Named constants (clean-code: no magic numbers)
-DATA_DIR_NAME = ".hexstrike_data"
+DATA_DIR_NAME = config_core.get("DATA_DIR_NAME", ".hexstrike_data")
 SESSIONS_DIR_NAME = "sessions"
 COMPLETED_DIR_NAME = "completed"
 MAX_COMPLETED_SESSIONS = 200

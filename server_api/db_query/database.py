@@ -5,7 +5,7 @@ Database interaction API endpoints (MySQL, SQLite, PostgreSQL).
 import sqlite3
 from flask import Blueprint, request, jsonify
 import pymysql
-import psycopg2
+#import psycopg2
 
 api_database_bp = Blueprint("database", __name__)
 
@@ -51,29 +51,27 @@ def sqlite_query():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
-import psycopg2
-
-@api_database_bp.route("/api/tools/postgresql", methods=["POST"])
-def postgresql_query():
-    data = request.json
-    host = data.get("host")
-    user = data.get("user")
-    password = data.get("password", "")
-    database = data.get("database")
-    query = data.get("query")
-    try:
-        conn = psycopg2.connect(
-            host=host,
-            user=user,
-            password=password,
-            dbname=database
-        )
-        cur = conn.cursor()
-        cur.execute(query)
-        result = cur.fetchall()
-        columns = [desc[0] for desc in cur.description] if cur.description else []
-        cur.close()
-        conn.close()
-        return jsonify({"success": True, "columns": columns, "result": result})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+# @api_database_bp.route("/api/tools/postgresql", methods=["POST"])
+# def postgresql_query():
+#     data = request.json
+#     host = data.get("host")
+#     user = data.get("user")
+#     password = data.get("password", "")
+#     database = data.get("database")
+#     query = data.get("query")
+#     try:
+#         conn = psycopg2.connect(
+#             host=host,
+#             user=user,
+#             password=password,
+#             dbname=database
+#         )
+#         cur = conn.cursor()
+#         cur.execute(query)
+#         result = cur.fetchall()
+#         columns = [desc[0] for desc in cur.description] if cur.description else []
+#         cur.close()
+#         conn.close()
+#         return jsonify({"success": True, "columns": columns, "result": result})
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)})

@@ -84,7 +84,7 @@ class CTFToolManager:
             "autopsy": "autopsy",
             "sleuthkit": "fls -r",
             "scalpel": "scalpel -c /etc/scalpel/scalpel.conf",
-            "bulk-extractor": "bulk_extractor -o /tmp/bulk_output",
+            "bulk_extractor": "bulk_extractor -o /tmp/bulk_output",
             "ddrescue": "ddrescue",
             "dc3dd": "dc3dd",
 

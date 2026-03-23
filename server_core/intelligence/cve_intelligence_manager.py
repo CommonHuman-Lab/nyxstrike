@@ -76,7 +76,7 @@ class CVEIntelligenceManager:
         cvss = vuln_data.get('cvss_score', 0.0)
 
         # Get severity color
-        severity_color = ModernVisualEngine.COLORS['HACKER_RED'] if severity == 'critical' else ModernVisualEngine.COLORS['HACKER_RED'] if severity == 'high' else ModernVisualEngine.COLORS['CYBER_ORANGE'] if severity == 'medium' else ModernVisualEngine.COLORS['CYBER_ORANGE'] if severity == 'low' else ModernVisualEngine.COLORS['NEON_BLUE']
+        severity_color = ModernVisualEngine.COLORS['HACKER_RED'] if severity == 'critical' else ModernVisualEngine.COLORS['CYBER_ORANGE'] if severity == 'high' else ModernVisualEngine.COLORS['ACCENT_GRADIENT'] if severity == 'medium' else ModernVisualEngine.COLORS['NEON_BLUE'] if severity == 'low' else ModernVisualEngine.COLORS['NEON_BLUE']
 
         # Severity indicators
         severity_indicators = {

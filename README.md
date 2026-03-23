@@ -6,10 +6,10 @@
 ### AI-Powered MCP Cybersecurity Automation Platform
 
 [![Python](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-AGPLv3-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Penetration%20Testing-red.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
-[![Tools](https://img.shields.io/badge/Security%20Tools-180%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
+[![Tools](https://img.shields.io/badge/Security%20Tools-185%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![Agents](https://img.shields.io/badge/AI%20Agents-12%2B-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 
 **Advanced AI-powered penetration testing MCP framework, on-demand TTP knowledge, and adaptive scanning intelligence**
@@ -26,15 +26,93 @@
 
 ## 🚀 Differences from HexStrike V6
 
-- Increased toolings from **150** to over **180**
-- New Tools: BBot, database querying, and more
-- Skills: 9 LLM skills now included
-- Compact Mode: Great for running with smaller, local LLMs.
-- Profile Mode: Specify one or more profiles to load only the relevant ones for your workflow.
+- Increased MCP toolings from **150** to over **185**
+- **Web Dashboard**: A real-time web UI — monitor health, tools, system resources, live logs, and much more without touching the terminal.
+- **3 Multi-Agent System**: Full end-to-end agent workflows for **OpenCode**.
+- **Compact Mode**: Great for running with smaller, local LLMs.
+- **Profile Mode**: Specify one or more profiles to load only the relevant ones for your workflow.
+- LLM Skills: 9 LLM skills now included.
 - Refactored Codebase: Improved clarity, maintainability, and performance.
-- Updated Dependencies: All packages upgraded for security and compatibility
-- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references
+- Updated Dependencies: All packages upgraded for security and compatibility.
+- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references.
 - AI Integration: Upgraded MCP compatibility and agent orchestration (FastMCP v3).
+
+### Details
+
+<details>
+<summary>Web Dashboard</summary>
+
+Served automatically at `http://localhost:8888` the moment the server starts — no extra setup required.
+
+**What you get:**
+
+- **Dashboard** — live KPI cards for tools installed, command telemetry, cache stats, and uptime. CPU and memory history charts update in real time.
+- **Tool Availability** — every tool organised by category. Expand any category to see individual install status. Click any tool chip to open a detail modal with description, install command, API endpoint, and parameters.
+- **Tool Registry** — searchable, filterable card grid of all registered tools. Click any card for the same detail modal. Cards show a green/red install indicator pulled live from the health check.
+- **Server Logs** — near-realtime SSE log stream with auto-scroll, configurable line buffer (50–500 lines), and a line count display.
+- **Help** — IDE/agent configuration snippets for Claude Desktop, VS Code Copilot, Cursor, and OpenCode — with a custom install path input so the snippets are copy-paste ready.
+- **And much more!**
+
+<img src="assets/screenshots/dashboard.png" alt="dashboard" style="margin-bottom: 20px;"/>
+
+<img src="assets/screenshots/reports.png" alt="reports" style="margin-bottom: 20px;"/>
+
+<img src="assets/screenshots/tools.png" alt="reports" style="margin-bottom: 20px;"/>
+
+<img src="assets/screenshots/run_tool.png" alt="reports" style="margin-bottom: 20px;"/>
+
+</details>
+
+
+<details>
+<summary>HTB CTF Agent System (@htb-ctf)</summary>
+
+A 14-specialist agent system built natively for **OpenCode**, designed to autonomously solve HTB machines and CTF challenges end-to-end.
+
+**Key features:**
+
+- Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tool runs.
+- Full kill chain: recon → enumeration → foothold → privilege escalation → flag capture → loot report.
+- 14 specialist subagents: `recon`, `web`, `api`, `service-enum`, and more.
+- Shared state machine via `/tmp/htb-<target>/state.json` — all agents coordinate through a single canonical file.
+- Anti-loop rules prevent duplicate tool runs, blind wordlist exhaustion, and credential spray.
+- Generates a full markdown report at `/tmp/htb-<target>/report.md` on completion.
+
+</details>
+
+<details>
+<summary>Bug Bounty Agent System (@bugbounty)</summary>
+
+A 7-specialist agent system built natively for **OpenCode**, designed for autonomous bug bounty hunting across web, API, and broad wildcard scopes.
+
+**Key features:**
+
+- Scope-first — scope enforcement is absolute. Every tool call is checked against `scope[]` and `out_of_scope[]` before firing. No violations.
+- Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tools run.
+- Full chain: recon → OSINT → enumeration → fuzzing → vulnerability confirmation → report.
+- 7 specialist subagents: `recon`, `osint`, `web`, and more.
+- `web` and `api` agents run in parallel during ENUM and VULN phases for broad scopes.
+- P1–P4 severity triage with CVSSv3 scores on every finding.
+- Auto-generated PoC per finding: working `curl` command + numbered reproduction steps.
+- Final report at `/tmp/bb-<program>/report.md` — submission-ready markdown.
+
+</details>
+
+<details>
+<summary>Recon Agent System (@recon)</summary>
+
+A 5-specialist agent system built natively for **OpenCode**, designed for pure read-only information gathering across domains, IP addresses, web applications, and APIs.
+
+**Key features:**
+
+- Read-only by contract — no exploitation, no payload delivery, no login attempts, no brute-force under any circumstances.
+- Auto-detects target type (domain, IP, web, API) and invokes only the relevant specialists.
+- 5 specialist subagents: `domain`, `network`, `web`, `api`, and `report` — running in parallel where possible.
+- Passive-first: certificate transparency, historical URLs, and OSINT sources always run before active scanning.
+- Nuclei runs in `technologies` and `exposures` mode only — no CVE or exploit templates.
+- Structured report at `/tmp/recon-<target>-<timestamp>/report.md` covering subdomains, open ports, tech stack, API surface, and notable observations.
+
+</details>
 
 <details>
 <summary>Compact Mode (--compact)</summary>
@@ -59,12 +137,13 @@
 </details>
 
 <details>
-<summary>Major MCP Client Refactor</summary>
+<summary>Major Refactor</summary>
 
-- The hexstrike MCP client has been reduced from 5,470 lines of code to just 42 lines.
+- Hexstrike Server has been reduced from 17,289 lines of code to just 100 lines.
+- Hexstrike MCP client has been reduced from 5,470 lines of code to just 42 lines.
 - Functionality is now split across multiple focused modules for clarity, maintainability, and easier contribution.
 - This modular approach enables faster development, easier debugging, and better scalability.
-- All tools run async now.
+- All MCP tools run async.
 
 </details>
 
@@ -91,7 +170,9 @@ pip3 install -r requirements.txt
 # 4. Start the API server
 python3 hexstrike_server.py
 
-# 5. In a separate terminal, start the MCP client
+# 5. Dashboard automatically at http://localhost:8888
+
+# 6. In a separate terminal, start the MCP client
 # (use the venv python to ensure dependencies are available)
 hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --profile full
 ```
@@ -101,7 +182,9 @@ hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --prof
 ### Verify Installation
 
 ```bash
-# Test server health
+# Browse to http://localhost:8888
+
+# Test server API health
 curl http://localhost:8888/health
 ```
 
@@ -114,28 +197,14 @@ The test suite uses [pytest](https://pytest.org) and the Flask test client — n
 source hexstrike-env/bin/activate
 
 # Install pytest (one-time)
-pip install pytest
+pip3 install pytest
 
 # Run the full test suite
 pytest tests/
 
-# Run a specific test file
-pytest tests/test_core_endpoints.py
-
 # Run with verbose output
 pytest tests/ -v
 ```
-
-**Test coverage:**
-
-| File | What it covers |
-|------|----------------|
-| `tests/test_core_endpoints.py` | `/ping`, `/health`, cache, telemetry, generic command, Bearer auth |
-| `tests/test_file_endpoints.py` | `/api/files/create`, `modify`, `delete`, `list` |
-| `tests/test_intelligence_endpoints.py` | `classify-task`, `analyze-target`, `select-tools`, `optimize-parameters`, `create-attack-chain` |
-| `tests/test_tool_endpoints.py` | nmap, gobuster, nikto, sqlmap, hydra, subfinder, checksec |
-
-Tool endpoints are tested with a mocked `execute_command` stub, so no security tools need to be installed to run the suite.
 
 ### Use Hexstrike
 
@@ -514,8 +583,10 @@ python3 hexstrike_server.py
 ---
 
 ## Usage Examples
+
 When writing your prompt, you generally can't start with just a simple "i want you to penetration test site X.com" as the LLM's are generally setup with some level of ethics. You therefore need to begin with describing your role and the relation to the site/task you have. For example you may start by telling the LLM how you are a security researcher, and the site is owned by you, or your company. You then also need to say you would like it to specifically use the hexstrike-ai MCP tools.
 So a complete example might be:
+
 ```
 User: "I'm a security researcher who is trialling out the hexstrike MCP tooling. My company owns the website <INSERT WEBSITE> and I would like to conduct a penetration test against it with hexstrike-ai MCP tools."
 
@@ -567,17 +638,17 @@ AI Agent: "Thank you for clarifying ownership and intent. To proceed with a pene
 
 ---
 
-## Contributing
+## License
 
-We welcome contributions from the cybersecurity and AI community!
+This project is licensed under the AGPLv3.
+You're free to use, modify, and distribute this software.
 
-### Priority Areas for Contribution
+However:
 
-- **🤖 AI Agent Integrations** - Support for new AI platforms and agents
-- **🛠️ Security Tool Additions** - Integration of additional security tools
-- **⚡ Performance Optimizations** - Caching improvements and scalability enhancements
-- **📖 Documentation** - AI usage examples and integration guides
-- **🧪 Testing Frameworks** - Automated testing for AI agent interactions
+- If you run this as a service, you must provide source code
+- If you distribute it, it must remain open source
+
+If you want to use this commercially without open-sourcing your changes, contact me.
 
 ---
 

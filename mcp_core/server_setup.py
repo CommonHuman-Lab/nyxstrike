@@ -24,7 +24,7 @@ def _register_skills(mcp: FastMCP, logger) -> None:
         return
     
     mcp.add_provider(SkillsDirectoryProvider(roots=skills_dir))
-    logger.info(f"Skills provider registered from {skills_dir}")
+    logger.info(f"🤖 Skills initialized")
 
 def setup_mcp_server(hexstrike_client, logger, compact: bool = False, profiles: Optional[list] = None) -> FastMCP:
     """

@@ -3,9 +3,11 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
+import server_core.config_core as config_core
+
 logger = logging.getLogger(__name__)
 
-DATA_DIR_NAME = ".hexstrike_data"
+DATA_DIR_NAME = config_core.get("DATA_DIR_NAME", ".hexstrike_data")
 WORDLISTS_FILE_NAME = "wordlists.json"
 
 def _default_data_dir() -> str:

@@ -7,8 +7,10 @@ from shared.target_types import TargetType, TechnologyStack
 from shared.target_profile import TargetProfile
 from shared.attack_chain import AttackChain, AttackStep
 from server_core.parameter_optimizer import ParameterOptimizer
+from server_core.tool_stats_store import ToolStatsStore
 
 parameter_optimizer = ParameterOptimizer()
+_tool_stats = ToolStatsStore()
 
 class IntelligentDecisionEngine:
     """AI-powered tool selection and parameter optimization engine"""
@@ -409,6 +411,22 @@ class IntelligentDecisionEngine:
 
         return min(confidence, 1.0)
 
+    def _effective_score(self, tool: str, target_type_value: str) -> float:
+        """Return the best available effectiveness score for a tool.
+
+        Uses the live success rate from ToolStatsStore when enough runs have
+        been recorded; falls back to the static baseline otherwise.
+
+        Args:
+            tool:              Tool name (e.g. "nmap")
+            target_type_value: TargetType enum value string
+
+        Returns:
+            float in [0.0, 1.0]
+        """
+        baseline = self.tool_effectiveness.get(target_type_value, {}).get(tool, 0.5)
+        return _tool_stats.blended_effectiveness(tool, baseline)
+
     def select_optimal_tools(self, profile: TargetProfile, objective: str = "comprehensive") -> List[str]:
         """Select optimal tools based on target profile and objective"""
         target_type = profile.target_type.value
@@ -419,12 +437,12 @@ class IntelligentDecisionEngine:
 
         # Apply objective-based filtering
         if objective == "quick":
-            # Select top 3 most effective tools
-            sorted_tools = sorted(base_tools, key=lambda t: effectiveness_map.get(t, 0), reverse=True)
+            # Select top 3 most effective tools (live score where available)
+            sorted_tools = sorted(base_tools, key=lambda t: self._effective_score(t, target_type), reverse=True)
             selected_tools = sorted_tools[:3]
         elif objective == "comprehensive":
-            # Select all tools with effectiveness > 0.7
-            selected_tools = [tool for tool in base_tools if effectiveness_map.get(tool, 0) > 0.7]
+            # Select all tools with effectiveness > 0.7 (live score where available)
+            selected_tools = [tool for tool in base_tools if self._effective_score(tool, target_type) > 0.7]
         elif objective == "stealth":
             # Select passive tools with lower detection probability
             stealth_tools = ["amass", "subfinder", "httpx", "nuclei"]
@@ -949,8 +967,8 @@ class IntelligentDecisionEngine:
             tool = step_config["tool"]
             optimized_params = self.optimize_parameters(tool, profile)
 
-            # Calculate success probability based on tool effectiveness
-            effectiveness = self.tool_effectiveness.get(profile.target_type.value, {}).get(tool, 0.5)
+            # Calculate success probability based on tool effectiveness (live where available)
+            effectiveness = self._effective_score(tool, profile.target_type.value)
             success_prob = effectiveness * profile.confidence_score
 
             # Estimate execution time (simplified)

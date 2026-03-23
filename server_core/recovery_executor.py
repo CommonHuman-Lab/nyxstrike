@@ -77,7 +77,8 @@ def execute_command_with_recovery(
         alt_tool = getattr(recovery_strategy, "alternative_tool", None)
         if alt_tool:
           op_type = determine_operation_type_fn(tool_name)
-          fallback = degradation_manager.get_fallback_tool(op_type, tool_name)
+          fallback_chain = degradation_manager.create_fallback_chain(op_type, tool_name)
+          fallback = fallback_chain[0] if fallback_chain else None
           if fallback:
             tool_name = fallback
             logger.warning(f"🔄 Switching from {tool_name} to fallback tool {fallback}")

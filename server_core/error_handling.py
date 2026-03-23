@@ -11,6 +11,7 @@ from server_core.modern_visual_engine import ModernVisualEngine
 import logging
 import socket
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -74,48 +75,48 @@ class IntelligentErrorHandler:
         self.error_history = []
         self.max_history_size = 1000
 
-    def _initialize_error_patterns(self) -> Dict[str, ErrorType]:
-        """Initialize error pattern recognition"""
+    def _initialize_error_patterns(self) -> Dict[re.Pattern, ErrorType]:
+        """Initialize error pattern recognition (pre-compiled for performance)"""
         return {
             # Timeout patterns
-            r"timeout|timed out|connection timeout|read timeout": ErrorType.TIMEOUT,
-            r"operation timed out|command timeout": ErrorType.TIMEOUT,
+            re.compile(r"timeout|timed out|connection timeout|read timeout", re.IGNORECASE): ErrorType.TIMEOUT,
+            re.compile(r"operation timed out|command timeout", re.IGNORECASE): ErrorType.TIMEOUT,
 
             # Permission patterns
-            r"permission denied|access denied|forbidden|not authorized": ErrorType.PERMISSION_DENIED,
-            r"sudo required|root required|insufficient privileges": ErrorType.PERMISSION_DENIED,
+            re.compile(r"permission denied|access denied|forbidden|not authorized", re.IGNORECASE): ErrorType.PERMISSION_DENIED,
+            re.compile(r"sudo required|root required|insufficient privileges", re.IGNORECASE): ErrorType.PERMISSION_DENIED,
 
             # Network patterns
-            r"network unreachable|host unreachable|no route to host": ErrorType.NETWORK_UNREACHABLE,
-            r"connection refused|connection reset|network error": ErrorType.NETWORK_UNREACHABLE,
+            re.compile(r"network unreachable|host unreachable|no route to host", re.IGNORECASE): ErrorType.NETWORK_UNREACHABLE,
+            re.compile(r"connection refused|connection reset|network error", re.IGNORECASE): ErrorType.NETWORK_UNREACHABLE,
 
             # Rate limiting patterns
-            r"rate limit|too many requests|throttled|429": ErrorType.RATE_LIMITED,
-            r"request limit exceeded|quota exceeded": ErrorType.RATE_LIMITED,
+            re.compile(r"rate limit|too many requests|throttled|429", re.IGNORECASE): ErrorType.RATE_LIMITED,
+            re.compile(r"request limit exceeded|quota exceeded", re.IGNORECASE): ErrorType.RATE_LIMITED,
 
             # Tool not found patterns
-            r"command not found|no such file or directory|not found": ErrorType.TOOL_NOT_FOUND,
-            r"executable not found|binary not found": ErrorType.TOOL_NOT_FOUND,
+            re.compile(r"command not found|no such file or directory|not found", re.IGNORECASE): ErrorType.TOOL_NOT_FOUND,
+            re.compile(r"executable not found|binary not found", re.IGNORECASE): ErrorType.TOOL_NOT_FOUND,
 
             # Parameter patterns
-            r"invalid argument|invalid option|unknown option": ErrorType.INVALID_PARAMETERS,
-            r"bad parameter|invalid parameter|syntax error": ErrorType.INVALID_PARAMETERS,
+            re.compile(r"invalid argument|invalid option|unknown option", re.IGNORECASE): ErrorType.INVALID_PARAMETERS,
+            re.compile(r"bad parameter|invalid parameter|syntax error", re.IGNORECASE): ErrorType.INVALID_PARAMETERS,
 
             # Resource patterns
-            r"out of memory|memory error|disk full|no space left": ErrorType.RESOURCE_EXHAUSTED,
-            r"resource temporarily unavailable|too many open files": ErrorType.RESOURCE_EXHAUSTED,
+            re.compile(r"out of memory|memory error|disk full|no space left", re.IGNORECASE): ErrorType.RESOURCE_EXHAUSTED,
+            re.compile(r"resource temporarily unavailable|too many open files", re.IGNORECASE): ErrorType.RESOURCE_EXHAUSTED,
 
             # Authentication patterns
-            r"authentication failed|login failed|invalid credentials": ErrorType.AUTHENTICATION_FAILED,
-            r"unauthorized|invalid token|expired token": ErrorType.AUTHENTICATION_FAILED,
+            re.compile(r"authentication failed|login failed|invalid credentials", re.IGNORECASE): ErrorType.AUTHENTICATION_FAILED,
+            re.compile(r"unauthorized|invalid token|expired token", re.IGNORECASE): ErrorType.AUTHENTICATION_FAILED,
 
             # Target patterns
-            r"target unreachable|target not responding|target down": ErrorType.TARGET_UNREACHABLE,
-            r"host not found|dns resolution failed": ErrorType.TARGET_UNREACHABLE,
+            re.compile(r"target unreachable|target not responding|target down", re.IGNORECASE): ErrorType.TARGET_UNREACHABLE,
+            re.compile(r"host not found|dns resolution failed", re.IGNORECASE): ErrorType.TARGET_UNREACHABLE,
 
             # Parsing patterns
-            r"parse error|parsing failed|invalid format|malformed": ErrorType.PARSING_ERROR,
-            r"json decode error|xml parse error|invalid json": ErrorType.PARSING_ERROR
+            re.compile(r"parse error|parsing failed|invalid format|malformed", re.IGNORECASE): ErrorType.PARSING_ERROR,
+            re.compile(r"json decode error|xml parse error|invalid json", re.IGNORECASE): ErrorType.PARSING_ERROR
         }
 
     def _initialize_recovery_strategies(self) -> Dict[ErrorType, List[RecoveryStrategy]]:
@@ -435,7 +436,7 @@ class IntelligentErrorHandler:
 
         # Check error patterns
         for pattern, error_type in self.error_patterns.items():
-            if re.search(pattern, error_text, re.IGNORECASE):
+            if pattern.search(error_text):
                 return error_type
 
         return ErrorType.UNKNOWN
@@ -765,25 +766,26 @@ class GracefulDegradation:
         return enhanced_results
 
     def _basic_port_check(self, target: str) -> List[int]:
-        """Basic port connectivity check"""
+        """Basic port connectivity check (parallel)"""
         if not target:
             return []
 
         common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995]
-        open_ports = []
 
-        for port in common_ports:
+        def _check_one(port: int):
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(2)
-                result = sock.connect_ex((target, port))
-                if result == 0:
-                    open_ports.append(port)
+                sock.settimeout(1)
+                open_ = sock.connect_ex((target, port)) == 0
                 sock.close()
+                return port if open_ else None
             except Exception:
-                continue
+                return None
 
-        return open_ports
+        with ThreadPoolExecutor(max_workers=len(common_ports)) as executor:
+            return [p for p in (f.result() for f in as_completed(
+                executor.submit(_check_one, port) for port in common_ports
+            )) if p is not None]
 
     def _basic_directory_check(self, target: str) -> List[str]:
         """Basic directory existence check"""

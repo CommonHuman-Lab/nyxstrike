@@ -1,13 +1,28 @@
 import time
 import threading
 import logging
+import re as _re
 import subprocess
 import traceback
 from typing import Dict, Any
 from datetime import datetime
+from wcwidth import wcswidth as _wcswidth
 import server_core.config_core as config_core
 from server_core.process_manager import ProcessManager
 from server_core.modern_visual_engine import ModernVisualEngine
+
+_ANSI = _re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
+_BOX_WIDTH = 66  # visible columns between the two │ borders
+
+
+def _box_row(content_with_ansi: str) -> str:
+    C = ModernVisualEngine.COLORS
+    visible = _ANSI.sub('', content_with_ansi)
+    w = _wcswidth(visible)
+    if w < 0:
+        w = len(visible)
+    padding = ' ' * (_BOX_WIDTH - w)
+    return f"{C['MATRIX_GREEN']}{C['BOLD']}│{C['RESET']}{content_with_ansi}{padding}{C['MATRIX_GREEN']}{C['BOLD']}│{C['RESET']}"
 
 # Global telemetry collector
 from server_core.telemetry_collector import TelemetryCollector
@@ -63,55 +78,65 @@ class EnhancedCommandExecutor:
         finally:
             self.stderr_data = "".join(self._stderr_chunks)
 
-    def _show_progress(self, duration: float):
+    def _show_progress(self):
         """Show enhanced progress indication for long-running commands"""
-        if duration > 2:  # Show progress for commands taking more than 2 seconds
-            progress_chars = ModernVisualEngine.PROGRESS_STYLES['dots']
-            start = time.time()
-            i = 0
-            while self.process and self.process.poll() is None:
-                elapsed = time.time() - start
-                char = progress_chars[i % len(progress_chars)]
+        progress_chars = ModernVisualEngine.PROGRESS_STYLES['dots']
+        start = time.time()
+        i = 0
+        while self.process and self.process.poll() is None:
+            elapsed = time.time() - start
+            char = progress_chars[i % len(progress_chars)]
 
-                # Calculate progress percentage (rough estimate)
-                progress_percent = min((elapsed / self.timeout) * 100, 99.9)
-                progress_fraction = progress_percent / 100
+            # Calculate progress percentage (rough estimate)
+            progress_percent = min((elapsed / self.timeout) * 100, 99.9)
+            progress_fraction = progress_percent / 100
 
-                # Calculate ETA
-                eta = 0
-                if progress_percent > 5:  # Only show ETA after 5% progress
-                    eta = ((elapsed / progress_percent) * 100) - elapsed
+            # Calculate ETA
+            eta = 0
+            if progress_percent > 5:  # Only show ETA after 5% progress
+                eta = ((elapsed / progress_percent) * 100) - elapsed
 
-                # Calculate speed
-                bytes_processed = sum(len(c) for c in self._stdout_chunks) + sum(len(c) for c in self._stderr_chunks)
-                speed = f"{bytes_processed/elapsed:.0f} B/s" if elapsed > 0 else "0 B/s"
+            # Calculate speed
+            bytes_processed = sum(len(c) for c in self._stdout_chunks) + sum(len(c) for c in self._stderr_chunks)
+            speed = f"{bytes_processed/elapsed:.0f} B/s" if elapsed > 0 else "0 B/s"
 
-                # Update process manager with progress
-                ProcessManager.update_process_progress(
-                    self.process.pid,
-                    progress_fraction,
-                    f"Running for {elapsed:.1f}s",
-                    bytes_processed
-                )
+            # Update process manager with progress
+            ProcessManager.update_process_progress(
+                self.process.pid,
+                progress_fraction,
+                f"Running for {elapsed:.1f}s",
+                bytes_processed
+            )
 
-                # Create beautiful progress bar using ModernVisualEngine
-                progress_bar = ModernVisualEngine.render_progress_bar(
-                    progress_fraction,
-                    width=30,
-                    style='cyber',
-                    label=f"⚡ PROGRESS {char}",
-                    eta=eta,
-                    speed=speed
-                )
+            # Create beautiful progress bar using ModernVisualEngine
+            progress_bar = ModernVisualEngine.render_progress_bar(
+                progress_fraction,
+                width=30,
+                style='cyber',
+                label=f"⚡ PROGRESS {char}",
+                eta=eta,
+                speed=speed
+            )
 
-                logger.info(f"{progress_bar} | {elapsed:.1f}s | PID: {self.process.pid}")
-                time.sleep(0.8)
-                i += 1
-                if elapsed > self.timeout:
-                    break
+            logger.info(f"{progress_bar} | {elapsed:.1f}s | PID: {self.process.pid}")
+            time.sleep(0.8)
+            i += 1
+            if elapsed > self.timeout:
+                break
 
     def execute(self) -> Dict[str, Any]:
         """Execute the command with enhanced monitoring and output"""
+        # Reset per-execution state so the instance can be reused across calls
+        self.stdout_data = ""
+        self.stderr_data = ""
+        self._stdout_chunks = []
+        self._stderr_chunks = []
+        self.process = None
+        self.stdout_thread = None
+        self.stderr_thread = None
+        self.return_code = None
+        self.timed_out = False
+        self.end_time = None
         self.start_time = time.time()
 
         logger.info(f"🚀 EXECUTING: {self.command}")
@@ -141,10 +166,11 @@ class EnhancedCommandExecutor:
             self.stdout_thread.start()
             self.stderr_thread.start()
 
-            # Start progress tracking in a separate thread
-            progress_thread = threading.Thread(target=self._show_progress, args=(self.timeout,))
-            progress_thread.daemon = True
-            progress_thread.start()
+            # Start progress tracking only for commands expected to run > 2 s
+            if self.timeout > 2:
+                progress_thread = threading.Thread(target=self._show_progress)
+                progress_thread.daemon = True
+                progress_thread.start()
 
             # Wait for the process to complete or timeout
             try:
@@ -200,22 +226,20 @@ class EnhancedCommandExecutor:
             timeout_status = f" {ModernVisualEngine.COLORS['WARNING']}[TIMEOUT]{ModernVisualEngine.COLORS['RESET']}" if self.timed_out else ""
 
             # Create beautiful results summary
-            results_summary = f"""
-{ModernVisualEngine.COLORS['MATRIX_GREEN']}{ModernVisualEngine.COLORS['BOLD']}╭─────────────────────────────────────────────────────────────────────────────╮{ModernVisualEngine.COLORS['RESET']}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {status_color}📊 FINAL RESULTS {status_icon}{ModernVisualEngine.COLORS['RESET']}
-{ModernVisualEngine.COLORS['BOLD']}├─────────────────────────────────────────────────────────────────────────────┤{ModernVisualEngine.COLORS['RESET']}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['NEON_BLUE']}🚀 Command:{ModernVisualEngine.COLORS['RESET']} {self.command[:55]}{'...' if len(self.command) > 55 else ''}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['CYBER_ORANGE']}⏱️  Duration:{ModernVisualEngine.COLORS['RESET']} {execution_time:.2f}s{timeout_status}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['WARNING']}📊 Output Size:{ModernVisualEngine.COLORS['RESET']} {output_size} bytes
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {ModernVisualEngine.COLORS['ELECTRIC_PURPLE']}🔢 Exit Code:{ModernVisualEngine.COLORS['RESET']} {self.return_code}
-{ModernVisualEngine.COLORS['BOLD']}│{ModernVisualEngine.COLORS['RESET']} {status_color}📈 Status:{ModernVisualEngine.COLORS['RESET']} {'SUCCESS' if success else 'FAILED'} | Cached: Yes
-{ModernVisualEngine.COLORS['MATRIX_GREEN']}{ModernVisualEngine.COLORS['BOLD']}╰─────────────────────────────────────────────────────────────────────────────╯{ModernVisualEngine.COLORS['RESET']}
-"""
-
-            # Log the beautiful summary
-            for line in results_summary.strip().split('\n'):
-                if line.strip():
-                    logger.info(line)
+            C = ModernVisualEngine.COLORS
+            _hr = '─' * _BOX_WIDTH
+            box_lines = [
+                f"{C['MATRIX_GREEN']}{C['BOLD']}╭{_hr}╮{C['RESET']}",
+                _box_row(f" {status_color}📊 FINAL RESULTS {status_icon}{C['RESET']}"),
+                f"{C['MATRIX_GREEN']}{C['BOLD']}├{_hr}┤{C['RESET']}",
+                _box_row(f" {C['NEON_BLUE']}🚀 Command:{C['RESET']} {self.command[:55]}{'...' if len(self.command) > 55 else ''}"),
+                _box_row(f" {C['CYBER_ORANGE']}⏰ Duration:{C['RESET']} {execution_time:.2f}s{timeout_status}"),
+                _box_row(f" {C['WARNING']}📊 Output Size:{C['RESET']} {output_size} bytes"),
+                _box_row(f" {C['ELECTRIC_PURPLE']}🔢 Exit Code:{C['RESET']} {self.return_code}"),
+                _box_row(f" {status_color}📈 Status:{C['RESET']} {'SUCCESS' if success else 'FAILED'} | Cached: Yes"),
+                f"{C['MATRIX_GREEN']}{C['BOLD']}╰{_hr}╯{C['RESET']}",
+            ]
+            print('\n'.join(box_lines), flush=True)
 
             return {
                 "stdout": self.stdout_data,
