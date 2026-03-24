@@ -29,6 +29,13 @@ REQUIRE_PIP_CHECK = ["pwntools", "one-gadget"]
 
 REQUIRE_GEM_CHECK = ["zsteg"]
 
+REQUIRE_CARGO_CHECK = ["pwninit"]
+
+BINARY_NAME_OVERRIDES = {
+    "scout-suite": "scout",
+    "volatility": "vol"
+}
+
 _HEALTH_TOOL_CATEGORIES = {
     "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
     "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
@@ -79,37 +86,49 @@ def _refresh_tool_availability() -> None:
     })
 
     def probe(tool: str) -> tuple:
-        if tool in BUILT_IN_TOOLS:
+        if tool in BINARY_NAME_OVERRIDES:
+            tool_to_check = BINARY_NAME_OVERRIDES[tool]
+        else:
+            tool_to_check = tool
+        if tool_to_check in BUILT_IN_TOOLS:
             # Always report built-ins as available without probing
             return tool, True
         try:
-            if tool in REQUIRE_DPKG_CHECK:
+            if tool_to_check in REQUIRE_DPKG_CHECK:
                 # For tools that require dpkg, check if the package is installed
                 result = subprocess.run(
-                    ["dpkg", "-s", tool],
+                    ["dpkg", "-s", tool_to_check],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
                 return tool, result.returncode == 0
-            elif tool in REQUIRE_PIP_CHECK:
+            elif tool_to_check in REQUIRE_PIP_CHECK:
                 # For tools that require pip, check if the package is installed
                 result = subprocess.run(
-                    ["pip3", "list", "|", "grep", tool],
+                    ["pip3", "list", "|", "grep", tool_to_check],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
                 return tool, result.returncode == 0
-            elif tool in REQUIRE_GEM_CHECK:
+            elif tool_to_check in REQUIRE_GEM_CHECK:
                 # For tools that require gem, check if the package is installed
                 result = subprocess.run(
-                    ["gem", "list", "|", "grep", tool],
+                    ["gem", "list", "|", "grep", tool_to_check],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return tool, result.returncode == 0
+            elif tool_to_check in REQUIRE_CARGO_CHECK:
+                # For tools that require cargo, check if the package is installed
+                result = subprocess.run(
+                    ["cargo", "install", "--list", "|", "grep", tool_to_check],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
                 return tool, result.returncode == 0
             else:
                 result = subprocess.run(
-                    ["which", tool],
+                    ["which", tool_to_check],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
