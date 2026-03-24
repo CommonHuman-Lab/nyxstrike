@@ -28,6 +28,7 @@ def get_tools():
             "effectiveness": effective,
             "effectiveness_runs": stats["runs"],
             "effectiveness_live": stats["runs"] >= 5,
+            "parent_tool": meta.get("parent_tool", None),
         })
 
     categories = sorted({t["category"] for t in tools})

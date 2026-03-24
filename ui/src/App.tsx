@@ -278,6 +278,24 @@ export default function App() {
     return <TokenGate onUnlocked={() => { setAuthed(true); setNeedsAuth(false) }} />
   }
 
+  function getToolsStatusWithParents(
+    tools: Tool[],
+    toolsStatus: Record<string, boolean>
+  ): Record<string, boolean> {
+    const result = { ...toolsStatus }
+    for (const tool of tools) {
+      if (tool.parent_tool && toolsStatus[tool.parent_tool]) {
+        // Add tool if not already present
+        if (!(tool.name in result)) {
+          result[tool.name] = true
+        }
+      }
+    }
+    return result
+  }
+
+  const toolsStatusWithParents = getToolsStatusWithParents(tools, health?.tools_status ?? {})
+
   return (
     <div className={demo ? 'layout layout--demo' : 'layout'}>
       {/* ── Demo banner ── */}
@@ -382,7 +400,7 @@ export default function App() {
         {page === 'run' && (
           <RunPage
             tools={tools}
-            toolsStatus={health?.tools_status ?? {}}
+            toolsStatus={toolsStatusWithParents ?? {}}
             runHistory={runHistory}
             setRunHistory={setRunHistory}
             onRefresh={fetchServerRunHistory}
@@ -390,7 +408,7 @@ export default function App() {
         )}
         {page === 'tasks' && <TasksPage demoData={demo ? { processes: DEMO_PROCESSES } : undefined} />}
         {page === 'tools' && health && (
-          <ToolsPage health={health} tools={tools} toolsStatus={health.tools_status ?? {}} />
+          <ToolsPage health={health} tools={tools} toolsStatus={toolsStatusWithParents ?? {}} />
         )}
         {page === 'reports' && <ReportsPage runHistory={runHistory} />}
         {page === 'sessions' && <SessionsPage demoData={demo ? { sessions: DEMO_SESSIONS } : undefined} />}
