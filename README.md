@@ -139,8 +139,8 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 <details>
 <summary>Major Refactor</summary>
 
-- Hexstrike Server has been reduced from 17,289 lines of code to just 100 lines.
-- Hexstrike MCP client has been reduced from 5,470 lines of code to just 42 lines.
+- Hexstrike Server has been reduced from 17,289 lines of code to just under 200 lines.
+- Hexstrike MCP client has been reduced from 5,470 lines of code to just under 50 lines.
 - Functionality is now split across multiple focused modules for clarity, maintainability, and easier contribution.
 - This modular approach enables faster development, easier debugging, and better scalability.
 - All MCP tools run async.
@@ -371,6 +371,28 @@ python3 hexstrike_server.py
 - **SMBMap** - SMB share enumeration and exploitation
 - **Responder** - LLMNR, NBT-NS and MDNS poisoner for credential harvesting
 - **NetExec** - Network service exploitation framework (formerly CrackMapExec)
+
+</details>
+
+<details>
+<summary><b>📡 WiFi Penetration Testing</b></summary>
+
+- Aircrack-ng Suite:
+- Aircrack-ng - WPA/WPA2 PSK cracking from captured handshakes using dictionary attacks
+- Airmon-ng - Enable/disable monitor mode and kill interfering processes
+- Airodump-ng - Passive 802.11 packet capture for AP discovery and WPA handshake collection
+- Aireplay-ng - Packet injection for deauthentication, fake authentication, and ARP replay attacks
+- Airbase-ng - Rogue/soft access point creation for Evil Twin and client capture attacks
+- Airdecap-ng - Decrypt WEP/WPA/WPA2 encrypted pcap capture files
+
+*Modern WiFi Tools:*
+
+- hcxdumptool - Clientless PMKID capture and WPA/WPA2 handshake collection (v7.0.0+)
+- hcxpcapngtool - Convert hcxdumptool pcapng output to hashcat -m 22000 format
+- EAPHammer - WPA-Enterprise Evil Twin for harvesting 802.1X EAP credentials
+- Wifite2 - Automated WiFi auditing with PMKID, handshake, and WPS attack support
+- Bettercap - WiFi recon, deauthentication, and Evil Twin via Bettercap wifi module
+- mdk4 - 802.11 protocol stress testing and WIDS/WIPS evasion validation
 
 </details>
 
@@ -648,7 +670,8 @@ However:
 - If you run this as a service, you must provide source code
 - If you distribute it, it must remain open source
 
-If you want to use this commercially without open-sourcing your changes, contact me.
+For commercial licensing options that do not require open-sourcing your changes,
+please contact the authors.
 
 ---
 
@@ -657,11 +680,5 @@ If you want to use this commercially without open-sourcing your changes, contact
 **0x4m4** - [HexStrike AI](https://github.com/0x4m4/hexstrike-ai)
 
 <div align="center">
-
-### **🚀 Ready to Transform Your AI Agents?**
-
-**Made with ❤️ by the cybersecurity community for AI-powered security automation**
-
 *HexStrike AI - Where artificial intelligence meets cybersecurity excellence*
-
 </div>
