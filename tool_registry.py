@@ -1113,6 +1113,16 @@ TOOLS: Dict[str, dict] = {
         "optional": {"method": "GET", "data": {}, "headers": {}},
         "effectiveness": 0.76,
     },
+    "api_fuzzer": {
+        "desc": "Custom API fuzzer for parameter and endpoint fuzzing.",
+        "endpoint": "/api/tools/api_fuzzer",
+        "method": "POST",
+        "category": "api",
+        "params": {"base_url": {"required": True}},
+        "optional": {"method": "GET", "wordlist": "/usr/share/wordlists/dirb/common.txt", "endpoints": []},
+        "effectiveness": 0.80,
+        "parent_tool": "ffuf",
+    },
 
     # ---- OSINT ----
     "sherlock": {

@@ -49,7 +49,9 @@ export function ToolModal({ tool, onClose, installed }: {
               </span>
             )}
             { tool.parent_tool && (
-              <span className="modal-cat">Parent: {tool.parent_tool}</span>
+              <span className="modal-cat" title={`Based on ${tool.parent_tool}`}>
+                {tool.parent_tool}
+              </span>
             )}
           </div>
           <button className="modal-close" onClick={onClose}><XCircle size={18} /></button>
