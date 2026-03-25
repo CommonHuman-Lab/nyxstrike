@@ -29,7 +29,7 @@ REQUIRE_PIP_CHECK = ["pwntools", "one-gadget"]
 
 REQUIRE_GEM_CHECK = ["zsteg"]
 
-REQUIRE_CARGO_CHECK = ["pwninit"]
+REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
 
 BINARY_NAME_OVERRIDES = {
     "scout-suite": "scout",
