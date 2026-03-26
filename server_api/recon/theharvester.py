@@ -40,7 +40,7 @@ def theharvester():
         return jsonify({"success": False, "error": "Domain is required"}), 400
 
 
-    command = f"theharvester -d {domain} {additional_args}"
+    command = f"theHarvester -d {domain} {additional_args}"
     logger.info(f"🔍 Starting TheHarvester: {domain}")
     result = execute_command(command, use_cache=True)
     if result.get("success"):

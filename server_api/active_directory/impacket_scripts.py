@@ -337,7 +337,7 @@ def _build_impacket_command(script_name: str, payload: dict):
     return argv, spec
 
 
-@api_tools_impacket_bp.route("/api/tools/impacket", methods=["POST"])
+@api_tools_impacket_bp.route("/api/tool/active_directory/impacket", methods=["POST"])
 def run_impacket():
     """
     Generic Impacket wrapper with per-script validation.
@@ -403,7 +403,7 @@ def run_impacket():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 
-@api_tools_impacket_bp.route("/api/tools/impacket/spec", methods=["POST"])
+@api_tools_impacket_bp.route("/api/tool/active_directory/impacket/spec", methods=["POST"])
 def get_impacket_spec():
     """
     Helper endpoint so UI/agent can discover required args for a script.

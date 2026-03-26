@@ -26,10 +26,17 @@ TOOL_PROFILES = {
 
     "active_directory": [
         lambda mcp, client, logger: register_impacket(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_ldapdomaindump_tool(mcp, client, logger),
     ],
 
     "api_audit": [
         lambda mcp, client, logger: register_comprehensive_api_audit_tool(mcp, client, logger), #Uses api_fuzz and api_scan tools internally, so they are needed for this profile as well.
+    ],
+
+    #OSINT tools for information gathering and reconnaissance e.g. Sherlock)
+    "osint": [
+        lambda mcp, client, logger: register_osint_sherlock_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_osint_spiderfoot_tool(mcp, client, logger),
     ],
 
     #Tools for steganography analysis (e.g., Steghide).
@@ -190,6 +197,10 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_burpsuite_tool(mcp, client, logger, HexStrikeColors),
         lambda mcp, client, logger: register_zap_tool(mcp, client, logger),
         lambda mcp, client, logger: register_xsser_tool(mcp, client, logger),
+    ],
+
+    "fingerprint": [
+        lambda mcp, client, logger: register_whatweb_tool(mcp, client, logger),
     ],
 
     #Tools for web probing and technology detection (e.g., httpx).

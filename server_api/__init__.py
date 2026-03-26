@@ -51,6 +51,7 @@ from .web_probe import *
 from .web_scan import *
 from .wifi_pentest import *
 from .active_directory import *
+from .osint import *
 
 def register_blueprints(app):
   """Register all API blueprints with the Flask app."""
@@ -63,11 +64,16 @@ def register_blueprints(app):
   app.register_blueprint(api_runs_bp)
   app.register_blueprint(api_sessions_bp)
 
+  #OSINT
+  app.register_blueprint(api_osint_sherlock_bp)
+  app.register_blueprint(api_osint_spiderfoot_bp)
+
   # Database
   app.register_blueprint(api_database_bp)
 
   #Active Directory
   app.register_blueprint(api_tools_impacket_bp)
+  app.register_blueprint(api_tool_active_directory_ldapdomaindump_bp)
 
   # OPS — General
   app.register_blueprint(api_visual_bp)
@@ -110,6 +116,7 @@ def register_blueprints(app):
   app.register_blueprint(api_exploit_framework_msfvenom_bp)
   app.register_blueprint(api_exploit_framework_metasploit_bp)
   app.register_blueprint(api_exploit_framework_pwntools_bp)
+  app.register_blueprint(api_exploit_framework_commix_bp)
 
   # Binary Analysis
   app.register_blueprint(api_binary_analysis_autopsy_bp)
@@ -164,6 +171,7 @@ def register_blueprints(app):
   app.register_blueprint(api_web_scan_nikto_bp)
   app.register_blueprint(api_web_scan_sqlmap_bp)
   app.register_blueprint(api_web_scan_wpscan_bp)
+  app.register_blueprint(api_web_scan_whatweb_bp)
 
   # Web Crawl
   app.register_blueprint(api_web_crawl_katana_bp)

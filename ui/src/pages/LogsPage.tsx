@@ -51,7 +51,7 @@ export default function LogsPage({
               Show Dashboard Logs
             </label>
             <label className="log-limit-label">
-              Show last
+              Show
               <select
                 className="log-limit-select"
                 value={logLimit}

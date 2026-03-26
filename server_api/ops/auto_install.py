@@ -10,7 +10,7 @@ APT_TOOLS = {
     "nikto", "nmap", "ophcrack", "paramspider", "patator",
     "radare2", "responder", "scalpel", "sleuthkit",
     "smbmap", "sqlmap", "steghide", "subfinder", "tcpdump", "testdisk", "tshark",
-    "wireshark", "wpscan", "xxd"
+    "wireshark", "wpscan", "xxd", "python3-ldapdomaindump", "commix", "theharvester"
 }
 
 def is_tool_installed(tool):

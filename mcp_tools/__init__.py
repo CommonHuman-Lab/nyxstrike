@@ -47,3 +47,5 @@ from mcp_tools.crypto_attack import *
 from mcp_tools.wifi_pentest import *
 from mcp_tools.active_directory import *
 from mcp_tools.vuln_intel import *
+from mcp_tools.fingerprint import *
+from mcp_tools.osint import *

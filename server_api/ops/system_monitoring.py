@@ -21,7 +21,10 @@ api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
 # TOOL AVAILABILITY CACHE — populated once at startup, refreshed every hour
 # ============================================================================
 # List of tools considered always installed (built-in, code-provided or simulated)
-BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner", "http-framework"]
+BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner", 
+                  "http-framework", "auto_install_missing_apt_tools", 
+                  "analyze-target", "create-attack-chain", "smart-scan",
+                  "technology-detection"]
 
 REQUIRE_DPKG_CHECK = ["hashcat-utils", "sleuthkit", "impacket-scripts"]
 
@@ -53,24 +56,29 @@ _HEALTH_TOOL_CATEGORIES = {
     "cloud": ["prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
               "docker-bench-security", "checkov", "terrascan", "falco", "clair",
               "cloudmapper", "pacu"],
-    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theharvester", "sherlock",
+    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
               "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "have-i-been-pwned", "whois", "bbot", "gau", "waybackurls"],
-    "exploitation": ["msfconsole", "msfvenom", "searchsploit"],
+              "whois", "bbot", "gau", "waybackurls"],
+    "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
     "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
                  "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
                  "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
     "database": ["mysql", "sqlite3"],
     "active_directory": [
-        "impacket-scripts"
+        "impacket-scripts", "ldapdomaindump"
     ],
-    "vulnerability_intelligence": ["vulnx"]
+    "vulnerability_intelligence": ["vulnx"],
+    "fingerprint": ["whatweb"],
 
-    #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", 
+    "ops": ["auto_install_missing_apt_tools"],
+
+    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
+
+    #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned",
     
     #"active_directory": [
-    #    "impacket-scripts", "bloodhound-ce-python", "ldapdomaindump",
+    #    "bloodhound-ce-python"
     #    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
     #]
 }

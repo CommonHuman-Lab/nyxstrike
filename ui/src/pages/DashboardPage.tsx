@@ -6,6 +6,11 @@ import {
   Lock, Eye,
   Bug,
   Wrench,
+  Box,
+  Wand,
+  Fingerprint,
+  Earth,
+  Brain,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -51,10 +56,10 @@ function ResourceChart({ data }: { data: HistoryPoint[] }) {
 }
 
 // ─── Tool Availability Section ────────────────────────────────────────────────
-
+// Icons : https://lucide.dev/icons/
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   // server health category names
-  essential: <Shield size={14} />,
+  essential: <Wand size={14} />,
   network_recon: <Wifi size={14} />,
   web_recon: <Activity size={14} />,
   web_vuln: <AlertCircle size={14} />,
@@ -68,7 +73,10 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   wifi_pentest: <Wifi size={14} />,
   database: <Database size={14} />,
   vulnerability_intelligence: <Bug size={14} />,
-  
+  active_directory: <Box size={14} />,
+  fingerprint: <Fingerprint size={14} />,
+  ops: <Earth size={14} />,
+  intelligence: <Brain size={14} />,
 }
 
 function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
@@ -149,24 +157,27 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
     "cloud": ["prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
               "docker-bench-security", "checkov", "terrascan", "falco", "clair",
               "cloudmapper", "pacu"],
-    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theharvester", "sherlock",
+    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
               "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "have-i-been-pwned", "whois", "bbot", "gau", "waybackurls"],
-    "exploitation": ["msfconsole", "msfvenom", "searchsploit"],
+              "whois", "bbot", "gau", "waybackurls"],
+    "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
     "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
                  "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
                  "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
     "database": ["mysql", "sqlite3"],
     "active_directory": [
-        "impacket-scripts"
+        "impacket-scripts", "ldapdomaindump"
     ],
-    "vulnerability_intelligence": ["vulnx"]
+    "vulnerability_intelligence": ["vulnx"],
+    "fingerprint": ["whatweb"],
+    "ops": ["auto_install_missing_apt_tools"],
+    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
 
-    //Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", 
+    //Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned", 
 
     //"active_directory": [
-    //    "impacket-scripts", "bloodhound-ce-python", "ldapdomaindump",
+    //    "bloodhound-ce-python"
     //    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
     //]
 }

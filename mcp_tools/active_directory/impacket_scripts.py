@@ -7,8 +7,8 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
     Register MCP tools for generic Impacket script execution.
 
     Expected backend endpoints:
-      - POST /api/tools/impacket
-      - GET  /api/tools/impacket/spec/<script_name>
+      - POST /api/tool/active_directory/impacket
+      - GET  /api/tool/active_directory/impacket/spec/<script_name>
     """
 
     async def _run_post(endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:

@@ -26,12 +26,10 @@
 
 ## 🚀 Differences from HexStrike V6
 
-- Increased MCP toolings from **150** to over **185**
-- **Web Dashboard**: A real-time web UI — monitor health, tools, system resources, live logs, and much more without touching the terminal.
-- **3 Multi-Agent System**: Full end-to-end agent workflows for **OpenCode**.
+- Many new tools, workflows, skills and end-to-end agent workflows added!
+- **Web Dashboard**: Monitor health, tools, live logs, run tools, export artifacts and much more without touching the terminal.
 - **Compact Mode**: Great for running with smaller, local LLMs.
 - **Profile Mode**: Specify one or more profiles to load only the relevant ones for your workflow.
-- LLM Skills: 9 LLM skills now included.
 - Refactored Codebase: Improved clarity, maintainability, and performance.
 - Updated Dependencies: All packages upgraded for security and compatibility.
 - Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references.
@@ -46,11 +44,12 @@ Served automatically at `http://localhost:8888` the moment the server starts —
 
 **What you get:**
 
-- **Dashboard** — live KPI cards for tools installed, command telemetry, cache stats, and uptime. CPU and memory history charts update in real time.
-- **Tool Availability** — every tool organised by category. Expand any category to see individual install status. Click any tool chip to open a detail modal with description, install command, API endpoint, and parameters.
-- **Tool Registry** — searchable, filterable card grid of all registered tools. Click any card for the same detail modal. Cards show a green/red install indicator pulled live from the health check.
-- **Server Logs** — near-realtime SSE log stream with auto-scroll, configurable line buffer (50–500 lines), and a line count display.
-- **Help** — IDE/agent configuration snippets for Claude Desktop, VS Code Copilot, Cursor, and OpenCode — with a custom install path input so the snippets are copy-paste ready.
+- **Dashboard** — KPI cards for tools installed, command telemetry, uptime and more.
+- **Tool Run** — Run any tool, straight from the dashboard!
+- **Reports** — Searchable, filterable tool run history, with export.
+- **Tool Registry** — Searchable, filterable for all registered tools. Click any tool for more details.
+- **Server Logs** — near-realtime SSE log stream.
+- **Help** — IDE/agent configuration snippets for Claude Desktop, VS Code Copilot, Cursor, and OpenCode.
 - **And much more!**
 
 <img src="assets/screenshots/dashboard.png" alt="dashboard" style="margin-bottom: 20px;"/>
@@ -673,12 +672,6 @@ However:
 For commercial licensing options that do not require open-sourcing your changes,
 please contact the authors.
 
----
-
 ## Based Of
 
 **0x4m4** - [HexStrike AI](https://github.com/0x4m4/hexstrike-ai)
-
-<div align="center">
-*HexStrike AI - Where artificial intelligence meets cybersecurity excellence*
-</div>
