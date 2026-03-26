@@ -124,7 +124,8 @@ export const INSTALL_HINTS: Record<string, string> = {
   cloudmapper:       'https://github.com/duo-labs/cloudmapper',
   vulnx:             'go install github.com/projectdiscovery/cvemap/cmd/vulnx@latest',
   falco:             'https://falco.org/docs/setup/packages/#install-with-apt',
-  ldapdomaindump:    'sudo apt install python3-ldapdomaindump'
+  ldapdomaindump:    'sudo apt install python3-ldapdomaindump',
+  sublist3r:         'sudo apt install sublist3r',
 }
 
 export function installHint(name: string): string {

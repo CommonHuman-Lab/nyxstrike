@@ -159,7 +159,7 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
               "cloudmapper", "pacu"],
     "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
               "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls"],
+              "whois", "bbot", "gau", "waybackurls", "sublist3r"],
     "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
     "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",

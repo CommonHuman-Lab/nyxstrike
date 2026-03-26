@@ -4,13 +4,17 @@ api_auto_tool_bp = Blueprint("auto_tool", __name__)
 
 APT_TOOLS = {
     "aircrack-ng", "amass", "arjun", "arp-scan", "autopsy", "binutils", "binwalk", 
-    "bulk-extractor", "bettercap", "checksec", "dirb", "dirsearch", "enum4linux", "enum4linux-ng", 
-    "eaphammer","exiftool", "feroxbuster", "ffuf", "file", "foremost", "gdb", "gobuster", "hashcat", 
-    "hashcat-utils", "hashid", "hydra", "john", "kismet", "masscan", "mdk4" "medusa", "nbtscan", 
+    "bulk-extractor", "bettercap", "checksec", "dirb", "dirsearch", 
+    "enum4linux", "enum4linux-ng", 
+    "eaphammer","exiftool", "feroxbuster", "ffuf", "file", 
+    "foremost", "gdb", "gobuster", "hashcat", 
+    "hashcat-utils", "hashid", "hydra", "john", "kismet", 
+    "masscan", "mdk4", "medusa", "nbtscan", 
     "nikto", "nmap", "ophcrack", "paramspider", "patator",
     "radare2", "responder", "scalpel", "sleuthkit",
-    "smbmap", "sqlmap", "steghide", "subfinder", "tcpdump", "testdisk", "tshark",
-    "wireshark", "wpscan", "xxd", "python3-ldapdomaindump", "commix", "theharvester"
+    "smbmap", "sqlmap", "steghide", "subfinder", 
+    "tcpdump", "testdisk", "tshark", "wireshark", "wpscan", 
+    "xxd", "python3-ldapdomaindump", "commix", "theharvester", "sublist3r"
 }
 
 def is_tool_installed(tool):

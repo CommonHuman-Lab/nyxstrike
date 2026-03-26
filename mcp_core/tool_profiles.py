@@ -37,6 +37,7 @@ TOOL_PROFILES = {
     "osint": [
         lambda mcp, client, logger: register_osint_sherlock_tool(mcp, client, logger),
         lambda mcp, client, logger: register_osint_spiderfoot_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_osint_sublist3r_tool(mcp, client, logger),
     ],
 
     #Tools for steganography analysis (e.g., Steghide).

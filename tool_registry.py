@@ -497,6 +497,15 @@ TOOLS: Dict[str, dict] = {
         "optional": {"silent": True, "all_sources": False, "additional_args": ""},
         "effectiveness": 0.82,
     },
+    "sublist3r": {
+        "desc": "Subdomain enumeration using OSINT sources",
+        "endpoint": "/api/osint/tools/sublist3r",
+        "method": "POST",
+        "category": "osint",
+        "params": {"domain": {"required": True}},
+        "optional": {"threads": 3, "engine": ""},
+        "effectiveness": 0.80,
+    },
     "fierce": {
         "desc": "DNS reconnaissance tool",
         "endpoint": "/api/tools/fierce",
