@@ -146,7 +146,7 @@ const HEALTH_CAT_TOOLS: Record<string, string[]> = {
                 "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],
     "web_recon": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
                      "arjun", "paramspider", "x8", "jaeles", "dalfox",
-                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan"],
+                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan", "joomscan"],
     "web_vuln": ["nuclei", "graphql-scanner", "jwt-analyzer", "zaproxy"],
     "brute_force": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
     "binary": ["gdb", "radare2", "binwalk", "ROPgadget", "checksec", "objdump",

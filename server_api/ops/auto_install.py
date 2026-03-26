@@ -15,7 +15,7 @@ APT_TOOLS = {
     "smbmap", "sqlmap", "steghide", "subfinder", 
     "tcpdump", "testdisk", "tshark", "wireshark", "wpscan", 
     "xxd", "python3-ldapdomaindump", "commix", "theharvester", 
-    "sublist3r", "parsero"
+    "sublist3r", "parsero", "joomscan"
 }
 
 def is_tool_installed(tool):

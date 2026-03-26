@@ -232,6 +232,15 @@ TOOLS: Dict[str, dict] = {
         "optional": {"additional_args": ""},
         "effectiveness": 0.95,
     },
+    "joomscan": {
+        "desc": "Joomla vulnerability scanner",
+        "endpoint": "/api/tools/web_recon/joomscan",
+        "method": "POST",
+        "category": "web_recon",
+        "params": {"url": {"required": True}},
+        "optional": {"additional_args": ""},
+        "effectiveness": 0.90,
+    },
 
     # ---- Web Vuln ----
     "nuclei": {

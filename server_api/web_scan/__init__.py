@@ -7,3 +7,4 @@ from .dalfox import *
 from .burpsuite import *
 from .zap import *
 from .whatweb import *
+from .joomscan import *

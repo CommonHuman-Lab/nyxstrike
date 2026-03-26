@@ -173,6 +173,7 @@ def register_blueprints(app):
   app.register_blueprint(api_web_scan_nikto_bp)
   app.register_blueprint(api_web_scan_sqlmap_bp)
   app.register_blueprint(api_web_scan_wpscan_bp)
+  app.register_blueprint(api_web_scan_joomscan_bp)
   app.register_blueprint(api_web_scan_whatweb_bp)
 
   # Web Crawl

@@ -39,6 +39,7 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_osint_spiderfoot_tool(mcp, client, logger),
         lambda mcp, client, logger: register_osint_sublist3r_tool(mcp, client, logger),
         lambda mcp, client, logger: register_osint_parsero_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_osint_joomscan_tool(mcp, client, logger),
     ],
 
     #Tools for steganography analysis (e.g., Steghide).

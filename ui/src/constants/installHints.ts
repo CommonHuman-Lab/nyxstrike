@@ -127,6 +127,7 @@ export const INSTALL_HINTS: Record<string, string> = {
   ldapdomaindump:    'sudo apt install python3-ldapdomaindump',
   sublist3r:         'sudo apt install sublist3r',
   parsero:           'sudo apt install parsero',
+  joomscan:          'sudo apt install joomscan',
 }
 
 export function installHint(name: string): string {
