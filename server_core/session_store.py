@@ -16,23 +16,15 @@ import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
-
 import server_core.config_core as config_core
 
 logger = logging.getLogger(__name__)
 
 # Named constants (clean-code: no magic numbers)
-DATA_DIR_NAME = config_core.get("DATA_DIR_NAME", ".hexstrike_data")
 SESSIONS_DIR_NAME = "sessions"
 COMPLETED_DIR_NAME = "completed"
 MAX_COMPLETED_SESSIONS = 200
 SESSION_FILE_SUFFIX = ".json"
-
-
-def _default_data_dir() -> str:
-    """Resolve the data directory path. Uses HEXSTRIKE_DATA_DIR env var or cwd."""
-    return os.environ.get("HEXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
-
 
 class SessionStore:
     """Persists scan sessions as JSON files on disk.
@@ -43,7 +35,7 @@ class SessionStore:
     """
 
     def __init__(self, data_dir: Optional[str] = None) -> None:
-        self._data_dir = data_dir or _default_data_dir()
+        self._data_dir = data_dir or config_core.default_data_dir()
         self._sessions_dir = os.path.join(self._data_dir, SESSIONS_DIR_NAME)
         self._completed_dir = os.path.join(self._sessions_dir, COMPLETED_DIR_NAME)
         self._ensure_dirs()

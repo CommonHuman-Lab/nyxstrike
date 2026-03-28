@@ -2,16 +2,11 @@ import json
 import logging
 import os
 from typing import Optional
-
 import server_core.config_core as config_core
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR_NAME = config_core.get("DATA_DIR_NAME", ".hexstrike_data")
 WORDLISTS_FILE_NAME = "wordlists.json"
-
-def _default_data_dir() -> str:
-    return os.environ.get("HEXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
 
 class WordlistStore:
     """
@@ -21,7 +16,7 @@ class WordlistStore:
     """
 
     def __init__(self, data_dir: Optional[str] = None) -> None:
-        self._data_dir = data_dir or _default_data_dir()
+        self._data_dir = data_dir or config_core.default_data_dir()
         self._wordlists_file = os.path.join(self._data_dir, WORDLISTS_FILE_NAME)
         self._ensure_dir_and_file()
 

@@ -39,6 +39,10 @@ if os.path.exists(_CONFIG_LOCAL_PATH):
     except Exception as e:
         logger.warning("Failed to load config_local.json: %r", e)
 
+def default_data_dir() -> str:
+    """Resolve the data directory path. Uses HEXSTRIKE_DATA_DIR env var or cwd."""
+    return os.environ.get("HEXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
+
 def get_word_list(name: str) -> Optional[dict]:
     """
     Retrieve the metadata dictionary for a word list by its name.
