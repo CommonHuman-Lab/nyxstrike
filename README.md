@@ -60,14 +60,13 @@ Served automatically at `http://localhost:8888` the moment the server starts —
 
 </details>
 
-
 <details>
-<summary>HTB CTF Agent System (@htb-ctf)</summary>
+<summary>End-to-end Agents</summary>
 
+### HTB CTF Agent System (@htb-ctf)
 A 14-specialist agent system built natively for **OpenCode**, designed to autonomously solve HTB machines and CTF challenges end-to-end.
 
 **Key features:**
-
 - Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tool runs.
 - Full kill chain: recon → enumeration → foothold → privilege escalation → flag capture → loot report.
 - 14 specialist subagents: `recon`, `web`, `api`, `service-enum`, and more.
@@ -75,15 +74,10 @@ A 14-specialist agent system built natively for **OpenCode**, designed to autono
 - Anti-loop rules prevent duplicate tool runs, blind wordlist exhaustion, and credential spray.
 - Generates a full markdown report at `/tmp/htb-<target>/report.md` on completion.
 
-</details>
-
-<details>
-<summary>Bug Bounty Agent System (@bugbounty)</summary>
-
+### Bug Bounty Agent System (@bugbounty)
 A 7-specialist agent system built natively for **OpenCode**, designed for autonomous bug bounty hunting across web, API, and broad wildcard scopes.
 
 **Key features:**
-
 - Scope-first — scope enforcement is absolute. Every tool call is checked against `scope[]` and `out_of_scope[]` before firing. No violations.
 - Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tools run.
 - Full chain: recon → OSINT → enumeration → fuzzing → vulnerability confirmation → report.
@@ -93,15 +87,10 @@ A 7-specialist agent system built natively for **OpenCode**, designed for autono
 - Auto-generated PoC per finding: working `curl` command + numbered reproduction steps.
 - Final report at `/tmp/bb-<program>/report.md` — submission-ready markdown.
 
-</details>
-
-<details>
-<summary>Recon Agent System (@recon)</summary>
-
+### Recon Agent System (@recon)
 A 5-specialist agent system built natively for **OpenCode**, designed for pure read-only information gathering across domains, IP addresses, web applications, and APIs.
 
 **Key features:**
-
 - Read-only by contract — no exploitation, no payload delivery, no login attempts, no brute-force under any circumstances.
 - Auto-detects target type (domain, IP, web, API) and invokes only the relevant specialists.
 - 5 specialist subagents: `domain`, `network`, `web`, `api`, and `report` — running in parallel where possible.
@@ -130,17 +119,6 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 
 - 🚀 Select profiles for targeted workflows to speed up scans and reduce resource usage.
 - 🌐 Use --profile full to enable the complete arsenal, it's on default out-the-box for the recommended set.
-
-</details>
-
-<details>
-<summary>Major Refactor</summary>
-
-- Hexstrike Server has been reduced from 17,289 lines of code to just under 200 lines.
-- Hexstrike MCP client has been reduced from 5,470 lines of code to just under 50 lines.
-- Functionality is now split across multiple focused modules for clarity, maintainability, and easier contribution.
-- This modular approach enables faster development, easier debugging, and better scalability.
-- All MCP tools run async.
 
 </details>
 
