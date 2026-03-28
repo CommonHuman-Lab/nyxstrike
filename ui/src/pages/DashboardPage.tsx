@@ -192,14 +192,15 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
           label="Server Status"
           value={health.status.charAt(0).toUpperCase() + health.status.slice(1)}
           sub={`uptime ${uptimeStr(health.uptime)}`}
-          accent={health.status === 'healthy' ? 'var(--green)' : 'var(--red)'}
+          accent={health.status === 'healthy' ? 'var(--success)' : 'var(--danger)'}
         />
         <StatCard
           icon={<Shield size={20} />}
           label="Kali Tools"
           value={`${health.total_tools_available} / ${health.total_tools_count}`}
           sub={health.all_essential_tools_available ? 'all essential ready' : 'some essential missing'}
-          accent={health.all_essential_tools_available ? 'var(--green)' : 'var(--amber)'}
+          accent={health.all_essential_tools_available ? 'var(--success)' : 'var(--warning)'}
+
         />
         <StatCard icon={<Wrench size={20} />} label="Server Tools" value={tools.length} sub="in registry" accent="var(--blue)" />
         <StatCard

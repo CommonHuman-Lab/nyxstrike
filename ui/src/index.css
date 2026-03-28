@@ -9,21 +9,70 @@
   --bg-card: #13161e;
   --bg-card2: #191c26;
   --border: #252836;
+
   --text: #8b95a8;
   --text-h: #e2e8f0;
   --text-dim: #4a5568;
+
+  /* Core colors */
   --green: #00e676;
   --green-dim: rgba(0, 230, 118, 0.15);
+
   --red: #ff4d4d;
   --red-dim: rgba(255, 77, 77, 0.15);
+
   --amber: #ffc107;
   --amber-dim: rgba(255, 193, 7, 0.12);
+
   --blue: #4fc3f7;
   --blue-dim: rgba(79, 195, 247, 0.12);
+
   --purple: #b39ddb;
   --purple-dim: rgba(179, 157, 219, 0.12);
+
+  --cyan: #00e5ff;
+  --cyan-dim: rgba(0, 229, 255, 0.12);
+
+  --pink: #ff4081;
+  --pink-dim: rgba(255, 64, 129, 0.12);
+
+  --orange: #ff9100;
+  --orange-dim: rgba(255, 145, 0, 0.12);
+
+  --lime: #aeea00;
+  --lime-dim: rgba(174, 234, 0, 0.12);
+
+  --teal: #1de9b6;
+  --teal-dim: rgba(29, 233, 182, 0.12);
+
+  --indigo: #5c6bc0;
+  --indigo-dim: rgba(92, 107, 192, 0.12);
+
+  /* Neutral variations */
+  --gray: #94a3b8;
+  --gray-dim: rgba(148, 163, 184, 0.12);
+
+  --white-dim: rgba(255, 255, 255, 0.05);
+
+  /* Accent system */
   --accent: #00e676;
+  --accent-alt: #00e5ff;
+  --accent-warm: #ff9100;
+
+  /* Status variations (nice for dashboards) */
+  --success: var(--green);
+  --warning: var(--amber);
+  --danger: var(--red);
+  --info: var(--blue);
+
+  /* Effects */
+  --glow-green: 0 0 12px rgba(0, 230, 118, 0.6);
+  --glow-blue: 0 0 12px rgba(79, 195, 247, 0.6);
+  --glow-red: 0 0 12px rgba(255, 77, 77, 0.6);
+  --glow-cyan: 0 0 12px rgba(0, 229, 255, 0.6);
+
   --radius: 8px;
+
   --mono: 'Cascadia Code', 'Fira Code', ui-monospace, 'Courier New', monospace;
   --sans: 'Inter', system-ui, sans-serif;
 }
