@@ -230,6 +230,10 @@ export const DEMO_HEALTH: WebDashboardResponse = {
     disk_percent: 31.0,
     disk_free_gb: 274.5,
     load_avg: [1.12, 1.05, 0.98],
+    disk_total_gb: 398.0,
+    disk_used_gb: 123.5,
+    memory_total_gb: 16.0,
+    memory_used_gb: 7.2,
   },
   resources_timestamp: new Date().toISOString(),
   cache_stats: {

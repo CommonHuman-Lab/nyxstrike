@@ -277,12 +277,12 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
                 </div>
                 <div className="resource-detail">
                   <MemoryStick size={12} color="var(--text-dim)" />
-                  <span>{fmt(cu.memory_percent, 1)}% used · {fmt(cu.memory_available_gb, 1)} GB free</span>
+                  <span>{fmt(cu.memory_used_gb, 1)} / {fmt(cu.memory_total_gb, 1)} GB</span>
                 </div>
-                {cu.disk_free_gb !== undefined && (
+                {cu.disk_used_gb !== undefined && (
                   <div className="resource-detail">
                     <HardDrive size={12} color="var(--text-dim)" />
-                    <span>{fmt(cu.disk_percent, 1)}% used · {fmt(cu.disk_free_gb, 1)} GB free</span>
+                    <span>{fmt(cu.disk_used_gb, 1)} / {fmt(cu.disk_total_gb, 1)} GB</span>
                   </div>
                 )}
                 {cu.load_avg && (
