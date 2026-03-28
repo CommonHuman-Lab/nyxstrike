@@ -1,5 +1,5 @@
 # List of tools considered always installed (built-in, code-provided or simulated)
-BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner", 
+BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner",
                   "http-framework", "auto_install_missing_apt_tools", 
                   "analyze-target", "create-attack-chain", "smart-scan",
                   "technology-detection"]
@@ -47,7 +47,8 @@ HEALTH_TOOL_CATEGORIES = {
     "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
                  "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
-                 "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
+                 "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", 
+                 "airodump-ng", "aireplay-ng", "aircrack-ng"],
     "database": ["mysql", "sqlite3"],
     "active_directory": [
         "impacket-scripts", "ldapdomaindump"
@@ -59,8 +60,7 @@ HEALTH_TOOL_CATEGORIES = {
 
     "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
 
-    #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned",
-    
+    #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned"
     #"active_directory": [
     #    "bloodhound-ce-python"
     #    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
