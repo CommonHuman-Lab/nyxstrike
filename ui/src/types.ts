@@ -4,6 +4,8 @@ export interface HistoryPoint {
   t: number
   cpu: number
   mem: number
+  network_bytes_sent: number
+  network_bytes_recv: number
 }
 
 export interface RunHistoryEntry {

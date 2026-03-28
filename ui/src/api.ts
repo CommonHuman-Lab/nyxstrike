@@ -33,6 +33,8 @@ export interface WebDashboardResponse {
     disk_used_gb: number;
     disk_total_gb: number;
     load_avg?: number[];
+    network_bytes_sent: number;
+    network_bytes_recv: number;
   };
   resources_timestamp: string;
 

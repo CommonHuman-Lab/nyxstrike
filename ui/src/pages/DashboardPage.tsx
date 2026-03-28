@@ -11,6 +11,8 @@ import {
   Fingerprint,
   Earth,
   Brain,
+  Upload,
+  HardDriveDownload,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -144,6 +146,15 @@ function getCatTools(cat: string, allStatuses: Record<string, boolean>, toolCate
   return Object.keys(allStatuses)
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const value = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+  return `${value} ${sizes[i]}`;
+}
+
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 interface DashboardPageProps {
@@ -230,18 +241,26 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
               <div className="resource-detail-row">
                 <div className="resource-detail">
                   <Cpu size={12} color="var(--text-dim)" />
-                  <span>{fmt(cu.cpu_percent)}% CPU</span>
+                  <span title='CPU Usage'>{fmt(cu.cpu_percent)}% CPU</span>
                 </div>
                 <div className="resource-detail">
                   <MemoryStick size={12} color="var(--text-dim)" />
-                  <span>{fmt(cu.memory_used_gb, 1)} / {fmt(cu.memory_total_gb, 1)} GB</span>
+                  <span title='Memory Usage'>{fmt(cu.memory_used_gb, 1)} / {fmt(cu.memory_total_gb, 1)} GB</span>
                 </div>
                 {cu.disk_used_gb !== undefined && (
                   <div className="resource-detail">
                     <HardDrive size={12} color="var(--text-dim)" />
-                    <span>{fmt(cu.disk_used_gb, 1)} / {fmt(cu.disk_total_gb, 1)} GB</span>
+                    <span title='Disk Usage'>{fmt(cu.disk_used_gb, 1)} / {fmt(cu.disk_total_gb, 1)} GB</span>
                   </div>
-                )}
+                )} 
+                <div className="resource-detail">
+                  <Upload size={12} color="var(--text-dim)" />
+                  <span title='Total Sent'>{formatBytes(cu.network_bytes_sent)}</span>
+                </div>
+                <div className="resource-detail">
+                  <HardDriveDownload size={12} color="var(--text-dim)" />
+                  <span title='Total Received'>{formatBytes(cu.network_bytes_recv)}</span>
+                </div>
                 {cu.load_avg && (
                   <div className="resource-detail">
                     <Activity size={12} color="var(--text-dim)" />

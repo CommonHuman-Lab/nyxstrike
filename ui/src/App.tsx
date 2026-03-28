@@ -103,7 +103,7 @@ export default function App() {
       setHistory(prev => {
         const next = [
           ...prev.slice(-29),
-          { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent },
+          { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent, network_bytes_sent: h.resources.network_bytes_sent, network_bytes_recv: h.resources.network_bytes_recv },
         ]
         return next
       })
@@ -232,7 +232,7 @@ export default function App() {
         setHistory(prev => {
           const next = [
             ...prev.slice(-29),
-            { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent },
+            { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent, network_bytes_sent: h.resources.network_bytes_sent, network_bytes_recv: h.resources.network_bytes_recv },
           ]
           return next
         })

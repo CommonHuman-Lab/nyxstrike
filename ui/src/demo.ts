@@ -234,6 +234,8 @@ export const DEMO_HEALTH: WebDashboardResponse = {
     disk_used_gb: 123.5,
     memory_total_gb: 16.0,
     memory_used_gb: 7.2,
+    network_bytes_sent: 2100,
+    network_bytes_recv: 1200,
   },
   resources_timestamp: new Date().toISOString(),
   cache_stats: {
@@ -252,7 +254,9 @@ export function demoCpuMemHistory(): HistoryPoint[] {
   const now = Date.now()
   const cpu = [14, 16, 22, 19, 25, 18, 30, 27, 21, 18, 15, 13, 17, 20, 23, 18, 16, 19, 22, 18, 17, 20, 18, 16, 19, 21, 18, 17, 18, 18]
   const mem = [40, 41, 43, 42, 44, 43, 45, 45, 44, 43, 43, 42, 43, 44, 45, 44, 43, 44, 45, 44, 44, 45, 44, 44, 45, 45, 44, 44, 44, 44]
-  return cpu.map((c, i) => ({ t: now - (30 - i) * 10_000, cpu: c, mem: mem[i] }))
+  const network_bytes_sent = [1200, 1500, 1800, 1600, 2000, 1700, 2200, 2100, 1900, 1800, 1600, 1500, 1700, 2000, 2300, 2100, 1900, 2000, 2200, 2100, 2000, 2200, 2100, 2000, 2200, 2300, 2100, 2000, 2200, 2100]
+  const network_bytes_recv = [800, 900, 1000, 950, 1100, 1050, 1200, 1150, 1000, 900, 850, 800, 900, 1100, 1300, 1200, 1100, 1150, 1250, 1200, 1100, 1250, 1200, 1100, 1250, 1300, 1200, 1100, 1250, 1200]
+  return cpu.map((c, i) => ({ t: now - (30 - i) * 10_000, cpu: c, mem: mem[i], network_bytes_sent: network_bytes_sent[i], network_bytes_recv: network_bytes_recv[i] }))
 }
 
 // ── Run history ───────────────────────────────────────────────────────────────

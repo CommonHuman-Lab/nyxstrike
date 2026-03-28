@@ -365,8 +365,10 @@
 .resource-detail-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
   margin-top: 4px;
+  cursor: pointer;
+  justify-content: space-evenly;
+  flex: auto;
 }
 
 .resource-detail {
@@ -376,6 +378,7 @@
   font-size: 11px;
   color: var(--text-dim);
   font-family: var(--mono);
+  cursor: pointer;
 }
 
 .chart-legend {
