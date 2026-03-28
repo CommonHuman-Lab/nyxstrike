@@ -30,15 +30,16 @@ _tool_availability_cache: Dict[str, bool] = {}
 _tool_availability_lock = threading.Lock()
 _tool_availability_last_refresh: float = 0.0
 
+# Precompute the flat list of all tools at module load
+ALL_TOOLS_FLAT = list({
+    tool
+    for tools in HEALTH_TOOL_CATEGORIES.values()
+    for tool in tools
+})
 
 def _refresh_tool_availability() -> None:
     """Probe all tools with `which` in parallel and update the module-level cache."""
     global _tool_availability_last_refresh
-    all_tools_flat = list({
-        tool
-        for tools in HEALTH_TOOL_CATEGORIES.values()
-        for tool in tools
-    })
 
     def probe(tool: str) -> tuple:
         if tool in BINARY_NAME_OVERRIDES:
@@ -95,7 +96,7 @@ def _refresh_tool_availability() -> None:
             return tool, False
 
     with ThreadPoolExecutor(max_workers=20) as pool:
-        results = dict(pool.map(probe, all_tools_flat))
+        results = dict(pool.map(probe, ALL_TOOLS_FLAT))
 
     with _tool_availability_lock:
         _tool_availability_cache.update(results)
@@ -126,13 +127,12 @@ def _get_tool_availability() -> Dict[str, bool]:
     elif stale:
         threading.Thread(target=_refresh_tool_availability, daemon=True).start()
 
+    # Only lock while copying the cache
     with _tool_availability_lock:
-        # Always set any built-in tool as available in returned status
         output_status = dict(_tool_availability_cache)
-        for tool in BUILT_IN_TOOLS:
-            output_status[tool] = True
-        return output_status
-
+    for tool in BUILT_IN_TOOLS:
+        output_status[tool] = True
+    return output_status
 
 @api_system_monitoring_bp.route("/health", methods=["GET"])
 def health_check():
