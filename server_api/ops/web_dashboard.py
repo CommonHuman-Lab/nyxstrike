@@ -5,7 +5,8 @@ from flask import Blueprint, jsonify, Response, stream_with_context
 import server_core.config_core as config_core
 from server_core.singletons import cache, telemetry, enhanced_process_manager
 import server_api.ops.system_monitoring as _sm
-from server_api.ops.system_monitoring import _get_tool_availability, _HEALTH_TOOL_CATEGORIES
+from server_api.ops.system_monitoring import _get_tool_availability
+from server_core.tool_constants import HEALTH_TOOL_CATEGORIES
 import json
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ def web_dashboard():
   try:
     # ── Tool availability (health) ────────────────────────────────────────
     tools_status = _get_tool_availability()
-    essential_tools = _HEALTH_TOOL_CATEGORIES["essential"]
+    essential_tools = HEALTH_TOOL_CATEGORIES["essential"]
     all_essential_available = all(tools_status.get(t, False) for t in essential_tools)
 
     category_stats = {
@@ -26,7 +27,7 @@ def web_dashboard():
         "total": len(tools),
         "available": sum(1 for t in tools if tools_status.get(t, False)),
       }
-      for cat, tools in _HEALTH_TOOL_CATEGORIES.items()
+      for cat, tools in HEALTH_TOOL_CATEGORIES.items()
     }
 
     # ── System resources ──────────────────────────────────────────────────
@@ -70,14 +71,14 @@ def stream_dashboard():
         while True:
             try:
                 tools_status = _get_tool_availability()
-                essential_tools = _HEALTH_TOOL_CATEGORIES["essential"]
+                essential_tools = HEALTH_TOOL_CATEGORIES["essential"]
                 all_essential_available = all(tools_status.get(t, False) for t in essential_tools)
                 category_stats = {
                     cat: {
                         "total": len(tools),
                         "available": sum(1 for t in tools if tools_status.get(t, False)),
                     }
-                    for cat, tools in _HEALTH_TOOL_CATEGORIES.items()
+                    for cat, tools in HEALTH_TOOL_CATEGORIES.items()
                 }
                 current_usage = enhanced_process_manager.resource_monitor.get_current_usage()
                 dashboard = {

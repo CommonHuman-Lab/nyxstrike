@@ -166,7 +166,7 @@ export const DEMO_TOOLS: Tool[] = [
   { name: 'sleuthkit',      desc: 'Collection of command-line digital forensics tools (fls, icat, mmls…)',   category: 'forensics', endpoint: '/api/tools/sleuthkit',      method: 'POST', params: { image_path: r() },             optional: { command: 'fls', additional_args: '' },                                                          effectiveness: 0.83 },
 ]
 
-// ── tools_status: mirrors _HEALTH_TOOL_CATEGORIES from system_monitoring.py ──
+// ── tools_status: mirrors HEALTH_TOOL_CATEGORIES from tool_constants.py ──
 // Uses the same category names as the real server so the dashboard renders identically.
 
 const HEALTH_CAT_TOOLS: Record<string, string[]> = {

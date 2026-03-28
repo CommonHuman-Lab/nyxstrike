@@ -13,6 +13,12 @@ from server_core.command_executor import execute_command
 from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import cache, telemetry
 
+from server_core.tool_constants import (
+    BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_PIP_CHECK,
+    REQUIRE_GEM_CHECK, REQUIRE_CARGO_CHECK, BINARY_NAME_OVERRIDES,
+    HEALTH_TOOL_CATEGORIES
+)
+
 logger = logging.getLogger(__name__)
 
 api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
@@ -20,69 +26,6 @@ api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
 # ============================================================================
 # TOOL AVAILABILITY CACHE — populated once at startup, refreshed every hour
 # ============================================================================
-# List of tools considered always installed (built-in, code-provided or simulated)
-BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner", 
-                  "http-framework", "auto_install_missing_apt_tools", 
-                  "analyze-target", "create-attack-chain", "smart-scan",
-                  "technology-detection"]
-
-REQUIRE_DPKG_CHECK = ["hashcat-utils", "sleuthkit", "impacket-scripts"]
-
-REQUIRE_PIP_CHECK = ["pwntools", "one-gadget"]
-
-REQUIRE_GEM_CHECK = ["zsteg"]
-
-REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
-
-BINARY_NAME_OVERRIDES = {
-    "scout-suite": "scout",
-    "volatility": "vol"
-}
-
-_HEALTH_TOOL_CATEGORIES = {
-    "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
-    "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
-                "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],
-    "web_recon": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
-                     "arjun", "paramspider", "x8", "jaeles", "dalfox",
-                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan", "joomscan"],
-    "web_vuln": ["nuclei", "graphql-scanner", "jwt-analyzer", "zaproxy"],
-    "brute_force": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
-    "binary": ["gdb", "radare2", "binwalk", "ROPgadget", "checksec", "objdump",
-               "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database", "pwninit"],
-    "forensics": ["vol", "steghide", "hashpump", "foremost", "exiftool",
-                  "strings", "xxd", "file", "photorec", "testdisk", "scalpel",
-                  "bulk_extractor", "stegsolve", "zsteg", "outguess", "volatility", "sleuthkit", "autopsy"],
-    "cloud": ["prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
-              "docker-bench-security", "checkov", "terrascan", "falco", "clair",
-              "cloudmapper", "pacu"],
-    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
-              "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls", "sublist3r", "parsero"],
-    "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
-    "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
-    "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
-                 "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
-                 "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
-    "database": ["mysql", "sqlite3"],
-    "active_directory": [
-        "impacket-scripts", "ldapdomaindump"
-    ],
-    "vulnerability_intelligence": ["vulnx"],
-    "fingerprint": ["whatweb"],
-
-    "ops": ["auto_install_missing_apt_tools"],
-
-    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
-
-    #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned",
-    
-    #"active_directory": [
-    #    "bloodhound-ce-python"
-    #    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
-    #]
-}
-
 _tool_availability_cache: Dict[str, bool] = {}
 _tool_availability_lock = threading.Lock()
 _tool_availability_last_refresh: float = 0.0
@@ -93,7 +36,7 @@ def _refresh_tool_availability() -> None:
     global _tool_availability_last_refresh
     all_tools_flat = list({
         tool
-        for tools in _HEALTH_TOOL_CATEGORIES.values()
+        for tools in HEALTH_TOOL_CATEGORIES.values()
         for tool in tools
     })
 
@@ -193,7 +136,7 @@ def health_check():
     """Health check endpoint with comprehensive tool detection"""
     tools_status = _get_tool_availability()
 
-    essential_tools = _HEALTH_TOOL_CATEGORIES["essential"]
+    essential_tools = HEALTH_TOOL_CATEGORIES["essential"]
     all_essential_tools_available = all(tools_status.get(t, False) for t in essential_tools)
 
     category_stats = {
@@ -201,7 +144,7 @@ def health_check():
             "total": len(tools),
             "available": sum(1 for t in tools if tools_status.get(t, False)),
         }
-        for cat, tools in _HEALTH_TOOL_CATEGORIES.items()
+        for cat, tools in HEALTH_TOOL_CATEGORIES.items()
     }
 
     all_tools_count = len(tools_status)
@@ -278,5 +221,5 @@ def get_telemetry():
 def get_tool_categories():
     """Get the list of tool categories and their tools"""
     return jsonify({
-        "categories": _HEALTH_TOOL_CATEGORIES
+        "categories": HEALTH_TOOL_CATEGORIES
     })
