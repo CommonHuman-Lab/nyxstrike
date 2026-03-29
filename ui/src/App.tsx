@@ -394,7 +394,7 @@ export default function App() {
           </a>
           <a
             className="icon-btn"
-            href="https://discord.gg/sZZVmaJACd"
+            href="https://discord.gg/PKQrQ3dh5J"
             target="_blank"
             rel="noreferrer"
             title="Join Discord community"
