@@ -15,8 +15,8 @@
 [📡 Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
 
 <p align="center">
-  <a href="https://discord.gg/BWnmrrSHbA">
-    <img src="https://img.shields.io/badge/Discord-Join-7289DA?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord" />
+  <a href="https://discord.gg/sZZVmaJACd">
+    <img src="https://img.shields.io/badge/Discord-Join-7289DA?logo=discord&logoColor=white&style=for-the-badge" alt="Join Discord Community" />
   </a>
 </p>
 

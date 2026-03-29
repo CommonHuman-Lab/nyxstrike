@@ -221,7 +221,19 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
             const ok = Math.round(serverCount * rate / 100)
             return `${ok} ok · ${serverCount - ok} failed`
           })()}
-          accent="var(--purple)"
+          accent=
+            {(() => {
+              const serverCount = health.telemetry?.commands_executed ?? 0
+              const localCount = runHistory.length
+              if (localCount > serverCount) {
+                const ok = runHistory.filter(e => e.result.success).length
+                return ok === localCount ? 'var(--success)' : ok === 0 ? 'var(--danger)' : 'var(--warning)'
+              }
+              const rate = parseFloat(health.telemetry?.success_rate ?? '0')
+              const ok = Math.round(serverCount * rate / 100)
+              return ok === serverCount ? 'var(--success)' : ok === 0 ? 'var(--danger)' : 'var(--warning)'
+
+            })()}
         />
       </div>
 
@@ -234,7 +246,7 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
           </div>
           <div className="resources-layout">
             <div className="gauges-col">
-              <GaugeBar label="CPU" value={cu.cpu_percent} color='var(--green' />
+              <GaugeBar label="CPU" value={cu.cpu_percent} color='var(--green)' />
               <GaugeBar label="Memory" value={cu.memory_percent} color='var(--blue)' />
               {cu.disk_percent !== undefined && (
                 <GaugeBar label="Disk" value={cu.disk_percent} color='var(--purple)' />
