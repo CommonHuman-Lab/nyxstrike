@@ -24,10 +24,14 @@ class ResourceMonitor:
 
             usage = {
                 "cpu_percent": cpu_percent,
+                "memory_total_gb": memory.total / (1024**3),
                 "memory_percent": memory.percent,
                 "memory_available_gb": memory.available / (1024**3),
+                "memory_used_gb": memory.used / (1024**3),
                 "disk_percent": disk.percent,
                 "disk_free_gb": disk.free / (1024**3),
+                "disk_used_gb": disk.used / (1024**3),
+                "disk_total_gb": disk.total / (1024**3),
                 "network_bytes_sent": network.bytes_sent,
                 "network_bytes_recv": network.bytes_recv,
                 "timestamp": time.time()

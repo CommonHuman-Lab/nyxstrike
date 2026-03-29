@@ -29,7 +29,6 @@ import logging
 import os
 import threading
 from typing import Dict, Optional
-
 import server_core.config_core as config_core
 
 logger = logging.getLogger(__name__)
@@ -37,13 +36,7 @@ logger = logging.getLogger(__name__)
 # Minimum number of recorded runs before we trust the live rate over the baseline.
 MIN_RUNS_FOR_LIVE = 5
 
-DATA_DIR_NAME = config_core.get("DATA_DIR_NAME", ".hexstrike_data")
 STATS_FILE_NAME = "tool_stats.json"
-
-
-def _default_data_dir() -> str:
-    return os.environ.get("HEXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
-
 
 class ToolStatsStore:
     """
@@ -59,7 +52,7 @@ class ToolStatsStore:
     """
 
     def __init__(self, data_dir: Optional[str] = None) -> None:
-        self._data_dir = data_dir or _default_data_dir()
+        self._data_dir = data_dir or config_core.default_data_dir()
         self._stats_path = os.path.join(self._data_dir, STATS_FILE_NAME)
         self._lock = threading.Lock()
         self._stats: Dict[str, Dict[str, int]] = {}

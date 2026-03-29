@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/hexstrike-logo.png" alt="HexStrike AI Logo" width="220" style="margin-bottom: 20px;"/>
+<img src="assets/fox_logo.png" alt="HexStrike" width="220"/>
 
 # HexStrike AI - Community Edition
 ### AI-Powered MCP Cybersecurity Automation Platform
@@ -9,16 +9,14 @@
 [![License](https://img.shields.io/badge/License-AGPLv3-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Penetration%20Testing-red.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
-[![Tools](https://img.shields.io/badge/Security%20Tools-185%2B-brightgreen.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
-[![Agents](https://img.shields.io/badge/AI%20Agents-12%2B-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 
 **Advanced AI-powered penetration testing MCP framework, on-demand TTP knowledge, and adaptive scanning intelligence**
 
 [📡 Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
 
 <p align="center">
-  <a href="https://discord.gg/BWnmrrSHbA">
-    <img src="https://img.shields.io/badge/Discord-Join-7289DA?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord" />
+  <a href="https://discord.gg/sZZVmaJACd">
+    <img src="https://img.shields.io/badge/Discord-Join-7289DA?logo=discord&logoColor=white&style=for-the-badge" alt="Join Discord Community" />
   </a>
 </p>
 
@@ -62,57 +60,6 @@ Served automatically at `http://localhost:8888` the moment the server starts —
 
 </details>
 
-
-<details>
-<summary>HTB CTF Agent System (@htb-ctf)</summary>
-
-A 14-specialist agent system built natively for **OpenCode**, designed to autonomously solve HTB machines and CTF challenges end-to-end.
-
-**Key features:**
-
-- Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tool runs.
-- Full kill chain: recon → enumeration → foothold → privilege escalation → flag capture → loot report.
-- 14 specialist subagents: `recon`, `web`, `api`, `service-enum`, and more.
-- Shared state machine via `/tmp/htb-<target>/state.json` — all agents coordinate through a single canonical file.
-- Anti-loop rules prevent duplicate tool runs, blind wordlist exhaustion, and credential spray.
-- Generates a full markdown report at `/tmp/htb-<target>/report.md` on completion.
-
-</details>
-
-<details>
-<summary>Bug Bounty Agent System (@bugbounty)</summary>
-
-A 7-specialist agent system built natively for **OpenCode**, designed for autonomous bug bounty hunting across web, API, and broad wildcard scopes.
-
-**Key features:**
-
-- Scope-first — scope enforcement is absolute. Every tool call is checked against `scope[]` and `out_of_scope[]` before firing. No violations.
-- Confirm before fire — the leader builds a structured attack plan and waits for your `yes` before any tools run.
-- Full chain: recon → OSINT → enumeration → fuzzing → vulnerability confirmation → report.
-- 7 specialist subagents: `recon`, `osint`, `web`, and more.
-- `web` and `api` agents run in parallel during ENUM and VULN phases for broad scopes.
-- P1–P4 severity triage with CVSSv3 scores on every finding.
-- Auto-generated PoC per finding: working `curl` command + numbered reproduction steps.
-- Final report at `/tmp/bb-<program>/report.md` — submission-ready markdown.
-
-</details>
-
-<details>
-<summary>Recon Agent System (@recon)</summary>
-
-A 5-specialist agent system built natively for **OpenCode**, designed for pure read-only information gathering across domains, IP addresses, web applications, and APIs.
-
-**Key features:**
-
-- Read-only by contract — no exploitation, no payload delivery, no login attempts, no brute-force under any circumstances.
-- Auto-detects target type (domain, IP, web, API) and invokes only the relevant specialists.
-- 5 specialist subagents: `domain`, `network`, `web`, `api`, and `report` — running in parallel where possible.
-- Passive-first: certificate transparency, historical URLs, and OSINT sources always run before active scanning.
-- Nuclei runs in `technologies` and `exposures` mode only — no CVE or exploit templates.
-- Structured report at `/tmp/recon-<target>-<timestamp>/report.md` covering subdomains, open ports, tech stack, API surface, and notable observations.
-
-</details>
-
 <details>
 <summary>Compact Mode (--compact)</summary>
 
@@ -136,13 +83,21 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 </details>
 
 <details>
-<summary>Major Refactor</summary>
+<summary>End-to-end Agents</summary>
 
-- Hexstrike Server has been reduced from 17,289 lines of code to just under 200 lines.
-- Hexstrike MCP client has been reduced from 5,470 lines of code to just under 50 lines.
-- Functionality is now split across multiple focused modules for clarity, maintainability, and easier contribution.
-- This modular approach enables faster development, easier debugging, and better scalability.
-- All MCP tools run async.
+> See [Agents](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Agents) for more info
+
+#### HTB CTF Agent System (@htb-ctf)
+
+A 14-specialist agent system built natively for **OpenCode**, designed to autonomously solve HTB machines and CTF challenges end-to-end.
+
+#### Bug Bounty Agent System (@bugbounty)
+
+A 7-specialist agent system built natively for **OpenCode**, designed for autonomous bug bounty hunting across web, API, and broad wildcard scopes.
+
+#### Recon Agent System (@recon)
+
+A 5-specialist agent system built natively for **OpenCode**, designed for pure read-only information gathering across domains, IP addresses, web applications, and APIs.
 
 </details>
 
@@ -185,24 +140,6 @@ hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --prof
 
 # Test server API health
 curl http://localhost:8888/health
-```
-
-### Run Tests
-
-The test suite uses [pytest](https://pytest.org) and the Flask test client — no running server or external tools required.
-
-```bash
-# Activate the virtual environment
-source hexstrike-env/bin/activate
-
-# Install pytest (one-time)
-pip3 install pytest
-
-# Run the full test suite
-pytest tests/
-
-# Run with verbose output
-pytest tests/ -v
 ```
 
 ### Use Hexstrike
@@ -290,7 +227,6 @@ Configure OpenCode settings in `~/.config/opencode/opencode.json`:
   "mcp": {
     "hexstrike-ai": {
       "type": "local",
-      "timeout": 000,
       "command": ["/path/to/hexstrike-ai/hexstrike_env/bin/python3",
         "/path/to/hexstrike-ai/hexstrike_mcp.py",
         "--server",

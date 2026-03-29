@@ -24,11 +24,17 @@ export interface WebDashboardResponse {
   // System resources
   resources: {
     cpu_percent: number;
+    memory_total_gb: number;
     memory_percent: number;
     memory_available_gb: number;
+    memory_used_gb: number;
     disk_percent: number;
     disk_free_gb: number;
+    disk_used_gb: number;
+    disk_total_gb: number;
     load_avg?: number[];
+    network_bytes_sent: number;
+    network_bytes_recv: number;
   };
   resources_timestamp: string;
 
@@ -235,9 +241,14 @@ export interface CacheStatsResponse {
   [key: string]: number;
 }
 
+export interface ToolCategoriesResponse {
+  categories: Record<string, string[]>;
+}
+
 export const api = {
   dashboard: () => apiFetch<WebDashboardResponse>('/web-dashboard'),
   tools: () => apiFetch<ToolsCatalogResponse>('/api/tools'),
+  getToolCategories: () => apiFetch<ToolCategoriesResponse>('/api/tools/categories'),
   getSettings: () => apiFetch<SettingsResponse>('/api/settings'),
   patchSettings: (runtime: Partial<Settings['runtime']>) =>
     apiFetch<PatchSettingsResponse>('/api/settings', {

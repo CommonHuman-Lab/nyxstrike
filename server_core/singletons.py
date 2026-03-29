@@ -76,6 +76,6 @@ ctf_automator = CTFChallengeAutomator()
 ctf_coordinator = CTFTeamCoordinator()
 
 # ── Wordlist paths (resolved once) ────────────────────────────────────────────
-ROCKYOU_PATH = config_core.get_word_list_path("rockyou")
-COMMON_DIRB_PATH = config_core.get_word_list_path("common_dirb")
-COMMON_DIRSEARCH_PATH = config_core.get_word_list_path("common_dirsearch")
+ROCKYOU_PATH = wordlist_store.get_word_list_path("rockyou")
+COMMON_DIRB_PATH = wordlist_store.get_word_list_path("common_dirb")
+COMMON_DIRSEARCH_PATH = wordlist_store.get_word_list_path("common_dirsearch")

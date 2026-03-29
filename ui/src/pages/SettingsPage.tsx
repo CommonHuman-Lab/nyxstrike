@@ -228,7 +228,7 @@ export default function SettingsPage() {
           ))}
         </div>
         <p className="settings-hint">
-          Edit wordlists via <code>GET/POST /api/wordlists</code> or modify <code>config.py</code> and restart.
+          Modify <code>config.py</code> and restart.
         </p>
       </section>
     </div>

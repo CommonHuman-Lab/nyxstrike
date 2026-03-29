@@ -13,6 +13,12 @@ from server_core.command_executor import execute_command
 from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import cache, telemetry
 
+from server_core.tool_constants import (
+    BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_PIP_CHECK,
+    REQUIRE_GEM_CHECK, REQUIRE_CARGO_CHECK, BINARY_NAME_OVERRIDES,
+    HEALTH_TOOL_CATEGORIES
+)
+
 logger = logging.getLogger(__name__)
 
 api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
@@ -20,82 +26,20 @@ api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
 # ============================================================================
 # TOOL AVAILABILITY CACHE — populated once at startup, refreshed every hour
 # ============================================================================
-# List of tools considered always installed (built-in, code-provided or simulated)
-BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner", 
-                  "http-framework", "auto_install_missing_apt_tools", 
-                  "analyze-target", "create-attack-chain", "smart-scan",
-                  "technology-detection"]
-
-REQUIRE_DPKG_CHECK = ["hashcat-utils", "sleuthkit", "impacket-scripts"]
-
-REQUIRE_PIP_CHECK = ["pwntools", "one-gadget"]
-
-REQUIRE_GEM_CHECK = ["zsteg"]
-
-REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
-
-BINARY_NAME_OVERRIDES = {
-    "scout-suite": "scout",
-    "volatility": "vol"
-}
-
-_HEALTH_TOOL_CATEGORIES = {
-    "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
-    "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
-                "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],
-    "web_recon": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
-                     "arjun", "paramspider", "x8", "jaeles", "dalfox",
-                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan", "joomscan"],
-    "web_vuln": ["nuclei", "graphql-scanner", "jwt-analyzer", "zaproxy"],
-    "brute_force": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
-    "binary": ["gdb", "radare2", "binwalk", "ROPgadget", "checksec", "objdump",
-               "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database", "pwninit"],
-    "forensics": ["vol", "steghide", "hashpump", "foremost", "exiftool",
-                  "strings", "xxd", "file", "photorec", "testdisk", "scalpel",
-                  "bulk_extractor", "stegsolve", "zsteg", "outguess", "volatility", "sleuthkit", "autopsy"],
-    "cloud": ["prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
-              "docker-bench-security", "checkov", "terrascan", "falco", "clair",
-              "cloudmapper", "pacu"],
-    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
-              "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls", "sublist3r", "parsero"],
-    "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
-    "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
-    "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
-                 "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
-                 "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
-    "database": ["mysql", "sqlite3"],
-    "active_directory": [
-        "impacket-scripts", "ldapdomaindump"
-    ],
-    "vulnerability_intelligence": ["vulnx"],
-    "fingerprint": ["whatweb"],
-
-    "ops": ["auto_install_missing_apt_tools"],
-
-    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
-
-    #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned",
-    
-    #"active_directory": [
-    #    "bloodhound-ce-python"
-    #    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
-    #]
-}
-
 _tool_availability_cache: Dict[str, bool] = {}
 _tool_availability_lock = threading.Lock()
 _tool_availability_last_refresh: float = 0.0
 
+# Precompute the flat list of all tools at module load
+ALL_TOOLS_FLAT = list({
+    tool
+    for tools in HEALTH_TOOL_CATEGORIES.values()
+    for tool in tools
+})
 
 def _refresh_tool_availability() -> None:
     """Probe all tools with `which` in parallel and update the module-level cache."""
     global _tool_availability_last_refresh
-    all_tools_flat = list({
-        tool
-        for tools in _HEALTH_TOOL_CATEGORIES.values()
-        for tool in tools
-    })
 
     def probe(tool: str) -> tuple:
         if tool in BINARY_NAME_OVERRIDES:
@@ -117,27 +61,30 @@ def _refresh_tool_availability() -> None:
             elif tool_to_check in REQUIRE_PIP_CHECK:
                 # For tools that require pip, check if the package is installed
                 result = subprocess.run(
-                    ["pip3", "list", "|", "grep", tool_to_check],
-                    stdout=subprocess.DEVNULL,
+                    ["pip3", "list"],
+                    stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
+                    text=True,
                 )
-                return tool, result.returncode == 0
+                return tool, tool_to_check in result.stdout
             elif tool_to_check in REQUIRE_GEM_CHECK:
                 # For tools that require gem, check if the package is installed
                 result = subprocess.run(
-                    ["gem", "list", "|", "grep", tool_to_check],
-                    stdout=subprocess.DEVNULL,
+                    ["gem", "list"],
+                    stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
+                    text=True,
                 )
-                return tool, result.returncode == 0
+                return tool, tool_to_check in result.stdout
             elif tool_to_check in REQUIRE_CARGO_CHECK:
                 # For tools that require cargo, check if the package is installed
                 result = subprocess.run(
-                    ["cargo", "install", "--list", "|", "grep", tool_to_check],
-                    stdout=subprocess.DEVNULL,
+                    ["cargo", "install", "--list"],
+                    stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
+                    text=True,
                 )
-                return tool, result.returncode == 0
+                return tool, tool_to_check in result.stdout
             else:
                 result = subprocess.run(
                     ["which", tool_to_check],
@@ -149,7 +96,7 @@ def _refresh_tool_availability() -> None:
             return tool, False
 
     with ThreadPoolExecutor(max_workers=20) as pool:
-        results = dict(pool.map(probe, all_tools_flat))
+        results = dict(pool.map(probe, ALL_TOOLS_FLAT))
 
     with _tool_availability_lock:
         _tool_availability_cache.update(results)
@@ -180,20 +127,19 @@ def _get_tool_availability() -> Dict[str, bool]:
     elif stale:
         threading.Thread(target=_refresh_tool_availability, daemon=True).start()
 
+    # Only lock while copying the cache
     with _tool_availability_lock:
-        # Always set any built-in tool as available in returned status
         output_status = dict(_tool_availability_cache)
-        for tool in BUILT_IN_TOOLS:
-            output_status[tool] = True
-        return output_status
-
+    for tool in BUILT_IN_TOOLS:
+        output_status[tool] = True
+    return output_status
 
 @api_system_monitoring_bp.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint with comprehensive tool detection"""
     tools_status = _get_tool_availability()
 
-    essential_tools = _HEALTH_TOOL_CATEGORIES["essential"]
+    essential_tools = HEALTH_TOOL_CATEGORIES["essential"]
     all_essential_tools_available = all(tools_status.get(t, False) for t in essential_tools)
 
     category_stats = {
@@ -201,7 +147,7 @@ def health_check():
             "total": len(tools),
             "available": sum(1 for t in tools if tools_status.get(t, False)),
         }
-        for cat, tools in _HEALTH_TOOL_CATEGORIES.items()
+        for cat, tools in HEALTH_TOOL_CATEGORIES.items()
     }
 
     all_tools_count = len(tools_status)
@@ -273,3 +219,10 @@ def clear_cache():
 def get_telemetry():
     """Get system telemetry"""
     return jsonify(telemetry.get_stats())
+
+@api_system_monitoring_bp.route("/api/tools/categories", methods=["GET"])
+def get_tool_categories():
+    """Get the list of tool categories and their tools"""
+    return jsonify({
+        "categories": HEALTH_TOOL_CATEGORIES
+    })

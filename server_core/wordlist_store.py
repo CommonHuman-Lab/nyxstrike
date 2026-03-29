@@ -1,17 +1,12 @@
 import json
 import logging
 import os
-from typing import Any, Dict, Optional
-
+from typing import Optional
 import server_core.config_core as config_core
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR_NAME = config_core.get("DATA_DIR_NAME", ".hexstrike_data")
 WORDLISTS_FILE_NAME = "wordlists.json"
-
-def _default_data_dir() -> str:
-    return os.environ.get("HEXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
 
 class WordlistStore:
     """
@@ -21,7 +16,7 @@ class WordlistStore:
     """
 
     def __init__(self, data_dir: Optional[str] = None) -> None:
-        self._data_dir = data_dir or _default_data_dir()
+        self._data_dir = data_dir or config_core.default_data_dir()
         self._wordlists_file = os.path.join(self._data_dir, WORDLISTS_FILE_NAME)
         self._ensure_dir_and_file()
 
@@ -84,6 +79,10 @@ class WordlistStore:
         if wordlist and "path" in wordlist:
             return wordlist["path"]
         return None
+    
+    def get(self, wordlist_id: str) -> Optional[dict]:
+        """Get the metadata dictionary of a wordlist by its ID."""
+        return self.load(wordlist_id)
 
     def load(self, wordlist_id: str) -> Optional[dict]:
         """Load a wordlist entry from the wordlists.json file."""
@@ -92,43 +91,59 @@ class WordlistStore:
         try:
             with open(self._wordlists_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            return data.get("WORD_LISTS", {}).get(wordlist_id)
+            wordlists = data.get("WORD_LISTS", {})
+            config_wordlists = config_core.get("WORD_LISTS", {})
+            merged = {**config_wordlists, **wordlists}
+            return merged.get(wordlist_id)
         except (json.JSONDecodeError, OSError) as exc:
             logger.error(f"💾 Failed to load wordlist {wordlist_id}: {exc}")
             return None
 
     def load_all(self) -> dict:
-        """Load all wordlist entries from wordlists.json."""
+        """
+        Load all wordlist entries from wordlists.json.
+        Includes wordlists from config_core. 
+        """
         if not os.path.exists(self._wordlists_file):
             return {}
         try:
             with open(self._wordlists_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            return data.get("WORD_LISTS", {})
+            wordlists = data.get("WORD_LISTS", {})
+            # Merge with config_core wordlists, giving precedence to user-added ones
+            config_wordlists = config_core.get("WORD_LISTS", {})
+            merged = {**config_wordlists, **wordlists}
+            return merged
         except (json.JSONDecodeError, OSError) as exc:
             logger.error(f"💾 Failed to load all wordlists: {exc}")
             return {}
+        
+    def get_word_list_path(self, name: str) -> Optional[str]:
+        """
+        Get the filesystem path to a word list by its name.
+
+        Args:
+            name (str): The name of the word list.
+
+        Returns:
+            Optional[str]: Path to the word list, or None if not found.
+        """
+        wl = self.load_all().get(name)
+        if wl:
+            return wl.get("path")
+        return None
         
     def find_best_match(self, criteria: dict) -> Optional[dict]:
         """
         Find the best matching wordlist based on given criteria.
 
-        Criteria can include keys like 'for_task', 'tool', 'speed', etc.
+        Criteria can include keys like 'for_task', 'tool', 'type', 'language', 'speed', 'coverage', 'format'.
         The method will attempt to find the most suitable wordlist based on these criteria.
 
         Args:
-            criteria (dict): A dictionary of criteria to match against wordlist metadata.   
-                Supported keys include:
-                    - for_task: Task the wordlist is recommended for (matches if value is in 'recommended_for' list)
-                    - tool: Tool the wordlist is intended for (matches if value is in 'tool' list)
-                    - type: Type of wordlist (e.g., 'password', 'directory')
-                    - language: Language of the wordlist (e.g., 'en')
-                    - speed: Speed category (e.g., 'fast', 'medium', 'slow')
-                    - coverage: Coverage type (e.g., 'broad', 'focused')
-                    - format: File format (e.g., 'txt', 'lst')        
+            criteria (dict): A dictionary of criteria to match against wordlist metadata.
         Returns:
-            Optional[dict]: The best matching wordlist metadata dictionary, or None if no match is
-            found.
+            Optional[dict]: The best matching wordlist metadata dictionary, or None if no match is found.
         """
         wordlists = self.load_all()
         def matches(wl):

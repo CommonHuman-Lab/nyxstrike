@@ -11,6 +11,8 @@ import {
   Fingerprint,
   Earth,
   Brain,
+  Upload,
+  HardDriveDownload,
 } from 'lucide-react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
@@ -138,54 +140,19 @@ function ToolCategoryRow({ category, stats, toolStatuses, toolsByName }: {
   )
 }
 
-// Map health category names to their tool lists (mirrors _HEALTH_TOOL_CATEGORIES in Python)
-// Also includes tool_registry.py category names
-const HEALTH_CAT_TOOLS: Record<string, string[]> = {
-    "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
-    "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
-                "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],
-    "web_recon": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
-                     "arjun", "paramspider", "x8", "jaeles", "dalfox",
-                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan", "joomscan"],
-    "web_vuln": ["nuclei", "graphql-scanner", "jwt-analyzer", "zaproxy"],
-    "brute_force": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
-    "binary": ["gdb", "radare2", "binwalk", "ROPgadget", "checksec", "objdump",
-               "ghidra", "pwntools", "one-gadget", "ropper", "angr", "libc-database", "pwninit"],
-    "forensics": ["vol", "steghide", "hashpump", "foremost", "exiftool",
-                  "strings", "xxd", "file", "photorec", "testdisk", "scalpel",
-                  "bulk_extractor", "stegsolve", "zsteg", "outguess", "volatility", "sleuthkit", "autopsy"],
-    "cloud": ["prowler", "scout-suite", "trivy", "kube-hunter", "kube-bench",
-              "docker-bench-security", "checkov", "terrascan", "falco", "clair",
-              "cloudmapper", "pacu"],
-    "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
-              "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls", "sublist3r", "parsero"],
-    "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
-    "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
-    "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
-                 "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
-                 "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", "airodump-ng", "aireplay-ng", "aircrack-ng"],
-    "database": ["mysql", "sqlite3"],
-    "active_directory": [
-        "impacket-scripts", "ldapdomaindump"
-    ],
-    "vulnerability_intelligence": ["vulnx"],
-    "fingerprint": ["whatweb"],
-    "ops": ["auto_install_missing_apt_tools"],
-    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
-
-    //Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned", 
-
-    //"active_directory": [
-    //    "bloodhound-ce-python"
-    //    "certipy-ad", "mitm6", "adidnsdump", "pywerview"
-    //]
+function getCatTools(cat: string, allStatuses: Record<string, boolean>, toolCategories: Record<string, string[]>): string[] {
+  const fromApi = toolCategories[cat] ?? []
+  if (fromApi.length > 0) return fromApi
+  return Object.keys(allStatuses)
 }
 
-function getCatTools(cat: string, allStatuses: Record<string, boolean>): string[] {
-  const known = HEALTH_CAT_TOOLS[cat] ?? []
-  if (known.length > 0) return known
-  return Object.keys(allStatuses)
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const value = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+  return `${value} ${sizes[i]}`;
 }
 
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
@@ -197,9 +164,10 @@ interface DashboardPageProps {
   runHistory: RunHistoryEntry[]
   loading: boolean
   error: string | null
+  toolCategories: Record<string, string[]>;
 }
 
-export function DashboardPage({ health, tools, history, runHistory, loading, error }: DashboardPageProps) {
+export function DashboardPage({ health, tools, history, runHistory, loading, error, toolCategories }: DashboardPageProps) {
   const cu = health.resources
 
   return (
@@ -224,14 +192,15 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
           label="Server Status"
           value={health.status.charAt(0).toUpperCase() + health.status.slice(1)}
           sub={`uptime ${uptimeStr(health.uptime)}`}
-          accent={health.status === 'healthy' ? 'var(--green)' : 'var(--red)'}
+          accent={health.status === 'healthy' ? 'var(--success)' : 'var(--danger)'}
         />
         <StatCard
           icon={<Shield size={20} />}
           label="Kali Tools"
           value={`${health.total_tools_available} / ${health.total_tools_count}`}
           sub={health.all_essential_tools_available ? 'all essential ready' : 'some essential missing'}
-          accent={health.all_essential_tools_available ? 'var(--green)' : 'var(--amber)'}
+          accent={health.all_essential_tools_available ? 'var(--success)' : 'var(--warning)'}
+
         />
         <StatCard icon={<Wrench size={20} />} label="Server Tools" value={tools.length} sub="in registry" accent="var(--blue)" />
         <StatCard
@@ -252,7 +221,19 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
             const ok = Math.round(serverCount * rate / 100)
             return `${ok} ok · ${serverCount - ok} failed`
           })()}
-          accent="var(--purple)"
+          accent=
+            {(() => {
+              const serverCount = health.telemetry?.commands_executed ?? 0
+              const localCount = runHistory.length
+              if (localCount > serverCount) {
+                const ok = runHistory.filter(e => e.result.success).length
+                return ok === localCount ? 'var(--success)' : ok === 0 ? 'var(--danger)' : 'var(--warning)'
+              }
+              const rate = parseFloat(health.telemetry?.success_rate ?? '0')
+              const ok = Math.round(serverCount * rate / 100)
+              return ok === serverCount ? 'var(--success)' : ok === 0 ? 'var(--danger)' : 'var(--warning)'
+
+            })()}
         />
       </div>
 
@@ -265,26 +246,34 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
           </div>
           <div className="resources-layout">
             <div className="gauges-col">
-              <GaugeBar label="CPU" value={cu.cpu_percent} />
-              <GaugeBar label="Memory" value={cu.memory_percent} />
+              <GaugeBar label="CPU" value={cu.cpu_percent} color='var(--green)' />
+              <GaugeBar label="Memory" value={cu.memory_percent} color='var(--blue)' />
               {cu.disk_percent !== undefined && (
-                <GaugeBar label="Disk" value={cu.disk_percent} />
+                <GaugeBar label="Disk" value={cu.disk_percent} color='var(--purple)' />
               )}
               <div className="resource-detail-row">
                 <div className="resource-detail">
                   <Cpu size={12} color="var(--text-dim)" />
-                  <span>{fmt(cu.cpu_percent)}% CPU</span>
+                  <span title='CPU Usage'>{fmt(cu.cpu_percent)}% CPU</span>
                 </div>
                 <div className="resource-detail">
                   <MemoryStick size={12} color="var(--text-dim)" />
-                  <span>{fmt(cu.memory_percent, 1)}% used · {fmt(cu.memory_available_gb, 1)} GB free</span>
+                  <span title='Memory Usage'>{fmt(cu.memory_used_gb, 1)} / {fmt(cu.memory_total_gb, 1)} GB</span>
                 </div>
-                {cu.disk_free_gb !== undefined && (
+                {cu.disk_used_gb !== undefined && (
                   <div className="resource-detail">
                     <HardDrive size={12} color="var(--text-dim)" />
-                    <span>{fmt(cu.disk_percent, 1)}% used · {fmt(cu.disk_free_gb, 1)} GB free</span>
+                    <span title='Disk Usage'>{fmt(cu.disk_used_gb, 1)} / {fmt(cu.disk_total_gb, 1)} GB</span>
                   </div>
-                )}
+                )} 
+                <div className="resource-detail">
+                  <Upload size={12} color="var(--text-dim)" />
+                  <span title='Total Sent'>{formatBytes(cu.network_bytes_sent)}</span>
+                </div>
+                <div className="resource-detail">
+                  <HardDriveDownload size={12} color="var(--text-dim)" />
+                  <span title='Total Received'>{formatBytes(cu.network_bytes_recv)}</span>
+                </div>
                 {cu.load_avg && (
                   <div className="resource-detail">
                     <Activity size={12} color="var(--text-dim)" />
@@ -324,7 +313,7 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
         </div>
         <div className="cat-list">
           {Object.entries(health.category_stats).sort(([a], [b]) => a.localeCompare(b)).map(([cat, stats]) => {
-            const catToolNames = getCatTools(cat, health.tools_status)
+            const catToolNames = getCatTools(cat, health.tools_status, toolCategories)
             const catStatuses = Object.fromEntries(
               catToolNames.map(n => [n, health.tools_status[n] ?? false])
             )
