@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/fox_logo.png" alt="HexStrike" width="220"/>
+<img src="assets/hex_logo.png" alt="HexStrike" width="220"/>
 
 # HexStrike AI - Community Edition
 ### AI-Powered MCP Cybersecurity Automation Platform
