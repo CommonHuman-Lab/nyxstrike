@@ -209,6 +209,7 @@ TOOL_PROFILES = {
     #Tools for web probing and technology detection (e.g., httpx).
     "web_probe": [
         lambda mcp, client, logger: register_httpx_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_testssl_tool(mcp, client, logger),
     ],
 
     #Tools for vulnerability scanning and assessment (e.g., Nuclei).

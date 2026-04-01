@@ -534,6 +534,10 @@ class TestWebProbing:
         r = _post(client, "/api/tools/httpx")
         assert_route_exists(r, "/api/tools/httpx")
 
+    def test_testssl(self, client):
+        r = _post(client, "/api/tools/testssl")
+        assert_route_exists(r, "/api/tools/testssl")
+
 
 # ===========================================================================
 # Web Framework Helpers

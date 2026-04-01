@@ -182,6 +182,7 @@ def register_blueprints(app):
 
   # Web Probe
   app.register_blueprint(api_web_probe_httpx_bp)
+  app.register_blueprint(api_web_probe_testssl_bp)
 
   # Web Framework
   app.register_blueprint(api_web_framework_http_framework_bp)
