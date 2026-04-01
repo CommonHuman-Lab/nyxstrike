@@ -48,8 +48,11 @@ def nmap_advanced():
 
         if nse_scripts:
             command += f" --script={nse_scripts}"
-        elif not aggressive:  # Default useful scripts if not aggressive
-            command += " --script=default,discovery,safe"
+        elif not aggressive:
+            # Use Nmap's default script set instead of broad discovery/safe
+            # categories, which can trigger noisy local-network broadcast NSE
+            # behavior unrelated to the requested target.
+            command += " -sC"
 
         if additional_args:
             command += f" {additional_args}"

@@ -711,9 +711,9 @@ class IntelligentDecisionEngine:
 
         # Add NSE scripts based on target type
         if profile.target_type == TargetType.WEB_APPLICATION:
-            params["nse_scripts"] = "http-*,ssl-*"
+            params["nse_scripts"] = "ssl-cert,http-title,http-headers"
         elif profile.target_type == TargetType.NETWORK_HOST:
-            params["nse_scripts"] = "default,discovery,safe"
+            params["nse_scripts"] = "default"
 
         return params
 
