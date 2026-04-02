@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import {
   api, clearToken, hasToken,
-  type WebDashboardResponse, type Tool,
+  type WebDashboardResponse, type Tool, type ToolExecResponse,
   type RunHistoryEntry as ApiRunHistoryEntry,
 } from './api'
 import {
@@ -113,6 +113,20 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingError, setStreamingError] = useState<string | null>(null)
   const [toolCategories, setToolCategories] = useState<Record<string, string[]>>({});
+
+  const addBrowserRunEntry = useCallback((tool: string, params: Record<string, unknown>, result: ToolExecResponse) => {
+    setRunHistory(prev => {
+      const entry: RunHistoryEntry = {
+        id: Date.now(),
+        tool,
+        params,
+        result,
+        ts: new Date(),
+        source: 'browser',
+      }
+      return [entry, ...prev].slice(0, 200)
+    })
+  }, [])
 
   const fetchAll = useCallback(async () => {
     if (demo) return
@@ -455,6 +469,7 @@ export default function App() {
             sessionId={activeSessionId}
             tools={tools}
             onBack={() => setPage('sessions')}
+            onToolRun={addBrowserRunEntry}
           />
         )}
         {page === 'logs' && (

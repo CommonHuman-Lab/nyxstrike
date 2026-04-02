@@ -436,19 +436,49 @@
   padding: 8px;
   text-align: left;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-workbench-tool-name {
+  font-size: 11px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-workbench-tool--idle {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.session-workbench-tool--success {
+  background: color-mix(in srgb, var(--green) 12%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--green) 45%, var(--border));
+}
+
+.session-workbench-tool--failed {
+  background: color-mix(in srgb, var(--red) 10%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--red) 40%, var(--border));
 }
 
 .session-remove-tool {
-  margin-left: auto;
+  margin-left: 0;
   font-size: 10px;
   color: var(--text-dim);
   border: 1px solid var(--border);
   border-radius: 999px;
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-main);
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .session-remove-tool:hover {

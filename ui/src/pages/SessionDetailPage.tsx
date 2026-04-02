@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Bot, Play, RefreshCw, Target, Activity, Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Bot, Play, RefreshCw, Target, Activity, Clock, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../api'
 import { ParamField } from '../components/tool-run/ParamField'
 import { buildInitialFieldValues, buildRunPayload } from '../components/tool-run/payload'
@@ -68,10 +68,12 @@ export default function SessionDetailPage({
   sessionId,
   tools,
   onBack,
+  onToolRun,
 }: {
   sessionId: string
   tools: Tool[]
   onBack: () => void
+  onToolRun?: (tool: string, params: Record<string, unknown>, result: ToolExecResponse) => void
 }) {
   const [session, setSession] = useState<SessionSummary | null>(null)
   const [loading, setLoading] = useState(true)
@@ -227,6 +229,7 @@ export default function SessionDetailPage({
       const result = await api.runTool(tool.endpoint, payload)
       setStepResults(prev => ({ ...prev, [stepKey]: { result } }))
       setStepState(prev => ({ ...prev, [stepKey]: result.success ? 'success' : 'failed' }))
+      if (onToolRun) onToolRun(step.tool, payload, result)
 
       const existingMeta = (sessionRef.metadata ?? {}) as Record<string, unknown>
       const existingToolStatus = (existingMeta.tool_status && typeof existingMeta.tool_status === 'object') ? (existingMeta.tool_status as Record<string, string>) : {}
@@ -375,12 +378,13 @@ export default function SessionDetailPage({
               return (
                 <button
                   key={stepKey}
-                  className={`session-workbench-tool ${selectedStepIndex === idx ? 'active' : ''}`}
+                  className={`session-workbench-tool session-workbench-tool--${stepState[stepKey] ?? 'idle'} ${selectedStepIndex === idx ? 'active' : ''}`}
                   onClick={() => setSelectedStepIndex(idx)}
                 >
-                  <span className={`session-tool-chip mono session-tool-chip--${stepState[stepKey] ?? 'idle'}`}>{step.tool}</span>
+                  <span className="session-workbench-tool-name mono">{step.tool}</span>
                   {!isCompleted && (
-                    <span
+                    <button
+                      type="button"
                       className="session-remove-tool"
                       onClick={e => {
                         e.stopPropagation()
@@ -388,8 +392,8 @@ export default function SessionDetailPage({
                       }}
                       title="Remove tool"
                     >
-                      x
-                    </span>
+                      <Trash2 size={12} />
+                    </button>
                   )}
                 </button>
               )
