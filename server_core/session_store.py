@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Named constants (clean-code: no magic numbers)
 SESSIONS_DIR_NAME = "sessions"
 COMPLETED_DIR_NAME = "completed"
+TEMPLATES_DIR_NAME = "templates"
 MAX_COMPLETED_SESSIONS = 200
 SESSION_FILE_SUFFIX = ".json"
 
@@ -38,6 +39,7 @@ class SessionStore:
         self._data_dir = data_dir or config_core.default_data_dir()
         self._sessions_dir = os.path.join(self._data_dir, SESSIONS_DIR_NAME)
         self._completed_dir = os.path.join(self._sessions_dir, COMPLETED_DIR_NAME)
+        self._templates_dir = os.path.join(self._sessions_dir, TEMPLATES_DIR_NAME)
         self._ensure_dirs()
 
     @property
@@ -48,12 +50,16 @@ class SessionStore:
     def _ensure_dirs(self) -> None:
         os.makedirs(self._sessions_dir, exist_ok=True)
         os.makedirs(self._completed_dir, exist_ok=True)
+        os.makedirs(self._templates_dir, exist_ok=True)
 
     def _session_path(self, session_id: str) -> str:
         return os.path.join(self._sessions_dir, f"{session_id}{SESSION_FILE_SUFFIX}")
 
     def _completed_path(self, session_id: str) -> str:
         return os.path.join(self._completed_dir, f"{session_id}{SESSION_FILE_SUFFIX}")
+
+    def _template_path(self, template_id: str) -> str:
+        return os.path.join(self._templates_dir, f"{template_id}{SESSION_FILE_SUFFIX}")
 
     # ── Write ─────────────────────────────────────────────────────────
 
@@ -114,6 +120,57 @@ class SessionStore:
         except (json.JSONDecodeError, OSError) as exc:
             logger.error(f"💾 Failed to load completed session {session_id}: {exc}")
             return None
+
+    def save_template(self, template_id: str, template_dict: Dict[str, Any]) -> bool:
+        """Save a session template to disk."""
+        try:
+            path = self._template_path(template_id)
+            tmp_path = path + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                json.dump(template_dict, f, indent=2, default=str)
+            os.replace(tmp_path, path)
+            return True
+        except (OSError, TypeError) as exc:
+            logger.error(f"💾 Failed to save template {template_id}: {exc}")
+            return False
+
+    def load_template(self, template_id: str) -> Optional[Dict[str, Any]]:
+        """Load one session template from disk."""
+        path = self._template_path(template_id)
+        if not os.path.exists(path):
+            return None
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.error(f"💾 Failed to load template {template_id}: {exc}")
+            return None
+
+    def list_templates(self) -> List[Dict[str, Any]]:
+        """List all saved session templates."""
+        if not os.path.isdir(self._templates_dir):
+            return []
+        templates: List[Dict[str, Any]] = []
+        for fname in os.listdir(self._templates_dir):
+            if not fname.endswith(SESSION_FILE_SUFFIX):
+                continue
+            path = os.path.join(self._templates_dir, fname)
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                templates.append(data)
+            except (json.JSONDecodeError, OSError):
+                continue
+        templates.sort(key=lambda t: t.get("updated_at", 0), reverse=True)
+        return templates
+
+    def delete_template(self, template_id: str) -> bool:
+        """Delete one session template."""
+        path = self._template_path(template_id)
+        if os.path.exists(path):
+            os.remove(path)
+            return True
+        return False
 
     def list_active(self) -> List[str]:
         """List all active session IDs on disk."""

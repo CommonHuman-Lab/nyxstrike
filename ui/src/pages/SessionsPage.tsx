@@ -7,6 +7,7 @@ import {
   api,
   type SessionsResponse,
   type SessionSummary,
+  type SessionTemplate,
 } from '../api'
 import { StatCard } from '../components/StatCard'
 import './SessionsPage.css'
@@ -17,7 +18,7 @@ interface SessionsPageProps {
 }
 
 interface StartMode {
-  key: 'comprehensive' | 'reconnaissance' | 'vulnerability_hunting' | 'osint' | 'manual'
+  key: 'comprehensive' | 'reconnaissance' | 'vulnerability_hunting' | 'osint' | 'manual' | 'from_template'
   title: string
   description: string
   details: string
@@ -69,6 +70,15 @@ const START_MODES: StartMode[] = [
     description: 'Start an empty session and add tools yourself.',
     details: 'Best when you want full manual control.',
     modalDescription: 'Creates a clean session with only target context. No predefined workflow is added, so you can build your own tool chain step-by-step from the session detail page.',
+    tools: [],
+    placeholder: 'Target URL/domain/IP (example.com)',
+  },
+  {
+    key: 'from_template',
+    title: 'From Template',
+    description: 'Start from a saved tool template.',
+    details: 'Reuse your recurring workflows.',
+    modalDescription: 'Creates a session from an existing template. You only set target and choose the saved template; all template tools are copied into the new session.',
     tools: [],
     placeholder: 'Target URL/domain/IP (example.com)',
   },
@@ -153,10 +163,12 @@ function SessionCard({ s, onOpen }: { s: SessionSummary; onOpen: (sessionId: str
 export default function SessionsPage({ demoData, onOpenSession }: SessionsPageProps) {
   const [data, setData] = useState<SessionsResponse | null>(demoData?.sessions ?? null)
   const [creatingSession, setCreatingSession] = useState(false)
+  const [templates, setTemplates] = useState<SessionTemplate[]>([])
   const [createMsg, setCreateMsg] = useState<string | null>(null)
   const [startMode, setStartMode] = useState<StartMode | null>(null)
   const [modalTarget, setModalTarget] = useState('')
   const [modalNote, setModalNote] = useState('')
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
   const [modalError, setModalError] = useState<string | null>(null)
   const [loading, setLoading] = useState(!demoData)
   const [error, setError] = useState<string | null>(null)
@@ -169,9 +181,10 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
 
   useEffect(() => {
     if (demoData) return
-    Promise.all([api.sessions(), api.tools()])
-      .then(([sessionsData]) => {
+    Promise.all([api.sessions(), api.tools(), api.sessionTemplates()])
+      .then(([sessionsData, _toolsData, templatesData]) => {
         setData(sessionsData)
+        setTemplates(templatesData.templates ?? [])
         setError(null)
       })
       .catch(e => setError(String(e)))
@@ -289,6 +302,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
     setStartMode(mode)
     setModalTarget('')
     setModalNote('')
+    setSelectedTemplateId('')
     setModalError(null)
   }
 
@@ -318,6 +332,26 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
           objective: mode.key,
           metadata: { origin: 'ui/sessions/create', mode: mode.key, note: noteValue, session_name: 'Manual session' },
         })
+      } else if (mode.key === 'from_template') {
+        const tpl = templates.find(t => t.template_id === selectedTemplateId)
+        if (!tpl) {
+          setModalError('Template is required')
+          return
+        }
+        stepCount = tpl.workflow_steps.length
+        sessionRes = await api.createSessionFromTemplate({
+          target,
+          template_id: tpl.template_id,
+          source: 'web',
+          objective: 'from_template',
+          metadata: {
+            origin: 'ui/sessions/create',
+            mode: 'from_template',
+            note: noteValue,
+            template_id: tpl.template_id,
+            session_name: `Template: ${tpl.name}`,
+          },
+        })
       } else {
         const chain = await api.createAttackChain(target, mode.key)
         stepCount = chain.attack_chain.steps.length
@@ -333,6 +367,8 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
       const sid = sessionRes.session.session_id
       setCreateMsg(mode.key === 'manual'
         ? `Session created: ${sid} (empty workflow, add tools manually).`
+        : mode.key === 'from_template'
+          ? `Session created: ${sid} (${stepCount} template tool calls loaded).`
         : `Session created: ${sid} (${stepCount} tool calls ready).`)
       closeStartModal()
       refresh()
@@ -431,6 +467,21 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
                   ))}
                 </div>
               </div>
+              {startMode.key === 'from_template' && (
+                <div className="session-start-form">
+                  <label className="mono">Template *</label>
+                  <select
+                    className="session-objective-select"
+                    value={selectedTemplateId}
+                    onChange={e => setSelectedTemplateId(e.target.value)}
+                  >
+                    <option value="">Select template</option>
+                    {templates.map(t => (
+                      <option key={t.template_id} value={t.template_id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="session-start-form">
                 <label className="mono" htmlFor="session-target-input">Target *</label>
                 <input

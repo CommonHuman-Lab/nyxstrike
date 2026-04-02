@@ -87,6 +87,9 @@ export default function SessionDetailPage({
   const [stepResults, setStepResults] = useState<Record<string, { result?: ToolExecResponse; error?: string }>>({})
   const [stepState, setStepState] = useState<Record<string, StepState>>({})
   const [selectedStepIndex, setSelectedStepIndex] = useState(0)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [templateName, setTemplateName] = useState('')
+  const [templateError, setTemplateError] = useState<string | null>(null)
   const [showAddTool, setShowAddTool] = useState(false)
   const [addToolSearch, setAddToolSearch] = useState('')
   const [handoffLoading, setHandoffLoading] = useState(false)
@@ -175,6 +178,41 @@ export default function SessionDetailPage({
       onBack()
     } catch (e) {
       setHandoffMsg(`Delete failed: ${String(e)}`)
+    }
+  }
+
+  async function createTemplateFromSession() {
+    if (!session) return
+    const name = templateName.trim()
+    if (!name) {
+      setTemplateError('Template name is required')
+      return
+    }
+    try {
+      const currentSteps = normalizeStepsFromSession(session)
+      if (currentSteps.length === 0) {
+        setTemplateError('Session has no tools to save as template')
+        return
+      }
+      try {
+        await api.createSessionTemplate({
+          name,
+          workflow_steps: currentSteps,
+          source_session_id: session.session_id,
+        })
+      } catch {
+        await api.createSessionTemplateCompat({
+          name,
+          workflow_steps: currentSteps,
+          source_session_id: session.session_id,
+        })
+      }
+      setTemplateError(null)
+      setTemplateName('')
+      setShowTemplateModal(false)
+      setHandoffMsg(`Template created: ${name}`)
+    } catch (e) {
+      setTemplateError(String(e))
     }
   }
 
@@ -335,6 +373,9 @@ export default function SessionDetailPage({
           <span className={`session-status session-status--${session.status ?? 'active'}`}>{session.status ?? 'active'}</span>
         </div>
         <div className="session-detail-actions">
+          <button className="session-action-btn" onClick={() => setShowTemplateModal(true)}>
+            Create Template
+          </button>
           <button className="session-action-btn" onClick={handoverToLlm} disabled={handoffLoading}>
             <Bot size={12} /> {handoffLoading ? 'Handing over…' : 'Handover to LLM'}
           </button>
@@ -342,6 +383,33 @@ export default function SessionDetailPage({
           <button className="session-delete-btn" onClick={deleteSession}>Delete Session</button>
           {handoffMsg && <span className="section-meta">{handoffMsg}</span>}
         </div>
+
+        {showTemplateModal && (
+          <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowTemplateModal(false) }}>
+            <div className="modal">
+              <div className="modal-header">
+                <div className="modal-title-row"><span className="modal-name">Create Template</span></div>
+                <button className="modal-close" onClick={() => setShowTemplateModal(false)}>x</button>
+              </div>
+              <div className="modal-body">
+                <div className="session-start-form">
+                  <label className="mono">Template Name *</label>
+                  <input
+                    className="search-input mono"
+                    placeholder="e.g. SMB Enumeration Pack"
+                    value={templateName}
+                    onChange={e => setTemplateName(e.target.value)}
+                  />
+                  {templateError && <div className="run-error">{templateError}</div>}
+                  <div className="session-start-actions">
+                    <button className="session-action-btn" onClick={() => setShowTemplateModal(false)}>Cancel</button>
+                    <button className="session-run-btn" onClick={createTemplateFromSession}>Save Template</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="section">

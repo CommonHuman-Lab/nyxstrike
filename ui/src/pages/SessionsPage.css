@@ -45,6 +45,15 @@
   gap: 8px;
 }
 
+.session-objective-select {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 10px;
+  width: 100%;
+}
+
 .session-card {
   background: var(--bg-card2);
   border: 1px solid var(--border);

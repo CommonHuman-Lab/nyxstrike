@@ -5,6 +5,8 @@ Sessions API — durable session create/read/update + handover integration.
 import logging
 import time
 import json
+import re
+import uuid
 from datetime import datetime
 from flask import Blueprint, jsonify, request, Response, stream_with_context
 
@@ -21,6 +23,13 @@ from tool_registry import classify_intent
 logger = logging.getLogger(__name__)
 
 api_sessions_bp = Blueprint("sessions", __name__)
+
+
+def _slugify(name: str) -> str:
+  s = (name or "").strip().lower()
+  s = re.sub(r"[^a-z0-9]+", "-", s)
+  s = s.strip("-")
+  return s or f"template-{uuid.uuid4().hex[:6]}"
 
 
 def _build_sessions_payload():
@@ -143,6 +152,62 @@ def create_session_from_web_or_workflow():
     })
   except Exception as e:
     logger.error(f"Error creating session: {e}")
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
+@api_sessions_bp.route("/api/sessions/from-template", methods=["POST"])
+@api_sessions_bp.route("/api/session-from-template", methods=["POST"])
+def create_session_from_template():
+  """Create durable session from a saved template id."""
+  try:
+    data = request.get_json(force=True) or {}
+    target = str(data.get("target", "")).strip()
+    template_id = str(data.get("template_id", "")).strip()
+    if not target:
+      return jsonify({"success": False, "error": "Target is required"}), 400
+    if not template_id:
+      return jsonify({"success": False, "error": "template_id is required"}), 400
+
+    template = session_store.load_template(template_id)
+    if not template:
+      return jsonify({"success": False, "error": "Template not found"}), 404
+
+    steps = template.get("workflow_steps", [])
+    if not isinstance(steps, list):
+      steps = []
+    # Legacy fallback: template may only have tool names
+    if len(steps) == 0 and isinstance(template.get("tools_executed"), list):
+      steps = [{"tool": t, "parameters": {}} for t in template.get("tools_executed", [])]
+
+    metadata = data.get("metadata", {}) if isinstance(data.get("metadata", {}), dict) else {}
+    metadata = {
+      **metadata,
+      "template_id": template_id,
+      "template_name": template.get("name", template_id),
+      "mode": "from_template",
+    }
+
+    session = create_session(
+      target=target,
+      steps=steps,
+      source=data.get("source", "web"),
+      objective=data.get("objective", "from_template"),
+      metadata=metadata,
+      session_id=data.get("session_id"),
+    )
+
+    return jsonify({
+      "success": True,
+      "session": _summary_from_data(session, session.get("session_id", "")),
+      "template": {
+        "template_id": template_id,
+        "name": template.get("name", template_id),
+        "step_count": len(session.get("workflow_steps", [])),
+      },
+      "timestamp": datetime.now().isoformat(),
+    })
+  except Exception as e:
+    logger.error(f"Error creating session from template: {e}")
     return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -283,4 +348,98 @@ def handover_session(session_id):
     })
   except Exception as e:
     logger.error(f"Error handing over session {session_id}: {e}")
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
+@api_sessions_bp.route("/api/sessions/templates", methods=["GET"])
+@api_sessions_bp.route("/api/session-templates", methods=["GET"])
+def list_session_templates():
+  """List saved session templates."""
+  try:
+    templates = session_store.list_templates()
+    return jsonify({"success": True, "templates": templates, "total": len(templates)})
+  except Exception as e:
+    logger.error(f"Error listing session templates: {e}")
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
+@api_sessions_bp.route("/api/sessions/templates", methods=["POST"])
+@api_sessions_bp.route("/api/session-templates", methods=["POST"])
+def create_session_template():
+  """Create template from provided workflow steps."""
+  try:
+    data = request.get_json(force=True) or {}
+    name = str(data.get("name", "")).strip()
+    steps = data.get("workflow_steps", [])
+    source_session_id = str(data.get("source_session_id", "")).strip()
+    if not name:
+      return jsonify({"success": False, "error": "Template name is required"}), 400
+    if not isinstance(steps, list) or len(steps) == 0:
+      return jsonify({"success": False, "error": "workflow_steps is required"}), 400
+
+    template_id = _slugify(name)
+    if session_store.load_template(template_id):
+      template_id = f"{template_id}-{uuid.uuid4().hex[:4]}"
+
+    cleaned_steps = []
+    for s in steps:
+      ns = normalize_step(s, "")
+      if ns:
+        cleaned_steps.append(ns)
+
+    template = {
+      "template_id": template_id,
+      "name": name,
+      "workflow_steps": cleaned_steps,
+      "source_session_id": source_session_id,
+      "created_at": int(time.time()),
+      "updated_at": int(time.time()),
+    }
+    ok = session_store.save_template(template_id, template)
+    if not ok:
+      return jsonify({"success": False, "error": "Failed saving template"}), 500
+
+    return jsonify({"success": True, "template": template, "timestamp": datetime.now().isoformat()})
+  except Exception as e:
+    logger.error(f"Error creating session template: {e}")
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
+@api_sessions_bp.route("/api/sessions/templates/<template_id>", methods=["PATCH"])
+@api_sessions_bp.route("/api/session-templates/<template_id>", methods=["PATCH"])
+def rename_session_template(template_id):
+  """Rename an existing session template."""
+  try:
+    data = request.get_json(force=True) or {}
+    name = str(data.get("name", "")).strip()
+    if not name:
+      return jsonify({"success": False, "error": "Template name is required"}), 400
+
+    template = session_store.load_template(template_id)
+    if not template:
+      return jsonify({"success": False, "error": "Template not found"}), 404
+
+    template["name"] = name
+    template["updated_at"] = int(time.time())
+    ok = session_store.save_template(template_id, template)
+    if not ok:
+      return jsonify({"success": False, "error": "Failed updating template"}), 500
+
+    return jsonify({"success": True, "template": template, "timestamp": datetime.now().isoformat()})
+  except Exception as e:
+    logger.error(f"Error renaming session template {template_id}: {e}")
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
+@api_sessions_bp.route("/api/sessions/templates/<template_id>", methods=["DELETE"])
+@api_sessions_bp.route("/api/session-templates/<template_id>", methods=["DELETE"])
+def delete_session_template(template_id):
+  """Delete a session template."""
+  try:
+    ok = session_store.delete_template(template_id)
+    if not ok:
+      return jsonify({"success": False, "error": "Template not found"}), 404
+    return jsonify({"success": True, "template_id": template_id, "timestamp": datetime.now().isoformat()})
+  except Exception as e:
+    logger.error(f"Error deleting session template {template_id}: {e}")
     return jsonify({"success": False, "error": str(e)}), 500

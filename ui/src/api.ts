@@ -318,6 +318,36 @@ export interface SessionHandoverResponse {
   error?: string;
 }
 
+export interface SessionTemplate {
+  template_id: string;
+  name: string;
+  workflow_steps: AttackChainStep[];
+  source_session_id?: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SessionTemplatesResponse {
+  success: boolean;
+  templates: SessionTemplate[];
+  total: number;
+  error?: string;
+}
+
+export interface SessionTemplateMutationResponse {
+  success: boolean;
+  template?: SessionTemplate;
+  timestamp?: string;
+  error?: string;
+}
+
+export interface SessionTemplateDeleteResponse {
+  success: boolean;
+  template_id?: string;
+  timestamp?: string;
+  error?: string;
+}
+
 export interface CacheStatsResponse {
   total: number;
   currentsize: number;
@@ -376,6 +406,18 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  createSessionFromTemplate: (payload: {
+    target: string;
+    template_id: string;
+    source?: string;
+    objective?: string;
+    metadata?: Record<string, unknown>;
+    session_id?: string;
+  }) =>
+    apiFetch<SessionMutationResponse>('/api/sessions/from-template', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   updateSession: (sessionId: string, payload: Partial<{
     target: string;
     status: string;
@@ -398,6 +440,35 @@ export const api = {
     apiFetch<SessionHandoverResponse>(`/api/sessions/${sessionId}/handover`, {
       method: 'POST',
       body: JSON.stringify({ note }),
+    }),
+  sessionTemplates: () => apiFetch<SessionTemplatesResponse>('/api/sessions/templates'),
+  sessionTemplatesCompat: () => apiFetch<SessionTemplatesResponse>('/api/session-templates'),
+  createSessionTemplate: (payload: {
+    name: string;
+    workflow_steps: AttackChainStep[];
+    source_session_id?: string;
+  }) =>
+    apiFetch<SessionTemplateMutationResponse>('/api/sessions/templates', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  createSessionTemplateCompat: (payload: {
+    name: string;
+    workflow_steps: AttackChainStep[];
+    source_session_id?: string;
+  }) =>
+    apiFetch<SessionTemplateMutationResponse>('/api/session-templates', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  renameSessionTemplate: (templateId: string, name: string) =>
+    apiFetch<SessionTemplateMutationResponse>(`/api/sessions/templates/${templateId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    }),
+  deleteSessionTemplate: (templateId: string) =>
+    apiFetch<SessionTemplateDeleteResponse>(`/api/sessions/templates/${templateId}`, {
+      method: 'DELETE',
     }),
   createAttackChain: (target: string, objective = 'comprehensive') =>
     apiFetch<CreateAttackChainResponse>('/api/intelligence/create-attack-chain', {
