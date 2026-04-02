@@ -23,7 +23,8 @@ interface StartMode {
   title: string
   description: string
   details: string
-  icon: 'shield' | 'radar' | 'bug' | 'search'
+  modalDescription: string
+  tools: string[]
   placeholder: string
 }
 
@@ -33,7 +34,8 @@ const START_MODES: StartMode[] = [
     title: 'Comprehensive Assessment',
     description: 'Balanced full-chain workflow from recon to vulnerability checks.',
     details: 'Best default for unknown targets.',
-    icon: 'shield',
+    modalDescription: 'Builds a broad, practical workflow that starts with target profiling and surface mapping, then moves into prioritized vulnerability validation. This is designed for cases where you want full context and a structured path from discovery to actionable findings.',
+    tools: ['nmap', 'httpx', 'katana', 'nuclei', 'nikto', 'ffuf'],
     placeholder: 'Target URL/domain/IP (example.com)',
   },
   {
@@ -41,7 +43,8 @@ const START_MODES: StartMode[] = [
     title: 'Reconnaissance',
     description: 'Discovery-first workflow for assets, endpoints, and technologies.',
     details: 'Use when mapping attack surface.',
-    icon: 'radar',
+    modalDescription: 'Focuses on enumeration and intelligence gathering with minimal intrusive testing. It maps hosts, services, paths, and technologies so you can decide where deeper testing should happen next.',
+    tools: ['subfinder', 'amass', 'httpx', 'katana', 'waybackurls', 'gau'],
     placeholder: 'Scope target (example.com or 10.0.0.0/24)',
   },
   {
@@ -49,7 +52,8 @@ const START_MODES: StartMode[] = [
     title: 'Vulnerability Hunting',
     description: 'Vulnerability-focused chain prioritizing exploitable findings.',
     details: 'Use when recon is already known.',
-    icon: 'bug',
+    modalDescription: 'Runs targeted security checks against known attack surface to quickly identify high-value weaknesses. This mode biases toward validating likely vulnerabilities and producing results you can triage and act on fast.',
+    tools: ['nuclei', 'sqlmap', 'dalfox', 'jaeles', 'nikto', 'wpscan'],
     placeholder: 'Web/API target (https://target.tld)',
   },
   {
@@ -57,7 +61,8 @@ const START_MODES: StartMode[] = [
     title: 'OSINT Collection',
     description: 'Intelligence and external footprint gathering for a target.',
     details: 'Useful before active probing.',
-    icon: 'search',
+    modalDescription: 'Collects passive intelligence from public sources to understand exposure before active scanning. This includes historical URLs, publicly indexed assets, and reconnaissance artifacts useful for planning follow-up testing.',
+    tools: ['theharvester', 'subfinder', 'amass', 'gau', 'waybackurls'],
     placeholder: 'Domain or org target (target.tld)',
   },
 ]
@@ -579,7 +584,15 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
               <button className="modal-close" onClick={closeStartModal}><XCircle size={18} /></button>
             </div>
             <div className="modal-body">
-              <p className="modal-desc">{startMode.description} {startMode.details}</p>
+              <p className="modal-desc">{startMode.modalDescription}</p>
+              <div className="modal-section">
+                <span className="modal-label">Typical Tooling</span>
+                <div className="modal-params">
+                  {startMode.tools.map(tool => (
+                    <span key={tool} className="modal-param mono">{tool}</span>
+                  ))}
+                </div>
+              </div>
               <div className="session-start-form">
                 <label className="mono" htmlFor="session-target-input">Target *</label>
                 <input
