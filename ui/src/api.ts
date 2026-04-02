@@ -220,6 +220,16 @@ export interface SessionSummary {
   total_findings: number;
   iterations: number;
   tools_executed: string[];
+  workflow_steps?: AttackChainStep[];
+  source?: string;
+  objective?: string;
+  handover_history?: Array<{
+    timestamp: string;
+    session_id: string;
+    category: string;
+    confidence: number;
+    note?: string;
+  }>;
   created_at: number;
   updated_at: number;
 }
@@ -230,6 +240,70 @@ export interface SessionsResponse {
   completed: SessionSummary[];
   total_active: number;
   total_completed: number;
+}
+
+export interface AttackChainStep {
+  tool: string;
+  parameters: Record<string, unknown>;
+  expected_outcome?: string;
+  success_probability?: number;
+  execution_time_estimate?: number;
+  dependencies?: string[];
+}
+
+export interface AttackChain {
+  target: string;
+  steps: AttackChainStep[];
+  success_probability: number;
+  estimated_time: number;
+  required_tools: string[];
+  risk_level: string;
+}
+
+export interface CreateAttackChainResponse {
+  success: boolean;
+  target: string;
+  objective: string;
+  attack_chain: AttackChain;
+  session_id?: string;
+  timestamp: string;
+}
+
+export interface ClassifyTaskResponse {
+  success: boolean;
+  category: string;
+  confidence: number;
+  category_description: string;
+  tools: Tool[];
+  tool_summary: string;
+  timestamp: string;
+}
+
+export interface SessionMutationResponse {
+  success: boolean;
+  session: SessionSummary;
+  timestamp?: string;
+  error?: string;
+}
+
+export interface SessionDetailResponse {
+  success: boolean;
+  state: 'active' | 'completed';
+  session: SessionSummary;
+  error?: string;
+}
+
+export interface SessionHandoverResponse {
+  success: boolean;
+  handover?: {
+    timestamp: string;
+    session_id: string;
+    category: string;
+    confidence: number;
+    note?: string;
+  };
+  session?: SessionSummary;
+  error?: string;
 }
 
 export interface CacheStatsResponse {
@@ -277,7 +351,50 @@ export const api = {
   resumeProcess: (pid: number) =>
     apiFetch<{ success: boolean; message?: string; error?: string }>(`/api/processes/resume/${pid}`, { method: 'POST' }),
   sessions: () => apiFetch<SessionsResponse>('/api/sessions'),
+  session: (sessionId: string) => apiFetch<SessionDetailResponse>(`/api/sessions/${sessionId}`),
+  createSession: (payload: {
+    target: string;
+    workflow_steps?: AttackChainStep[];
+    source?: string;
+    objective?: string;
+    session_id?: string;
+    metadata?: Record<string, unknown>;
+  }) =>
+    apiFetch<SessionMutationResponse>('/api/sessions', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateSession: (sessionId: string, payload: Partial<{
+    target: string;
+    status: string;
+    total_findings: number;
+    iterations: number;
+    workflow_steps: AttackChainStep[];
+    objective: string;
+    source: string;
+    metadata: Record<string, unknown>;
+  }>) =>
+    apiFetch<SessionMutationResponse>(`/api/sessions/${sessionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+  handoverSession: (sessionId: string, note = '') =>
+    apiFetch<SessionHandoverResponse>(`/api/sessions/${sessionId}/handover`, {
+      method: 'POST',
+      body: JSON.stringify({ note }),
+    }),
+  createAttackChain: (target: string, objective = 'comprehensive') =>
+    apiFetch<CreateAttackChainResponse>('/api/intelligence/create-attack-chain', {
+      method: 'POST',
+      body: JSON.stringify({ target, objective }),
+    }),
+  classifyTask: (description: string) =>
+    apiFetch<ClassifyTaskResponse>('/api/intelligence/classify-task', {
+      method: 'POST',
+      body: JSON.stringify({ description }),
+    }),
   dashboardStream: (): EventSource => new EventSource('/web-dashboard/stream'),
   processDashboardStream: (): EventSource => new EventSource('/api/processes/dashboard/stream'),
   processPoolStatsStream: (): EventSource => new EventSource('/api/process/pool-stats/stream'),
+  sessionsStream: (): EventSource => new EventSource('/api/sessions/stream'),
 };

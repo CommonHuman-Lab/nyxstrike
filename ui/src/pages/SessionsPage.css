@@ -7,6 +7,44 @@
   padding: 4px 0;
 }
 
+.start-mode-grid {
+  gap: 1px;
+  background: var(--border);
+}
+
+.start-mode-card {
+  cursor: default;
+}
+
+.start-mode-icon {
+  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+}
+
+.start-mode-detail {
+  color: var(--text-dim);
+  margin: 0;
+  font-size: 11px;
+}
+
+.session-start-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.session-start-form label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.session-start-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .session-card {
   background: var(--bg-card2);
   border: 1px solid var(--border);
@@ -91,4 +129,138 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.session-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sessions-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sessions-stream-status {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.sessions-stream-status--streaming {
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border));
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+}
+
+.sessions-stream-status--polling {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 35%, var(--border));
+  background: color-mix(in srgb, var(--blue) 10%, transparent);
+}
+
+.sessions-stream-status--error {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 35%, var(--border));
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+}
+
+.session-action-btn,
+.session-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.session-action-btn:disabled,
+.session-run-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.session-expanded {
+  margin-top: 6px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-target-override {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.session-target-override label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.session-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-step-row {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.session-step-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-step-params {
+  width: 100%;
+  resize: vertical;
+  min-height: 68px;
+  border: 1px solid var(--border);
+  background: var(--bg-main);
+  color: var(--text);
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 11px;
+}
+
+.session-step-result {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.session-handoff-note {
+  font-size: 11px;
+  color: var(--blue);
+}
+
+@media (max-width: 860px) {
+  .session-start-actions {
+    justify-content: stretch;
+  }
+
+  .session-start-actions button {
+    flex: 1;
+  }
 }

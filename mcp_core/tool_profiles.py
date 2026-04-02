@@ -368,6 +368,7 @@ TOOL_PROFILES = {
     #Tools for system monitoring
     "monitoring": [
         lambda mcp, client, logger: register_system_monitoring_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_session_handover_tools(mcp, client, logger),
     ],
 
     #Tools for process management

@@ -4,6 +4,7 @@ import logging
 
 from server_core.workflows.bugbounty.target import BugBountyTarget
 from server_core.singletons import bugbounty_manager, fileupload_framework
+from server_core.session_flow import create_session, extract_workflow_steps
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +34,20 @@ def create_reconnaissance_workflow():
         )
 
         workflow = bugbounty_manager.create_reconnaissance_workflow(target)
+        persisted = create_session(
+            target=domain,
+            steps=extract_workflow_steps(workflow, domain),
+            source="mcp_bugbounty",
+            objective="reconnaissance",
+            metadata={"origin": "api/bugbounty/reconnaissance-workflow"},
+        )
 
         logger.info(f"Reconnaissance workflow created for {domain}")
 
         return jsonify({
             "success": True,
             "workflow": workflow,
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 
@@ -68,12 +77,20 @@ def create_vulnerability_hunting_workflow():
         )
 
         workflow = bugbounty_manager.create_vulnerability_hunting_workflow(target)
+        persisted = create_session(
+            target=domain,
+            steps=extract_workflow_steps(workflow, domain),
+            source="mcp_bugbounty",
+            objective="vulnerability_hunting",
+            metadata={"origin": "api/bugbounty/vulnerability-hunting-workflow"},
+        )
 
         logger.info(f"Vulnerability hunting workflow created for {domain}")
 
         return jsonify({
             "success": True,
             "workflow": workflow,
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 
@@ -98,12 +115,20 @@ def create_business_logic_workflow():
         target = BugBountyTarget(domain=domain, program_type=program_type)
 
         workflow = bugbounty_manager.create_business_logic_testing_workflow(target)
+        persisted = create_session(
+            target=domain,
+            steps=extract_workflow_steps(workflow, domain),
+            source="mcp_bugbounty",
+            objective="business_logic",
+            metadata={"origin": "api/bugbounty/business-logic-workflow"},
+        )
 
         logger.info(f"Business logic testing workflow created for {domain}")
 
         return jsonify({
             "success": True,
             "workflow": workflow,
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 
@@ -127,12 +152,20 @@ def create_osint_workflow():
         target = BugBountyTarget(domain=domain)
 
         workflow = bugbounty_manager.create_osint_workflow(target)
+        persisted = create_session(
+            target=domain,
+            steps=extract_workflow_steps(workflow, domain),
+            source="mcp_bugbounty",
+            objective="osint",
+            metadata={"origin": "api/bugbounty/osint-workflow"},
+        )
 
         logger.info(f"OSINT workflow created for {domain}")
 
         return jsonify({
             "success": True,
             "workflow": workflow,
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 
@@ -156,12 +189,20 @@ def create_file_upload_testing():
         workflow = fileupload_framework.create_upload_testing_workflow(target_url)
         test_files = fileupload_framework.generate_test_files()
         workflow["test_files"] = test_files
+        persisted = create_session(
+            target=target_url,
+            steps=extract_workflow_steps(workflow, target_url),
+            source="mcp_bugbounty",
+            objective="file_upload_testing",
+            metadata={"origin": "api/bugbounty/file-upload-testing"},
+        )
 
         logger.info(f"File upload testing workflow created for {target_url}")
 
         return jsonify({
             "success": True,
             "workflow": workflow,
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 
@@ -214,11 +255,20 @@ def create_comprehensive_bugbounty_assessment():
             "priority_score": assessment["vulnerability_hunting"].get("priority_score", 0)
         }
 
+        persisted = create_session(
+            target=domain,
+            steps=extract_workflow_steps(assessment, domain),
+            source="mcp_bugbounty",
+            objective="comprehensive_assessment",
+            metadata={"origin": "api/bugbounty/comprehensive-assessment"},
+        )
+
         logger.info(f"Comprehensive bug bounty assessment created for {domain}")
 
         return jsonify({
             "success": True,
             "assessment": assessment,
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 
