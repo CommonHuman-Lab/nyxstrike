@@ -57,6 +57,7 @@ def _summary_from_data(data, fallback_sid):
     "workflow_steps": workflow_steps if isinstance(workflow_steps, list) else [],
     "source": data.get("source", "legacy"),
     "objective": data.get("objective", ""),
+    "metadata": data.get("metadata", {}),
     "handover_history": data.get("handover_history", []),
     "created_at": data.get("created_at", 0),
     "updated_at": data.get("updated_at", 0),

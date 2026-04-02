@@ -223,6 +223,7 @@ export interface SessionSummary {
   workflow_steps?: AttackChainStep[];
   source?: string;
   objective?: string;
+  metadata?: Record<string, unknown>;
   handover_history?: Array<{
     timestamp: string;
     session_id: string;

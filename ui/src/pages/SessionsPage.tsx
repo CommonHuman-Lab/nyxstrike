@@ -1,21 +1,20 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   RefreshCw, XCircle, Activity, Clock, CheckCircle,
-  Layers, Target, Play, Bot, ChevronDown, ChevronUp,
+  Layers, Target,
 } from 'lucide-react'
 import {
   api,
   type SessionsResponse,
   type SessionSummary,
   type AttackChainStep,
-  type Tool,
-  type ToolExecResponse,
 } from '../api'
 import { StatCard } from '../components/StatCard'
 import './SessionsPage.css'
 
 interface SessionsPageProps {
   demoData?: { sessions: SessionsResponse }
+  onOpenSession: (sessionId: string) => void
 }
 
 interface StartMode {
@@ -72,19 +71,6 @@ function fmtTs(ts: number) {
   return new Date(ts * 1000).toLocaleString('en-GB')
 }
 
-function inferTargetValue(paramName: string, target: string): string | undefined {
-  const k = paramName.toLowerCase()
-  if (k === 'target' || k === 'host' || k === 'query') return target
-  if (k === 'url' || k === 'endpoint') {
-    if (target.startsWith('http://') || target.startsWith('https://')) return target
-    return `https://${target}`
-  }
-  if (k === 'domain') {
-    return target.replace(/^https?:\/\//, '').replace(/\/.*/, '')
-  }
-  return undefined
-}
-
 function normalizeStepsFromSession(s: SessionSummary): AttackChainStep[] {
   if (Array.isArray(s.workflow_steps) && s.workflow_steps.length > 0) {
     return s.workflow_steps
@@ -92,43 +78,18 @@ function normalizeStepsFromSession(s: SessionSummary): AttackChainStep[] {
   return s.tools_executed.map(tool => ({ tool, parameters: {} }))
 }
 
-interface SessionCardProps {
-  s: SessionSummary
-  expanded: boolean
-  sessionTargetValue: string
-  onToggleExpand: () => void
-  onTargetChange: (v: string) => void
-  steps: AttackChainStep[]
-  toolMap: Record<string, Tool>
-  stepDrafts: Record<string, string>
-  runningStepKey: string | null
-  stepResults: Record<string, { result?: ToolExecResponse; error?: string }>
-  onStepDraftChange: (stepKey: string, next: string) => void
-  onRunStep: (session: SessionSummary, step: AttackChainStep, index: number) => void
-  handoffPending: boolean
-  handoffResult: string | null
-  onHandover: () => void
-}
+function SessionCard({ s, onOpen }: { s: SessionSummary; onOpen: (sessionId: string) => void }) {
+  const toolStatus = (s.metadata?.tool_status ?? {}) as Record<string, string>
+  const lastRun = ((s.metadata?.last_run ?? null) as {
+    tool?: string
+    success?: boolean
+    return_code?: number
+    execution_time?: number
+  } | null)
+  const toolCount = normalizeStepsFromSession(s).length
 
-function SessionCard({
-  s,
-  expanded,
-  sessionTargetValue,
-  onToggleExpand,
-  onTargetChange,
-  steps,
-  toolMap,
-  stepDrafts,
-  runningStepKey,
-  stepResults,
-  onStepDraftChange,
-  onRunStep,
-  handoffPending,
-  handoffResult,
-  onHandover,
-}: SessionCardProps) {
   return (
-    <div className="session-card">
+    <div className="session-card session-card--compact registry-card--clickable" onClick={() => onOpen(s.session_id)}>
       <div className="session-card-header">
         <div className="session-target">
           <Target size={13} color="var(--blue)" />
@@ -145,103 +106,35 @@ function SessionCard({
         <span><Clock size={11} /> {fmtTs(s.updated_at)}</span>
       </div>
 
-      {s.tools_executed.length > 0 && (
-        <div className="session-tools">
-          {s.tools_executed.slice(0, 8).map(t => (
-            <span key={t} className="session-tool-chip mono">{t}</span>
-          ))}
-          {s.tools_executed.length > 8 && (
-            <span className="session-tool-chip session-tool-chip--more">+{s.tools_executed.length - 8}</span>
-          )}
-        </div>
-      )}
-
-      <div className="session-id mono">{s.session_id}</div>
-
-      <div className="session-actions">
-        <button className="session-action-btn" onClick={onToggleExpand}>
-          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          {expanded ? 'Collapse' : 'Expand'}
-        </button>
-        <button className="session-action-btn" onClick={onHandover} disabled={handoffPending}>
-          <Bot size={12} />
-          {handoffPending ? 'Handing over…' : 'Handover to LLM'}
-        </button>
+      <div className="session-tools">
+        {s.tools_executed.slice(0, 8).map(t => (
+          <span
+            key={t}
+            className={`session-tool-chip mono session-tool-chip--${toolStatus[t] === 'success' ? 'success' : toolStatus[t] === 'failed' ? 'failed' : 'idle'}`}
+          >
+            {t}
+          </span>
+        ))}
+        {s.tools_executed.length > 8 && (
+          <span className="session-tool-chip session-tool-chip--more">+{s.tools_executed.length - 8}</span>
+        )}
       </div>
 
-      {handoffResult && <div className="session-handoff-note">{handoffResult}</div>}
-
-      {expanded && (
-        <div className="session-expanded">
-          <div className="session-target-override">
-            <label className="mono">Target</label>
-            <input
-              className="search-input mono"
-              value={sessionTargetValue}
-              onChange={e => onTargetChange(e.target.value)}
-              placeholder="Target to run this session against"
-            />
-          </div>
-
-          <div className="session-step-list">
-            {steps.length === 0 ? (
-              <p className="empty-state">No tool calls in this session.</p>
-            ) : (
-              steps.map((step, idx) => {
-                const stepKey = `${s.session_id}:${idx}`
-                const r = stepResults[stepKey]
-                const isRunning = runningStepKey === stepKey
-                const hasTool = !!toolMap[step.tool]
-
-                return (
-                  <div key={stepKey} className="session-step-row">
-                    <div className="session-step-head">
-                      <span className="session-tool-chip mono">{step.tool}</span>
-                      <button
-                        className="session-run-btn"
-                        onClick={() => onRunStep(s, step, idx)}
-                        disabled={isRunning || !hasTool}
-                        title={!hasTool ? 'Tool endpoint not found in catalog' : 'Run this tool now'}
-                      >
-                        {isRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
-                        {isRunning ? 'Running…' : 'Run'}
-                      </button>
-                    </div>
-
-                    <textarea
-                      className="session-step-params mono"
-                      value={stepDrafts[stepKey] ?? JSON.stringify(step.parameters ?? {}, null, 2)}
-                      onChange={e => onStepDraftChange(stepKey, e.target.value)}
-                      rows={3}
-                    />
-
-                    {r?.error && <div className="run-error">{r.error}</div>}
-                    {r?.result && (
-                      <div className="session-step-result mono">
-                        {r.result.success ? 'OK' : 'FAIL'} | exit {r.result.return_code} | {r.result.execution_time.toFixed(2)}s
-                      </div>
-                    )}
-                  </div>
-                )
-              })
-            )}
-          </div>
+      <div className="session-card-footer">
+        <span className="session-id mono">{s.session_id}</span>
+        <span className="session-open-hint">Open ({toolCount} tools)</span>
+      </div>
+      {lastRun?.tool && (
+        <div className="session-last-run mono">
+          last: {lastRun.tool} | {lastRun.success ? 'OK' : 'FAIL'} | exit {lastRun.return_code ?? 0} | {(lastRun.execution_time ?? 0).toFixed(2)}s
         </div>
       )}
     </div>
   )
 }
 
-export default function SessionsPage({ demoData }: SessionsPageProps) {
+export default function SessionsPage({ demoData, onOpenSession }: SessionsPageProps) {
   const [data, setData] = useState<SessionsResponse | null>(demoData?.sessions ?? null)
-  const [tools, setTools] = useState<Tool[]>([])
-  const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>({})
-  const [sessionTargets, setSessionTargets] = useState<Record<string, string>>({})
-  const [stepDrafts, setStepDrafts] = useState<Record<string, string>>({})
-  const [runningStepKey, setRunningStepKey] = useState<string | null>(null)
-  const [stepResults, setStepResults] = useState<Record<string, { result?: ToolExecResponse; error?: string }>>({})
-  const [handoffLoading, setHandoffLoading] = useState<Record<string, boolean>>({})
-  const [handoffState, setHandoffState] = useState<Record<string, string>>({})
   const [creatingSession, setCreatingSession] = useState(false)
   const [createMsg, setCreateMsg] = useState<string | null>(null)
   const [startMode, setStartMode] = useState<StartMode | null>(null)
@@ -260,9 +153,8 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
   useEffect(() => {
     if (demoData) return
     Promise.all([api.sessions(), api.tools()])
-      .then(([sessionsData, toolData]) => {
+      .then(([sessionsData]) => {
         setData(sessionsData)
-        setTools(toolData.tools)
         setError(null)
       })
       .catch(e => setError(String(e)))
@@ -409,8 +301,6 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
         metadata: { origin: 'ui/sessions/create', mode: mode.key, note: noteValue },
       })
       const sid = sessionRes.session.session_id
-      setExpandedSessions(prev => ({ ...prev, [sid]: true }))
-      setSessionTargets(prev => ({ ...prev, [sid]: target }))
       setCreateMsg(`Session created: ${sid} (${chain.attack_chain.steps.length} tool calls ready).`)
       closeStartModal()
       refresh()
@@ -420,95 +310,6 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
       setCreateMsg(msg)
     } finally {
       setCreatingSession(false)
-    }
-  }
-
-  async function handoverToLlm(s: SessionSummary, steps: AttackChainStep[]) {
-    setHandoffLoading(prev => ({ ...prev, [s.session_id]: true }))
-    try {
-      const note = `Tools: ${steps.map(step => step.tool).join(', ')}`
-      const r = await api.handoverSession(s.session_id, note)
-      const category = r.handover?.category ?? 'unknown'
-      const confidence = r.handover?.confidence ?? 0
-      setHandoffState(prev => ({
-        ...prev,
-        [s.session_id]: `LLM handoff done for ${s.session_id} -> ${category} (${(confidence * 100).toFixed(0)}% confidence)`,
-      }))
-    } catch (e) {
-      setHandoffState(prev => ({ ...prev, [s.session_id]: `Handover failed: ${String(e)}` }))
-    } finally {
-      setHandoffLoading(prev => ({ ...prev, [s.session_id]: false }))
-    }
-  }
-
-  async function runStep(s: SessionSummary, step: AttackChainStep, index: number) {
-    const stepKey = `${s.session_id}:${index}`
-    const tool = tools.find(t => t.name === step.tool)
-    if (!tool) {
-      setStepResults(prev => ({ ...prev, [stepKey]: { error: `Tool ${step.tool} not found in tool catalog` } }))
-      return
-    }
-
-    let manualParams: Record<string, unknown> = {}
-    const raw = stepDrafts[stepKey] ?? JSON.stringify(step.parameters ?? {}, null, 2)
-    try {
-      const parsed = JSON.parse(raw)
-      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-        setStepResults(prev => ({ ...prev, [stepKey]: { error: 'Parameters must be a JSON object' } }))
-        return
-      }
-      manualParams = parsed as Record<string, unknown>
-    } catch {
-      setStepResults(prev => ({ ...prev, [stepKey]: { error: 'Invalid JSON in parameters editor' } }))
-      return
-    }
-
-    const target = (sessionTargets[s.session_id] ?? s.target ?? '').trim()
-    const payload: Record<string, unknown> = { ...manualParams }
-    const missing: string[] = []
-    for (const req of Object.keys(tool.params)) {
-      const current = payload[req]
-      if (current !== undefined && String(current).trim() !== '') continue
-      const guessed = inferTargetValue(req, target)
-      if (guessed !== undefined && guessed !== '') payload[req] = guessed
-    }
-    for (const req of Object.keys(tool.params)) {
-      const current = payload[req]
-      if (current === undefined || String(current).trim() === '') missing.push(req)
-    }
-
-    if (missing.length > 0) {
-      setStepResults(prev => ({
-        ...prev,
-        [stepKey]: { error: `Missing required params: ${missing.join(', ')}` },
-      }))
-      return
-    }
-
-    const editedSteps = normalizeStepsFromSession(s).map((existingStep, i) => {
-      if (i !== index) return existingStep
-      return { ...existingStep, parameters: payload }
-    })
-
-    try {
-      await api.updateSession(s.session_id, {
-        target,
-        workflow_steps: editedSteps,
-      })
-      refresh()
-    } catch {
-      // non-fatal for local execution flow
-    }
-
-    setRunningStepKey(stepKey)
-    setStepResults(prev => ({ ...prev, [stepKey]: {} }))
-    try {
-      const result = await api.runTool(tool.endpoint, payload)
-      setStepResults(prev => ({ ...prev, [stepKey]: { result } }))
-    } catch (e) {
-      setStepResults(prev => ({ ...prev, [stepKey]: { error: String(e) } }))
-    } finally {
-      setRunningStepKey(null)
     }
   }
 
@@ -522,11 +323,14 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
     <div className="error-banner"><XCircle size={16} /> {error}</div>
   )
 
-  const active = data?.active ?? []
-  const completed = data?.completed ?? []
+  const rawActive = data?.active ?? []
+  const active = rawActive.filter(s => (s.status ?? 'active') !== 'completed')
+  const completed = [
+    ...(data?.completed ?? []),
+    ...rawActive.filter(s => (s.status ?? 'active') === 'completed'),
+  ].filter((s, idx, arr) => arr.findIndex(x => x.session_id === s.session_id) === idx)
   const allFindings = [...active, ...completed].reduce((sum, s) => sum + s.total_findings, 0)
   const uniqueTargets = new Set([...active, ...completed].map(s => s.target)).size
-  const toolMap = Object.fromEntries(tools.map(t => [t.name, t]))
 
   return (
     <div className="page-content">
@@ -620,7 +424,7 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
                     onClick={() => createSessionFromTarget(startMode, modalTarget, modalNote)}
                     disabled={creatingSession}
                   >
-                    {creatingSession ? <RefreshCw size={13} className="spin" /> : <Play size={13} />}
+                    {creatingSession ? <RefreshCw size={13} className="spin" /> : <Target size={13} />}
                     {creatingSession ? 'Starting…' : 'Start Session'}
                   </button>
                 </div>
@@ -647,7 +451,7 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
         </div>
         {showHandoverHelp && (
           <div className="session-help-box">
-            <p><strong>Web handover:</strong> open/expand a session card and click <span className="mono">Handover to LLM</span>.</p>
+            <p><strong>Web handover:</strong> open a session and click <span className="mono">Handover to LLM</span>.</p>
             <p><strong>MCP handover:</strong> call <span className="mono">handover_session("&lt;session_id&gt;", "optional note")</span>.</p>
             <p><strong>Tip:</strong> update target/step parameters before handover so the LLM gets the latest context.</p>
           </div>
@@ -659,29 +463,7 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
           </div>
         ) : (
           <div className="sessions-grid">
-            {active.map(s => {
-              const steps = normalizeStepsFromSession(s)
-              return (
-                <SessionCard
-                  key={s.session_id}
-                  s={s}
-                  expanded={!!expandedSessions[s.session_id]}
-                  sessionTargetValue={sessionTargets[s.session_id] ?? s.target}
-                  onToggleExpand={() => setExpandedSessions(prev => ({ ...prev, [s.session_id]: !prev[s.session_id] }))}
-                  onTargetChange={v => setSessionTargets(prev => ({ ...prev, [s.session_id]: v }))}
-                  steps={steps}
-                  toolMap={toolMap}
-                  stepDrafts={stepDrafts}
-                  runningStepKey={runningStepKey}
-                  stepResults={stepResults}
-                  onStepDraftChange={(stepKey, next) => setStepDrafts(prev => ({ ...prev, [stepKey]: next }))}
-                  onRunStep={runStep}
-                  handoffPending={!!handoffLoading[s.session_id]}
-                  handoffResult={handoffState[s.session_id] ?? null}
-                  onHandover={() => handoverToLlm(s, steps)}
-                />
-              )
-            })}
+            {active.map(s => <SessionCard key={s.session_id} s={s} onOpen={onOpenSession} />)}
           </div>
         )}
       </section>
@@ -694,29 +476,7 @@ export default function SessionsPage({ demoData }: SessionsPageProps) {
           <p className="empty-state">No completed sessions yet.</p>
         ) : (
           <div className="sessions-grid">
-            {completed.map(s => {
-              const steps = normalizeStepsFromSession(s)
-              return (
-                <SessionCard
-                  key={s.session_id}
-                  s={s}
-                  expanded={!!expandedSessions[s.session_id]}
-                  sessionTargetValue={sessionTargets[s.session_id] ?? s.target}
-                  onToggleExpand={() => setExpandedSessions(prev => ({ ...prev, [s.session_id]: !prev[s.session_id] }))}
-                  onTargetChange={v => setSessionTargets(prev => ({ ...prev, [s.session_id]: v }))}
-                  steps={steps}
-                  toolMap={toolMap}
-                  stepDrafts={stepDrafts}
-                  runningStepKey={runningStepKey}
-                  stepResults={stepResults}
-                  onStepDraftChange={(stepKey, next) => setStepDrafts(prev => ({ ...prev, [stepKey]: next }))}
-                  onRunStep={runStep}
-                  handoffPending={!!handoffLoading[s.session_id]}
-                  handoffResult={handoffState[s.session_id] ?? null}
-                  onHandover={() => handoverToLlm(s, steps)}
-                />
-              )
-            })}
+            {completed.map(s => <SessionCard key={s.session_id} s={s} onOpen={onOpenSession} />)}
           </div>
         )}
       </section>

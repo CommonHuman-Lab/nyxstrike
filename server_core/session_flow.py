@@ -155,7 +155,11 @@ def update_session(session_id: str, updates: Dict[str, Any]) -> Optional[Dict[st
         session_dict["workflow_steps"] = [s for s in steps if s]
         session_dict["tools_executed"] = [s["tool"] for s in session_dict["workflow_steps"]]
 
-    if state == "completed":
+    target_status = str(session_dict.get("status", "")).lower()
+
+    if target_status == "completed":
+        session_store.archive(session_id, session_dict)
+    elif state == "completed":
         session_store.archive(session_id, session_dict)
     else:
         session_store.save(session_id, session_dict)

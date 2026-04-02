@@ -28,19 +28,24 @@ import TasksPage from './pages/TasksPage'
 import ToolsPage from './pages/ToolsPage'
 import ReportsPage from './pages/ReportsPage'
 import SessionsPage from './pages/SessionsPage'
+import SessionDetailPage from './pages/SessionDetailPage'
 import type { RunHistoryEntry, HistoryPoint } from './types'
 import './App.css'
 
 // ─── Routing ─────────────────────────────────────────────────────────────────
 
 const POLL_MS = 10_000
-type Page = 'dashboard' | 'settings' | 'help' | 'logs' | 'run' | 'tasks' | 'tools' | 'reports' | 'sessions'
+type Page = 'dashboard' | 'settings' | 'help' | 'logs' | 'run' | 'tasks' | 'tools' | 'reports' | 'sessions' | 'session-detail'
 
-const VALID_PAGES = new Set<Page>(['dashboard', 'settings', 'help', 'logs', 'run', 'tasks', 'tools', 'reports', 'sessions'])
+const VALID_PAGES = new Set<Page>(['dashboard', 'settings', 'help', 'logs', 'run', 'tasks', 'tools', 'reports', 'sessions', 'session-detail'])
 
-function pageFromHash(): Page {
+function routeFromHash(): { page: Page; sessionId: string | null } {
   const hash = window.location.hash.replace(/^#\/?/, '')
-  return VALID_PAGES.has(hash as Page) ? (hash as Page) : 'dashboard'
+  if (hash.startsWith('sessions/')) {
+    const sessionId = hash.slice('sessions/'.length)
+    return { page: 'session-detail', sessionId: sessionId || null }
+  }
+  return { page: VALID_PAGES.has(hash as Page) ? (hash as Page) : 'dashboard', sessionId: null }
 }
 
 // ─── App ─────────────────────────────────────────────────────────────────────
@@ -49,16 +54,30 @@ export default function App() {
   const [demo] = useState(isDemoMode)
   const [authed, setAuthed] = useState(demo || hasToken())
   const [needsAuth, setNeedsAuth] = useState(false)
-  const [page, setPageState] = useState<Page>(pageFromHash)
+  const initialRoute = routeFromHash()
+  const [page, setPageState] = useState<Page>(initialRoute.page)
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(initialRoute.sessionId)
 
   function setPage(p: Page) {
+    if (p === 'session-detail') return
     window.location.hash = p === 'dashboard' ? '' : `/${p}`
     setPageState(p)
+    setActiveSessionId(null)
+  }
+
+  function openSessionDetail(sessionId: string) {
+    window.location.hash = `/sessions/${sessionId}`
+    setPageState('session-detail')
+    setActiveSessionId(sessionId)
   }
 
   // Keep state in sync if the user presses Back/Forward
   useEffect(() => {
-    function onHashChange() { setPageState(pageFromHash()) }
+    function onHashChange() {
+      const route = routeFromHash()
+      setPageState(route.page)
+      setActiveSessionId(route.sessionId)
+    }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
@@ -346,7 +365,7 @@ export default function App() {
           <button className={`nav-tab ${page === 'reports' ? 'active' : ''}`} onClick={() => setPage('reports')}>
             <FileText size={13} /> Reports
           </button>
-          <button className={`nav-tab ${page === 'sessions' ? 'active' : ''}`} onClick={() => setPage('sessions')}>
+          <button className={`nav-tab ${page === 'sessions' || page === 'session-detail' ? 'active' : ''}`} onClick={() => setPage('sessions')}>
             <Layers size={13} /> Sessions
           </button>
         </nav>
@@ -430,7 +449,14 @@ export default function App() {
           <ToolsPage health={health} tools={tools} toolsStatus={toolsStatusWithParents ?? {}} />
         )}
         {page === 'reports' && <ReportsPage runHistory={runHistory} />}
-        {page === 'sessions' && <SessionsPage demoData={demo ? { sessions: DEMO_SESSIONS } : undefined} />}
+        {page === 'sessions' && <SessionsPage demoData={demo ? { sessions: DEMO_SESSIONS } : undefined} onOpenSession={openSessionDetail} />}
+        {page === 'session-detail' && activeSessionId && (
+          <SessionDetailPage
+            sessionId={activeSessionId}
+            tools={tools}
+            onBack={() => setPage('sessions')}
+          />
+        )}
         {page === 'logs' && (
           <LogsPage
             logLines={logLines}
