@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Bot, Play, RefreshCw, Target, Activity, Clock, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { ArrowLeft, Bot, Play, RefreshCw, Target, Activity, Clock, ChevronDown, ChevronUp, Trash2, Download } from 'lucide-react'
 import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../api'
 import { ParamField } from '../components/tool-run/ParamField'
 import { buildInitialFieldValues, buildRunPayload } from '../components/tool-run/payload'
+import { exportEntry } from '../utils'
+import type { RunHistoryEntry } from '../types'
 import './SessionsPage.css'
 import '../components/tool-run/shared.css'
 
@@ -179,6 +181,7 @@ export default function SessionDetailPage({
   const selectedStep = steps[selectedStepIndex] ?? null
   const selectedStepKey = selectedStep && session ? `${session.session_id}:${selectedStepIndex}` : null
   const selectedResult = selectedStepKey ? stepResults[selectedStepKey] : undefined
+  const resultData = selectedResult?.result
   const selectedRunning = selectedStepKey ? runningStepKey === selectedStepKey : false
   const selectedTool = selectedStep ? toolMap[selectedStep.tool] : null
 
@@ -471,13 +474,51 @@ export default function SessionDetailPage({
                   <h4>Result</h4>
                   {isCompleted && <p className="section-meta">Completed session: results are read-only.</p>}
                   {selectedResult?.error && <div className="run-error">{selectedResult.error}</div>}
-                  {selectedResult?.result ? (
+                  {resultData ? (
                     <>
+                      {selectedStepKey && resultData && (
+                        <div className="session-result-actions">
+                          <button
+                            className="run-export-btn"
+                            onClick={() => {
+                              const entry: RunHistoryEntry = {
+                                id: Date.now(),
+                                tool: selectedStep.tool,
+                                params: stepFieldValues[selectedStepKey] ?? {},
+                                result: resultData,
+                                ts: new Date(resultData.timestamp),
+                                source: 'browser',
+                              }
+                              exportEntry(entry, 'txt')
+                            }}
+                            title="Export as .txt"
+                          >
+                            <Download size={11} /> TXT
+                          </button>
+                          <button
+                            className="run-export-btn"
+                            onClick={() => {
+                              const entry: RunHistoryEntry = {
+                                id: Date.now(),
+                                tool: selectedStep.tool,
+                                params: stepFieldValues[selectedStepKey] ?? {},
+                                result: resultData,
+                                ts: new Date(resultData.timestamp),
+                                source: 'browser',
+                              }
+                              exportEntry(entry, 'json')
+                            }}
+                            title="Export as .json"
+                          >
+                            <Download size={11} /> JSON
+                          </button>
+                        </div>
+                      )}
                       <div className="session-step-result mono">
-                        {selectedResult.result.success ? 'OK' : 'FAIL'} | exit {selectedResult.result.return_code} | {selectedResult.result.execution_time.toFixed(2)}s
+                        {resultData.success ? 'OK' : 'FAIL'} | exit {resultData.return_code} | {resultData.execution_time.toFixed(2)}s
                       </div>
-                      <pre className="session-result-pre mono">{selectedResult.result.stdout || '(no stdout)'}</pre>
-                      {selectedResult.result.stderr && <pre className="session-result-pre mono">{selectedResult.result.stderr}</pre>}
+                      <pre className="session-result-pre mono">{resultData.stdout || '(no stdout)'}</pre>
+                      {resultData.stderr && <pre className="session-result-pre mono">{resultData.stderr}</pre>}
                     </>
                   ) : (
                     <p className="section-meta">No result yet for this tool.</p>
