@@ -31,7 +31,7 @@ export default function ToolsPage({ health, tools, toolsStatus }: ToolsPageProps
   const missingCount = health.total_tools_count - health.total_tools_available
 
   return (
-    <div className="page-content">
+    <div className="page-content tools-page">
       {selectedTool && (
         <ToolModal
           tool={selectedTool}

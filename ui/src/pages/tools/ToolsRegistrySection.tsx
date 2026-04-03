@@ -74,27 +74,28 @@ export function ToolsRegistrySection({
             title={`Click for details on ${tool.name}`}
           >
             <div className="registry-card-top">
-              <span className="registry-name mono">{tool.name}</span>
-              <span className="registry-cat">{tool.category.replace(/_/g, ' ')}</span>
-              {tool.parent_tool && (
-                <span className="registry-cat" title={`Based on ${tool.parent_tool}`}>
-                  {tool.parent_tool}
-                </span>
-              )}
-              {toolsStatus[tool.name] === true && (
-                <span className="registry-installed" title="Installed">
-                  <CheckCircle size={11} color="var(--green)" />
-                </span>
-              )}
-              {toolsStatus[tool.name] === false && (
-                <span className="registry-installed" title="Not installed">
-                  <XCircle size={11} color="var(--red)" />
-                </span>
-              )}
+              <span className="registry-name mono" title={tool.name}>{tool.name}</span>
+              <div className="registry-meta">
+                {tool.parent_tool && (
+                  <span className="registry-cat" title={`Based on ${tool.parent_tool}`}>
+                    {tool.parent_tool}
+                  </span>
+                )}
+                {toolsStatus[tool.name] === true && (
+                  <span className="registry-installed" title="Installed">
+                    <CheckCircle size={11} color="var(--green)" />
+                  </span>
+                )}
+                {toolsStatus[tool.name] === false && (
+                  <span className="registry-installed" title="Not installed">
+                    <XCircle size={11} color="var(--red)" />
+                  </span>
+                )}
+              </div>
             </div>
             <p className="registry-desc">{tool.desc}</p>
             <div className="registry-footer">
-              <span className="registry-endpoint mono">{tool.method} {tool.endpoint}</span>
+              <span className="registry-cat">{tool.category.replace(/_/g, ' ')}</span>
               <span className="registry-eff" title="Effectiveness">
                 {'█'.repeat(Math.round(tool.effectiveness * 5))}{'░'.repeat(5 - Math.round(tool.effectiveness * 5))}
               </span>
