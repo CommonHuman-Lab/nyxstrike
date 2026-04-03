@@ -1,5 +1,6 @@
 import { Save, Plus, Trash2 } from 'lucide-react'
 import type { Settings, WordlistEntry } from '../../api'
+import { ActionButton } from '../../components/ActionButton'
 
 function SettingsRow({ label, value, mono, accent }: {
   label: string
@@ -124,9 +125,9 @@ export function RuntimeConfigSection({
         />
       </div>
       <div className="settings-actions">
-        <button className="btn-primary" onClick={onSave} disabled={saving}>
+        <ActionButton variant="success" onClick={onSave} disabled={saving}>
           <Save size={14} /> {saving ? 'Saving…' : 'Save Runtime'}
-        </button>
+        </ActionButton>
       </div>
     </section>
   )
@@ -146,14 +147,12 @@ export function ServerControlsSection({
       </div>
       <div className="settings-grid">
         <div className="settings-row" style={{ alignItems: 'flex-start' }}>
-          <button
-            className="btn-primary"
-            style={{ minWidth: 120 }}
-            disabled={clearingCache}
-            onClick={onClearCache}
-          >
-            {clearingCache ? 'Clearing…' : 'Clear Cache'}
-          </button>
+          <ActionButton variant="danger" onClick={onClearCache} disabled={clearingCache}>
+            <Trash2 size={14} /> {clearingCache ? 'Clearing Cache…' : 'Clear Cache'}
+          </ActionButton>
+          <p className="settings-hint-small">
+            Clear all cached tool results. This can be useful if you want to free up memory or ensure that outdated results are not used.
+          </p>
         </div>
       </div>
     </section>
@@ -186,12 +185,13 @@ export function WordlistsSection({
       <div className="section-header">
         <h3>Wordlists <span className="badge">{wordlistsDraft.length}</span></h3>
         <div className="settings-actions-inline">
-          <button className="btn-secondary" onClick={onAddWordlist} disabled={wordlistsSaving}>
+
+          <ActionButton variant="default" onClick={onAddWordlist} disabled={wordlistsSaving}>
             <Plus size={14} /> Add Wordlist
-          </button>
-          <button className="btn-secondary" onClick={onSaveWordlists} disabled={wordlistsSaving}>
+          </ActionButton>
+          <ActionButton variant="default" onClick={onSaveWordlists} disabled={wordlistsSaving}>
             <Save size={14} /> {wordlistsSaving ? 'Saving…' : 'Save Wordlists'}
-          </button>
+          </ActionButton>
         </div>
       </div>
       <div className="wordlist-table">
@@ -240,14 +240,14 @@ export function WordlistsSection({
               onChange={e => onUpdateWordlist(index, 'path', e.target.value)}
               placeholder="/usr/share/wordlists/rockyou.txt"
             />
-            <button
-              className="btn-danger-outline"
+            <ActionButton
+              variant={wordlist.is_default ? 'default' : 'danger'}
               onClick={() => onRemoveWordlist(index)}
               disabled={wordlistsSaving || Boolean(wordlist.is_default)}
               title={wordlist.is_default ? 'Default wordlists cannot be deleted' : 'Remove row'}
             >
               <Trash2 size={14} />
-            </button>
+            </ActionButton>
           </div>
         ))}
       </div>

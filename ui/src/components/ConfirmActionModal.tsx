@@ -1,6 +1,7 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
+import { ActionButton, type ActionButtonVariant } from './ActionButton'
 import './ConfirmActionModal.css'
 
 interface ConfirmActionModalProps {
@@ -10,7 +11,7 @@ interface ConfirmActionModalProps {
   impactItems?: string[]
   confirmLabel?: string
   cancelLabel?: string
-  confirmVariant?: 'danger' | 'primary'
+  confirmVariant?: ActionButtonVariant
   isConfirming?: boolean
   onConfirm: () => void | Promise<void>
   onClose: () => void
@@ -63,16 +64,16 @@ export function ConfirmActionModal({
           )}
 
           <div className="confirm-action-buttons">
-            <button className="confirm-action-cancel" onClick={onClose} disabled={isConfirming}>
+            <ActionButton variant="default" onClick={onClose} disabled={isConfirming}>
               {cancelLabel}
-            </button>
-            <button
-              className={`confirm-action-confirm confirm-action-confirm--${confirmVariant}`}
+            </ActionButton>
+            <ActionButton
+              variant={confirmVariant}
               onClick={() => { void onConfirm() }}
               disabled={isConfirming}
             >
               {isConfirming ? 'Clearing…' : confirmLabel}
-            </button>
+            </ActionButton>
           </div>
         </div>
       </div>

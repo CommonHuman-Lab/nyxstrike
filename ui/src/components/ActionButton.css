@@ -1,0 +1,48 @@
+.action-button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.action-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.action-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-button--default {
+  border-color: var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.action-button--default:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--text-dim) 60%, var(--border));
+}
+
+.action-button--success {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--green) 80%, #a6ffd5), color-mix(in srgb, var(--green) 92%, #1f6e50));
+  color: #fff;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--green) 28%, transparent);
+}
+
+.action-button--warning {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 84%, #ffe2a6), color-mix(in srgb, var(--amber) 94%, #7a4d0f));
+  color: #fff;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--amber) 30%, transparent);
+}
+
+.action-button--danger {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--red) 82%, #ff9e9e), color-mix(in srgb, var(--red) 92%, #8e1f1f));
+  color: #fff;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--red) 28%, transparent);
+}
