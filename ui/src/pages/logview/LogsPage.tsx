@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { LogsToolbar, LogsViewer } from './logview/LogsSections'
-import { getVisibleLogLines } from './logview/utils'
+import { LogsToolbar, LogsViewer } from './LogsSections'
+import { getVisibleLogLines } from './utils'
 import './LogsPage.css'
 
 interface LogsPageProps {

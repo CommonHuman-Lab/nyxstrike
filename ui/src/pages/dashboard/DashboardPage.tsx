@@ -1,9 +1,9 @@
 import { XCircle } from 'lucide-react'
-import { type WebDashboardResponse, type Tool } from '../api'
-import type { HistoryPoint, RunHistoryEntry } from '../types'
-import { KpiSection } from './dashboard/KpiSection'
-import { ResourceSection } from './dashboard/ResourceSection'
-import { ToolAvailabilitySection } from './dashboard/ToolAvailabilitySection'
+import { type WebDashboardResponse, type Tool } from '../../api'
+import type { HistoryPoint, RunHistoryEntry } from '../../types'
+import { KpiSection } from './KpiSection'
+import { ResourceSection } from './ResourceSection'
+import { ToolAvailabilitySection } from './ToolAvailabilitySection'
 import './DashboardPage.css'
 
 // ─── Dashboard Page ───────────────────────────────────────────────────────────

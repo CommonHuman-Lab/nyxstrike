@@ -7,10 +7,10 @@ import {
   api,
   type SessionsResponse,
   type SessionTemplate,
-} from '../api'
-import { StatCard } from '../components/StatCard'
-import { START_MODES, type StartMode } from './sessions/constants'
-import { SessionListSection, StartSessionModal, StartSessionSection } from './sessions/SessionsSections'
+} from '../../api'
+import { StatCard } from '../../components/StatCard'
+import { START_MODES, type StartMode } from './constants'
+import { SessionListSection, StartSessionModal, StartSessionSection } from './SessionsSections'
 import './SessionsPage.css'
 
 interface SessionsPageProps {

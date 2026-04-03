@@ -2,11 +2,11 @@ import { useState } from 'react'
 import {
   BarChart2, CheckCircle, Clock, TrendingUp, FileText,
 } from 'lucide-react'
-import { StatCard } from '../components/StatCard'
-import { RunResultModal } from '../components/RunResultModal'
-import { type RunHistoryEntry } from '../types'
-import { ReportsBreakdownSection, ReportsTimelineSection } from './reports/ReportsSections'
-import { extractTarget, type GroupBy } from './reports/reportUtils'
+import { StatCard } from '../../components/StatCard'
+import { RunResultModal } from '../../components/RunResultModal'
+import { type RunHistoryEntry } from '../../types'
+import { ReportsBreakdownSection, ReportsTimelineSection } from './ReportsSections'
+import { extractTarget, type GroupBy } from './reportUtils'
 import './ReportsPage.css'
 
 interface ReportsPageProps {

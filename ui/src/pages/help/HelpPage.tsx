@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { IdeConfigSection, FlagsSection, AuthenticationSection, DemoModeSection } from './help/HelpSections'
-import { IDE_CONFIGS } from './help/ideConfigs'
+import { IdeConfigSection, FlagsSection, AuthenticationSection, DemoModeSection } from './HelpSections'
+import { IDE_CONFIGS } from './ideConfigs'
 import './HelpPage.css'
 
 export default function HelpPage() {

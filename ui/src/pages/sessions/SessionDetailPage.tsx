@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Bot, RefreshCw, Target, Activity, Clock } from 'lucide-react'
-import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../api'
-import { buildInitialFieldValues, buildRunPayload } from '../components/tool-run/payload'
-import { SessionDetailWorkbench } from './sessions/SessionDetailWorkbench'
-import { TemplateModal } from './sessions/TemplateModal'
+import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../../api'
+import { buildInitialFieldValues, buildRunPayload } from '../../components/tool-run/payload'
+import { SessionDetailWorkbench } from './SessionDetailWorkbench'
+import { TemplateModal } from './TemplateModal'
 import {
   fmtTs,
   normalizeStepsFromSession,
   resolveToolForStep,
   type PersistedStepResult,
   type StepState,
-} from './sessions/sessionDetailUtils'
+} from './sessionDetailUtils'
 import './SessionsPage.css'
-import '../components/tool-run/shared.css'
+import '../../components/tool-run/shared.css'
 
 export default function SessionDetailPage({
   sessionId,

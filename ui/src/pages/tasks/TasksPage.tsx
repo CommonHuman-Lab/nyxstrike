@@ -1,9 +1,9 @@
 import {
   RefreshCw, XCircle,
 } from 'lucide-react'
-import type { ProcessDashboardResponse } from '../api'
-import { useProcessDashboard } from './tasks/useProcessDashboard'
-import { ProcessesSection, WorkerPoolSection } from './tasks/TasksSections'
+import type { ProcessDashboardResponse } from '../../api'
+import { useProcessDashboard } from './useProcessDashboard'
+import { ProcessesSection, WorkerPoolSection } from './TasksSections'
 import './TasksPage.css'
 
 interface TasksPageProps {

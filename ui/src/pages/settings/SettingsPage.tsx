@@ -1,11 +1,11 @@
 import { RefreshCw, XCircle } from 'lucide-react'
-import { useSettingsData } from './settings/useSettingsData'
+import { useSettingsData } from './useSettingsData'
 import {
   RuntimeConfigSection,
   ServerControlsSection,
   ServerEnvironmentSection,
   WordlistsSection,
-} from './settings/SettingsSections'
+} from './SettingsSections'
 import './SettingsPage.css'
 
 export default function SettingsPage() {

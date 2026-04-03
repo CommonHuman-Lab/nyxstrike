@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Wrench, Database, Shield, XCircle } from 'lucide-react'
-import { type Tool, type WebDashboardResponse } from '../api'
-import { StatCard } from '../components/StatCard'
-import { ToolModal } from '../components/ToolModal'
-import { ToolsRegistrySection } from './tools/ToolsRegistrySection'
-import { filterTools, getToolCategories } from './tools/utils'
+import { type Tool, type WebDashboardResponse } from '../../api'
+import { StatCard } from '../../components/StatCard'
+import { ToolModal } from '../../components/ToolModal'
+import { ToolsRegistrySection } from './ToolsRegistrySection'
+import { filterTools, getToolCategories } from './utils'
 import './ToolsPage.css'
 
 interface ToolsPageProps {
