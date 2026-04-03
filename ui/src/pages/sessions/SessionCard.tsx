@@ -37,7 +37,7 @@ export function SessionCard({
       </div>
 
       <div className="session-tools">
-        {session.tools_executed.slice(0, 8).map(tool => (
+        {session.tools_executed.slice(0, 7).map(tool => (
           <span
             key={tool}
             className={`session-tool-chip mono session-tool-chip--${toolStatus[tool] === 'success' ? 'success' : toolStatus[tool] === 'failed' ? 'failed' : 'idle'}`}
@@ -45,8 +45,8 @@ export function SessionCard({
             {tool}
           </span>
         ))}
-        {session.tools_executed.length > 8 && (
-          <span className="session-tool-chip session-tool-chip--more">+{session.tools_executed.length - 8}</span>
+        {session.tools_executed.length > 7 && (
+          <span className="session-tool-chip session-tool-chip--more">+{session.tools_executed.length - 7}</span>
         )}
       </div>
 

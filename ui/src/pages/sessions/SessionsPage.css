@@ -120,6 +120,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  flex-grow: 1;
 }
 
 .session-tool-chip {
@@ -129,6 +130,7 @@
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--text-dim);
+  height: 18px;
 }
 .session-tool-chip--idle {
   color: var(--text-dim);
