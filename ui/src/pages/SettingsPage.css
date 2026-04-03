@@ -123,12 +123,6 @@ select.settings-input {
   padding: 8px 20px;
 }
 
-.save-msg {
-  font-size: 13px;
-  font-family: var(--mono);
-}
-.save-msg.ok  { color: var(--green); }
-.save-msg.err { color: var(--red); }
 
 /* ── Wordlists Table ─────────────────────────────────────────────────────── */
 .wordlist-table {
@@ -201,20 +195,6 @@ select.settings-input {
 .btn-danger-outline:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.settings-inline-msg {
-  padding: 10px 18px 0;
-  font-size: 13px;
-  font-family: var(--mono);
-}
-
-.settings-inline-msg.ok {
-  color: var(--green);
-}
-
-.settings-inline-msg.err {
-  color: var(--red);
 }
 
 .wl-path {

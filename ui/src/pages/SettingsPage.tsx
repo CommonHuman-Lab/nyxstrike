@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, XCircle, Save, Plus, Trash2 } from 'lucide-react'
 import { api, type Settings, type WordlistEntry } from '../api'
+import { useToast } from '../components/ToastProvider'
 import './SettingsPage.css'
 
 function SettingsRow({ label, value, mono, accent }: {
@@ -54,9 +55,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [wordlistsSaving, setWordlistsSaving] = useState(false)
-  const [wordlistsMsg, setWordlistsMsg] = useState<string | null>(null)
+  const { pushToast } = useToast()
 
   const [timeout, setTimeout_] = useState('')
   const [cacheSize, setCacheSize] = useState('')
@@ -65,7 +65,6 @@ export default function SettingsPage() {
   const [wordlistsDraft, setWordlistsDraft] = useState<WordlistEntry[]>([])
 
   // --- Server Cache Stats ---
-  const [cacheMsg, setCacheMsg] = useState<string|null>(null)
   const [clearingCache, setClearingCache] = useState(false)
 
   useEffect(() => {
@@ -105,7 +104,6 @@ export default function SettingsPage() {
 
   async function save() {
     setSaving(true)
-    setSaveMsg(null)
     try {
       const runtimeRes = await api.patchSettings({
         command_timeout: Number(timeout),
@@ -114,37 +112,34 @@ export default function SettingsPage() {
         tool_availability_ttl: Number(toolTtl),
       })
       if (!runtimeRes.success) {
-        setSaveMsg('Error: ' + JSON.stringify(runtimeRes.errors || runtimeRes.error))
+        pushToast('error', 'Failed to save runtime settings')
         return
       }
-      setSaveMsg('Saved')
+      pushToast('success', 'Runtime settings saved')
     } catch (e) {
-      setSaveMsg('Error: ' + String(e))
+      pushToast('error', 'Failed to save runtime settings')
     } finally {
       setSaving(false)
-      setTimeout(() => setSaveMsg(null), 3000)
     }
   }
 
   async function saveWordlists() {
     setWordlistsSaving(true)
-    setWordlistsMsg(null)
     try {
       const wordlistsRes = await api.patchWordlists(wordlistsDraft)
       if (!wordlistsRes.success) {
-        setWordlistsMsg('Error: ' + JSON.stringify(wordlistsRes.errors || wordlistsRes.error))
+        pushToast('error', 'Failed to save wordlists')
         return
       }
 
       const refreshed = await api.getSettings()
       setSettings(refreshed.settings)
       setWordlistsDraft(refreshed.settings.wordlists.map(w => ({ ...w })))
-      setWordlistsMsg('Saved')
+      pushToast('success', 'Wordlists saved')
     } catch (e) {
-      setWordlistsMsg('Error: ' + String(e))
+      pushToast('error', 'Failed to save wordlists')
     } finally {
       setWordlistsSaving(false)
-      setTimeout(() => setWordlistsMsg(null), 3000)
     }
   }
 
@@ -218,9 +213,6 @@ export default function SettingsPage() {
           <button className="btn-primary" onClick={save} disabled={saving}>
             <Save size={14} /> {saving ? 'Saving…' : 'Save Runtime'}
           </button>
-          {saveMsg && (
-            <span className={`save-msg ${saveMsg.startsWith('Error') ? 'err' : 'ok'}`}>{saveMsg}</span>
-          )}
         </div>
       </section>
 
@@ -237,22 +229,19 @@ export default function SettingsPage() {
               disabled={clearingCache}
               onClick={async () => {
                 setClearingCache(true)
-                setCacheMsg(null)
                 try {
                   const res = await api.clearCache()
                   if(res.success){
-                    setCacheMsg("Cache cleared!")
+                    pushToast('success', 'Cache cleared')
                   } else {
-                    setCacheMsg("Cache clear failed: "+(res.message||'unknown error'))
+                    pushToast('error', 'Failed to clear cache')
                   }
                 } catch(e:any){
-                  setCacheMsg("Cache clear error: "+String(e))
+                  pushToast('error', 'Failed to clear cache')
                 }
-                setTimeout(()=>setCacheMsg(null),2000)
                 setClearingCache(false)
               }}
             >{clearingCache ? "Clearing…" : "Clear Cache"}</button>
-            {cacheMsg && <span style={{marginLeft:10, fontSize:'12px', color: cacheMsg.startsWith('Cache cleared')?'var(--green)':'var(--red)'}}>{cacheMsg}</span>}
           </div>
         </div>
       </section>
@@ -327,11 +316,6 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
-        {wordlistsMsg && (
-          <div className={`settings-inline-msg ${wordlistsMsg.startsWith('Error') ? 'err' : 'ok'}`}>
-            {wordlistsMsg}
-          </div>
-        )}
         <p className="settings-hint">
           Changes are stored in <code>wordlists.json</code>. Entries here override defaults from <code>config.py</code>.
         </p>

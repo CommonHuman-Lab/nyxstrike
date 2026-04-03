@@ -29,6 +29,7 @@ import ToolsPage from './pages/ToolsPage'
 import ReportsPage from './pages/ReportsPage'
 import SessionsPage from './pages/SessionsPage'
 import SessionDetailPage from './pages/SessionDetailPage'
+import { ToastProvider } from './components/ToastProvider'
 import type { RunHistoryEntry, HistoryPoint } from './types'
 import './App.css'
 
@@ -336,7 +337,8 @@ export default function App() {
   const toolsStatusWithParents = getToolsStatusWithParents(tools, health?.tools_status ?? {})
 
   return (
-    <div className={demo ? 'layout layout--demo' : 'layout'}>
+    <ToastProvider>
+      <div className={demo ? 'layout layout--demo' : 'layout'}>
       {/* ── Demo banner ── */}
       {demo && (
         <div className="demo-banner">
@@ -509,6 +511,7 @@ export default function App() {
           </>
         )}
       </main>
-    </div>
+      </div>
+    </ToastProvider>
   )
 }
