@@ -19,7 +19,7 @@ export function StartSessionSection({
         <h3>Start Session</h3>
         <span className="section-meta">Choose a workflow type, then provide target details.</span>
       </div>
-      <div className="registry-grid registry-grid--wide start-mode-grid">
+      <div className="registry-grid registry-grid--wider start-mode-grid">
         {startModes.map(mode => (
           <div key={mode.key} className="registry-card registry-card--clickable start-mode-card" onClick={() => onOpenStartMode(mode)}>
             <div className="registry-card-top">
