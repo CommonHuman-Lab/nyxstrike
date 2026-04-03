@@ -1,70 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Bot, Play, RefreshCw, Target, Activity, Clock, ChevronDown, ChevronUp, Trash2, Download } from 'lucide-react'
+import { ArrowLeft, Bot, RefreshCw, Target, Activity, Clock } from 'lucide-react'
 import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../api'
-import { ParamField } from '../components/tool-run/ParamField'
 import { buildInitialFieldValues, buildRunPayload } from '../components/tool-run/payload'
-import { exportEntry } from '../utils'
-import type { RunHistoryEntry } from '../types'
+import { SessionDetailWorkbench } from './sessions/SessionDetailWorkbench'
+import { TemplateModal } from './sessions/TemplateModal'
+import {
+  fmtTs,
+  normalizeStepsFromSession,
+  resolveToolForStep,
+  type PersistedStepResult,
+  type StepState,
+} from './sessions/sessionDetailUtils'
 import './SessionsPage.css'
 import '../components/tool-run/shared.css'
-
-function fmtTs(ts: number) {
-  if (!ts) return '—'
-  return new Date(ts * 1000).toLocaleString('en-GB')
-}
-
-function normalizeStepsFromSession(s: SessionSummary): AttackChainStep[] {
-  if (Array.isArray(s.workflow_steps) && s.workflow_steps.length > 0) return s.workflow_steps
-  return s.tools_executed.map(tool => ({ tool, parameters: {} }))
-}
-
-function normalizeToken(v: string): string {
-  return v.toLowerCase().replace(/[^a-z0-9]/g, '')
-}
-
-function resolveToolForStep(stepTool: string, tools: Tool[]): Tool | null {
-  const step = stepTool.trim()
-  if (!step) return null
-
-  const directByName = tools.find(t => t.name === step)
-  if (directByName) return directByName
-
-  const directByEndpoint = tools.find(t => t.endpoint === step)
-  if (directByEndpoint) return directByEndpoint
-
-  const directByParent = tools.find(t => t.parent_tool === step)
-  if (directByParent) return directByParent
-
-  const ns = normalizeToken(step)
-  let best: { tool: Tool; score: number } | null = null
-  for (const t of tools) {
-    const name = normalizeToken(t.name)
-    const parent = normalizeToken(t.parent_tool ?? '')
-    const endpoint = normalizeToken(t.endpoint)
-    let score = 0
-    if (name === ns) score = Math.max(score, 80)
-    if (parent === ns) score = Math.max(score, 75)
-    if (endpoint === ns) score = Math.max(score, 70)
-    if (name.includes(ns)) score = Math.max(score, 62)
-    if (endpoint.includes(ns)) score = Math.max(score, 58)
-    if (parent && parent.includes(ns)) score = Math.max(score, 56)
-    if (ns.includes(name)) score = Math.max(score, 52)
-    if (score === 0) continue
-    if (!best || score > best.score) best = { tool: t, score }
-  }
-  return best?.tool ?? null
-}
-
-type StepState = 'idle' | 'success' | 'failed'
-
-type PersistedStepResult = {
-  success: boolean
-  return_code: number
-  execution_time: number
-  timestamp?: string
-  stdout?: string
-  stderr?: string
-}
 
 export default function SessionDetailPage({
   sessionId,
@@ -219,8 +167,6 @@ export default function SessionDetailPage({
   const selectedStep = steps[selectedStepIndex] ?? null
   const selectedStepKey = selectedStep && session ? `${session.session_id}:${selectedStepIndex}` : null
   const selectedResult = selectedStepKey ? stepResults[selectedStepKey] : undefined
-  const resultData = selectedResult?.result
-  const selectedRunning = selectedStepKey ? runningStepKey === selectedStepKey : false
   const selectedTool = selectedStep ? toolMap[selectedStep.tool] : null
 
   useEffect(() => {
@@ -384,221 +330,43 @@ export default function SessionDetailPage({
           {handoffMsg && <span className="section-meta">{handoffMsg}</span>}
         </div>
 
-        {showTemplateModal && (
-          <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) setShowTemplateModal(false) }}>
-            <div className="modal">
-              <div className="modal-header">
-                <div className="modal-title-row"><span className="modal-name">Create Template</span></div>
-                <button className="modal-close" onClick={() => setShowTemplateModal(false)}>x</button>
-              </div>
-              <div className="modal-body">
-                <div className="session-start-form">
-                  <label className="mono">Template Name *</label>
-                  <input
-                    className="search-input mono"
-                    placeholder="e.g. SMB Enumeration Pack"
-                    value={templateName}
-                    onChange={e => setTemplateName(e.target.value)}
-                  />
-                  {templateError && <div className="run-error">{templateError}</div>}
-                  <div className="session-start-actions">
-                    <button className="session-action-btn" onClick={() => setShowTemplateModal(false)}>Cancel</button>
-                    <button className="session-run-btn" onClick={createTemplateFromSession}>Save Template</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <TemplateModal
+          show={showTemplateModal}
+          templateName={templateName}
+          templateError={templateError}
+          setTemplateName={setTemplateName}
+          onClose={() => setShowTemplateModal(false)}
+          onSave={createTemplateFromSession}
+        />
       </section>
 
-      <section className="section">
-        <div className="section-header">
-          <h3>Manual Tool Execution <span className="badge">{steps.length}</span></h3>
-        </div>
-        <div className="session-workbench">
-          <aside className="session-workbench-tools">
-            {!isCompleted && (
-              <div className="session-tool-manage">
-                <button className="session-add-tool-btn" onClick={() => setShowAddTool(v => !v)}>+ Add tool</button>
-                {showAddTool && (
-                  <div className="session-add-tool-panel">
-                    <input
-                      className="search-input mono"
-                      placeholder="Search tool..."
-                      value={addToolSearch}
-                      onChange={e => setAddToolSearch(e.target.value)}
-                    />
-                    <div className="session-add-tool-list">
-                      {addCandidates.map(t => (
-                        <button key={t.name} className="session-add-tool-item" onClick={() => addToolToSession(t)}>
-                          <span className="mono">{t.name}</span>
-                          <span>{t.category}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {steps.map((step, idx) => {
-              const stepKey = `${session.session_id}:${idx}`
-              return (
-                <button
-                  key={stepKey}
-                  className={`session-workbench-tool session-workbench-tool--${stepState[stepKey] ?? 'idle'} ${selectedStepIndex === idx ? 'active' : ''}`}
-                  onClick={() => setSelectedStepIndex(idx)}
-                >
-                  <span className="session-workbench-tool-name mono">{step.tool}</span>
-                  {!isCompleted && (
-                    <button
-                      type="button"
-                      className="session-remove-tool"
-                      onClick={e => {
-                        e.stopPropagation()
-                        removeToolFromSession(idx)
-                      }}
-                      title="Remove tool"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  )}
-                </button>
-              )
-            })}
-          </aside>
-
-          <div className="session-workbench-center">
-            {!selectedStep || !selectedStepKey || !selectedTool ? (
-              <p className="empty-state">No tools in this session.</p>
-            ) : (
-              <>
-                <div className="session-target-override">
-                  <label className="mono">Target</label>
-                  <input
-                    className="search-input mono"
-                    value={targetValue}
-                    onChange={e => setTargetValue(e.target.value)}
-                    placeholder="Target to run this session against"
-                    disabled={isCompleted}
-                  />
-                </div>
-
-                <div className="session-step-row">
-                  <div className="session-step-head">
-                    <span className={`session-tool-chip mono session-tool-chip--${stepState[selectedStepKey] ?? 'idle'}`}>{selectedStep.tool}</span>
-                    <button
-                      className="session-run-btn"
-                      onClick={() => runStep(selectedStep, selectedStepIndex)}
-                      disabled={isCompleted || selectedRunning}
-                    >
-                      {selectedRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
-                      {isCompleted ? 'Completed' : (selectedRunning ? 'Running…' : `Run ${selectedStep.tool}`)}
-                    </button>
-                  </div>
-
-                  <div className="session-param-grid">
-                    {Object.keys(selectedTool.params).map(k => (
-                      <ParamField
-                        key={k}
-                        name={k}
-                        value={stepFieldValues[selectedStepKey]?.[k] ?? ''}
-                        onChange={v => setStepFieldValues(prev => ({
-                          ...prev,
-                          [selectedStepKey]: { ...(prev[selectedStepKey] ?? {}), [k]: v },
-                        }))}
-                        required
-                        disabled={isCompleted}
-                      />
-                    ))}
-
-                    {Object.keys(selectedTool.optional).length > 0 && (
-                      <button
-                        className="run-opt-btn"
-                        onClick={() => setShowOptionalByStep(prev => ({ ...prev, [selectedStepKey]: !prev[selectedStepKey] }))}
-                      >
-                        {showOptionalByStep[selectedStepKey] ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                        Optional parameters ({Object.keys(selectedTool.optional).length})
-                      </button>
-                    )}
-
-                    {showOptionalByStep[selectedStepKey] && Object.keys(selectedTool.optional).map(k => (
-                      <ParamField
-                        key={k}
-                        name={k}
-                        value={stepFieldValues[selectedStepKey]?.[k] ?? ''}
-                        onChange={v => setStepFieldValues(prev => ({
-                          ...prev,
-                          [selectedStepKey]: { ...(prev[selectedStepKey] ?? {}), [k]: v },
-                        }))}
-                        disabled={isCompleted}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="session-result-panel">
-                  <h4>Result</h4>
-                  {isCompleted && <p className="section-meta">Completed session: results are read-only.</p>}
-                  {selectedResult?.error && <div className="run-error">{selectedResult.error}</div>}
-                  {resultData ? (
-                    <>
-                      <div className="session-result-head">
-                        <div className="session-step-result mono">
-                          {resultData.success ? 'OK' : 'FAIL'} | exit {resultData.return_code} | {resultData.execution_time.toFixed(2)}s
-                        </div>
-                        {selectedStepKey && resultData && (
-                          <div className="session-result-actions">
-                            <button
-                              className="run-export-btn"
-                              onClick={() => {
-                                const entry: RunHistoryEntry = {
-                                  id: Date.now(),
-                                  tool: selectedStep.tool,
-                                  params: stepFieldValues[selectedStepKey] ?? {},
-                                  result: resultData,
-                                  ts: new Date(resultData.timestamp),
-                                  source: 'browser',
-                                }
-                                exportEntry(entry, 'txt')
-                              }}
-                              title="Export as .txt"
-                            >
-                              <Download size={11} /> TXT
-                            </button>
-                            <button
-                              className="run-export-btn"
-                              onClick={() => {
-                                const entry: RunHistoryEntry = {
-                                  id: Date.now(),
-                                  tool: selectedStep.tool,
-                                  params: stepFieldValues[selectedStepKey] ?? {},
-                                  result: resultData,
-                                  ts: new Date(resultData.timestamp),
-                                  source: 'browser',
-                                }
-                                exportEntry(entry, 'json')
-                              }}
-                              title="Export as .json"
-                            >
-                              <Download size={11} /> JSON
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <pre className="session-result-pre mono">{resultData.stdout || '(no stdout)'}</pre>
-                      {resultData.stderr && <pre className="session-result-pre mono">{resultData.stderr}</pre>}
-                    </>
-                  ) : (
-                    <p className="section-meta">No result yet for this tool.</p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
+      <SessionDetailWorkbench
+        isCompleted={isCompleted}
+        sessionId={session.session_id}
+        steps={steps}
+        selectedStep={selectedStep}
+        selectedStepIndex={selectedStepIndex}
+        setSelectedStepIndex={setSelectedStepIndex}
+        selectedStepKey={selectedStepKey}
+        selectedTool={selectedTool}
+        stepState={stepState}
+        runningStepKey={runningStepKey}
+        targetValue={targetValue}
+        setTargetValue={setTargetValue}
+        stepFieldValues={stepFieldValues}
+        setStepFieldValues={setStepFieldValues}
+        showOptionalByStep={showOptionalByStep}
+        setShowOptionalByStep={setShowOptionalByStep}
+        selectedResult={selectedResult}
+        onRunStep={runStep}
+        onRemoveTool={removeToolFromSession}
+        showAddTool={showAddTool}
+        setShowAddTool={setShowAddTool}
+        addToolSearch={addToolSearch}
+        setAddToolSearch={setAddToolSearch}
+        addCandidates={addCandidates}
+        onAddTool={addToolToSession}
+      />
     </div>
   )
 }
