@@ -1,5 +1,4 @@
 import type { AttackChainStep, SessionSummary, Tool } from '../../api'
-export { fmtTs } from '../../shared/utils'
 
 export function normalizeStepsFromSession(session: SessionSummary): AttackChainStep[] {
   if (Array.isArray(session.workflow_steps) && session.workflow_steps.length > 0) return session.workflow_steps

@@ -1,5 +1,4 @@
 import type { SessionSummary } from '../../api'
-export { fmtTs } from '../../shared/utils'
 
 export function sessionName(session: SessionSummary): string {
   const meta = (session.metadata ?? {}) as Record<string, unknown>

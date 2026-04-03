@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Bot, RefreshCw, Target, Activity, Clock } from 'lucide-react'
 import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../../api'
 import { buildInitialFieldValues, buildRunPayload } from '../../components/tool-run/payload'
+import { fmtTs } from '../../shared/utils'
 import { SessionDetailWorkbench } from './SessionDetailWorkbench'
 import { TemplateModal } from './TemplateModal'
 import {
-  fmtTs,
   normalizeStepsFromSession,
   resolveToolForStep,
   type PersistedStepResult,

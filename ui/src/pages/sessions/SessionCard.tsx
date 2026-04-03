@@ -1,6 +1,7 @@
 import { Activity, Clock, RefreshCw, Target } from 'lucide-react'
 import type { SessionSummary } from '../../api'
-import { fmtTs, sessionName } from './utils'
+import { fmtTs } from '../../shared/utils'
+import { sessionName } from './utils'
 
 export function SessionCard({
   session,
