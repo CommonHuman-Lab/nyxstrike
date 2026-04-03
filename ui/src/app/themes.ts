@@ -1,4 +1,4 @@
-export type ThemeId = 'dark' | 'unicorn' | 'minimal-light'
+export type ThemeId = 'dark' | 'candy' | 'minimal-light'
 
 export interface ThemeOption {
   id: ThemeId
@@ -10,7 +10,7 @@ export const THEME_STORAGE_KEY = 'hexstrike_theme'
 
 export const THEME_OPTIONS: ThemeOption[] = [
   { id: 'dark', label: 'Dark Ops', hint: 'Default tactical dark' },
-  { id: 'unicorn', label: 'Unicorn', hint: 'Candy neon fantasy' },
+  { id: 'candy', label: 'Candy Pop', hint: 'Playful colorful palette' },
   { id: 'minimal-light', label: 'White Minimalist', hint: 'Clean and bright' },
 ]
 
