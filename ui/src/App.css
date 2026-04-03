@@ -335,6 +335,28 @@
 
 .stat-sub { font-size: 11px; color: var(--text-dim); }
 
+.dashboard-signature-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: -2px;
+  margin-bottom: 6px;
+}
+
+.dashboard-signature {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent-alt) 11%, transparent));
+  color: color-mix(in srgb, var(--text-h) 90%, var(--accent));
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
 /* ── Section ─────────────────────────────────────────────────────────────── */
 .section {
   background: var(--bg-card);

@@ -37,6 +37,10 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
       <KpiSection health={health} tools={tools} runHistory={runHistory} />
       <ResourceSection health={health} history={history} />
       <ToolAvailabilitySection health={health} tools={tools} toolCategories={toolCategories} />
+
+      <div className="dashboard-signature-wrap">
+        <span className="dashboard-signature mono">Made by CommonHuman</span>
+      </div>
     </>
   )
 }
