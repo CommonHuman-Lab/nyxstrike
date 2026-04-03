@@ -163,22 +163,11 @@
   gap: 10px;
 }
 
-.session-open-hint {
-  font-size: 11px;
-  color: var(--blue);
-}
-
 .session-last-run {
   font-size: 10px;
   color: var(--text-dim);
   padding-top: 2px;
   border-top: 1px dashed var(--border);
-}
-
-.session-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .sessions-header-actions {
@@ -580,11 +569,6 @@
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-.session-handoff-note {
-  font-size: 11px;
-  color: var(--blue);
 }
 
 @media (max-width: 860px) {

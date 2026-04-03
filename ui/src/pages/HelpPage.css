@@ -5,20 +5,6 @@
   gap: 20px;
 }
 
-.help-steps {
-  list-style: decimal;
-  margin: 0;
-  padding: 16px 18px 16px 36px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  color: var(--text);
-  font-size: 13px;
-}
-
-.help-steps li { line-height: 1.5; }
-.help-steps strong { color: var(--text-h); }
-
 .help-body {
   font-size: 13px;
   color: var(--text);
@@ -151,16 +137,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.help-about-credit {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin: 0;
-}
-
-.help-about-credit strong {
-  color: var(--text-h);
 }
 
 .help-about-desc {

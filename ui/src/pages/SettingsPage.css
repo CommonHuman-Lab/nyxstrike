@@ -33,10 +33,6 @@
   font-size: 13px;
   color: var(--text-h);
 }
-.cache-stat-el {
-  display: inline-block;
-  margin-right: 8px;
-}
 
 .settings-field {
   display: flex;
@@ -195,24 +191,6 @@ select.settings-input {
 .btn-danger-outline:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.wl-path {
-  font-size: 11px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.badge-small {
-  background: var(--bg-card2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 10px;
-  color: var(--text-dim);
-  white-space: nowrap;
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
