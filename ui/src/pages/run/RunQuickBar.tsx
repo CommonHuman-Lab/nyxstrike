@@ -1,22 +1,16 @@
 import { Sparkles, Target, X } from 'lucide-react'
 
 interface RunQuickBarProps {
-  selectedToolName: string | null
   favorites: string[]
   onPickFavorite: (toolName: string) => void
-  onToggleFavoriteSelected: () => void
-  isSelectedFavorite: boolean
   recentTargets: string[]
   onPickTarget: (target: string) => void
   onClearRecentTargets: () => void
 }
 
 export function RunQuickBar({
-  selectedToolName,
   favorites,
   onPickFavorite,
-  onToggleFavoriteSelected,
-  isSelectedFavorite,
   recentTargets,
   onPickTarget,
   onClearRecentTargets,
@@ -28,11 +22,6 @@ export function RunQuickBar({
           <Sparkles size={12} /> Favorites
         </div>
         <div className="run-quickbar-items">
-          {selectedToolName && (
-            <button className="run-quick-chip" onClick={onToggleFavoriteSelected}>
-              {isSelectedFavorite ? 'Unstar selected' : 'Star selected'}
-            </button>
-          )}
           {favorites.map(name => (
             <button key={name} className="run-quick-chip" onClick={() => onPickFavorite(name)}>
               {name}

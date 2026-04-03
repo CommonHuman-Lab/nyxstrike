@@ -186,6 +186,31 @@
   flex-wrap: wrap;
 }
 
+.run-favorite-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.run-favorite-toggle:hover {
+  border-color: var(--amber);
+  color: var(--text-h);
+}
+
+.run-favorite-toggle.active {
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--border));
+  background: color-mix(in srgb, var(--amber) 14%, transparent);
+  color: var(--amber);
+}
+
 .run-form-name {
   font-size: 18px;
   font-weight: 600;

@@ -185,16 +185,15 @@ export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory
         setShowOptional={setShowOptional}
         running={running}
         runError={runError}
+        isFavorite={selected ? favorites.includes(selected.name) : false}
+        onToggleFavorite={toggleFavoriteSelected}
         onRunTool={runTool}
         viewEntry={viewEntry}
       />
 
       <RunQuickBar
-        selectedToolName={selected?.name ?? null}
         favorites={favorites}
         onPickFavorite={selectToolByName}
-        onToggleFavoriteSelected={toggleFavoriteSelected}
-        isSelectedFavorite={selected ? favorites.includes(selected.name) : false}
         recentTargets={recentTargets}
         onPickTarget={applyTarget}
         onClearRecentTargets={() => setRecentTargets([])}

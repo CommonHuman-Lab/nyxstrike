@@ -1,6 +1,6 @@
 import {
   CheckCircle, XCircle, RefreshCw, Play, AlertCircle,
-  ChevronUp, ChevronDown, Download,
+  ChevronUp, ChevronDown, Download, Star,
 } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Tool } from '../../api'
@@ -17,6 +17,8 @@ interface RunPanelProps {
   setShowOptional: Dispatch<SetStateAction<boolean>>
   running: boolean
   runError: string | null
+  isFavorite: boolean
+  onToggleFavorite: () => void
   onRunTool: () => Promise<void>
   viewEntry: RunHistoryEntry | null
 }
@@ -30,6 +32,8 @@ export function RunPanel({
   setShowOptional,
   running,
   runError,
+  isFavorite,
+  onToggleFavorite,
   onRunTool,
   viewEntry,
 }: RunPanelProps) {
@@ -54,6 +58,14 @@ export function RunPanel({
             {toolsStatus[selected.name] === false && (
               <span className="modal-status modal-status--missing"><XCircle size={11} /> not installed</span>
             )}
+            <button
+              className={`run-favorite-toggle${isFavorite ? ' active' : ''}`}
+              onClick={onToggleFavorite}
+              title={isFavorite ? 'Unstar this tool' : 'Star this tool'}
+            >
+              <Star size={12} />
+              {isFavorite ? 'Starred' : 'Star'}
+            </button>
           </div>
           <p className="run-form-desc">{selected.desc}</p>
 
