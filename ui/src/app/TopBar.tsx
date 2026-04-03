@@ -63,6 +63,12 @@ export function TopBar({
     return () => window.removeEventListener('mousedown', onPointerDown)
   }, [themeMenuOpen])
 
+  useEffect(() => {
+    if (!themeMenuOpen) {
+      document.documentElement.setAttribute('data-theme', themeId)
+    }
+  }, [themeMenuOpen, themeId])
+
   return (
     <header className="topbar">
       <div className="topbar-brand">
@@ -153,11 +159,15 @@ export function TopBar({
             <Palette size={14} />
           </button>
           {themeMenuOpen && (
-            <div className="theme-menu-popover">
+            <div
+              className="theme-menu-popover"
+              onMouseLeave={() => document.documentElement.setAttribute('data-theme', themeId)}
+            >
               {THEME_OPTIONS.map(theme => (
                 <button
                   key={theme.id}
                   className={`theme-menu-item${themeId === theme.id ? ' active' : ''}`}
+                  onMouseEnter={() => document.documentElement.setAttribute('data-theme', theme.id)}
                   onClick={() => { setThemeId(theme.id); setThemeMenuOpen(false) }}
                 >
                   <span className="theme-menu-label">{theme.label}</span>
