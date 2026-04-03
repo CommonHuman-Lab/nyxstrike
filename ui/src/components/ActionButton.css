@@ -9,6 +9,7 @@
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.15s ease, background 0.15s ease;
 }
@@ -35,19 +36,20 @@
 }
 
 .action-button--success {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--green) 80%, #a6ffd5), color-mix(in srgb, var(--green) 92%, #1f6e50));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--green) 70%, #2f7a5b), color-mix(in srgb, var(--green) 92%, #184d3a));
+  border-color: color-mix(in srgb, var(--green) 45%, #0f2f23);
   color: #fff;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--green) 28%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--green) 16%, transparent);
 }
 
 .action-button--warning {
   background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 84%, #ffe2a6), color-mix(in srgb, var(--amber) 94%, #7a4d0f));
   color: #fff;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--amber) 30%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--amber) 16%, transparent);
 }
 
 .action-button--danger {
   background: linear-gradient(180deg, color-mix(in srgb, var(--red) 82%, #ff9e9e), color-mix(in srgb, var(--red) 92%, #8e1f1f));
   color: #fff;
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--red) 28%, transparent);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--red) 16%, transparent);
 }
