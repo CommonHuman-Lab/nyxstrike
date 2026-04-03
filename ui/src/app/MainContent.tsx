@@ -29,6 +29,8 @@ interface MainContentProps {
   setRunHistory: Dispatch<SetStateAction<RunHistoryEntry[]>>
   fetchServerRunHistory: () => Promise<void>
   clearServerRunHistory: () => Promise<void>
+  commandToolRequest?: { toolName: string; requestId: number } | null
+  onCommandToolHandled?: () => void
   openSessionDetail: (sessionId: string) => void
   activeSessionId: string | null
   setPage: (page: Page) => void
@@ -55,6 +57,8 @@ export function MainContent({
   setRunHistory,
   fetchServerRunHistory,
   clearServerRunHistory,
+  commandToolRequest,
+  onCommandToolHandled,
   openSessionDetail,
   activeSessionId,
   setPage,
@@ -80,7 +84,8 @@ export function MainContent({
           toolsStatus={toolsStatusWithParents}
           runHistory={runHistory}
           setRunHistory={setRunHistory}
-          setPage={setPage}
+          commandToolRequest={commandToolRequest}
+          onCommandToolHandled={onCommandToolHandled}
           onRefresh={fetchServerRunHistory}
           onClearHistory={clearServerRunHistory}
         />

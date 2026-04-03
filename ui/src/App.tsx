@@ -18,6 +18,7 @@ import { getToolsStatusWithParents } from './app/tools'
 import { TopBar } from './app/TopBar'
 import { THEME_STORAGE_KEY, isThemeId, type ThemeId } from './app/themes'
 import { MainContent } from './app/MainContent'
+import { CommandPalette } from './components/CommandPalette'
 import './App.css'
 
 const POLL_MS = 10_000
@@ -80,6 +81,8 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingError, setStreamingError] = useState<string | null>(null)
   const [toolCategories, setToolCategories] = useState<Record<string, string[]>>({});
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [commandToolRequest, setCommandToolRequest] = useState<{ toolName: string; requestId: number } | null>(null)
   const [themeId, setThemeId] = useState<ThemeId>(() => {
     try {
       const stored = localStorage.getItem(THEME_STORAGE_KEY)
@@ -94,6 +97,22 @@ export default function App() {
       localStorage.setItem(THEME_STORAGE_KEY, themeId)
     } catch { /* ignored */ }
   }, [themeId])
+
+  useEffect(() => {
+    function onGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onGlobalKeyDown)
+    return () => window.removeEventListener('keydown', onGlobalKeyDown)
+  }, [])
+
+  function handleCommandSelectTool(tool: Tool) {
+    setPage('run')
+    setCommandToolRequest({ toolName: tool.name, requestId: Date.now() })
+  }
 
   const addBrowserRunEntry = useCallback((tool: string, params: Record<string, unknown>, result: ToolExecResponse) => {
     setRunHistory(prev => {
@@ -309,6 +328,13 @@ export default function App() {
   return (
     <ToastProvider>
       <div className={demo ? 'layout layout--demo' : 'layout'}>
+        <CommandPalette
+          open={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+          setPage={setPage}
+          tools={tools}
+          onSelectTool={handleCommandSelectTool}
+        />
         {demo && (
           <div className="demo-banner">
             <FlaskConical size={13} />
@@ -343,6 +369,8 @@ export default function App() {
           setRunHistory={setRunHistory}
           fetchServerRunHistory={fetchServerRunHistory}
           clearServerRunHistory={clearServerRunHistory}
+          commandToolRequest={commandToolRequest}
+          onCommandToolHandled={() => setCommandToolRequest(null)}
           openSessionDetail={openSessionDetail}
           activeSessionId={activeSessionId}
           setPage={setPage}

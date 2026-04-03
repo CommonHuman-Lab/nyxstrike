@@ -1,12 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { api, type Tool } from '../../api'
-import type { Page } from '../../app/routing'
 import type { RunHistoryEntry } from '../../shared/types'
 import { RunResultModal } from '../../components/RunResultModal'
 import { usePersistentState } from '../../hooks/usePersistentState'
 import { buildRunPayload } from '../../components/tool-run/payload'
 import { filterToolsByOptions, getToolCategories } from '../../shared/toolUtils'
-import { CommandPalette } from '../../components/CommandPalette'
 import { buildRunDiff } from './compare'
 import { RunToolPicker } from './RunToolPicker'
 import { RunPanel } from './RunPanel'
@@ -23,12 +21,22 @@ interface RunPageProps {
   toolsStatus: Record<string, boolean>
   runHistory: RunHistoryEntry[]
   setRunHistory: React.Dispatch<React.SetStateAction<RunHistoryEntry[]>>
-  setPage: (page: Page) => void
+  commandToolRequest?: { toolName: string; requestId: number } | null
+  onCommandToolHandled?: () => void
   onRefresh?: () => void
   onClearHistory?: () => Promise<void>
 }
 
-export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory: setHistory, setPage, onRefresh, onClearHistory }: RunPageProps) {
+export function RunPage({
+  tools,
+  toolsStatus,
+  runHistory: history,
+  setRunHistory: setHistory,
+  commandToolRequest,
+  onCommandToolHandled,
+  onRefresh,
+  onClearHistory,
+}: RunPageProps) {
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
   const [selected, setSelected] = useState<Tool | null>(null)
@@ -39,7 +47,6 @@ export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory
   const [modalEntry, setModalEntry] = useState<RunHistoryEntry | null>(null)
   const [histSearch, setHistSearch] = useState('')
   const [runError, setRunError] = useState<string | null>(null)
-  const [paletteOpen, setPaletteOpen] = useState(false)
   const [favorites, setFavorites] = usePersistentState<string[]>(RUN_FAVORITES_KEY, [])
   const [recentTargets, setRecentTargets] = usePersistentState<string[]>(RUN_RECENT_TARGETS_KEY, [])
   const runIdRef = useRef(0)
@@ -112,16 +119,15 @@ export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory
     }
   }
 
-  React.useEffect(() => {
-    function onGlobalKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        setPaletteOpen(true)
-      }
+  useEffect(() => {
+    if (!commandToolRequest) return
+    const tool = tools.find(t => t.name === commandToolRequest.toolName)
+    if (tool) {
+      selectTool(tool)
+      setSearch(tool.name)
     }
-    window.addEventListener('keydown', onGlobalKeyDown)
-    return () => window.removeEventListener('keydown', onGlobalKeyDown)
-  }, [])
+    onCommandToolHandled?.()
+  }, [commandToolRequest, tools, onCommandToolHandled])
 
   const compareText = modalEntry
     ? (() => {
@@ -138,13 +144,6 @@ export function RunPage({ tools, toolsStatus, runHistory: history, setRunHistory
 
   return (
     <div className="run-page">
-      <CommandPalette
-        open={paletteOpen}
-        onClose={() => setPaletteOpen(false)}
-        setPage={setPage}
-        tools={tools}
-        onSelectTool={selectTool}
-      />
       {modalEntry && (
         <RunResultModal
           entry={modalEntry}
