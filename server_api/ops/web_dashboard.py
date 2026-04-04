@@ -2,7 +2,6 @@ import time
 import logging
 import re
 import threading
-import os
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, Response, stream_with_context
 import server_core.config_core as config_core
@@ -58,56 +57,13 @@ def _fetch_master_version():
     return _parse_remote_config_version(config_text)
 
 
-def _update_cache_file_path() -> str:
-    return os.path.join(config_core.default_data_dir(), "version_update_cache.json")
-
-
-def _load_persisted_update_result(local_version: str):
-    cache_path = _update_cache_file_path()
-    if not os.path.exists(cache_path):
-        return None
-    try:
-        with open(cache_path, "r") as f:
-            payload = json.load(f)
-        result = payload.get("result")
-        cached_for_version = payload.get("for_version")
-        if isinstance(result, dict) and cached_for_version == local_version:
-            return result
-    except Exception as e:
-        logger.debug("Could not read persisted update cache: %s", e)
-    return None
-
-
-def _persist_update_result(local_version: str, result):
-    cache_path = _update_cache_file_path()
-    try:
-        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-        with open(cache_path, "w") as f:
-            json.dump({"for_version": local_version, "result": result}, f)
-    except Exception as e:
-        logger.debug("Could not write persisted update cache: %s", e)
-
-
-def _get_update_status(local_version: str):
-    with _update_cache_lock:
-        cached_result = _update_cache.get("result")
-        cached_for_version = _update_cache.get("for_version")
-        if cached_result is not None and cached_for_version == local_version:
-            return cached_result
-
-    persisted = _load_persisted_update_result(local_version)
-    if persisted is not None:
-        with _update_cache_lock:
-            _update_cache["for_version"] = local_version
-            _update_cache["result"] = persisted
-        return persisted
-
+def _run_update_check(local_version: str):
     result = {
         "current_version": local_version,
         "latest_version": local_version,
         "update_available": False,
         "checked_at": datetime.now(timezone.utc).isoformat() + "Z",
-        "source": "github-master",
+        "source": "github-master-startup",
         "error": None,
     }
 
@@ -126,9 +82,24 @@ def _get_update_status(local_version: str):
         _update_cache["for_version"] = local_version
         _update_cache["result"] = result
 
-    _persist_update_result(local_version, result)
-
     return result
+
+
+def _get_update_status(local_version: str):
+    with _update_cache_lock:
+        cached_result = _update_cache.get("result")
+        cached_for_version = _update_cache.get("for_version")
+        if cached_result is not None and cached_for_version == local_version:
+            return cached_result
+
+    return {
+        "current_version": local_version,
+        "latest_version": local_version,
+        "update_available": False,
+        "checked_at": None,
+        "source": "startup-not-run",
+        "error": "Version check has not run yet",
+    }
 
 
 def initialize_update_status_check():
@@ -139,7 +110,7 @@ def initialize_update_status_check():
         _startup_update_check_done = True
 
     local_version = config_core.get("VERSION", "unknown")
-    status = _get_update_status(local_version)
+    status = _run_update_check(local_version)
     if status.get("error"):
         logger.warning("Version update check failed at startup: %s", status.get("error"))
         return
