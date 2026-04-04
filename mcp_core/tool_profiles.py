@@ -226,10 +226,11 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_exploit_db_tool(mcp, client, logger), #aka. exploit-db
     ],
 
-    #Tools for URL discovery and reconnaissance (e.g., Gau, Waybackurls).
+    #Tools for URL discovery and reconnaissance (e.g., Gau, Waybackurls, Waymore).
     "url_recon": [
         lambda mcp, client, logger: register_gau_tool(mcp, client, logger),
         lambda mcp, client, logger: register_waybackurls_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_waymore_tool(mcp, client, logger),
     ],
 
     #Tools for parameter discovery and fuzzing (e.g., Arju0n, ParamSpider, x8).

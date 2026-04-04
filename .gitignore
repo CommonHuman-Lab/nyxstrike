@@ -6,3 +6,6 @@ node_modules/
 
 # Web UI build output
 ui/node_modules/
+
+# Claude worktrees
+.claude/worktrees/

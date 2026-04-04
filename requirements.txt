@@ -38,6 +38,7 @@ bbot>=2.8.3                  # Bot framework for OSINT
 httpx>=0.28.1                # Fast HTTP client for OSINT
 uro>=1.0.2                   # Unified Reconnaissance OSINT tool
 dirsearch>=0.4.3             # Web path scanner for OSINT
+waymore # Find URLs and responses from Wayback Machine and other providers
 chardet>=3.0.2,<6.0.0        # Pin chardet; dirsearch pulls 7.x which breaks requests
 volatility3>=2.27.0          # Memory forensics framework 
 PyMySQL>=1.1.2,<2.0.0        # MySQL database connector (conditionally used for database interactions)

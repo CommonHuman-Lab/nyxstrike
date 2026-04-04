@@ -191,6 +191,7 @@ def register_blueprints(app):
   # URL Recon
   app.register_blueprint(api_url_recon_gau_bp)
   app.register_blueprint(api_url_recon_waybackurls_bp)
+  app.register_blueprint(api_web_probe_waymore_bp)
 
   # URL Filter
   app.register_blueprint(api_url_filter_uro_bp)
