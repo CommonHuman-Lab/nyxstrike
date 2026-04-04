@@ -50,7 +50,7 @@ class IntelligentDecisionEngine:
             },
             TargetType.NETWORK_HOST.value: {
                 "nmap": 0.95,
-                "nmap-advanced": 0.97,  # Enhanced Nmap with NSE scripts
+                "nmap_advanced": 0.97,  # Enhanced Nmap with NSE scripts
                 "masscan": 0.92,  # Enhanced with intelligent rate limiting
                 "rustscan": 0.9,  # Ultra-fast scanning
                 "autorecon": 0.95,  # Comprehensive automated recon
@@ -162,7 +162,7 @@ class IntelligentDecisionEngine:
             "network_discovery": [
                 {"tool": "arp-scan", "priority": 1, "params": {"local_network": True}},
                 {"tool": "rustscan", "priority": 2, "params": {"ulimit": 5000, "scripts": True}},
-                {"tool": "nmap-advanced", "priority": 3, "params": {"scan_type": "-sS", "os_detection": True, "version_detection": True}},
+                {"tool": "nmap_advanced", "priority": 3, "params": {"scan_type": "-sS", "os_detection": True, "version_detection": True}},
                 {"tool": "masscan", "priority": 4, "params": {"rate": 1000, "ports": "1-65535", "banners": True}},
                 {"tool": "enum4linux-ng", "priority": 5, "params": {"shares": True, "users": True, "groups": True}},
                 {"tool": "nbtscan", "priority": 6, "params": {"verbose": True}},
@@ -179,7 +179,7 @@ class IntelligentDecisionEngine:
             "comprehensive_network_pentest": [
                 {"tool": "autorecon", "priority": 1, "params": {"port_scans": "top-1000-ports", "service_scans": "default"}},
                 {"tool": "rustscan", "priority": 2, "params": {"ulimit": 5000, "scripts": True}},
-                {"tool": "nmap-advanced", "priority": 3, "params": {"aggressive": True, "nse_scripts": "vuln,exploit"}},
+                {"tool": "nmap_advanced", "priority": 3, "params": {"aggressive": True, "nse_scripts": "vuln,exploit"}},
                 {"tool": "enum4linux-ng", "priority": 4, "params": {"shares": True, "users": True, "groups": True, "policy": True}},
                 {"tool": "responder", "priority": 5, "params": {"wpad": True, "duration": 180}}
             ],
@@ -488,7 +488,7 @@ class IntelligentDecisionEngine:
             optimized_params = self._optimize_rustscan_params(profile, context)
         elif tool == "masscan":
             optimized_params = self._optimize_masscan_params(profile, context)
-        elif tool == "nmap-advanced":
+        elif tool == "nmap_advanced":
             optimized_params = self._optimize_nmap_advanced_params(profile, context)
         elif tool == "enum4linux-ng":
             optimized_params = self._optimize_enum4linux_ng_params(profile, context)
@@ -711,9 +711,9 @@ class IntelligentDecisionEngine:
 
         # Add NSE scripts based on target type
         if profile.target_type == TargetType.WEB_APPLICATION:
-            params["nse_scripts"] = "http-*,ssl-*"
+            params["nse_scripts"] = "ssl-cert,http-title,http-headers"
         elif profile.target_type == TargetType.NETWORK_HOST:
-            params["nse_scripts"] = "default,discovery,safe"
+            params["nse_scripts"] = "default"
 
         return params
 

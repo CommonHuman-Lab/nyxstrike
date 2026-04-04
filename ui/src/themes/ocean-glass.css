@@ -1,0 +1,57 @@
+:root[data-theme='ocean-glass'] {
+  --bg: #071724;
+  --bg-card: #0f2435;
+  --bg-card2: #163147;
+  --border: #2d4c63;
+
+  --text: #c6d9e8;
+  --text-h: #f4fbff;
+  --text-dim: #7f9cb2;
+
+  --green: #2ec4b6;
+  --green-dim: rgba(46, 196, 182, 0.16);
+
+  --red: #ff6b6b;
+  --red-dim: rgba(255, 107, 107, 0.16);
+
+  --amber: #f4b860;
+  --amber-dim: rgba(244, 184, 96, 0.16);
+
+  --blue: #4aa3ff;
+  --blue-dim: rgba(74, 163, 255, 0.16);
+
+  --purple: #8c7dff;
+  --purple-dim: rgba(140, 125, 255, 0.16);
+
+  --cyan: #59d6ff;
+  --cyan-dim: rgba(89, 214, 255, 0.16);
+
+  --pink: #ff7ca8;
+  --pink-dim: rgba(255, 124, 168, 0.16);
+
+  --orange: #ff9f68;
+  --orange-dim: rgba(255, 159, 104, 0.16);
+
+  --lime: #b4d455;
+  --lime-dim: rgba(180, 212, 85, 0.16);
+
+  --teal: #37c8c5;
+  --teal-dim: rgba(55, 200, 197, 0.16);
+
+  --indigo: #7e95ff;
+  --indigo-dim: rgba(126, 149, 255, 0.16);
+
+  --gray: #a8bfd1;
+  --gray-dim: rgba(168, 191, 209, 0.14);
+
+  --white-dim: rgba(244, 251, 255, 0.06);
+
+  --accent: #59d6ff;
+  --accent-alt: #2ec4b6;
+  --accent-warm: #f4b860;
+
+  --glow-green: 0 0 12px rgba(46, 196, 182, 0.5);
+  --glow-blue: 0 0 12px rgba(74, 163, 255, 0.5);
+  --glow-red: 0 0 12px rgba(255, 107, 107, 0.5);
+  --glow-cyan: 0 0 12px rgba(89, 214, 255, 0.5);
+}

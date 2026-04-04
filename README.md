@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/fox_logo.png" alt="HexStrike" width="220"/>
+<img src="assets/hex_logo.png" alt="HexStrike" width="220"/>
 
 # HexStrike AI - Community Edition
 ### AI-Powered MCP Cybersecurity Automation Platform
@@ -15,7 +15,7 @@
 [📡 Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
 
 <p align="center">
-  <a href="https://discord.gg/sZZVmaJACd">
+  <a href="https://discord.gg/aC8Q2xJFgp">
     <img src="https://img.shields.io/badge/Discord-Join-7289DA?logo=discord&logoColor=white&style=for-the-badge" alt="Join Discord Community" />
   </a>
 </p>
@@ -24,14 +24,14 @@
 
 ## 🚀 Differences from HexStrike V6
 
-- Many new tools, workflows, skills and end-to-end agent workflows added!
-- **Web Dashboard**: Monitor health, tools, live logs, run tools, export artifacts and much more without touching the terminal.
-- **Compact Mode**: Great for running with smaller, local LLMs.
-- **Profile Mode**: Specify one or more profiles to load only the relevant ones for your workflow.
-- Refactored Codebase: Improved clarity, maintainability, and performance.
-- Updated Dependencies: All packages upgraded for security and compatibility.
-- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references.
-- AI Integration: Upgraded MCP compatibility and agent orchestration (FastMCP v3).
+- **Bigger Arsenal + Better Agents**: Expanded tool coverage, workflow skills, and specialist end-to-end agent systems.
+- **Dashboard**: Run tools, monitor health, stream logs, and export reports from one UI.
+- **Global Command Palette (`Ctrl/Cmd+K`)**: Jump pages, trigger tools, and move faster with keyboard-first control.
+- **Personalized Run Workflow**: Favorite tools, recent targets, and quick compare with previous runs.
+- **Persistent Run History**: Server-side run history survives browser refresh/reset and clears safely with confirmation.
+- **Theme System Built In**: One-click theme switcher with hover preview (Dark, Candy, Unicorn, Minimal, and more).
+- **Performance Modes**: `--compact` for lightweight/local LLM usage and `--profile` for targeted tool loading.
+- **Core Improvements**: Refactored architecture, updated dependencies, smarter parameter handling, and upgraded MCP orchestration (FastMCP v3).
 
 ### Details
 
@@ -173,10 +173,10 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "hexstrike-ai": {
-      "command": "/path/to/hexstrike-ai/hexstrike-env/bin/python3",
+    "hexstrike": {
+      "command": "/path/to/hexstrike/hexstrike-env/bin/python3",
       "args": [
-        "/path/to/hexstrike-ai/hexstrike_mcp.py",
+        "/path/to/hexstrike/hexstrike_mcp.py",
         "--server",
         "http://localhost:8888",
         "--profile",
@@ -201,9 +201,9 @@ Configure VS Code settings in `.vscode/settings.json`:
   "servers": {
     "hexstrike": {
       "type": "stdio",
-      "command": "/path/to/hexstrike-ai/hexstrike-env/bin/python3",
+      "command": "/path/to/hexstrike/hexstrike-env/bin/python3",
       "args": [
-        "/path/to/hexstrike-ai/hexstrike_mcp.py",
+        "/path/to/hexstrike/hexstrike_mcp.py",
         "--server",
         "http://localhost:8888",
         "--profile",
@@ -225,14 +225,15 @@ Configure OpenCode settings in `~/.config/opencode/opencode.json`:
 {
   "$schema": "https://opencode.ai/config.json",
   "mcp": {
-    "hexstrike-ai": {
+    "hexstrike": {
       "type": "local",
-      "command": ["/path/to/hexstrike-ai/hexstrike_env/bin/python3",
-        "/path/to/hexstrike-ai/hexstrike_mcp.py",
+      "command": [
+        "/path/to/hexstrike/hexstrike-env/bin/python3",
+        "/path/to/hexstrike/hexstrike_mcp.py",
         "--server",
-        "http://localhost:8888",
+        "http://127.0.0.1:8888",
         "--profile",
-        "full"
+        "default"
       ],
       "enabled": true
     }

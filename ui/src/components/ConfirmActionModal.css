@@ -1,0 +1,41 @@
+.confirm-action-modal {
+  max-width: 520px;
+  border-color: color-mix(in srgb, var(--red) 28%, #252836);
+  background:
+    radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--red) 18%, transparent), transparent 42%),
+    linear-gradient(180deg, #151926 0%, #12151f 100%);
+}
+
+.confirm-action-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
+}
+
+.confirm-action-impact {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.confirm-action-impact-item {
+  border: 1px solid color-mix(in srgb, var(--red) 30%, var(--border));
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+  color: color-mix(in srgb, var(--red) 70%, var(--text));
+  border-radius: 8px;
+  padding: 10px 11px;
+  font-size: 13px;
+}
+
+.confirm-action-buttons {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

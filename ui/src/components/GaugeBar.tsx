@@ -1,4 +1,4 @@
-import { fmt } from '../utils'
+import { fmt } from '../shared/utils'
 
 export function GaugeBar({ label, value, max = 100, unit = '%', color }: {
   label: string

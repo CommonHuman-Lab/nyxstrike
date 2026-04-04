@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import logging
 from datetime import datetime
 
-from server_core.singletons import enhanced_process_manager
+from server_core.singletons import enhanced_process_manager, cache
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,9 @@ api_process_clear_cache_bp = Blueprint("api_process_clear_cache", __name__)
 def clear_process_cache():
     """Clear the advanced cache"""
     try:
+        # Clear both process-level cache and global tool cache
         enhanced_process_manager.cache.clear()
+        cache.clear()
 
         logger.info("🧹 Process cache cleared")
         return jsonify({

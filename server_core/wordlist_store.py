@@ -30,6 +30,18 @@ class WordlistStore:
             with open(self._wordlists_file, "w", encoding="utf-8") as f:
                 json.dump({"WORD_LISTS": {}}, f, indent=2)
 
+    def load_user_wordlists(self) -> dict:
+        """Load only user-persisted wordlists from wordlists.json."""
+        if not os.path.exists(self._wordlists_file):
+            return {}
+        try:
+            with open(self._wordlists_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data.get("WORD_LISTS", {})
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.error(f"💾 Failed to load user wordlists: {exc}")
+            return {}
+
     def delete(self, wordlist_id: str) -> bool:
         """Delete a wordlist entry by its ID."""
         if not os.path.exists(self._wordlists_file):

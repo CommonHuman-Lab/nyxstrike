@@ -4,6 +4,7 @@ from datetime import datetime
 
 from server_core.workflows.ctf.CTFChallenge import CTFChallenge
 from server_core.singletons import ctf_manager
+from server_core.session_flow import create_session, extract_workflow_steps
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +38,25 @@ def create_ctf_challenge_workflow():
 
         # Generate workflow
         workflow = ctf_manager.create_ctf_challenge_workflow(challenge)
+        persisted = create_session(
+            target=target or challenge_name,
+            steps=extract_workflow_steps(workflow, target or challenge_name),
+            source="mcp_ctf",
+            objective="ctf",
+            metadata={
+                "origin": "api/ctf/create-challenge-workflow",
+                "challenge": challenge_name,
+                "category": category,
+                "difficulty": difficulty,
+            },
+        )
 
         logger.info(f"🎯 CTF workflow created for {challenge_name} | Category: {category} | Difficulty: {difficulty}")
         return jsonify({
             "success": True,
             "workflow": workflow,
             "challenge": vars(challenge),
+            "session_id": persisted.get("session_id"),
             "timestamp": datetime.now().isoformat()
         })
 

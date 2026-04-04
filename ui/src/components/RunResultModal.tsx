@@ -1,13 +1,14 @@
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { CheckCircle, XCircle, Play, Download } from 'lucide-react'
-import { type RunHistoryEntry } from '../types'
-import { exportEntry } from '../utils'
+import { CheckCircle, XCircle, Play, Download, GitCompare } from 'lucide-react'
+import { type RunHistoryEntry } from '../shared/types'
+import { exportEntry } from '../shared/utils'
 
-export function RunResultModal({ entry, onClose, onRerun }: {
+export function RunResultModal({ entry, onClose, onRerun, compareText }: {
   entry: RunHistoryEntry
   onClose: () => void
   onRerun?: () => void
+  compareText?: string
 }) {
   const r = entry.result
 
@@ -45,6 +46,15 @@ export function RunResultModal({ entry, onClose, onRerun }: {
                 <Play size={11} /> Re-run
               </button>
             )}
+            {compareText && (
+              <button
+                className="run-export-btn"
+                onClick={() => navigator.clipboard?.writeText(compareText).catch(() => {})}
+                title="Copy comparison with previous run"
+              >
+                <GitCompare size={11} /> Compare
+              </button>
+            )}
             <button className="run-export-btn" onClick={() => exportEntry(entry, 'txt')} title="Export as .txt">
               <Download size={11} /> TXT
             </button>
@@ -65,6 +75,11 @@ export function RunResultModal({ entry, onClose, onRerun }: {
         <pre className="run-result-modal-output mono">
           {r.stdout || r.stderr || '(no output)'}
         </pre>
+        {compareText && (
+          <pre className="run-result-modal-compare mono">
+            {compareText}
+          </pre>
+        )}
       </div>
     </div>,
     document.body

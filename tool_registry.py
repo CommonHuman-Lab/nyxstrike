@@ -205,6 +205,15 @@ TOOLS: Dict[str, dict] = {
         "optional": {"probe": True, "tech_detect": False, "status_code": False, "title": False, "additional_args": ""},
         "effectiveness": 0.85,
     },
+    "testssl": {
+        "desc": "TLS and SSL analysis with testssl.sh",
+        "endpoint": "/api/tools/testssl",
+        "method": "POST",
+        "category": "web_recon",
+        "params": {},
+        "optional": {"target": "", "protocols": True, "server_defaults": True, "quiet": True, "additional_args": ""},
+        "effectiveness": 0.89,
+    },
     "dirsearch": {
         "desc": "Web path scanner",
         "endpoint": "/api/tools/dirsearch",

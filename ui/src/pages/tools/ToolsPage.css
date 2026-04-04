@@ -1,0 +1,69 @@
+.tools-page .registry-grid {
+  align-items: stretch;
+}
+
+.tools-page .registry-card {
+  min-width: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.tools-page .registry-card-top {
+  align-items: flex-start;
+}
+
+.tools-page .registry-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tools-page .registry-meta {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tools-page .registry-cat {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tools-page .registry-footer {
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tools-page .registry-endpoint {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.tools-page .registry-desc {
+  flex: 1 1 auto;
+}
+
+.tools-page .registry-footer {
+  margin-top: auto;
+  align-items: center;
+}
+
+.tools-page .registry-eff {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .tools-page .registry-grid--wide {
+    grid-template-columns: 1fr;
+  }
+}

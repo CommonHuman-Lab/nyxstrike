@@ -1,0 +1,57 @@
+:root[data-theme='solarized-terminal'] {
+  --bg: #002b36;
+  --bg-card: #073642;
+  --bg-card2: #0b4553;
+  --border: #1f5968;
+
+  --text: #93a1a1;
+  --text-h: #eee8d5;
+  --text-dim: #6f8a91;
+
+  --green: #859900;
+  --green-dim: rgba(133, 153, 0, 0.16);
+
+  --red: #dc322f;
+  --red-dim: rgba(220, 50, 47, 0.16);
+
+  --amber: #b58900;
+  --amber-dim: rgba(181, 137, 0, 0.16);
+
+  --blue: #268bd2;
+  --blue-dim: rgba(38, 139, 210, 0.16);
+
+  --purple: #6c71c4;
+  --purple-dim: rgba(108, 113, 196, 0.16);
+
+  --cyan: #2aa198;
+  --cyan-dim: rgba(42, 161, 152, 0.16);
+
+  --pink: #d33682;
+  --pink-dim: rgba(211, 54, 130, 0.16);
+
+  --orange: #cb4b16;
+  --orange-dim: rgba(203, 75, 22, 0.16);
+
+  --lime: #99aa3f;
+  --lime-dim: rgba(153, 170, 63, 0.16);
+
+  --teal: #3aa6a0;
+  --teal-dim: rgba(58, 166, 160, 0.16);
+
+  --indigo: #7482d1;
+  --indigo-dim: rgba(116, 130, 209, 0.16);
+
+  --gray: #93a1a1;
+  --gray-dim: rgba(147, 161, 161, 0.14);
+
+  --white-dim: rgba(238, 232, 213, 0.06);
+
+  --accent: #268bd2;
+  --accent-alt: #2aa198;
+  --accent-warm: #b58900;
+
+  --glow-green: 0 0 10px rgba(133, 153, 0, 0.45);
+  --glow-blue: 0 0 10px rgba(38, 139, 210, 0.45);
+  --glow-red: 0 0 10px rgba(220, 50, 47, 0.45);
+  --glow-cyan: 0 0 10px rgba(42, 161, 152, 0.45);
+}

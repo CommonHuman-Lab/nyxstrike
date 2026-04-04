@@ -153,6 +153,134 @@
 }
 .icon-btn:hover { background: var(--bg-card2); color: var(--text-h); }
 
+.theme-menu {
+  position: relative;
+}
+
+.palette-icon-k {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.palette-hint-floating {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid color-mix(in srgb, var(--blue) 40%, var(--border));
+  background: color-mix(in srgb, var(--blue) 10%, var(--bg-card));
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  animation: paletteHintIn 0.25s ease;
+  z-index: 220;
+}
+
+.palette-hint-main {
+  border: none;
+  background: transparent;
+  color: var(--text-h);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  min-width: 190px;
+}
+
+.palette-hint-main:hover {
+  background: color-mix(in srgb, var(--blue) 13%, var(--bg-card2));
+}
+
+.palette-hint-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.palette-hint-kbd {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.palette-hint-close {
+  border: none;
+  border-left: 1px solid color-mix(in srgb, var(--blue) 35%, var(--border));
+  background: transparent;
+  color: var(--text-dim);
+  width: 28px;
+  cursor: pointer;
+}
+
+.palette-hint-close:hover {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, transparent);
+}
+
+@keyframes paletteHintIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  z-index: 120;
+}
+
+.theme-menu-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.theme-menu-item:last-child {
+  border-bottom: 0;
+}
+
+.theme-menu-item:hover {
+  background: var(--bg-card2);
+}
+
+.theme-menu-item.active {
+  background: color-mix(in srgb, var(--blue) 16%, var(--bg-card));
+}
+
+.theme-menu-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.theme-menu-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
 .btn-primary {
   background: var(--green-dim);
   border: 1px solid var(--green);
@@ -168,68 +296,6 @@
 }
 .btn-primary:hover { background: rgba(0, 230, 118, 0.25); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-/* ── Token Gate ──────────────────────────────────────────────────────────── */
-.token-gate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: var(--bg);
-}
-
-.token-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 40px 36px;
-  width: 360px;
-  text-align: center;
-}
-
-.token-card h2 {
-  color: var(--text-h);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.token-card p { color: var(--text); font-size: 13px; }
-.token-card code {
-  background: var(--bg-card2);
-  border: 1px solid var(--border);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--green);
-}
-
-.token-input-row {
-  display: flex;
-  width: 100%;
-  gap: 6px;
-}
-
-.token-input-row input {
-  flex: 1;
-  background: var(--bg-card2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text-h);
-  padding: 8px 12px;
-  font-size: 13px;
-  outline: none;
-}
-.token-input-row input:focus { border-color: var(--green); }
-
-.token-err {
-  color: var(--red);
-  font-size: 12px;
-  font-family: var(--mono);
-}
 
 /* ── KPI Row ─────────────────────────────────────────────────────────────── */
 .kpi-row {
@@ -268,6 +334,27 @@
 }
 
 .stat-sub { font-size: 11px; color: var(--text-dim); }
+
+.dashboard-signature-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: -2px;
+  margin-bottom: 6px;
+}
+
+.dashboard-signature {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent-alt) 11%, transparent));
+  color: color-mix(in srgb, var(--text-h) 90%, var(--accent));
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 15%, transparent);
+}
 
 /* ── Section ─────────────────────────────────────────────────────────────── */
 .section {
@@ -578,6 +665,15 @@
   gap: 1px;
   background: var(--border);
 }
+
+.registry-grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.registry-grid--wider {
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+}
+
 
 .registry-card {
   background: var(--bg-card);

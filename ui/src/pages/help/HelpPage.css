@@ -1,0 +1,176 @@
+/* ── Help Page ───────────────────────────────────────────────────────────── */
+.help-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.help-body {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  padding: 12px 18px 0;
+}
+
+.help-body code {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--green);
+}
+
+.help-path-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.help-path-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  min-width: 110px;
+}
+
+.help-path-input {
+  max-width: 480px;
+}
+
+.help-path-detected {
+  font-size: 11px;
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--border));
+  background: color-mix(in srgb, var(--green) 10%, var(--bg));
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.ide-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ide-tab {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px 14px;
+  transition: background 0.12s, color 0.12s;
+}
+.ide-tab:hover { background: var(--border); color: var(--text-h); }
+.ide-tab.active {
+  background: var(--green-dim);
+  border-color: rgba(0,230,118,0.4);
+  color: var(--green);
+}
+
+.ide-panel {
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ide-config-path {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.ide-note {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.flags-table {
+  padding: 8px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.flag-row {
+  display: grid;
+  grid-template-columns: 280px 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.flag-row:last-child { border-bottom: none; }
+
+.flag-name {
+  color: var(--green);
+  font-size: 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.flag-desc { color: var(--text); }
+
+.flag-default {
+  font-size: 11px;
+  color: var(--text-dim);
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .flag-row { grid-template-columns: 1fr; }
+}
+
+/* ── About section ───────────────────────────────────────────────────────── */
+.help-about {
+  padding: 14px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.help-about-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.help-demo-btn {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--border));
+  border-radius: 6px;
+  color: var(--amber);
+  font-size: 12px;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s;
+}
+
+.help-demo-btn:hover {
+  background: color-mix(in srgb, var(--amber) 10%, var(--bg));
+}

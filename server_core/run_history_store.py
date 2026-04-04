@@ -1,7 +1,16 @@
+import json
+import logging
+import os
 import threading
-import time
 from collections import deque
-from typing import Any, Dict, List, Optional
+from typing import Any, Deque, Dict, List, Optional
+
+import server_core.config_core as config_core
+
+
+logger = logging.getLogger(__name__)
+
+RUN_HISTORY_FILE_NAME = "run_history.json"
 
 
 class RunHistoryStore:
@@ -12,10 +21,14 @@ class RunHistoryStore:
 
   MAX_ENTRIES = 500
 
-  def __init__(self):
+  def __init__(self, data_dir: Optional[str] = None):
+    self._data_dir = data_dir or config_core.default_data_dir()
+    self._history_path = os.path.join(self._data_dir, RUN_HISTORY_FILE_NAME)
     self._lock = threading.Lock()
-    self._entries: deque = deque(maxlen=self.MAX_ENTRIES)
+    self._entries: Deque[Dict[str, Any]] = deque(maxlen=self.MAX_ENTRIES)
     self._id_counter = 0
+    self._ensure_dir()
+    self._load()
 
   def record(
     self,
@@ -40,6 +53,7 @@ class RunHistoryStore:
         "execution_time": result.get("execution_time", 0.0),
         "timestamp": result.get("timestamp", ""),
       })
+      self._save_locked()
 
   def get_all(self) -> List[Dict[str, Any]]:
     with self._lock:
@@ -48,3 +62,53 @@ class RunHistoryStore:
   def clear(self) -> None:
     with self._lock:
       self._entries.clear()
+      self._id_counter = 0
+      self._save_locked()
+
+  def _ensure_dir(self) -> None:
+    os.makedirs(self._data_dir, exist_ok=True)
+
+  def _load(self) -> None:
+    if not os.path.exists(self._history_path):
+      return
+    try:
+      with open(self._history_path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+      if not isinstance(raw, list):
+        logger.warning("run_history_store: invalid history format in %s", self._history_path)
+        return
+      cleaned: List[Dict[str, Any]] = []
+      max_id = 0
+      for entry in raw[:self.MAX_ENTRIES]:
+        if not isinstance(entry, dict):
+          continue
+        entry_id = int(entry.get("id", 0) or 0)
+        max_id = max(max_id, entry_id)
+        cleaned.append({
+          "id": entry_id,
+          "tool": entry.get("tool", "unknown"),
+          "endpoint": entry.get("endpoint", ""),
+          "params": entry.get("params", {}),
+          "stdout": entry.get("stdout", ""),
+          "stderr": entry.get("stderr", ""),
+          "return_code": entry.get("return_code", -1),
+          "success": bool(entry.get("success", False)),
+          "timed_out": bool(entry.get("timed_out", False)),
+          "partial_results": bool(entry.get("partial_results", False)),
+          "execution_time": entry.get("execution_time", 0.0),
+          "timestamp": entry.get("timestamp", ""),
+        })
+      self._entries = deque(cleaned, maxlen=self.MAX_ENTRIES)
+      self._id_counter = max_id
+      logger.debug("run_history_store: loaded %d entries from %s", len(cleaned), self._history_path)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+      logger.warning("run_history_store: could not load %s (%s)", self._history_path, exc)
+
+  def _save_locked(self) -> None:
+    tmp = self._history_path + ".tmp"
+    try:
+      with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(list(self._entries), f, indent=2, default=str)
+      os.replace(tmp, self._history_path)
+    except OSError as exc:
+      logger.error("run_history_store: failed to save %s: %s", self._history_path, exc)

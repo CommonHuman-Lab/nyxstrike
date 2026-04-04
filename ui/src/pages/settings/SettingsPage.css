@@ -1,0 +1,212 @@
+/* ── Settings Page ───────────────────────────────────────────────────────── */
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-value {
+  word-break: break-word;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-input {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  padding: 6px 10px;
+  font-size: 13px;
+  width: 100px;
+  outline: none;
+}
+.settings-input:focus { border-color: var(--green); }
+
+select.settings-input {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(50% + 1px), calc(100% - 9px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 26px;
+}
+
+.settings-unit {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.settings-hint-small {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 10px 5px 12px;
+  line-height: 1.5;
+}
+
+
+.settings-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 10px 18px 12px;
+  line-height: 1.5;
+}
+
+.settings-hint code {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--green);
+}
+
+.settings-hint-inline {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+}
+
+.settings-actions-inline {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 8px;
+}
+
+.settings-actions .btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  padding: 8px 20px;
+}
+
+
+/* ── Wordlists Table ─────────────────────────────────────────────────────── */
+.wordlist-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.wordlist-head {
+  display: grid;
+  grid-template-columns: 160px 100px 90px 100px 1fr 84px;
+  gap: 10px;
+  padding: 8px 18px;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg-card2);
+  border-bottom: 1px solid var(--border);
+}
+
+.wordlist-row {
+  display: grid;
+  grid-template-columns: 160px 100px 90px 100px 1fr 84px;
+  gap: 10px;
+  padding: 10px 18px;
+  font-size: 12px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.wordlist-row:last-child { border-bottom: none; }
+.wordlist-row:hover { background: var(--bg-card2); }
+
+.wordlist-row.editable {
+  gap: 8px;
+}
+
+.wordlist-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.btn-secondary,
+.btn-danger-outline {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card2);
+  color: var(--text-h);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 7px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.btn-danger-outline:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.btn-secondary:disabled,
+.btn-danger-outline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-grid { grid-template-columns: 1fr; }
+  .wordlist-table { overflow-x: auto; }
+  .wordlist-head, .wordlist-row {
+    min-width: 760px;
+    grid-template-columns: 160px 100px 90px 100px 1fr 84px;
+  }
+}

@@ -264,6 +264,24 @@ class TestWordlists:
 
 
 # ===========================================================================
+# Settings
+# ===========================================================================
+
+class TestSettings:
+    def test_settings_get(self, client):
+        r = _get(client, "/api/settings")
+        assert_route_exists(r, "/api/settings")
+
+    def test_settings_patch(self, client):
+        r = client.patch("/api/settings", json={"runtime": {"cache_ttl": 60}})
+        assert_route_exists(r, "/api/settings PATCH")
+
+    def test_settings_wordlists_patch(self, client):
+        r = client.patch("/api/settings/wordlists", json={"wordlists": []})
+        assert_route_exists(r, "/api/settings/wordlists PATCH")
+
+
+# ===========================================================================
 # Python Environment
 # ===========================================================================
 
@@ -533,6 +551,10 @@ class TestWebProbing:
     def test_httpx(self, client):
         r = _post(client, "/api/tools/httpx")
         assert_route_exists(r, "/api/tools/httpx")
+
+    def test_testssl(self, client):
+        r = _post(client, "/api/tools/testssl")
+        assert_route_exists(r, "/api/tools/testssl")
 
 
 # ===========================================================================
