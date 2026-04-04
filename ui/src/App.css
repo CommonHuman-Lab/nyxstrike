@@ -106,6 +106,23 @@
   border: 1px solid var(--border);
 }
 
+.brand-update-chip {
+  font-size: 11px;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, var(--bg-card2));
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--amber) 38%, var(--border));
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.brand-update-chip:hover {
+  color: color-mix(in srgb, var(--amber) 82%, white);
+  background: color-mix(in srgb, var(--amber) 18%, var(--bg-card2));
+  border-color: color-mix(in srgb, var(--amber) 58%, var(--border));
+}
+
 .topbar-right {
   display: flex;
   align-items: center;

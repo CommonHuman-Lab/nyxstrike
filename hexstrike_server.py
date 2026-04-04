@@ -18,6 +18,7 @@ import server_core.config_core as config_core
 from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import run_history, tool_stats
 from server_api import register_blueprints
+from server_api.ops.web_dashboard import initialize_update_status_check
 
 # ============================================================================
 # LOGGING CONFIGURATION (MUST BE FIRST)
@@ -68,6 +69,7 @@ def require_json_for_post():
         }), 400
 
 register_blueprints(app)
+initialize_update_status_check()
 
 @app.after_request
 def record_tool_run(response):

@@ -77,6 +77,17 @@ export function TopBar({
         <img src={faviconUrl} width={18} height={18} alt="" />
         <span className="brand-text">HexStrike Community Edition</span>
         <span className="brand-version mono">{health?.version ?? '…'}</span>
+        {health?.update?.update_available && (
+          <a
+            className="brand-update-chip mono"
+            href="https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition"
+            target="_blank"
+            rel="noreferrer"
+            title={`New version available: ${health.update.latest_version}`}
+          >
+            Update available
+          </a>
+        )}
       </div>
 
       <nav className="topbar-nav">
