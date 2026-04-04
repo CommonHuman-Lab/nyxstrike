@@ -76,11 +76,6 @@ export function RunPage({
     setFavorites(prev => prev.includes(name) ? prev.filter(t => t !== name) : [name, ...prev].slice(0, 30))
   }
 
-  function selectToolByName(name: string) {
-    const tool = tools.find(t => t.name === name)
-    if (tool) selectTool(tool)
-  }
-
   function applyTarget(target: string) {
     const targetKeys = ['target', 'url', 'domain', 'host', 'ip', 'rhost', 'hostname']
     setFieldValues(prev => {
@@ -191,8 +186,6 @@ export function RunPage({
       />
 
       <RunQuickBar
-        favorites={favorites}
-        onPickFavorite={selectToolByName}
         recentTargets={recentTargets}
         onPickTarget={applyTarget}
         onClearRecentTargets={() => setRecentTargets([])}

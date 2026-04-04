@@ -353,7 +353,6 @@
   color: color-mix(in srgb, var(--text-h) 90%, var(--accent));
   font-size: 11px;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
