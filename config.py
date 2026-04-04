@@ -5,6 +5,7 @@ _config = {
     "VERSION": "1.2.1 - shellshark",
     "DATA_DIR_NAME": ".hexstrike_data",  # Root data directory name (relative to cwd, override with HEXSTRIKE_DATA_DIR env var)
     "COMMAND_TIMEOUT": 300,
+    "CLEAN_TOOL_OUTPUT": True,
     "CACHE_SIZE": 1000,
     "CACHE_TTL": 3600,  # 1 hour
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour

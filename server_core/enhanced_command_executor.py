@@ -15,6 +15,89 @@ _ANSI = _re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
 _BOX_WIDTH = 66  # visible columns between the two │ borders
 
 
+def _strip_ansi(text: str) -> str:
+    return _ANSI.sub('', text)
+
+
+def _is_decorative_line(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return True
+
+    if _re.fullmatch(r"[A-Z0-9 _\-/\\`'.]{10,}", stripped):
+        letters = [c for c in stripped if c.isalpha()]
+        if letters and sum(c.isupper() for c in letters) / len(letters) > 0.85:
+            return True
+
+    if _re.fullmatch(r"[-_=*~`.:+|/\\<>\[\]{}()#]{6,}", stripped):
+        return True
+
+    visible_chars = [c for c in stripped if not c.isspace()]
+    if not visible_chars:
+        return True
+
+    alpha_num = sum(c.isalnum() for c in visible_chars)
+    ratio = alpha_num / len(visible_chars)
+    return len(visible_chars) >= 10 and ratio < 0.35
+
+
+def _is_banner_text_line(line: str) -> bool:
+    stripped = line.strip()
+    lower = stripped.lower()
+
+    if "http://" in lower or "https://" in lower:
+        return True
+
+    if any(token in lower for token in ("github.com", "discord", "twitter", "blog")):
+        return True
+
+    if _re.fullmatch(r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,}\.??", stripped):
+        return True
+
+    if _re.fullmatch(r"[A-Za-z][A-Za-z ]{8,}:\s+.+[.!?]", stripped):
+        return True
+
+    return False
+
+
+def _strip_leading_banner_block(text: str) -> str:
+    lines = text.splitlines()
+    if not lines:
+        return text
+
+    start = 0
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+
+    if start >= len(lines) or not _is_decorative_line(lines[start]):
+        return text
+
+    i = start
+    non_empty_consumed = 0
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip() or _is_decorative_line(line) or _is_banner_text_line(line):
+            if line.strip():
+                non_empty_consumed += 1
+            i += 1
+            continue
+        break
+
+    if non_empty_consumed < 3:
+        return text
+
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+
+    return "\n".join(lines[i:])
+
+
+def _clean_output(text: str, command: str = "") -> str:
+    cleaned = _strip_ansi(text)
+    cleaned = _strip_leading_banner_block(cleaned)
+    return cleaned
+
+
 def _box_row(content_with_ansi: str) -> str:
     C = ModernVisualEngine.COLORS
     visible = _ANSI.sub('', content_with_ansi)
@@ -57,7 +140,7 @@ class EnhancedCommandExecutor:
                 if line:
                     self._stdout_chunks.append(line)
                     # Real-time output display
-                    logger.info(f"📤 STDOUT: {line.strip()}")
+                    logger.info(f"📤 STDOUT: {_strip_ansi(line).strip()}")
         except Exception as e:
             logger.error(f"Error reading stdout: {e}")
         finally:
@@ -72,7 +155,7 @@ class EnhancedCommandExecutor:
                 if line:
                     self._stderr_chunks.append(line)
                     # Real-time error output display
-                    logger.warning(f"📥 STDERR: {line.strip()}")
+                    logger.warning(f"📥 STDERR: {_strip_ansi(line).strip()}")
         except Exception as e:
             logger.error(f"Error reading stderr: {e}")
         finally:
@@ -215,6 +298,11 @@ class EnhancedCommandExecutor:
 
             # Always consider it a success if we have output, even with timeout
             success = True if self.timed_out and (self.stdout_data or self.stderr_data) else (self.return_code == 0)
+
+            # Normalize noisy terminal output for logs/API consumers
+            if config_core.get("CLEAN_TOOL_OUTPUT", True):
+                self.stdout_data = _clean_output(self.stdout_data, self.command)
+                self.stderr_data = _clean_output(self.stderr_data, self.command)
 
             # Log enhanced final results with summary using ModernVisualEngine
             output_size = len(self.stdout_data) + len(self.stderr_data)
