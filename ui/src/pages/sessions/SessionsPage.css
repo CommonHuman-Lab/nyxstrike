@@ -536,6 +536,13 @@
   gap: 10px;
 }
 
+.session-tool-description {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
 .session-result-pre {
   margin: 0;
   white-space: pre-wrap;

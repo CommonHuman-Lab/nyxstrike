@@ -168,6 +168,8 @@ export function SessionDetailWorkbench({
                   </button>
                 </div>
 
+                {selectedTool.desc && <p className="session-tool-description">{selectedTool.desc}</p>}
+
                 <div className="session-param-grid">
                   {Object.keys(selectedTool.params).map(key => (
                     <ParamField
