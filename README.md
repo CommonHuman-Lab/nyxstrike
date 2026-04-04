@@ -24,14 +24,14 @@
 
 ## 🚀 Differences from HexStrike V6
 
-- Many new tools, workflows, skills and end-to-end agent workflows added!
-- **Web Dashboard**: Monitor health, tools, live logs, run tools, export artifacts and much more without touching the terminal.
-- **Compact Mode**: Great for running with smaller, local LLMs.
-- **Profile Mode**: Specify one or more profiles to load only the relevant ones for your workflow.
-- Refactored Codebase: Improved clarity, maintainability, and performance.
-- Updated Dependencies: All packages upgraded for security and compatibility.
-- Enhanced Tool Usage: Smarter parameter handling, improved documentation, and endpoint references.
-- AI Integration: Upgraded MCP compatibility and agent orchestration (FastMCP v3).
+- **Bigger Arsenal + Better Agents**: Expanded tool coverage, workflow skills, and specialist end-to-end agent systems.
+- **Dashboard**: Run tools, monitor health, stream logs, and export reports from one UI.
+- **Global Command Palette (`Ctrl/Cmd+K`)**: Jump pages, trigger tools, and move faster with keyboard-first control.
+- **Personalized Run Workflow**: Favorite tools, recent targets, and quick compare with previous runs.
+- **Persistent Run History**: Server-side run history survives browser refresh/reset and clears safely with confirmation.
+- **Theme System Built In**: One-click theme switcher with hover preview + saved selection (Dark, Candy, Unicorn, Minimal, and more).
+- **Performance Modes**: `--compact` for lightweight/local LLM usage and `--profile` for targeted tool loading.
+- **Core Improvements**: Refactored architecture, updated dependencies, smarter parameter handling, and upgraded MCP orchestration (FastMCP v3).
 
 ### Details
 
