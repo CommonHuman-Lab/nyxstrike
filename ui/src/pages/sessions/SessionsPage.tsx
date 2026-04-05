@@ -47,6 +47,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   const [loading, setLoading] = useState(!demoData)
   const [error, setError] = useState<string | null>(null)
   const [showHandoverHelp, setShowHandoverHelp] = useState(false)
+  const [showCompletedSessions, setShowCompletedSessions] = useState(false)
   const [streamStatus, setStreamStatus] = useState<'streaming' | 'polling' | 'error'>(demoData ? 'polling' : 'streaming')
   const streamRef = useRef<EventSource | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -338,7 +339,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
         ? `Session created: ${sid} (empty workflow, add tools manually).`
         : mode.key === 'from_template'
           ? `Session created: ${sid} (${stepCount} template tool calls loaded).`
-          : `Session created: ${sid} (${stepCount} tool calls ready).`)
+        : `Session created: ${sid} (${stepCount} tool calls ready).`)
       pushToast('success', `Session created: ${sid}`)
       closeStartModal()
       refresh()
@@ -461,12 +462,28 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
         </section>
       )}
 
-      <SessionListSection
-        title="Completed Sessions"
-        sessions={completed}
-        emptyText="No completed sessions yet."
-        onOpenSession={onOpenSession}
-      />
+      {showCompletedSessions ? (
+        <SessionListSection
+          title="Completed Sessions"
+          sessions={completed}
+          emptyText="No completed sessions yet."
+          onOpenSession={onOpenSession}
+          headerRight={(
+            <button className="session-help-btn" onClick={() => setShowCompletedSessions(false)}>
+              Hide completed
+            </button>
+          )}
+        />
+      ) : (
+        <section className="section">
+          <div className="section-header">
+            <h3>Completed Sessions <span className="badge">{completed.length}</span></h3>
+            <button className="session-help-btn" onClick={() => setShowCompletedSessions(true)}>
+              Show completed
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="section">
         <div className="section-header">
@@ -490,7 +507,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
                     <Layers size={13} color="var(--blue)" />
                     <span className="mono">{template.name}</span>
                   </div>
-                  <span className="session-tool-chip mono">template</span>
+                  <span className="session-tool-chip mono">Custom Template</span>
                 </div>
 
                 <div className="session-card-meta">
@@ -499,15 +516,17 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
                 </div>
 
                 <div className="session-tools">
-                  {template.workflow_steps.map((step, idx) => (
+                  {template.workflow_steps.slice(0, 7).map((step, idx) => (
                     <span key={`${template.template_id}:${idx}:${step.tool}`} className="session-tool-chip">
                       {step.tool}
                     </span>
                   ))}
+                  {template.workflow_steps.length > 7 && (
+                    <span className="session-tool-chip">+{template.workflow_steps.length - 7}</span>
+                  )}
                 </div>
 
                 <div className="session-card-footer">
-                  <span className="session-id mono">{template.template_id}</span>
                   <div className="template-card-actions">
                     <button className="session-action-btn" onClick={() => useTemplate(template.template_id)}>
                       <Play size={12} /> Use
