@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Bot, RefreshCw, Target, Activity, Clock } from 'lucide-react'
+import { ArrowLeft, Bot, RefreshCw, Target, Activity, Clock, Download } from 'lucide-react'
 import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../../api'
 import { buildInitialFieldValues, buildRunPayload } from '../../components/tool-run/payload'
 import { fmtTs } from '../../shared/utils'
@@ -139,6 +139,77 @@ export default function SessionDetailPage({
     } finally {
       setDeleteLoading(false)
       setShowDeleteConfirm(false)
+    }
+  }
+
+  function exportToolLogs() {
+    if (!session) return
+    try {
+      const meta = (session.metadata ?? {}) as Record<string, unknown>
+      const storedStatus = (meta.tool_status && typeof meta.tool_status === 'object')
+        ? (meta.tool_status as Record<string, string>)
+        : {}
+      const storedResults = (meta.step_results && typeof meta.step_results === 'object')
+        ? (meta.step_results as Record<string, PersistedStepResult>)
+        : {}
+
+      const logs = steps.map((step, index) => {
+        const stepKey = `${session.session_id}:${index}`
+        const liveResult = stepResults[stepKey]?.result
+        const persistedResult = storedResults[stepKey]
+        const result = liveResult
+          ? {
+            success: liveResult.success,
+            return_code: liveResult.return_code,
+            execution_time: liveResult.execution_time,
+            timestamp: liveResult.timestamp,
+            stdout: liveResult.stdout,
+            stderr: liveResult.stderr,
+            timed_out: liveResult.timed_out,
+            partial_results: liveResult.partial_results,
+          }
+          : persistedResult
+            ? {
+              success: persistedResult.success,
+              return_code: persistedResult.return_code,
+              execution_time: persistedResult.execution_time,
+              timestamp: persistedResult.timestamp ?? '',
+              stdout: persistedResult.stdout ?? '',
+              stderr: persistedResult.stderr ?? '',
+              timed_out: false,
+              partial_results: false,
+            }
+            : null
+
+        return {
+          step_index: index,
+          step_key: stepKey,
+          tool: step.tool,
+          parameters: step.parameters ?? {},
+          status: stepState[stepKey] ?? storedStatus[stepKey] ?? 'idle',
+          result,
+        }
+      })
+
+      const payload = {
+        session_id: session.session_id,
+        target: session.target,
+        status: session.status ?? 'active',
+        exported_at: new Date().toISOString(),
+        logs,
+      }
+
+      const content = JSON.stringify(payload, null, 2)
+      const blob = new Blob([content], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${session.session_id}_tool_logs.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setHandoffMsg('Tool logs exported')
+    } catch (e) {
+      setHandoffMsg(`Export failed: ${String(e)}`)
     }
   }
 
@@ -334,6 +405,9 @@ export default function SessionDetailPage({
         <div className="session-detail-actions">
           <button className="session-action-btn" onClick={() => setShowTemplateModal(true)}>
             Create Template
+          </button>
+          <button className="session-action-btn" onClick={exportToolLogs}>
+            <Download size={12} /> Export Tool Logs
           </button>
           <button className="session-action-btn" onClick={handoverToLlm} disabled={handoffLoading}>
             <Bot size={12} /> {handoffLoading ? 'Handing over…' : 'Handover to LLM'}
