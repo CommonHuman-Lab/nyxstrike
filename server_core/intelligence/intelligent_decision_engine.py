@@ -156,8 +156,24 @@ class IntelligentDecisionEngine:
                 {"tool": "arjun", "priority": 2, "params": {"method": "GET,POST", "stable": True}},
                 {"tool": "x8", "priority": 3, "params": {"method": "GET", "wordlist": "/usr/share/wordlists/x8/params.txt"}},
                 {"tool": "paramspider", "priority": 4, "params": {"level": 2}},
+                {"tool": "api-schema-analyzer", "priority": 5, "params": {"schema_type": "openapi"}},
+                {"tool": "graphql-scanner", "priority": 6, "params": {"introspection": True, "query_depth": 10, "mutations": True}},
+                {"tool": "jwt-analyzer", "priority": 7, "params": {}},
+                {"tool": "katana", "priority": 8, "params": {"depth": 3, "js_crawl": True, "form_extraction": True}},
                 {"tool": "nuclei", "priority": 5, "params": {"tags": "api,graphql,jwt", "severity": "high,critical"}},
                 {"tool": "ffuf", "priority": 6, "params": {"mode": "parameter", "method": "POST"}}
+            ],
+            "internal_network_ad_assessment": [
+                {"tool": "nmap_advanced", "priority": 1, "params": {"scan_type": "-sS", "os_detection": True, "version_detection": True}},
+                {"tool": "autorecon", "priority": 2, "params": {"port_scans": "top-1000-ports", "service_scans": "default"}},
+                {"tool": "enum4linux-ng", "priority": 3, "params": {"shares": True, "users": True, "groups": True, "policy": True}},
+                {"tool": "smbmap", "priority": 4, "params": {}},
+                {"tool": "rpcclient", "priority": 5, "params": {"commands": "enumdomusers;enumdomgroups;querydominfo"}},
+                {"tool": "nxc", "priority": 6, "params": {"protocol": "smb"}},
+                {"tool": "ldapdomaindump", "priority": 7, "params": {"authtype": "NTLM"}},
+                {"tool": "impacket-ad-enum", "priority": 8, "params": {}},
+                {"tool": "responder", "priority": 9, "params": {"wpad": True, "duration": 180}},
+                {"tool": "evil-winrm", "priority": 10, "params": {}},
             ],
             "network_discovery": [
                 {"tool": "arp-scan", "priority": 1, "params": {"local_network": True}},
@@ -922,45 +938,53 @@ class IntelligentDecisionEngine:
         """Create an intelligent attack chain based on target profile"""
         chain = AttackChain(profile)
 
-        # Select attack pattern based on target type and objective
-        if profile.target_type == TargetType.WEB_APPLICATION:
-            if objective == "quick":
-                pattern = self.attack_patterns["vulnerability_assessment"][:2]
-            else:
-                pattern = self.attack_patterns["web_reconnaissance"] + self.attack_patterns["vulnerability_assessment"]
-        elif profile.target_type == TargetType.API_ENDPOINT:
-            pattern = self.attack_patterns["api_testing"]
-        elif profile.target_type == TargetType.NETWORK_HOST:
-            if objective == "comprehensive":
-                pattern = self.attack_patterns["comprehensive_network_pentest"]
-            else:
-                pattern = self.attack_patterns["network_discovery"]
-        elif profile.target_type == TargetType.BINARY_FILE:
-            if objective == "ctf":
-                pattern = self.attack_patterns["ctf_pwn_challenge"]
-            else:
-                pattern = self.attack_patterns["binary_exploitation"]
-        elif profile.target_type == TargetType.CLOUD_SERVICE:
-            if objective == "aws":
-                pattern = self.attack_patterns["aws_security_assessment"]
-            elif objective == "kubernetes":
-                pattern = self.attack_patterns["kubernetes_security_assessment"]
-            elif objective == "containers":
-                pattern = self.attack_patterns["container_security_assessment"]
-            elif objective == "iac":
-                pattern = self.attack_patterns["iac_security_assessment"]
-            else:
-                pattern = self.attack_patterns["multi_cloud_assessment"]
+        objective_overrides = {
+            "api_security": "api_testing",
+            "internal_network_ad": "internal_network_ad_assessment",
+        }
+        override_pattern = objective_overrides.get(objective)
+        if override_pattern:
+            pattern = self.attack_patterns[override_pattern]
         else:
-            # Handle bug bounty specific objectives
-            if objective == "bug_bounty_recon":
-                pattern = self.attack_patterns["bug_bounty_reconnaissance"]
-            elif objective == "bug_bounty_hunting":
-                pattern = self.attack_patterns["bug_bounty_vulnerability_hunting"]
-            elif objective == "bug_bounty_high_impact":
-                pattern = self.attack_patterns["bug_bounty_high_impact"]
+            # Select attack pattern based on target type and objective
+            if profile.target_type == TargetType.WEB_APPLICATION:
+                if objective == "quick":
+                    pattern = self.attack_patterns["vulnerability_assessment"][:2]
+                else:
+                    pattern = self.attack_patterns["web_reconnaissance"] + self.attack_patterns["vulnerability_assessment"]
+            elif profile.target_type == TargetType.API_ENDPOINT:
+                pattern = self.attack_patterns["api_testing"]
+            elif profile.target_type == TargetType.NETWORK_HOST:
+                if objective == "comprehensive":
+                    pattern = self.attack_patterns["comprehensive_network_pentest"]
+                else:
+                    pattern = self.attack_patterns["network_discovery"]
+            elif profile.target_type == TargetType.BINARY_FILE:
+                if objective == "ctf":
+                    pattern = self.attack_patterns["ctf_pwn_challenge"]
+                else:
+                    pattern = self.attack_patterns["binary_exploitation"]
+            elif profile.target_type == TargetType.CLOUD_SERVICE:
+                if objective == "aws":
+                    pattern = self.attack_patterns["aws_security_assessment"]
+                elif objective == "kubernetes":
+                    pattern = self.attack_patterns["kubernetes_security_assessment"]
+                elif objective == "containers":
+                    pattern = self.attack_patterns["container_security_assessment"]
+                elif objective == "iac":
+                    pattern = self.attack_patterns["iac_security_assessment"]
+                else:
+                    pattern = self.attack_patterns["multi_cloud_assessment"]
             else:
-                pattern = self.attack_patterns["web_reconnaissance"]
+                # Handle bug bounty specific objectives
+                if objective == "bug_bounty_recon":
+                    pattern = self.attack_patterns["bug_bounty_reconnaissance"]
+                elif objective == "bug_bounty_hunting":
+                    pattern = self.attack_patterns["bug_bounty_vulnerability_hunting"]
+                elif objective == "bug_bounty_high_impact":
+                    pattern = self.attack_patterns["bug_bounty_high_impact"]
+                else:
+                    pattern = self.attack_patterns["web_reconnaissance"]
 
         # Create attack steps
         for step_config in pattern:
