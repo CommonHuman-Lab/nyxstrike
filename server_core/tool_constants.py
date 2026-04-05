@@ -42,7 +42,7 @@ HEALTH_TOOL_CATEGORIES = {
               "cloudmapper", "pacu"],
     "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
               "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls", "sublist3r", "parsero"],
+              "whois", "bbot", "gau", "waybackurls", "waymore", "sublist3r", "parsero"],
     "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
     "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",

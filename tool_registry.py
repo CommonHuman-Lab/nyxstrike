@@ -28,7 +28,18 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.90,
     },
 
-    # ---- Intelligence ----
+    # ---- URL Recon ----
+    "waymore": {
+        "desc": "Find URLs and responses from various archives using waymore.",
+        "endpoint": "/api/tools/waymore",
+        "method": "POST",
+        "category": "osint",
+        "params": {"input": {"required": True}},
+        "optional": {"mode": "U", "output_urls": "", "output_responses": ""},
+        "effectiveness": 0.85,
+    },
+
+  # ---- Intelligence ----
     "analyze-target": {
         "desc": "Analyze target and create comprehensive profile using Intelligent Decision Engine",
         "endpoint": "/api/intelligence/analyze-target",
@@ -1619,7 +1630,7 @@ _INTENT_KEYWORDS: Dict[str, List[str]] = {
     "osint": [
         "subdomain", "dns", "osint", "amass", "subfinder", "domain", "recon",
         "url", "fierce", "enumerate", "whois", "bbot", "theharvester", 
-        "gau", "waybackurls"
+        "gau", "waybackurls", "waymore"
     ],
     "binary": [
         "binary", "reverse", "rop", "gadget", "checksec", "firmware", "elf",
