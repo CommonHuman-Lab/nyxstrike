@@ -468,19 +468,29 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
           sessions={completed}
           emptyText="No completed sessions yet."
           onOpenSession={onOpenSession}
+          onHeaderClick={() => setShowCompletedSessions(false)}
           headerRight={(
-            <button className="session-help-btn" onClick={() => setShowCompletedSessions(false)}>
+            <span className="session-help-btn">
               Hide completed
-            </button>
+            </span>
           )}
         />
       ) : (
         <section className="section">
-          <div className="section-header">
+          <div
+            className="section-header sessions-collapsed-toggle"
+            role="button"
+            tabIndex={0}
+            onClick={() => setShowCompletedSessions(true)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                setShowCompletedSessions(true)
+              }
+            }}
+          >
             <h3>Completed Sessions <span className="badge">{completed.length}</span></h3>
-            <button className="session-help-btn" onClick={() => setShowCompletedSessions(true)}>
-              Show completed
-            </button>
+            <span className="session-help-btn">Show completed</span>
           </div>
         </section>
       )}

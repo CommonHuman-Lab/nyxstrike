@@ -1,5 +1,5 @@
 import { Layers, RefreshCw, Target } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { KeyboardEvent, ReactNode } from 'react'
 import type { SessionSummary } from '../../api'
 import { SessionCard } from './SessionCard'
 import type { StartMode } from './constants'
@@ -42,16 +42,32 @@ export function SessionListSection({
   emptyText,
   onOpenSession,
   headerRight,
+  onHeaderClick,
 }: {
   title: string
   sessions: SessionSummary[]
   emptyText: string
   onOpenSession: (sessionId: string) => void
   headerRight?: ReactNode
+  onHeaderClick?: () => void
 }) {
+  const interactiveHeaderProps = onHeaderClick
+    ? {
+      role: 'button' as const,
+      tabIndex: 0,
+      onClick: onHeaderClick,
+      onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onHeaderClick()
+        }
+      },
+    }
+    : {}
+
   return (
     <section className="section">
-      <div className="section-header">
+      <div className={`section-header${onHeaderClick ? ' sessions-collapsed-toggle' : ''}`} {...interactiveHeaderProps}>
         <h3>{title} <span className="badge">{sessions.length}</span></h3>
         {headerRight}
       </div>

@@ -212,6 +212,20 @@
   margin-top: 6px;
 }
 
+.sessions-collapsed-toggle {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.sessions-collapsed-toggle:hover {
+  opacity: 0.9;
+}
+
+.sessions-collapsed-toggle:focus-visible {
+  outline: 1px solid var(--blue);
+  outline-offset: 2px;
+}
+
 .sessions-stream-status {
   font-size: 10px;
   text-transform: uppercase;
