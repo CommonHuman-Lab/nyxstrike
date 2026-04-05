@@ -960,6 +960,10 @@ class TestIntelligence:
         r = _post(client, "/api/intelligence/create-attack-chain")
         assert_route_exists(r, "/api/intelligence/create-attack-chain")
 
+    def test_preview_attack_chain(self, client):
+        r = _post(client, "/api/intelligence/preview-attack-chain")
+        assert_route_exists(r, "/api/intelligence/preview-attack-chain")
+
     def test_smart_scan(self, client):
         r = _post(client, "/api/intelligence/smart-scan")
         assert_route_exists(r, "/api/intelligence/smart-scan")

@@ -60,6 +60,16 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.90,
     },
 
+    "preview-attack-chain": {
+        "desc": "Preview an intelligent attack chain without persisting a session",
+        "endpoint": "/api/intelligence/preview-attack-chain",
+        "method": "POST",
+        "category": "intelligence",
+        "params": {"target": {"required": True}},
+        "optional": {"objective": "comprehensive"},
+        "effectiveness": 0.89,
+    },
+
     "smart-scan": {
         "desc": "Execute an intelligent scan using AI-driven tool selection and parameter optimization with parallel execution",
         "endpoint": "/api/intelligence/smart-scan",

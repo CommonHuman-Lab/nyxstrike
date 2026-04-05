@@ -1,7 +1,7 @@
 # List of tools considered always installed (built-in, code-provided or simulated)
 BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner",
-                  "http-framework", "auto_install_missing_apt_tools", 
-                  "analyze-target", "create-attack-chain", "smart-scan",
+                   "http-framework", "auto_install_missing_apt_tools", 
+                  "analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan",
                   "technology-detection"]
 
 # Tools that require dpkg check (Debian-based systems)
@@ -58,7 +58,7 @@ HEALTH_TOOL_CATEGORIES = {
 
     "ops": ["auto_install_missing_apt_tools"],
 
-    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
+    "intelligence": ["analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan", "technology-detection"],
 
     #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned"
     #"active_directory": [

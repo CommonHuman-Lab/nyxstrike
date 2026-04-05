@@ -104,6 +104,38 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         return result
 
     @mcp.tool()
+    async def preview_attack_chain_ai(target: str, objective: str = "comprehensive") -> Dict[str, Any]:
+        """
+        Preview an intelligent attack chain without persisting a session.
+
+        Args:
+            target: Target for the attack chain
+            objective: Attack objective - "comprehensive", "quick", or "stealth"
+
+        Returns:
+            AI-generated attack chain preview with success probability and time estimates
+        """
+        logger.info(f"🧪 Previewing AI-driven attack chain for {target}")
+
+        data = {
+            "target": target,
+            "objective": objective,
+        }
+        loop = asyncio.get_running_loop()
+        result = await loop.run_in_executor(
+            None, lambda: hexstrike_client.safe_post("api/intelligence/preview-attack-chain", data)
+        )
+
+        if result.get("success"):
+            chain = result.get("attack_chain", {})
+            steps = len(chain.get("steps", []))
+            logger.info(f"✅ Attack chain preview generated - {steps} steps (not persisted)")
+        else:
+            logger.error(f"❌ Attack chain preview failed for {target}")
+
+        return result
+
+    @mcp.tool()
     async def create_attack_chain_ai(target: str, objective: str = "comprehensive") -> Dict[str, Any]:
         """
         Create an intelligent attack chain using AI-driven tool sequencing and optimization.
@@ -131,8 +163,11 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             steps = len(chain.get("steps", []))
             success_prob = chain.get("success_probability", 0)
             estimated_time = chain.get("estimated_time", 0)
+            session_id = result.get("session_id")
 
-            logger.info(f"✅ Attack chain created - {steps} steps, {success_prob:.2f} success probability, ~{estimated_time}s")
+            logger.info(
+                f"✅ Attack chain created - {steps} steps, {success_prob:.2f} success probability, ~{estimated_time}s, session={session_id}"
+            )
         else:
             logger.error(f"❌ Attack chain creation failed for {target}")
 
