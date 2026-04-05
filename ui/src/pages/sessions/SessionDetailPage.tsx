@@ -61,6 +61,7 @@ export default function SessionDetailPage({
       const meta = (r.session.metadata ?? {}) as Record<string, unknown>
       const storedStatus = (meta.tool_status ?? {}) as Record<string, string>
       const storedResults = (meta.step_results ?? {}) as Record<string, PersistedStepResult>
+      const storedRunningStepKey = typeof meta.running_step_key === 'string' ? meta.running_step_key : null
 
       const hydratedState: Record<string, StepState> = {}
       const hydratedResults: Record<string, { result?: ToolExecResponse; error?: string }> = {}
@@ -84,6 +85,21 @@ export default function SessionDetailPage({
       }
       setStepState(hydratedState)
       setStepResults(hydratedResults)
+
+      try {
+        const processList = await api.processList()
+        const hasActive = Object.keys(processList.active_processes ?? {}).length > 0
+        if (hasActive && storedRunningStepKey) {
+          hydratedState[storedRunningStepKey] = 'running'
+          setRunningStepKey(storedRunningStepKey)
+          setStepState({ ...hydratedState })
+        } else {
+          setRunningStepKey(null)
+        }
+      } catch {
+        // non-fatal: process list unavailable
+      }
+
       setError(null)
     } catch (e) {
       setError(String(e))
@@ -327,7 +343,22 @@ export default function SessionDetailPage({
       // non-fatal
     }
 
+    const existingMetaBeforeRun = (sessionRef.metadata ?? {}) as Record<string, unknown>
+    try {
+      await api.updateSession(sessionRef.session_id, {
+        metadata: {
+          ...existingMetaBeforeRun,
+          running_step_key: stepKey,
+          running_tool: step.tool,
+          running_started_at: new Date().toISOString(),
+        },
+      })
+    } catch {
+      // non-fatal
+    }
+
     setRunningStepKey(stepKey)
+    setStepState(prev => ({ ...prev, [stepKey]: 'running' }))
     setStepResults(prev => ({ ...prev, [stepKey]: {} }))
     try {
       const result = await api.runTool(tool.endpoint, payload)
@@ -365,12 +396,28 @@ export default function SessionDetailPage({
             execution_time: result.execution_time,
             timestamp: result.timestamp,
           },
+          running_step_key: null,
+          running_tool: null,
+          running_started_at: null,
         },
       })
       await loadSession()
     } catch (e) {
       setStepResults(prev => ({ ...prev, [stepKey]: { error: String(e) } }))
       setStepState(prev => ({ ...prev, [stepKey]: 'failed' }))
+      try {
+        const existingMeta = (sessionRef.metadata ?? {}) as Record<string, unknown>
+        await api.updateSession(sessionRef.session_id, {
+          metadata: {
+            ...existingMeta,
+            running_step_key: null,
+            running_tool: null,
+            running_started_at: null,
+          },
+        })
+      } catch {
+        // non-fatal
+      }
     } finally {
       setRunningStepKey(null)
     }
@@ -396,6 +443,7 @@ export default function SessionDetailPage({
 
       const pid = Math.max(...candidates)
       await api.terminateProcess(pid)
+      
       setHandoffMsg(`Stopped running process ${pid}`)
       setRunningStepKey(null)
       setStepState(prev => ({ ...prev, [stepKey]: 'failed' }))
@@ -406,6 +454,21 @@ export default function SessionDetailPage({
           error: `Process ${pid} terminated by user`,
         },
       }))
+      if (session) {
+        try {
+          const existingMeta = (session.metadata ?? {}) as Record<string, unknown>
+          await api.updateSession(session.session_id, {
+            metadata: {
+              ...existingMeta,
+              running_step_key: null,
+              running_tool: null,
+              running_started_at: null,
+            },
+          })
+        } catch {
+          // non-fatal
+        }
+      }
     } catch (e) {
       setHandoffMsg(`Stop failed: ${String(e)}`)
     }

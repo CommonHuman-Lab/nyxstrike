@@ -46,7 +46,7 @@ export function resolveToolForStep(stepTool: string, tools: Tool[]): Tool | null
   return best?.tool ?? null
 }
 
-export type StepState = 'idle' | 'success' | 'failed'
+export type StepState = 'idle' | 'running' | 'success' | 'failed'
 
 export type PersistedStepResult = {
   success: boolean

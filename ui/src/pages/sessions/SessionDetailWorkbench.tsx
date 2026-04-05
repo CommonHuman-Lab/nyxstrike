@@ -5,6 +5,7 @@ import type { AttackChainStep, Tool, ToolExecResponse } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
 import { exportEntry } from '../../shared/utils'
 import type { StepState } from './sessionDetailUtils'
+import { ActionButton } from '../../components/ActionButton'
 
 interface SessionDetailWorkbenchProps {
   isCompleted: boolean
@@ -178,18 +179,14 @@ export function SessionDetailWorkbench({
               <div className="session-step-row">
                 <div className="session-step-head">
                   <span className={`session-tool-chip mono session-tool-chip--${stepState[selectedStepKey] ?? 'idle'}`}>{selectedStep.tool}</span>
-                  <button
-                    className="session-run-btn"
-                    onClick={() => onRunStep(selectedStep, selectedStepIndex)}
-                    disabled={isCompleted || selectedRunning}
-                  >
+                  <ActionButton variant="default" disabled={isCompleted || selectedRunning} onClick={() => onRunStep(selectedStep, selectedStepIndex)}>
                     {selectedRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
                     {isCompleted ? 'Completed' : (selectedRunning ? 'Running…' : `Run ${selectedStep.tool}`)}
-                  </button>
+                  </ActionButton>
                   {selectedRunning && !isCompleted && (
-                    <button className="session-stop-btn" onClick={() => { void onStopRunningStep() }}>
+                    <ActionButton variant="danger" onClick={() => { void onStopRunningStep() }}>
                       <Square size={12} /> Stop
-                    </button>
+                    </ActionButton>
                   )}
                 </div>
 
@@ -247,29 +244,16 @@ export function SessionDetailWorkbench({
                       </div>
                       {selectedStepKey && resultData && (
                         <div className="session-result-actions">
-                          <button
-                            className="run-export-btn"
-                            onClick={() => exportResultEntry('txt', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}
-                            title="Export as .txt"
-                          >
-                            <Download size={11} /> TXT
-                          </button>
-                          <button
-                            className="run-export-btn"
-                            onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}
-                            title="Export as .json"
-                          >
+                          <ActionButton variant="default" onClick={() => exportResultEntry('txt', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}>
+                            <Download size={11} /> Export
+                          </ActionButton>
+                          <ActionButton variant="default" onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}>
                             <Download size={11} /> JSON
-                          </button>
+                          </ActionButton>
                           {selectedStep.tool === 'create-attack-chain' && resultData.success && (
-                            <button
-                              className="run-export-btn"
-                              onClick={() => { void onApplyAttackChainFromResult() }}
-                              title="Add attack chain tools to manual execution"
-                              disabled={isCompleted}
-                            >
+                            <ActionButton disabled={isCompleted} variant="success" onClick={() => { void onApplyAttackChainFromResult() }}>
                               Use Chain
-                            </button>
+                            </ActionButton>
                           )}
                         </div>
                       )}

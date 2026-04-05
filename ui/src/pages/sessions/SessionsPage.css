@@ -510,6 +510,11 @@
   border-color: var(--border);
 }
 
+.session-workbench-tool--running {
+  background: color-mix(in srgb, var(--blue) 10%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--blue) 40%, var(--border));
+}
+
 .session-workbench-tool--success {
   background: color-mix(in srgb, var(--green) 12%, var(--bg-card));
   border-color: color-mix(in srgb, var(--green) 45%, var(--border));
