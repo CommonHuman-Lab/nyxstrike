@@ -310,7 +310,6 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
     try {
       const target = targetValue.trim()
       let sessionRes
-      let stepCount = 0
       if (mode.key === 'manual') {
         sessionRes = await api.createSession({
           target,
@@ -326,7 +325,6 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
           pushToast('error', 'Template is required')
           return
         }
-        stepCount = tpl.workflow_steps.length
         sessionRes = await api.createSessionFromTemplate({
           target,
           template_id: tpl.template_id,
@@ -342,7 +340,6 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
         })
       } else {
         const chain = await api.createAttackChain(target, mode.key)
-        stepCount = chain.attack_chain.steps.length
         sessionRes = await api.createSession({
           target,
           workflow_steps: chain.attack_chain.steps,
@@ -353,11 +350,6 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
         })
       }
       const sid = sessionRes.session.session_id
-      setCreateMsg(mode.key === 'manual'
-        ? `Session created: ${sid} (empty workflow, add tools manually).`
-        : mode.key === 'from_template'
-          ? `Session created: ${sid} (${stepCount} template tool calls loaded).`
-        : `Session created: ${sid} (${stepCount} tool calls ready).`)
       pushToast('success', `Session created: ${sid}`)
       closeStartModal()
       refresh()
