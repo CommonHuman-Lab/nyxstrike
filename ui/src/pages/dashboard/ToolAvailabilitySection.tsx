@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   Activity, AlertCircle, Box, Brain, Bug, CheckCircle, ChevronDown, ChevronRight,
+  ChevronUp,
   Cpu, Database, Earth, Eye, Fingerprint, Lock, Server, Shield, Wand, Wifi, XCircle, Zap,
 } from 'lucide-react'
 import type { Tool, WebDashboardResponse } from '../../api'
@@ -101,30 +102,53 @@ export function ToolAvailabilitySection({
   tools: Tool[]
   toolCategories: Record<string, string[]>
 }) {
+  const [showAll, setShowAll] = useState(false)
   const toolsByName = Object.fromEntries(tools.map(tool => [tool.name, tool]))
+  const installColor = health.all_essential_tools_available ? 'var(--success)' : 'var(--warning)'
+  const categoryEntries = Object.entries(health.category_stats)
+    .sort(([a], [b]) => a.localeCompare(b))
+  const visibleCategoryEntries = showAll
+    ? categoryEntries
+    : categoryEntries.filter(([, stats]) => stats.available < stats.total)
+  const missingCategoryCount = categoryEntries.filter(([, stats]) => stats.available < stats.total).length
 
   return (
     <section className="section">
-      <div className="section-header">
-        <h3>Tool Availability</h3>
-        <span className="section-meta">{getToolAvailabilityAgeLabel(health.tool_availability_age_seconds)}</span>
-      </div>
+      <button className="section-header section-header--collapsible" onClick={() => setShowAll(prev => !prev)}>
+        <h3>
+          Tool Availability
+          <span className="section-install-badge" style={{ color: installColor, borderColor: `${installColor}55`, background: `${installColor}1A` }}>
+            {health.total_tools_available}/{health.total_tools_count} installed
+          </span>
+        </h3>
+        <div className="section-header-side">
+          <span className="section-meta">{getToolAvailabilityAgeLabel(health.tool_availability_age_seconds)}</span>
+          <span className="section-chevron">{showAll ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
+        </div>
+      </button>
       <div className="cat-list">
-        {Object.entries(health.category_stats)
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([category, stats]) => {
-            const catToolNames = getCatTools(category, health.tools_status, toolCategories)
-            const catStatuses = Object.fromEntries(catToolNames.map(name => [name, health.tools_status[name] ?? false]))
-            return (
-              <ToolCategoryRow
-                key={category}
-                category={category}
-                stats={stats}
-                toolStatuses={catStatuses}
-                toolsByName={toolsByName}
-              />
-            )
-          })}
+        {!showAll && (
+          <div className="cat-list-mode-note">
+            Showing categories with missing tools ({missingCategoryCount}/{categoryEntries.length})
+          </div>
+        )}
+        {visibleCategoryEntries.map(([category, stats]) => {
+          const catToolNames = getCatTools(category, health.tools_status, toolCategories)
+          const catStatuses = Object.fromEntries(catToolNames.map(name => [name, health.tools_status[name] ?? false]))
+          return (
+            <ToolCategoryRow
+              key={category}
+              category={category}
+              stats={stats}
+              toolStatuses={catStatuses}
+              toolsByName={toolsByName}
+            />
+          )
+        })}
+        <button className="cat-list-toggle-row" onClick={() => setShowAll(prev => !prev)}>
+          <span>{showAll ? 'Show only incomplete categories' : 'Show all categories'}</span>
+          <span className="cat-list-toggle-chevron">{showAll ? <ChevronUp size={14} /> : <ChevronRight size={14} />}</span>
+        </button>
       </div>
     </section>
   )

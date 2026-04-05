@@ -39,7 +39,14 @@ export function DashboardPage({ health, tools, history, runHistory, loading, err
       <ToolAvailabilitySection health={health} tools={tools} toolCategories={toolCategories} />
 
       <div className="dashboard-signature-wrap">
-        <span className="dashboard-signature mono">Made by CommonHuman</span>
+        <span className="dashboard-signature mono">
+            <a
+            href="https://github.com/CommonHuman-Lab"
+            target="_blank"
+            rel="noreferrer">
+              Made by CommonHuman
+            </a>
+          </span>
       </div>
     </>
   )
