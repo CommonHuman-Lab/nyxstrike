@@ -5,6 +5,7 @@ import { buildInitialFieldValues, buildRunPayload } from '../../components/tool-
 import { fmtTs } from '../../shared/utils'
 import { SessionDetailWorkbench } from './SessionDetailWorkbench'
 import { TemplateModal } from './TemplateModal'
+import { ConfirmActionModal } from '../../components/ConfirmActionModal'
 import {
   normalizeStepsFromSession,
   resolveToolForStep,
@@ -42,6 +43,10 @@ export default function SessionDetailPage({
   const [addToolSearch, setAddToolSearch] = useState('')
   const [handoffLoading, setHandoffLoading] = useState(false)
   const [handoffMsg, setHandoffMsg] = useState<string | null>(null)
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [completeLoading, setCompleteLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const toolMap = useMemo(() => Object.fromEntries(tools.map(t => [t.name, t])), [tools])
   const steps = session ? normalizeStepsFromSession(session) : []
@@ -111,21 +116,29 @@ export default function SessionDetailPage({
 
   async function completeSession() {
     if (!session) return
+    setCompleteLoading(true)
     try {
       await api.updateSession(session.session_id, { status: 'completed' })
       onBack()
     } catch (e) {
       setHandoffMsg(`Complete failed: ${String(e)}`)
+    } finally {
+      setCompleteLoading(false)
+      setShowCompleteConfirm(false)
     }
   }
 
   async function deleteSession() {
     if (!session) return
+    setDeleteLoading(true)
     try {
       await api.deleteSession(session.session_id)
       onBack()
     } catch (e) {
       setHandoffMsg(`Delete failed: ${String(e)}`)
+    } finally {
+      setDeleteLoading(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -325,8 +338,8 @@ export default function SessionDetailPage({
           <button className="session-action-btn" onClick={handoverToLlm} disabled={handoffLoading}>
             <Bot size={12} /> {handoffLoading ? 'Handing over…' : 'Handover to LLM'}
           </button>
-          {session.status !== 'completed' && <button className="session-complete-btn" onClick={completeSession}>Complete Session</button>}
-          <button className="session-delete-btn" onClick={deleteSession}>Delete Session</button>
+          {session.status !== 'completed' && <button className="session-complete-btn" onClick={() => setShowCompleteConfirm(true)}>Complete Session</button>}
+          <button className="session-delete-btn" onClick={() => setShowDeleteConfirm(true)}>Delete Session</button>
           {handoffMsg && <span className="section-meta">{handoffMsg}</span>}
         </div>
 
@@ -337,6 +350,38 @@ export default function SessionDetailPage({
           setTemplateName={setTemplateName}
           onClose={() => setShowTemplateModal(false)}
           onSave={createTemplateFromSession}
+        />
+
+        <ConfirmActionModal
+          isOpen={showCompleteConfirm}
+          title="Complete Session"
+          description="Mark this session as completed? It will move to Completed Sessions."
+          impactItems={[
+            `Session ID: ${session.session_id}`,
+            'Session will become read-only',
+          ]}
+          confirmLabel="Yes, complete session"
+          cancelLabel="Keep active"
+          confirmVariant="danger"
+          isConfirming={completeLoading}
+          onConfirm={completeSession}
+          onClose={() => setShowCompleteConfirm(false)}
+        />
+
+        <ConfirmActionModal
+          isOpen={showDeleteConfirm}
+          title="Delete Session"
+          description="Delete this session permanently? This action cannot be undone."
+          impactItems={[
+            `Session ID: ${session.session_id}`,
+            'All workflow state and run metadata will be removed',
+          ]}
+          confirmLabel="Yes, delete session"
+          cancelLabel="Keep session"
+          confirmVariant="danger"
+          isConfirming={deleteLoading}
+          onConfirm={deleteSession}
+          onClose={() => setShowDeleteConfirm(false)}
         />
       </section>
 
