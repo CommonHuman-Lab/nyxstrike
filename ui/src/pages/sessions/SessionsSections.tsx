@@ -1,5 +1,6 @@
 import { Layers, RefreshCw, Target } from 'lucide-react'
-import type { KeyboardEvent, ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import type { AttackChainStep } from '../../api'
 import type { SessionSummary } from '../../api'
 import { SessionCard } from './SessionCard'
 import type { StartMode } from './constants'
@@ -101,7 +102,7 @@ export function StartSessionModal({
   onSubmit,
 }: {
   startMode: StartMode
-  templates: Array<{ template_id: string; name: string }>
+  templates: Array<{ template_id: string; name: string; workflow_steps?: AttackChainStep[] }>
   selectedTemplateId: string
   setSelectedTemplateId: (value: string) => void
   modalTarget: string
@@ -113,6 +114,36 @@ export function StartSessionModal({
   onClose: () => void
   onSubmit: () => void
 }) {
+  const templateSelectRef = useRef<HTMLSelectElement | null>(null)
+  const targetInputRef = useRef<HTMLInputElement | null>(null)
+  const selectedTemplate = useMemo(
+    () => templates.find(template => template.template_id === selectedTemplateId),
+    [templates, selectedTemplateId]
+  )
+  const modalTools = useMemo(() => {
+    if (startMode.key !== 'from_template') return startMode.tools
+    if (!selectedTemplate) return startMode.tools
+    const steps = Array.isArray(selectedTemplate.workflow_steps) ? selectedTemplate.workflow_steps : []
+    const uniqueTools: string[] = []
+    for (const step of steps) {
+      const toolName = step?.tool
+      if (!toolName || uniqueTools.includes(toolName)) continue
+      uniqueTools.push(toolName)
+    }
+    return uniqueTools
+  }, [startMode, selectedTemplate])
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (startMode.key === 'from_template') {
+        templateSelectRef.current?.focus()
+        return
+      }
+      targetInputRef.current?.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [startMode.key])
+
   return (
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal">
@@ -127,8 +158,8 @@ export function StartSessionModal({
           <div className="modal-section">
             <span className="modal-label">Typical Tooling</span>
             <div className="modal-params">
-              {startMode.tools.length === 0 && <span className="modal-param mono">none preloaded</span>}
-              {startMode.tools.map(tool => (
+              {modalTools.length === 0 && <span className="modal-param mono">none preloaded</span>}
+              {modalTools.map(tool => (
                 <span key={tool} className="modal-param mono">{tool}</span>
               ))}
             </div>
@@ -137,6 +168,7 @@ export function StartSessionModal({
             <div className="session-start-form">
               <label className="mono">Template *</label>
               <select
+                ref={templateSelectRef}
                 className="session-objective-select"
                 value={selectedTemplateId}
                 onChange={e => setSelectedTemplateId(e.target.value)}
@@ -152,6 +184,7 @@ export function StartSessionModal({
             <label className="mono" htmlFor="session-target-input">Target *</label>
             <input
               id="session-target-input"
+              ref={targetInputRef}
               className="search-input mono"
               value={modalTarget}
               onChange={e => setModalTarget(e.target.value)}
