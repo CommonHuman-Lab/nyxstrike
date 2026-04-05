@@ -72,7 +72,7 @@ export function ConfirmActionModal({
               onClick={() => { void onConfirm() }}
               disabled={isConfirming}
             >
-              {isConfirming ? 'Clearing…' : confirmLabel}
+              {isConfirming ? 'Working…' : confirmLabel}
             </ActionButton>
           </div>
         </div>

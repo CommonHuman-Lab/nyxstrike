@@ -11,6 +11,8 @@ import {
   type Tool,
 } from '../../api'
 import { StatCard } from '../../components/StatCard'
+import { ConfirmActionModal } from '../../components/ConfirmActionModal'
+import { useToast } from '../../components/ToastProvider'
 import { fmtTs } from '../../shared/utils'
 import { START_MODES, type StartMode } from './constants'
 import { SessionListSection, StartSessionModal, StartSessionSection } from './SessionsSections'
@@ -22,6 +24,7 @@ interface SessionsPageProps {
 }
 
 export default function SessionsPage({ demoData, onOpenSession }: SessionsPageProps) {
+  const { pushToast } = useToast()
   const [data, setData] = useState<SessionsResponse | null>(demoData?.sessions ?? null)
   const [creatingSession, setCreatingSession] = useState(false)
   const [tools, setTools] = useState<Tool[]>([])
@@ -29,6 +32,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   const [createMsg, setCreateMsg] = useState<string | null>(null)
   const [templateActionError, setTemplateActionError] = useState<string | null>(null)
   const [templateActionBusyId, setTemplateActionBusyId] = useState<string | null>(null)
+  const [pendingDeleteTemplate, setPendingDeleteTemplate] = useState<SessionTemplate | null>(null)
   const [startMode, setStartMode] = useState<StartMode | null>(null)
   const [modalTarget, setModalTarget] = useState('')
   const [modalNote, setModalNote] = useState('')
@@ -220,10 +224,14 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
       setTemplates(prev => prev.filter(t => t.template_id !== templateId))
       if (selectedTemplateId === templateId) setSelectedTemplateId('')
       setCreateMsg('Template deleted.')
+      pushToast('success', 'Template deleted')
     } catch (e) {
-      setTemplateActionError(String(e))
+      const msg = String(e)
+      setTemplateActionError(msg)
+      pushToast('error', `Delete failed: ${msg}`)
     } finally {
       setTemplateActionBusyId(null)
+      setPendingDeleteTemplate(null)
     }
   }
 
@@ -240,10 +248,12 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
     const name = editTemplateName.trim()
     if (!name) {
       setEditTemplateError('Template name is required')
+      pushToast('error', 'Template name is required')
       return
     }
     if (editTemplateSteps.length === 0) {
       setEditTemplateError('Template must include at least one tool')
+      pushToast('error', 'Template must include at least one tool')
       return
     }
 
@@ -257,9 +267,12 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
       })
       await refreshTemplates()
       setCreateMsg('Template updated.')
+      pushToast('success', 'Template updated')
       closeTemplateEditor()
     } catch (e) {
-      setEditTemplateError(String(e))
+      const msg = String(e)
+      setEditTemplateError(msg)
+      pushToast('error', `Save failed: ${msg}`)
     } finally {
       setSavingTemplate(false)
     }
@@ -268,6 +281,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   async function createSessionFromTarget(mode: StartMode, targetValue: string, noteValue: string) {
     if (!targetValue.trim()) {
       setModalError('Target is required')
+      pushToast('error', 'Target is required')
       return
     }
 
@@ -290,6 +304,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
         const tpl = templates.find(t => t.template_id === selectedTemplateId)
         if (!tpl) {
           setModalError('Template is required')
+          pushToast('error', 'Template is required')
           return
         }
         stepCount = tpl.workflow_steps.length
@@ -323,13 +338,15 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
         ? `Session created: ${sid} (empty workflow, add tools manually).`
         : mode.key === 'from_template'
           ? `Session created: ${sid} (${stepCount} template tool calls loaded).`
-        : `Session created: ${sid} (${stepCount} tool calls ready).`)
+          : `Session created: ${sid} (${stepCount} tool calls ready).`)
+      pushToast('success', `Session created: ${sid}`)
       closeStartModal()
       refresh()
     } catch (e) {
       const msg = String(e)
       setModalError(msg)
       setCreateMsg(msg)
+      pushToast('error', `Session start failed: ${msg}`)
     } finally {
       setCreatingSession(false)
     }
@@ -500,7 +517,7 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
                     </button>
                     <button
                       className="session-delete-btn"
-                      onClick={() => deleteTemplate(template.template_id)}
+                      onClick={() => setPendingDeleteTemplate(template)}
                       disabled={templateActionBusyId === template.template_id}
                     >
                       <Trash2 size={12} /> {templateActionBusyId === template.template_id ? 'Deleting…' : 'Delete'}
@@ -589,6 +606,32 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={!!pendingDeleteTemplate}
+        title="Delete Template"
+        description={pendingDeleteTemplate
+          ? `Delete template "${pendingDeleteTemplate.name}"? This action cannot be undone.`
+          : 'Delete template?'}
+        impactItems={pendingDeleteTemplate
+          ? [
+            `Template ID: ${pendingDeleteTemplate.template_id}`,
+            `Tools in template: ${pendingDeleteTemplate.workflow_steps.length}`,
+            'Future sessions can no longer use this template',
+          ]
+          : []}
+        confirmLabel="Yes, delete template"
+        cancelLabel="Keep template"
+        confirmVariant="danger"
+        isConfirming={!!pendingDeleteTemplate && templateActionBusyId === pendingDeleteTemplate.template_id}
+        onConfirm={async () => {
+          if (!pendingDeleteTemplate) return
+          await deleteTemplate(pendingDeleteTemplate.template_id)
+        }}
+        onClose={() => {
+          if (!templateActionBusyId) setPendingDeleteTemplate(null)
+        }}
+      />
     </div>
   )
 }
