@@ -102,46 +102,40 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 
 </details>
 
-## Installation
+## Quickstart
 
-### Quick Setup & Run Hexstrike Server
-
-> **Note:** Many tools (nmap, masscan, etc.) require elevated privileges for certain scan types. You can either run the setup as `root`, or grant individual tool capabilities (e.g. `setcap cap_net_raw+ep /usr/bin/nmap`). Running as root is simpler but less secure.
+Get the server and MCP client running in minutes for AI-powered penetration testing, recon automation, and bug bounty workflows.
 
 ```bash
-# 1. Clone the repository
+# 1) Clone
 git clone https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition.git
 cd hexstrike-ai-community-edition
 
-# 2. Create virtual environment
+# 2) Create and activate venv
 python3 -m venv hexstrike-env
-source hexstrike-env/bin/activate        # Linux/Mac
-# sudo source hexstrike-env/bin/activate # Linux as root
-# hexstrike-env\Scripts\activate         # Windows
+source hexstrike-env/bin/activate
 
-# 3. Install Python dependencies
+# 3) Install dependencies
 pip3 install -r requirements.txt
 
-# 4. Start the API server
+# 4) Start API server + dashboard (http://localhost:8888)
 python3 hexstrike_server.py
 
-# 5. Dashboard automatically at http://localhost:8888
-
-# 6. In a separate terminal, start the MCP client
-# (use the venv python to ensure dependencies are available)
+# 5) In a second terminal, start MCP client
 hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --profile full
 ```
 
-> See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) on how to customize the experience.
-
-### Verify Installation
+### Verify Setup
 
 ```bash
-# Browse to http://localhost:8888
-
-# Test server API health
 curl http://localhost:8888/health
 ```
+
+### Permissions Note
+
+Some security tools (for example `nmap` and `masscan`) need elevated privileges for specific scan modes. Use a dedicated test VM and least-privilege setup where possible.
+
+> See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) for runtime options and profile tuning.
 
 ### Use Hexstrike
 
