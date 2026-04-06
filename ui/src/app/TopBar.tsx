@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import faviconUrl from '../favicon-16x16.png'
 import {
-  Clock, RefreshCw, Lock, Github, Copy, Check,
+  RefreshCw, Lock, Github, Copy, Check,
   LayoutDashboard, Terminal, Play,
   Settings as SettingsIcon, HelpCircle,
   ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X,
@@ -66,13 +66,17 @@ export function TopBar({
   onOpenCommandPalette,
   onSignOut,
 }: TopBarProps) {
+  const REFRESH_BUTTON_DELAY_MS = 3500
   const [themeModalOpen, setThemeModalOpen] = useState(false)
   const [themePreviewId, setThemePreviewId] = useState<ThemeId>(themeId)
   const [themeSelectionId, setThemeSelectionId] = useState<ThemeId>(themeId)
   const [updateModalOpen, setUpdateModalOpen] = useState(false)
   const [updateCmdCopied, setUpdateCmdCopied] = useState(false)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [showRefreshButton, setShowRefreshButton] = useState(false)
   const quickActionsRef = useRef<HTMLDivElement | null>(null)
+  const firstRefreshIsoRef = useRef<string | null>(null)
+  const [showRefreshInTooltip, setShowRefreshInTooltip] = useState(demo)
 
   function copyUpdateCommand() {
     navigator.clipboard.writeText('git pull').then(() => {
@@ -89,6 +93,23 @@ export function TopBar({
     }
     document.documentElement.setAttribute('data-theme', themePreviewId)
   }, [themeModalOpen, themePreviewId, themeId])
+
+  useEffect(() => {
+    if (demo) {
+      setShowRefreshInTooltip(true)
+      return
+    }
+    if (!lastRefresh) return
+    const iso = lastRefresh.toISOString()
+    if (!firstRefreshIsoRef.current) {
+      firstRefreshIsoRef.current = iso
+      return
+    }
+    if (firstRefreshIsoRef.current !== iso) {
+      setShowRefreshInTooltip(true)
+      firstRefreshIsoRef.current = iso
+    }
+  }, [demo, lastRefresh])
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
@@ -111,6 +132,21 @@ export function TopBar({
     }
   }, [quickActionsOpen])
 
+  useEffect(() => {
+    if (demo || isStreaming) {
+      setShowRefreshButton(false)
+      return
+    }
+
+    const timerId = window.setTimeout(() => {
+      setShowRefreshButton(true)
+    }, REFRESH_BUTTON_DELAY_MS)
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
+  }, [demo, isStreaming])
+
   function openThemeModal() {
     setQuickActionsOpen(false)
     setThemePreviewId(themeId)
@@ -129,6 +165,17 @@ export function TopBar({
     setThemeId(themeSelectionId)
     setThemeModalOpen(false)
   }
+
+  const healthLabel = health?.status
+    ? health.status.charAt(0).toUpperCase() + health.status.slice(1)
+    : (loading ? 'Connecting…' : error ?? 'Unknown')
+  const streamLabel = isStreaming ? 'Live' : streamingError ? 'Polling' : 'N/A'
+  const refreshPart = showRefreshInTooltip && lastRefresh
+    ? ` | Last refresh: ${lastRefresh.toLocaleTimeString('en-GB')}`
+    : ''
+  const statusTooltip = demo
+    ? `System: ${healthLabel}${refreshPart}`
+    : `System: ${healthLabel} | Updates: ${streamLabel}${refreshPart}${streamingError ? ` (${streamingError})` : ''}`
 
   const mobilePage = page === 'session-detail' ? 'sessions' : page
 
@@ -241,9 +288,9 @@ export function TopBar({
         </button>
       </nav>
 
-      <div className="topbar-right">
-        <label className="topbar-mobile-nav" aria-label="Navigate page">
-          <span className="topbar-mobile-nav-label">Page</span>
+        <div className="topbar-right">
+          <label className="topbar-mobile-nav" aria-label="Navigate page">
+            <span className="topbar-mobile-nav-label">Page</span>
           <select
             className="topbar-mobile-nav-select"
             value={mobilePage}
@@ -254,26 +301,12 @@ export function TopBar({
             ))}
           </select>
         </label>
-        {lastRefresh && (
-          <span className="topbar-meta">
-            <Clock size={12} /> {lastRefresh.toLocaleTimeString('en-GB')}
-          </span>
-        )}
-        {demo ? null : (
-          <>
-            <div
-              className={`status-dot ${isStreaming ? 'online' : streamingError ? 'error' : 'loading'}`}
-              title={isStreaming ? 'Live (streaming)' : streamingError ? streamingError : 'Idle'}
-              style={{ marginRight: 4 }}
-            />
-            <span className="status-label" style={{ fontSize: 12 }}>
-              {isStreaming ? 'Live' : streamingError ? 'Polling' : 'N/A'}
-            </span>
-          </>
-        )}
-        <div className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}`} />
-        <span className="status-label">{health?.status ? health.status.charAt(0).toUpperCase() + health.status.slice(1) : (loading ? 'connecting…' : error ?? 'unknown')}</span>
-        {!isStreaming && (
+        <div
+          className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}`}
+          title={statusTooltip}
+          aria-label={statusTooltip}
+        />
+        {showRefreshButton && (
           <button className="icon-btn" onClick={fetchAll} title="Refresh now">
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
           </button>

@@ -1279,10 +1279,6 @@
 }
 
 @media (max-width: 640px) {
-  .status-label {
-    display: none;
-  }
-
   .topbar-mobile-nav-select {
     min-width: 76px;
     max-width: 96px;
