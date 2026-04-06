@@ -27,6 +27,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   fingerprint: <Fingerprint size={14} />,
   ops: <Earth size={14} />,
   intelligence: <Brain size={14} />,
+  data_processing: <Server size={14} />,
 }
 
 function ToolCategoryRow({

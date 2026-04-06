@@ -262,6 +262,7 @@ def register_blueprints(app):
 
   # Data Processing
   app.register_blueprint(api_data_processing_anew_bp)
+  app.register_blueprint(api_data_processing_hurl_bp)
 
   # Container Scanning
   app.register_blueprint(api_container_scan_trivy_bp)

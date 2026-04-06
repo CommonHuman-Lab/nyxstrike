@@ -248,6 +248,7 @@ TOOL_PROFILES = {
     #Tools for data processing and unique line filtering (e.g., anew).
     "data_processing": [
         lambda mcp, client, logger: register_anew_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_hurl_tool(mcp, client, logger),
     ],
 
     #Tools for URL filtering and duplicate removal (e.g., uro).

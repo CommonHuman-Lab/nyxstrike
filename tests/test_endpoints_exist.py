@@ -876,6 +876,10 @@ class TestCryptoData:
         r = _post(client, "/api/tools/anew")
         assert_route_exists(r, "/api/tools/anew")
 
+    def test_hurl(self, client):
+        r = _post(client, "/api/tools/data_processing/hurl")
+        assert_route_exists(r, "/api/tools/data_processing/hurl")
+
 
 # ===========================================================================
 # Wi-Fi Pentesting

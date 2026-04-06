@@ -77,6 +77,14 @@ def build_tool_catalog() -> Dict[str, ToolSpec]:
             tech_affinities=set(),
             noise_score=0.15,
         ),
+        "hurl": ToolSpec(
+            name="hurl",
+            capabilities={"api_assessment", "manual_validation"},
+            target_types={TargetType.WEB_APPLICATION.value, TargetType.API_ENDPOINT.value},
+            objectives={"quick", "comprehensive", "stealth", "reconnaissance", "api_security", "intelligence"},
+            tech_affinities=set(),
+            noise_score=0.1,
+        ),
         "katana": ToolSpec(
             name="katana",
             capabilities={"content_discovery", "endpoint_discovery", "api_discovery"},

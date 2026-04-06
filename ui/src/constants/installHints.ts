@@ -128,6 +128,7 @@ export const INSTALL_HINTS: Record<string, string> = {
   sublist3r:         'sudo apt install sublist3r',
   parsero:           'sudo apt install parsero',
   joomscan:          'sudo apt install joomscan',
+  hurl:              'sudo apt install hurl',
 }
 
 export function installHint(name: string): string {

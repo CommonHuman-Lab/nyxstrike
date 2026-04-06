@@ -19,7 +19,8 @@ REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
 # Binary name overrides for tools where the executable name differs from the tool name
 BINARY_NAME_OVERRIDES = {
     "scout-suite": "scout",
-    "volatility": "vol"
+    "volatility": "vol",
+    "hurl": "hURL"
 }
 
 # Comprehensive list of tools categorized by functionality for health monitoring and availability checks
@@ -44,7 +45,7 @@ HEALTH_TOOL_CATEGORIES = {
               "social-analyzer", "recon-ng", "maltego", "spiderfoot",
               "whois", "bbot", "gau", "waybackurls", "waymore", "sublist3r", "parsero"],
     "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
-    "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
+    "api": ["api-schema-analyzer", "curl", "http-framework", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
                  "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
                  "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", 
@@ -59,6 +60,8 @@ HEALTH_TOOL_CATEGORIES = {
     "ops": ["auto_install_missing_apt_tools"],
 
     "intelligence": ["analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan", "technology-detection"],
+
+    "data_processing": ["hurl", "anew"],
 
     #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned"
     #"active_directory": [
