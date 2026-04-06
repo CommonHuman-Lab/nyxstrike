@@ -7,6 +7,13 @@ This guide covers the full path for adding a new tool:
 - Tool registry entry (`tool_registry.py`)
 - Optional intelligence-planner integration
 
+Related docs:
+
+- `docs/add_new_tool_examples.md`
+- `docs/testing_matrix.md`
+- `docs/naming_and_schema_conventions.md`
+- `docs/intelligence_tool_catalog.md`
+
 ## Architecture at a glance
 
 1. **Server API route** executes the underlying binary or logic.
@@ -19,6 +26,10 @@ This guide covers the full path for adding a new tool:
 ## 1) Add the server endpoint
 
 Create a module under `server_api/<category>/` (or extend an existing one).
+
+For new tools, use category-prefixed routes:
+
+- `POST /api/tools/<category>/<tool-name>`
 
 Example pattern:
 
@@ -33,7 +44,7 @@ logger = logging.getLogger(__name__)
 api_web_scan_mytool_bp = Blueprint("api_web_scan_mytool", __name__)
 
 
-@api_web_scan_mytool_bp.route("/api/tools/mytool", methods=["POST"])
+@api_web_scan_mytool_bp.route("/api/tools/web_scan/mytool", methods=["POST"])
 def run_mytool():
     start_time = time.time()
     try:
@@ -96,7 +107,7 @@ def register_mytool(mcp, hexstrike_client, logger):
         }
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/mytool", payload)
+            None, lambda: hexstrike_client.safe_post("api/tools/web_scan/mytool", payload)
         )
 ```
 
@@ -116,7 +127,7 @@ Update `tool_registry.py` `TOOLS` dictionary:
 ```python
 "mytool": {
     "desc": "One-line tool description",
-    "endpoint": "/api/tools/mytool",
+    "endpoint": "/api/tools/web_scan/mytool",
     "method": "POST",
     "category": "web_recon",
     "params": {"target": {"required": True}},
@@ -128,6 +139,7 @@ Update `tool_registry.py` `TOOLS` dictionary:
 Guidelines:
 
 - `endpoint` must match the Flask route.
+- Prefer category-prefixed endpoint paths for new tools.
 - `params` = required fields for `run_tool` gateway validation.
 - `optional` = defaults auto-filled by `run_tool`.
 - `category` should match existing taxonomy when possible.
