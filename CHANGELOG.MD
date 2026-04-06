@@ -42,10 +42,10 @@ Precise summary based on GitHub release notes and current branch changes.
 
 ## 1.0.9 (2026-02-24)
 - Added password-cracking tools: `hashid`, `patator`, `ophcrack`, `medusa`.
-- Added MIT `LICENSE` and doc updates; fixed `httpx` target flag handling.
+- Fixed `httpx` target flag handling.
 
 ## 1.0.8 (2026-02-23)
-- Added MCP profile mode (`--profile`) and improved default tool profile behavior.
+- Added MCP profile modes (`--profile`, `--compact`) and improved default tool profile behavior.
 - Introduced `AGENTS.md` guidance and new config defaults (`DEFAULT_HEXSTRIKE_SERVER`, `MAX_RETRIES`).
 - Refactored `hexstrike_mcp.py` entrypoint to a much smaller modular structure.
 
