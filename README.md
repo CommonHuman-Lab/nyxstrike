@@ -137,31 +137,46 @@ Some security tools (for example `nmap` and `masscan`) need elevated privileges 
 
 > See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) for runtime options and profile tuning.
 
-### Use Hexstrike
+## MCP Integrations
 
-#### Installation & Demo Video
+Connect this platform to MCP-compatible AI clients for automated penetration testing, bug bounty workflows, and security research.
 
-Watch the full installation and setup walkthrough here: [YouTube - HexStrike AI Installation & Demo](https://www.youtube.com/watch?v=pSoftCagCm8)
+- Supported clients include **OpenCode**, **Cursor**, **Claude Desktop**, **VS Code Copilot**, **Roo Code**, and other MCP-compatible agents.
+- Watch setup walkthrough: [YouTube - HexStrike AI Installation & Demo](https://www.youtube.com/watch?v=pSoftCagCm8)
+- Full client-specific guides: [Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
+
+### Universal MCP Command
+
+Use this command pattern in clients that support local stdio MCP servers:
+
+```bash
+/path/to/hexstrike/hexstrike-env/bin/python3 /path/to/hexstrike/hexstrike_mcp.py --server http://127.0.0.1:8888 --profile full
+```
+
+### OpenCode Example
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "hexstrike": {
+      "type": "local",
+      "command": [
+        "/path/to/hexstrike/hexstrike-env/bin/python3",
+        "/path/to/hexstrike/hexstrike_mcp.py",
+        "--server",
+        "http://127.0.0.1:8888",
+        "--profile",
+        "full"
+      ],
+      "enabled": true
+    }
+  }
+}
+```
 
 <details>
-<summary>Supported AI Clients for Running & Integration</summary>
-
-You can install and run HexStrike AI MCPs with various AI clients, including:
-
-- **5ire (Latest version v0.14.0 not supported for now)**
-- **VS Code Copilot**
-- **Roo Code**
-- **Cursor**
-- **Claude Desktop**
-- **OpenCode**
-- **Any MCP-compatible agent**
-
-Refer to the video above for step-by-step instructions and integration examples for these platforms.
-
-</details>
-
-<details>
-<summary>Claude Desktop Integration or Cursor</summary>
+<summary>Claude Desktop / Cursor Example</summary>
 
 Edit `~/.config/Claude/claude_desktop_config.json`:
 
@@ -184,12 +199,13 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
   }
 }
 ```
+
 </details>
 
 <details>
-<summary>VS Code Copilot Integration</summary>
+<summary>VS Code Copilot Example</summary>
 
-Configure VS Code settings in `.vscode/settings.json`:
+Configure `.vscode/settings.json`:
 
 ```json
 {
@@ -209,32 +225,7 @@ Configure VS Code settings in `.vscode/settings.json`:
   "inputs": []
 }
 ```
-</details>
 
-<details>
-<summary>OpenCode Integration</summary>
-
-Configure OpenCode settings in `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "hexstrike": {
-      "type": "local",
-      "command": [
-        "/path/to/hexstrike/hexstrike-env/bin/python3",
-        "/path/to/hexstrike/hexstrike_mcp.py",
-        "--server",
-        "http://127.0.0.1:8888",
-        "--profile",
-        "default"
-      ],
-      "enabled": true
-    }
-  }
-}
-```
 </details>
 
 ---
