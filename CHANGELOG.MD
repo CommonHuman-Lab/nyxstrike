@@ -1,50 +1,80 @@
 # Changelog
 
+Precise summary based on GitHub release notes and current branch changes.
+
 ## 1.3.0 - shellshark (next)
-- Added new tools/workflows: `hurl`, `waymore`, and improved `testssl.sh` wrapper compatibility.
-- Upgraded intelligence planning with precision modes, attack-chain preview, and step-level selection reasons.
-- Improved sessions and operator UX: template/workbench polish, tool-log export, ESC-to-close modals, and update modal with copyable `git pull`.
-- Strengthened long-run reliability with per-tool timeout policy, request/runtime timeout split, inactivity watchdog, and max runtime cap.
-- Expanded quality coverage with output-cleaning tests plus updated tool-integration/planner docs.
+- Added new tools/wrappers: `hurl`, `waymore`, and improved `testssl.sh` compatibility/fallback.
+- Upgraded intelligence workflows with precision planning, preview mode, and tool selection reasons.
+- Improved sessions and UI flows (template/workbench polish, log export, ESC-to-close modals, update modal with copyable `git pull`).
+- Strengthened long-running execution with per-tool timeout policies, request/runtime timeout split, inactivity watchdog, and max runtime cap.
 
 ## 1.2.0 - packetpanther (2026-04-04)
-- Added in-app update notification groundwork (version check surfaced in UI).
-- Stabilization release consolidating 1.1.x tooling and dashboard improvements.
+- Added global command palette (`Ctrl/Cmd+K`) and plug-and-play theme system.
+- Improved Run/Sessions workflows (favorites, recent targets, compare results, session template/workbench improvements).
+- Moved run history to server-side persistence and polished dashboard/frontend structure.
 
 ## 1.1.2 - rootkitfox (2026-03-29)
-- Reliability and packaging consistency release for the expanded 1.1.x toolset.
-- Maintenance fixes and quality improvements ahead of 1.2.0.
+- Refactored tool system internals (centralized constants, flatter probing, better detector logic for pip/gem/cargo).
+- Added `/api/tools/categories` and dashboard helper cleanups for stronger frontend integration.
+- Improved vulnerability-intelligence matching and wordlist store integration.
 
 ## 1.1.1 - Zerodaywolf (2026-03-26)
-- Added new security tools: `joomscan`, `parsero`, and `sublist3r`.
-- Improved installation hints and tool/category alignment, including x8 install/check refinements.
-- Refined dashboard/tool status behavior and parent/child tool status matching.
+- Expanded reconnaissance/vuln tooling with `sherlock`, `spiderfoot`, `sublist3r`, `parsero`, `joomscan`, `whatweb`, `vulnx`, `ldapdomaindump`, and `commix`.
+- Improved coverage for OSINT, web fingerprinting, CVE intelligence, and AD enumeration workflows.
 
-## 1.1.0 (2026-03-23)
-- Major web dashboard expansion: dedicated Tasks, Tools, Reports, and Sessions pages.
-- Added rich run-history UX: search, clear, export, rerun, and run-result modal workflows.
-- Added SSE live streaming with polling fallback for dashboard/process/log surfaces.
-- Improved tool experience: install-command copy, effectiveness tracking, registry modal polish, and category/health alignment.
-- Added demo mode support and broad UI responsiveness/quality improvements.
+## 1.1.0 - Major Features (2026-03-23)
+- Introduced the built-in web dashboard (`http://localhost:8888`) with tool availability, reports, live KPIs, and logs.
+- Expanded platform scale to 185+ MCP tools and added more multi-agent/skill workflows.
+- Delivered major refactor/performance pass and improved operator control across run/registry/help surfaces.
 
 ## 1.0.12 (2026-03-15)
-- Stabilization release with reliability-focused fixes.
-- Prepared the codebase for the larger 1.1 dashboard/session/tooling expansion.
+- Added 12 new tools and 9 new LLM skills.
+- Updated docs for expanded toolset, async execution model, and newer Python compatibility/modes.
 
 ## 1.0.11 (2026-03-11)
-- Hardening release for production-readiness improvements.
-- Included reliability fixes and operational cleanup.
+- Added optional bearer auth (`HEXSTRIKE_API_TOKEN`) and MCP client auth/SSL flags (`--auth-token`, `--disable-ssl-verify`).
+- Added `auto_install_missing_apt_tools` MCP flow for server-side tool installation.
+- Improved deployment/security documentation and general cleanup.
 
 ## 1.0.10 (2026-02-25)
-- Added service/tool check improvements including Metasploit detection correction.
-- Patch release focused on tool availability accuracy and stability.
+- Added `autopsy`, `aircrack-ng`, `theharvester`, and `exploit-db` integrations.
+- Refactored tool registration/import flow for cleaner modularity and easier extension.
 
-## 1.0.3 - 1.0.9 (2026-02-14 - 2026-02-24)
-- Included incremental fixes and release packaging cleanup.
-- Added frequent tool updates and wrapper fixes.
-- Hardened core workflows and improved quality-of-life UX.
+## 1.0.9 (2026-02-24)
+- Added password-cracking tools: `hashid`, `patator`, `ophcrack`, `medusa`.
+- Added MIT `LICENSE` and doc updates; fixed `httpx` target flag handling.
+
+## 1.0.8 (2026-02-23)
+- Added MCP profile mode (`--profile`) and improved default tool profile behavior.
+- Introduced `AGENTS.md` guidance and new config defaults (`DEFAULT_HEXSTRIKE_SERVER`, `MAX_RETRIES`).
+- Refactored `hexstrike_mcp.py` entrypoint to a much smaller modular structure.
+
+## 1.0.7 (2026-02-21)
+- Added wordlist management API (`wordlist_store`) with CRUD and best-match retrieval.
+- Introduced `core/config_core.py` and metadata-driven wordlist configuration.
+- Continued MCP modularization and docs improvements for compact mode/flags.
+
+## 1.0.6 (2026-02-21)
+- Added `bbot` integration (API endpoint, registry, MCP wrapper) and upgraded FastMCP v3.
+- Centralized wordlist paths and removed hardcoded values across tool endpoints.
+- Added `requirements-tools.txt` and improved install/dependency guidance.
+
+## 1.0.5 (2026-02-18)
+- Large internal refactor for process/resource management, telemetry, and caching architecture.
+- Improved attack modeling and intelligent decision engine organization.
+- Split/refined API modules and docs for maintainability.
+
+## 1.0.4 (2026-02-15)
+- Added database query tooling for MySQL, PostgreSQL, and SQLite.
+- Improved CTF workflow internals and API-audit typing fixes.
+- Added cache configuration knobs (`CACHE_SIZE`, `CACHE_TTL`).
+
+## 1.0.3 (2026-02-14)
+- Added `whois_lookup` tool and improved OpenCode integration/docs.
+- Fixed payload naming bugs and removed duplicate tool definitions.
+- Improved output rendering/extensibility in vulnerability/smart-scan flows.
 
 ## 1.0.2 (2026-02-13)
-- Established the early baseline for Community Edition usability and docs.
-- Improved CVE intelligence/exploitability flow and fixed key integration errors.
-- Added broad installation/docs cleanup, tool discovery fixes, and initial UX polish.
+- Added foundational project standards (`.editorconfig`, `.gitattributes`, contributing/PR templates).
+- Introduced central `config.py`, compact MCP mode, and secure file-ops module.
+- Updated docs/README for clearer architecture and contributor onboarding.
