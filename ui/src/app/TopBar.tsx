@@ -4,7 +4,7 @@ import {
   Clock, RefreshCw, Lock, Github, Copy, Check,
   LayoutDashboard, Terminal, Play,
   Settings as SettingsIcon, HelpCircle,
-  ListTodo, Wrench, FileText, Layers, Palette,
+  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X,
 } from 'lucide-react'
 import { clearToken, hasToken, type WebDashboardResponse } from '../api'
 import type { Page } from './routing'
@@ -66,10 +66,13 @@ export function TopBar({
   onOpenCommandPalette,
   onSignOut,
 }: TopBarProps) {
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
+  const [themeModalOpen, setThemeModalOpen] = useState(false)
+  const [themePreviewId, setThemePreviewId] = useState<ThemeId>(themeId)
+  const [themeSelectionId, setThemeSelectionId] = useState<ThemeId>(themeId)
   const [updateModalOpen, setUpdateModalOpen] = useState(false)
   const [updateCmdCopied, setUpdateCmdCopied] = useState(false)
-  const themeMenuRef = useRef<HTMLDivElement | null>(null)
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const quickActionsRef = useRef<HTMLDivElement | null>(null)
 
   function copyUpdateCommand() {
     navigator.clipboard.writeText('git pull').then(() => {
@@ -79,19 +82,53 @@ export function TopBar({
   }
 
   useEffect(() => {
-    function onPointerDown(e: MouseEvent) {
-      if (!themeMenuRef.current) return
-      if (!themeMenuRef.current.contains(e.target as Node)) setThemeMenuOpen(false)
+    if (!themeModalOpen) {
+      setThemePreviewId(themeId)
+      setThemeSelectionId(themeId)
+      return
     }
-    if (themeMenuOpen) window.addEventListener('mousedown', onPointerDown)
-    return () => window.removeEventListener('mousedown', onPointerDown)
-  }, [themeMenuOpen])
+    document.documentElement.setAttribute('data-theme', themePreviewId)
+  }, [themeModalOpen, themePreviewId, themeId])
 
   useEffect(() => {
-    if (!themeMenuOpen) {
-      document.documentElement.setAttribute('data-theme', themeId)
+    function onPointerDown(e: MouseEvent) {
+      if (!quickActionsRef.current) return
+      if (!quickActionsRef.current.contains(e.target as Node)) setQuickActionsOpen(false)
     }
-  }, [themeMenuOpen, themeId])
+
+    function onEscClose(e: KeyboardEvent) {
+      if (e.key === 'Escape') setQuickActionsOpen(false)
+    }
+
+    if (quickActionsOpen) {
+      window.addEventListener('mousedown', onPointerDown)
+      window.addEventListener('keydown', onEscClose)
+    }
+
+    return () => {
+      window.removeEventListener('mousedown', onPointerDown)
+      window.removeEventListener('keydown', onEscClose)
+    }
+  }, [quickActionsOpen])
+
+  function openThemeModal() {
+    setQuickActionsOpen(false)
+    setThemePreviewId(themeId)
+    setThemeSelectionId(themeId)
+    setThemeModalOpen(true)
+  }
+
+  function closeThemeModal() {
+    document.documentElement.setAttribute('data-theme', themeId)
+    setThemePreviewId(themeId)
+    setThemeSelectionId(themeId)
+    setThemeModalOpen(false)
+  }
+
+  function applyThemeSelection() {
+    setThemeId(themeSelectionId)
+    setThemeModalOpen(false)
+  }
 
   const mobilePage = page === 'session-detail' ? 'sessions' : page
 
@@ -126,6 +163,35 @@ export function TopBar({
           </div>
         </div>
         <p className="modal-desc">Run <span className="mono">git pull</span> in your project folder, then restart HexStrike.</p>
+      </InformationModal>
+
+      <InformationModal
+        isOpen={themeModalOpen}
+        title="Choose Theme"
+        description="Preview themes live, then apply your selection."
+        className="theme-picker-modal"
+        primaryLabel="Apply Theme"
+        secondaryLabel="Cancel"
+        onPrimary={applyThemeSelection}
+        onSecondary={closeThemeModal}
+        onClose={closeThemeModal}
+      >
+        <div className="theme-picker-grid">
+          {THEME_OPTIONS.map(option => (
+            <button
+              key={option.id}
+              className={`theme-picker-card${themeSelectionId === option.id ? ' active' : ''}`}
+              onClick={() => {
+                setThemeSelectionId(option.id)
+                setThemePreviewId(option.id)
+              }}
+              type="button"
+            >
+              <span className="theme-picker-card-label">{option.label}</span>
+              <span className="theme-picker-card-hint">{option.hint}</span>
+            </button>
+          ))}
+        </div>
       </InformationModal>
 
       <header className="topbar">
@@ -213,7 +279,7 @@ export function TopBar({
           </button>
         )}
         <a
-          className="icon-btn topbar-link-btn"
+          className="icon-btn topbar-link-btn topbar-action-desktop"
           href="https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition"
           target="_blank"
           rel="noreferrer"
@@ -222,7 +288,7 @@ export function TopBar({
           <Github size={14} />
         </a>
         <a
-          className="icon-btn topbar-link-btn"
+          className="icon-btn topbar-link-btn topbar-action-desktop"
           href="https://discord.gg/aC8Q2xJFgp"
           target="_blank"
           rel="noreferrer"
@@ -231,39 +297,19 @@ export function TopBar({
           <DiscordIcon />
         </a>
         <button
-          className="icon-btn"
+          className="icon-btn topbar-action-desktop"
           title="Command palette (Ctrl/Cmd+K)"
           onClick={onOpenCommandPalette}
         >
           <span className="palette-icon-k mono">K</span>
         </button>
-        <div className="theme-menu" ref={themeMenuRef}>
-          <button
-            className="icon-btn"
-            title="Change theme"
-            onClick={() => setThemeMenuOpen(v => !v)}
-          >
-            <Palette size={14} />
-          </button>
-          {themeMenuOpen && (
-            <div
-              className="theme-menu-popover"
-              onMouseLeave={() => document.documentElement.setAttribute('data-theme', themeId)}
-            >
-              {THEME_OPTIONS.map(theme => (
-                <button
-                  key={theme.id}
-                  className={`theme-menu-item${themeId === theme.id ? ' active' : ''}`}
-                  onMouseEnter={() => document.documentElement.setAttribute('data-theme', theme.id)}
-                  onClick={() => { setThemeId(theme.id); setThemeMenuOpen(false) }}
-                >
-                  <span className="theme-menu-label">{theme.label}</span>
-                  <span className="theme-menu-hint">{theme.hint}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          className="icon-btn topbar-action-desktop"
+          title="Change theme"
+          onClick={openThemeModal}
+        >
+          <Palette size={14} />
+        </button>
         {hasToken() && (
           <button className="icon-btn" onClick={() => { clearToken(); onSignOut() }} title="Sign out">
             <Lock size={14} />
@@ -271,6 +317,67 @@ export function TopBar({
         )}
       </div>
     </header>
+
+      <div
+        ref={quickActionsRef}
+        className={`quick-actions-fab${quickActionsOpen ? ' open' : ''}`}
+      >
+        <div className="quick-actions-panel" aria-hidden={!quickActionsOpen}>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              onOpenCommandPalette()
+              setQuickActionsOpen(false)
+            }}
+            title="Open command palette"
+          >
+            <span className="quick-actions-item-icon mono">K</span>
+            <span>Command Palette</span>
+          </button>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              openThemeModal()
+            }}
+            title="Choose theme"
+          >
+            <Palette size={14} />
+            <span>Theme Picker</span>
+          </button>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              window.open('https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition', '_blank', 'noopener,noreferrer')
+              setQuickActionsOpen(false)
+            }}
+            title="Open GitHub"
+          >
+            <Github size={14} />
+            <span>GitHub</span>
+          </button>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              window.open('https://discord.gg/aC8Q2xJFgp', '_blank', 'noopener,noreferrer')
+              setQuickActionsOpen(false)
+            }}
+            title="Join Discord community"
+          >
+            <DiscordIcon size={14} />
+            <span>Discord</span>
+          </button>
+        </div>
+
+        <button
+          className="quick-actions-trigger"
+          onClick={() => setQuickActionsOpen(v => !v)}
+          aria-expanded={quickActionsOpen}
+          aria-label={quickActionsOpen ? 'Close quick actions' : 'Open quick actions'}
+          title={quickActionsOpen ? 'Close quick actions' : 'Open quick actions'}
+        >
+          {quickActionsOpen ? <X size={16} /> : <PanelBottomOpen size={16} />}
+        </button>
+      </div>
     </>
   )
 }
