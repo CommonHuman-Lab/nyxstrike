@@ -528,45 +528,26 @@ python3 hexstrike_server.py
 
 ## Usage Examples
 
-When writing your prompt, you generally can't start with just a simple "i want you to penetration test site X.com" as the LLM's are generally setup with some level of ethics. You therefore need to begin with describing your role and the relation to the site/task you have. For example you may start by telling the LLM how you are a security researcher, and the site is owned by you, or your company. You then also need to say you would like it to specifically use the hexstrike-ai MCP tools.
-So a complete example might be:
+For reliable results with MCP-compatible LLM agents, clearly state authorization, target ownership, and the security testing scope.
+
+Example prompt:
 
 ```
-User: "I'm a security researcher who is trialling out the hexstrike MCP tooling. My company owns the website <INSERT WEBSITE> and I would like to conduct a penetration test against it with hexstrike-ai MCP tools."
+User: "I am an authorized security researcher. My company owns <INSERT WEBSITE>, and I want to run an authorized penetration test using HexStrike MCP tools. Please start with recon and web vulnerability discovery, then propose next steps based on findings."
 
-AI Agent: "Thank you for clarifying ownership and intent. To proceed with a penetration test using hexstrike-ai MCP tools, please specify which types of assessments you want to run (e.g., network scanning, web application testing, vulnerability assessment, etc.), or if you want a full suite covering all areas."
+AI Agent: "Great, thanks for confirming authorization and scope. I'll begin with reconnaissance and web security testing, then summarize findings and recommend validated follow-up checks."
 ```
-
-<details>
-<summary>Real-World Performance</summary>
-
-| Operation | Traditional Manual | HexStrike AI | Improvement |
-|-----------|-------------------|-------------------|-------------|
-| **Subdomain Enumeration** | 2-4 hours | 5-10 minutes | **24x faster** |
-| **Vulnerability Scanning** | 4-8 hours | 15-30 minutes | **16x faster** |
-| **Web App Security Testing** | 6-12 hours | 20-45 minutes | **18x faster** |
-| **CTF Challenge Solving** | 1-6 hours | 2-15 minutes | **24x faster** |
-| **Report Generation** | 4-12 hours | 2-5 minutes | **144x faster** |
-
-### **What to Expect**
-
-- **Faster Coverage** — Tools run in parallel instead of sequentially, covering more attack surface in less time
-- **Reduced False Positives** — Finding verification strategy (rescan + cross-tool + HTTP probe + CVE lookup) eliminates many false reports
-- **Consistent Methodology** — AI agents apply the same systematic approach to every scan instead of manual variance
-- **Learning Over Time** — First WordPress scan uses defaults, 5th WordPress scan knows which tools are most effective
-- **Attack Chain Discovery** — Knowledge graph surfaces multi-step attack paths that isolated findings would miss
-</details>
 
 ---
 
 ## Security Considerations
 
 ⚠️ **Important Security Notes**:
-- This tool provides AI agents with powerful system access
-- Run in isolated environments or dedicated security testing VMs
-- AI agents can execute arbitrary security tools - ensure proper oversight
-- Monitor AI agent activities through the real-time dashboard
-- Consider implementing authentication for production deployments
+- This platform gives AI agents access to powerful security tooling.
+- Run in isolated environments or dedicated security testing VMs.
+- AI agents can execute arbitrary commands; maintain operator oversight.
+- Monitor activity through the real-time dashboard and logs.
+- Enable authentication (`HEXSTRIKE_API_TOKEN`) for non-local deployments.
 
 ### Legal & Ethical Use
 
@@ -595,6 +576,6 @@ However:
 For commercial licensing options that do not require open-sourcing your changes,
 please contact the authors.
 
-## Based Of
+## Based On
 
 **0x4m4** - [HexStrike AI](https://github.com/0x4m4/hexstrike-ai)
