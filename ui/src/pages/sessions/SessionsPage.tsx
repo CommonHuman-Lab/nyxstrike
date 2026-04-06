@@ -454,6 +454,11 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   const previewRisk = pendingPreview?.preview.attack_chain.risk_level ?? 'unknown'
   const previewEstimatedTime = pendingPreview?.preview.attack_chain.estimated_time ?? 0
   const previewTools = Array.from(new Set(previewSteps.map(step => step.tool).filter(Boolean)))
+  const previewReasons = previewSteps
+    .map(step => ({ tool: step.tool, reason: step.selection_reason }))
+    .filter(item => !!item.reason)
+  const fmtPercent = (n?: number) => (typeof n === 'number' ? `${Math.round(n * 100)}%` : 'n/a')
+  const fmtNumber = (n?: number) => (typeof n === 'number' ? n.toFixed(2) : 'n/a')
 
   return (
     <div className="page-content">
@@ -540,6 +545,59 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
             ))}
           </div>
         </div>
+
+        {previewReasons.length > 0 && (
+          <div className="modal-section">
+            <span className="modal-label">Why selected</span>
+            <div className="intelligence-preview-reasons">
+              {previewReasons.map((item, idx) => (
+                <details key={`${item.tool}:${idx}`} className="intelligence-reason-item">
+                  <summary className="intelligence-reason-summary">
+                    <span className="intelligence-reason-tool mono">{item.tool}</span>
+                    <span className="intelligence-reason-meta mono">{fmtPercent(item.reason?.effective_score)} match</span>
+                    <span className="intelligence-reason-toggle">Details</span>
+                  </summary>
+                  <div className="intelligence-reason-body">
+                    <p className="intelligence-preview-line">
+                      <span className="intelligence-preview-label">Reason:</span>
+                      {item.reason?.summary ?? 'Selected by precision planner.'}
+                    </p>
+                    <p className="intelligence-preview-line">
+                      <span className="intelligence-preview-label">Score:</span>
+                      <span className="mono">{fmtPercent(item.reason?.effective_score)}</span>
+                    </p>
+                    <p className="intelligence-preview-line">
+                      <span className="intelligence-preview-label">Noise:</span>
+                      <span className="mono">{fmtNumber(item.reason?.noise_score)}</span>
+                    </p>
+                    <p className="intelligence-preview-line">
+                      <span className="intelligence-preview-label">Objective match:</span>
+                      <span className="mono">{item.reason?.objective_match ? 'yes' : 'no'}</span>
+                    </p>
+
+                    {(item.reason?.new_capabilities_added?.length ?? 0) > 0 && (
+                      <div className="intelligence-reason-tags">
+                        <span className="intelligence-preview-label">New coverage:</span>
+                        {(item.reason?.new_capabilities_added ?? []).map(cap => (
+                          <span key={`${item.tool}:${cap}:new`} className="modal-param mono">{cap}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {(item.reason?.covers_required?.length ?? 0) > 0 && (
+                      <div className="intelligence-reason-tags">
+                        <span className="intelligence-preview-label">Required capability fit:</span>
+                        {(item.reason?.covers_required ?? []).map(cap => (
+                          <span key={`${item.tool}:${cap}:req`} className="modal-param mono">{cap}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
 
       </InformationModal>
 

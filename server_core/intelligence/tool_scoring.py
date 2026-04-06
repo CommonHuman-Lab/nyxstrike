@@ -97,6 +97,60 @@ def rank_tools_precision_first(
     return selected[: int(settings["max_tools"])]
 
 
+def explain_selection_reason(
+    tool: str,
+    profile: TargetProfile,
+    objective: str,
+    catalog: Dict[str, ToolSpec],
+    required: Optional[Set[str]] = None,
+    effective_score: Optional[float] = None,
+    selected_capabilities: Optional[Set[str]] = None,
+) -> Dict[str, object]:
+    """Build human-readable and machine-readable rationale for tool selection."""
+    spec = catalog.get(tool)
+    if not spec:
+        return {
+            "summary": f"Selected {tool} as fallback due to ranking availability.",
+            "objective_match": False,
+            "target_type_match": False,
+            "capabilities": [],
+            "covers_required": [],
+            "new_capabilities_added": [],
+            "effective_score": effective_score,
+        }
+
+    normalized_objective = objective_alias(objective)
+    required_caps = required or required_capabilities(profile.target_type.value, normalized_objective)
+    selected_so_far = selected_capabilities or set()
+    covers_required = sorted(list(spec.capabilities & required_caps))
+    newly_added = sorted(list((spec.capabilities & required_caps) - selected_so_far))
+
+    objective_match = normalized_objective in spec.objectives
+    target_type_match = profile.target_type.value in spec.target_types
+    summary_parts = [f"Selected {tool}"]
+    if newly_added:
+        summary_parts.append(f"to add required coverage ({', '.join(newly_added)})")
+    elif covers_required:
+        summary_parts.append(f"for required capability fit ({', '.join(covers_required)})")
+    else:
+        summary_parts.append("for strong precision score")
+    if objective_match:
+        summary_parts.append(f"and objective match ({normalized_objective})")
+
+    return {
+        "summary": " ".join(summary_parts) + ".",
+        "objective": normalized_objective,
+        "objective_match": objective_match,
+        "target_type": profile.target_type.value,
+        "target_type_match": target_type_match,
+        "capabilities": sorted(list(spec.capabilities)),
+        "covers_required": covers_required,
+        "new_capabilities_added": newly_added,
+        "noise_score": spec.noise_score,
+        "effective_score": effective_score,
+    }
+
+
 def _score_tool(
     tool: str,
     base: float,

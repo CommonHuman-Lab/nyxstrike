@@ -41,19 +41,109 @@
 .intelligence-preview-summary {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card2);
 }
 
 .intelligence-preview-line {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.55;
   color: var(--text);
 }
 
 .intelligence-preview-label {
   color: var(--text-dim);
   margin-right: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.intelligence-preview-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.intelligence-reason-item {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card2);
+  overflow: hidden;
+}
+
+.intelligence-reason-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.intelligence-reason-summary::-webkit-details-marker {
+  display: none;
+}
+
+.intelligence-reason-tool {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.intelligence-reason-meta {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+.intelligence-reason-toggle {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--bg-card);
+}
+
+.intelligence-reason-item[open] .intelligence-reason-toggle {
+  color: var(--text);
+  border-color: var(--text-dim);
+  background: var(--bg-card);
+}
+
+.intelligence-reason-body {
+  border-top: 1px dashed var(--border);
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.intelligence-reason-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+}
+
+.intelligence-reason-tags .modal-param {
+  border-color: var(--border);
+  background: var(--bg-card);
 }
 
 .session-start-form label {

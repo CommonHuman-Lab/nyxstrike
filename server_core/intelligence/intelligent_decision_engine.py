@@ -17,7 +17,7 @@ from .decision_engine_constants import (
 )
 from .decision_engine_legacy_optimizers import LegacyParameterOptimizers
 from .tool_catalog import build_tool_catalog
-from .tool_scoring import rank_tools_precision_first
+from .tool_scoring import explain_selection_reason, rank_tools_precision_first
 
 parameter_optimizer = ParameterOptimizer()
 _tool_stats = ToolStatsStore()
@@ -335,6 +335,8 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
 
         context_key = self._build_context_key(profile, objective)
         tool_overrides = runtime_context.get("tool_overrides", {}) if isinstance(runtime_context, dict) else {}
+        required_caps = self._required_capabilities_for(profile, objective)
+        selected_caps_so_far: set = set()
 
         for tool in ordered_tools:
             if ranked_set and tool not in ranked_set and tool not in pattern_tools:
@@ -367,6 +369,19 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             effectiveness = self._effective_score(tool, profile.target_type.value, context_key)
             success_prob = effectiveness * profile.confidence_score
             exec_time = TIME_ESTIMATES.get(tool, 180)
+            reason = explain_selection_reason(
+                tool=tool,
+                profile=profile,
+                objective=objective,
+                catalog=self.tool_catalog,
+                required=required_caps,
+                effective_score=effectiveness,
+                selected_capabilities=selected_caps_so_far,
+            )
+
+            spec = self.tool_catalog.get(tool)
+            if spec:
+                selected_caps_so_far.update(spec.capabilities)
 
             chain.add_step(
                 AttackStep(
@@ -375,12 +390,18 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
                     expected_outcome=f"Discover vulnerabilities using {tool}",
                     success_probability=success_prob,
                     execution_time_estimate=exec_time,
+                    selection_reason=reason,
                 )
             )
 
         chain.calculate_success_probability()
         chain.risk_level = profile.risk_level
         return chain
+
+    def _required_capabilities_for(self, profile: TargetProfile, objective: str) -> set:
+        from .tool_catalog import required_capabilities
+
+        return required_capabilities(profile.target_type.value, objective)
 
     def _select_attack_pattern(self, profile: TargetProfile, objective: str) -> List[Dict[str, Any]]:
         if profile.target_type == TargetType.WEB_APPLICATION:
