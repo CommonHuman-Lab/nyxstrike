@@ -1,3 +1,5 @@
+import { useEscapeClose } from '../../hooks/useEscapeClose'
+
 interface TemplateModalProps {
   show: boolean
   templateName: string
@@ -15,6 +17,8 @@ export function TemplateModal({
   onClose,
   onSave,
 }: TemplateModalProps) {
+  useEscapeClose(show, onClose)
+
   if (!show) return null
 
   return (

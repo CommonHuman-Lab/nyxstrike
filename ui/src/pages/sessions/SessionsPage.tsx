@@ -15,6 +15,7 @@ import { StatCard } from '../../components/StatCard'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
 import { InformationModal } from '../../components/InformationModal'
 import { useToast } from '../../components/ToastProvider'
+import { useEscapeClose } from '../../hooks/useEscapeClose'
 import { fmtTs } from '../../shared/utils'
 import { START_MODES, type StartMode } from './constants'
 import { SessionListSection, StartSessionModal, StartSessionSection } from './SessionsSections'
@@ -67,6 +68,8 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   const reconnectAttemptsRef = useRef(0)
   const sectionDefaultsSetRef = useRef(false)
   const templateSectionTouchedRef = useRef(false)
+
+  useEscapeClose(Boolean(editingTemplateId), closeTemplateEditor)
 
   useEffect(() => {
     if (demoData) return

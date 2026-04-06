@@ -1,8 +1,8 @@
-import React from 'react'
 import { createPortal } from 'react-dom'
 import { CheckCircle, XCircle, Play, Download, GitCompare } from 'lucide-react'
 import { type RunHistoryEntry } from '../shared/types'
 import { exportEntry } from '../shared/utils'
+import { useEscapeClose } from '../hooks/useEscapeClose'
 
 export function RunResultModal({ entry, onClose, onRerun, compareText }: {
   entry: RunHistoryEntry
@@ -12,11 +12,7 @@ export function RunResultModal({ entry, onClose, onRerun, compareText }: {
 }) {
   const r = entry.result
 
-  React.useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useEscapeClose(true, onClose)
 
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>

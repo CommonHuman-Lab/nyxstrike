@@ -1,7 +1,8 @@
-import React, { type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Info } from 'lucide-react'
 import { ActionButton, type ActionButtonVariant } from './ActionButton'
+import { useEscapeClose } from '../hooks/useEscapeClose'
 import './InformationModal.css'
 
 interface InformationModalProps {
@@ -37,14 +38,7 @@ export function InformationModal({
 }: InformationModalProps) {
   const isClosable = !disableClose && !isPrimaryBusy
 
-  React.useEffect(() => {
-    if (!isOpen) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && isClosable) onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, isClosable, onClose])
+  useEscapeClose(isOpen && isClosable, onClose)
 
   if (!isOpen) return null
 

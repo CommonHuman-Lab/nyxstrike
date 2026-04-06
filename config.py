@@ -4,7 +4,7 @@ _config = {
     "APP_NAME": "HexStrike AI Community Edition",
     "VERSION": "1.2.1 - shellshark",
     "DATA_DIR_NAME": ".hexstrike_data",  # Root data directory name (relative to cwd, override with HEXSTRIKE_DATA_DIR env var)
-    "COMMAND_TIMEOUT": 300,
+    "COMMAND_TIMEOUT": 500,
     "REQUEST_TIMEOUT": 0,
     "COMMAND_INACTIVITY_TIMEOUT": 900,
     "COMMAND_MAX_RUNTIME": 86400,

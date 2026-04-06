@@ -5,6 +5,7 @@ import {
 import type { ProcessDashboardResponse } from '../../api'
 import { StatCard } from '../../components/StatCard'
 import type { StreamStatus } from './useProcessDashboard'
+import { useEscapeClose } from '../../hooks/useEscapeClose'
 
 function formatStatValue(value: unknown): string {
   if (value === null || value === undefined) return 'n/a'
@@ -170,6 +171,8 @@ export function PoolStatsModal({
   poolStats: Record<string, unknown>
   onClose: () => void
 }) {
+  useEscapeClose(open, onClose)
+
   if (!open) return null
 
   const entries = Object.entries(poolStats).filter(([k]) => !['success', 'timestamp'].includes(k))

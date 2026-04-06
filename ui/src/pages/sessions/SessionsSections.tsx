@@ -4,6 +4,7 @@ import type { AttackChainStep } from '../../api'
 import type { SessionSummary } from '../../api'
 import { SessionCard } from './SessionCard'
 import type { StartMode } from './constants'
+import { useEscapeClose } from '../../hooks/useEscapeClose'
 
 export function StartSessionSection({
   startModes,
@@ -152,6 +153,8 @@ export function StartSessionModal({
     })
     return () => window.cancelAnimationFrame(frame)
   }, [startMode.key])
+
+  useEscapeClose(true, onClose)
 
   return (
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
