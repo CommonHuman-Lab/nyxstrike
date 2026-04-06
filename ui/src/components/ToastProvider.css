@@ -1,8 +1,8 @@
 .toast-stack {
   position: fixed;
   right: 18px;
-  bottom: 18px;
-  z-index: 80;
+  bottom: 64px;
+  z-index: 320;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -74,7 +74,7 @@
 
 @media (max-width: 768px) {
   .toast-stack {
-    bottom: 12px;
+    bottom: 68px;
     left: 12px;
     right: 12px;
   }
