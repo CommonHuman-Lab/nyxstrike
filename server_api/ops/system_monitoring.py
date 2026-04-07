@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Dict
 import logging
 import subprocess
+import sys
 import threading
 import time
 import traceback
@@ -61,7 +62,7 @@ def _refresh_tool_availability() -> None:
             elif tool_to_check in REQUIRE_PIP_CHECK:
                 # For tools that require pip, check if the package is installed
                 result = subprocess.run(
-                    ["pip3", "list"],
+                    [sys.executable, "-m", "pip", "list"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
                     text=True,

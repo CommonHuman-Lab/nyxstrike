@@ -2,6 +2,7 @@ import time
 import logging
 import re
 import threading
+from typing import Any, Dict
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, Response, stream_with_context
 import server_core.config_core as config_core
@@ -18,7 +19,7 @@ api_web_dashboard_bp = Blueprint("api_web_dashboard", __name__)
 
 REMOTE_MASTER_CONFIG_URL = "https://raw.githubusercontent.com/CommonHuman-Lab/hexstrike-ai-community-edition/master/config.py"
 _update_cache_lock = threading.Lock()
-_update_cache = {
+_update_cache: Dict[str, Any] = {
     "for_version": None,
     "result": None,
 }

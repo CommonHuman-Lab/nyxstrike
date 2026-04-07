@@ -420,6 +420,18 @@ class TestRecon:
         r = _post(client, "/api/tools/subfinder")
         assert_route_exists(r, "/api/tools/subfinder")
 
+    def test_assetfinder(self, client):
+        r = _post(client, "/api/tools/assetfinder")
+        assert_route_exists(r, "/api/tools/assetfinder")
+
+    def test_shuffledns(self, client):
+        r = _post(client, "/api/tools/shuffledns")
+        assert_route_exists(r, "/api/tools/shuffledns")
+
+    def test_massdns(self, client):
+        r = _post(client, "/api/tools/massdns")
+        assert_route_exists(r, "/api/tools/massdns")
+
     def test_autorecon(self, client):
         r = _post(client, "/api/tools/autorecon")
         assert_route_exists(r, "/api/tools/autorecon")
@@ -541,6 +553,10 @@ class TestWebCrawling:
     def test_hakrawler(self, client):
         r = _post(client, "/api/tools/hakrawler")
         assert_route_exists(r, "/api/tools/hakrawler")
+
+    def test_gospider(self, client):
+        r = _post(client, "/api/tools/gospider")
+        assert_route_exists(r, "/api/tools/gospider")
 
 
 # ===========================================================================

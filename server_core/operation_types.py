@@ -16,6 +16,8 @@ OPERATION_MAPPING: Dict[str, str] = {
   "subfinder": "subdomain_enumeration",
   "amass": "subdomain_enumeration",
   "assetfinder": "subdomain_enumeration",
+  "shuffledns": "subdomain_enumeration",
+  "massdns": "subdomain_enumeration",
   "arjun": "parameter_discovery",
   "paramspider": "parameter_discovery",
   "x8": "parameter_discovery",

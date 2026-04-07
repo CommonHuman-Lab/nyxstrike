@@ -151,6 +151,9 @@ TOOL_PROFILES = {
     "recon": [
         lambda mcp, client, logger: register_amass_tool(mcp, client, logger),
         lambda mcp, client, logger: register_subfinder_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_assetfinder_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_shuffledns_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_massdns_tool(mcp, client, logger),
         lambda mcp, client, logger: register_autorecon_tool(mcp, client, logger),
         lambda mcp, client, logger: register_theharvester_tool(mcp, client, logger),
     ],
@@ -188,6 +191,7 @@ TOOL_PROFILES = {
     "web_crawl": [
         lambda mcp, client, logger: register_katana_tool(mcp, client, logger),
         lambda mcp, client, logger: register_hakrawler_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_gospider_tool(mcp, client, logger),
     ],
 
     #Tools for web vulnerability scanning and assessment (e.g., Nikto, WPScan, SQLMap, Jaeles, Dalfox, ZAP, Burp Suite, XSSer).
