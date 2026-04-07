@@ -106,28 +106,26 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 
 Get the server and MCP client running in minutes for AI-powered penetration testing, recon automation, and bug bounty workflows.
 
+### Scripted Setup (recommended)
+
 ```bash
-# 1) Clone
+# Clone first
 git clone https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition.git
 cd hexstrike-ai-community-edition
 
-# 2) Create and activate venv
-python3 -m venv hexstrike-env
-source hexstrike-env/bin/activate
-
-# 3) Install dependencies
-pip3 install -r requirements.txt
-
-# 4) Start API server + dashboard (http://localhost:8888)
-python3 hexstrike_server.py
-
-# 5) In a second terminal, start MCP client
-hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --profile full
+# Recommended default: install tools + start server
+./scripts/install.sh -t -r
 ```
+
+> [Installation Guide](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Installation)
 
 ### Verify Setup
 
 ```bash
+# Browse http://localhost:8888
+
+# Or
+
 curl http://localhost:8888/health
 ```
 

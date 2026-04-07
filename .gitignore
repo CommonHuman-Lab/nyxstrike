@@ -3,9 +3,11 @@ __pycache__
 hexstrike.log
 .hexstrike_data/
 node_modules/
+git_tools/
 
 # Web UI build output
 ui/node_modules/
 
 # Claude worktrees
 .claude/worktrees/
+
