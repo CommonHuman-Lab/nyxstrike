@@ -121,11 +121,9 @@ cd hexstrike-ai-community-edition
 
 ### Verify Setup
 
+Browse [http://localhost:8888](http://localhost:8888)
+
 ```bash
-# Browse http://localhost:8888
-
-# Or
-
 curl http://localhost:8888/health
 ```
 
