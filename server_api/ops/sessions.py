@@ -318,9 +318,11 @@ def handover_session(session_id):
       f"Session ID: {session_id}",
       f"Target: {session_data.get('target', 'unknown')}",
       f"Status: {session_data.get('status', 'active')}",
+      f"Objective: {session_data.get('objective', '')}",
       f"Tools: {', '.join(step_names)}",
       f"Findings: {session_data.get('total_findings', 0)}",
       f"Iterations: {session_data.get('iterations', 0)}",
+      f"Metadata: {json.dumps(session_data.get('metadata', {}))}",
       f"Note: {note}",
       "Classify next best action for manual execution.",
     ])

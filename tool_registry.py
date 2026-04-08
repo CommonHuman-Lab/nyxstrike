@@ -1797,6 +1797,78 @@ _INTENT_KEYWORDS: Dict[str, List[str]] = {
 }
 
 
+SUGGESTED_APPROACHES: Dict[str, str] = {
+    "network_recon": (
+        "Run port scans (nmap/masscan/rustscan) and service fingerprinting. "
+        "Enumerate SMB, RPC, and SNMP if open. Identify OS, banners, and software versions."
+    ),
+    "web_recon": (
+        "Run directory/content discovery (gobuster/feroxbuster/ffuf). "
+        "Crawl for endpoints and check for common misconfigurations. "
+        "Fingerprint technologies and check for exposed admin panels or backup files."
+    ),
+    "web_vuln": (
+        "Scan discovered endpoints for SQLi, XSS, SSRF, LFI, and template injection "
+        "using nuclei, sqlmap, and dalfox. Check headers and cookies for misconfigurations."
+    ),
+    "exploitation": (
+        "Search Exploit-DB and Metasploit for matching CVEs. "
+        "Generate payloads with msfvenom and attempt initial access. "
+        "Validate exploitability against the detected service versions."
+    ),
+    "brute_force": (
+        "Brute-force login endpoints or crack captured hashes using hydra, medusa, "
+        "john, or hashcat with an appropriate wordlist. Target SSH, FTP, HTTP basic auth, "
+        "and web login forms."
+    ),
+    "osint": (
+        "Enumerate subdomains (subfinder/amass/dnsenum), harvest emails via theHarvester, "
+        "pull historical URLs (gau/waybackurls), and extract secrets from JS files. "
+        "Check certificate transparency logs and WHOIS records."
+    ),
+    "active_directory": (
+        "Run BloodHound/SharpHound collection. Enumerate AD objects via LDAP. "
+        "Look for kerberoastable accounts, AS-REP roastable users, and misconfigured ACLs. "
+        "Use impacket tools for lateral movement."
+    ),
+    "binary": (
+        "Analyse the binary with checksec, strings, and radare2. "
+        "Identify exploitable functions (gets, strcpy, system). "
+        "Build ROP chains if NX is enabled. Use GDB/pwndbg for dynamic analysis."
+    ),
+    "cloud": (
+        "Run prowler/trivy against the cloud environment. "
+        "Check for public S3 buckets, over-permissive IAM roles, exposed metadata endpoints, "
+        "and container image vulnerabilities."
+    ),
+    "wifi_pentest": (
+        "Capture WPA handshakes with airodump-ng or attempt the PMKID attack with hcxdumptool. "
+        "Crack captured hashes with aircrack-ng or hashcat. "
+        "Check for evil twin or rogue AP opportunities."
+    ),
+    "forensics": (
+        "Extract memory artefacts with volatility. Carve files with foremost/binwalk. "
+        "Check for steganography with steghide/stegsolve. "
+        "Inspect file metadata with exiftool. Look for hash length extension vulnerabilities."
+    ),
+    "database": (
+        "Connect to the database and enumerate tables, columns, and user privileges. "
+        "Look for sensitive credential or config tables. "
+        "Attempt privilege escalation via UDFs or misconfigurations."
+    ),
+    "essential": (
+        "Run the core toolkit in sequence: nmap (ports) -> gobuster (content) -> "
+        "nikto (web vulns) -> sqlmap (SQLi) -> hydra (brute-force). "
+        "Covers basic recon through common exploitation vectors."
+    ),
+    "vulnerability_intelligence": (
+        "Search CVE databases and Exploit-DB for the target stack. "
+        "Cross-reference discovered service versions with known vulnerabilities. "
+        "Prioritise CVEs with public PoC or Metasploit modules."
+    ),
+}
+
+
 _CLASSIFY_PROMPT = """Classify this security task into exactly one category.
 Categories: network_recon, web_recon, web_vuln, exploitation, brute_force, osint, binary, cloud, wifi_pentest, forensics
 Task: {input}
