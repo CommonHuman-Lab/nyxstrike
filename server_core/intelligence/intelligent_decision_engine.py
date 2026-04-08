@@ -1,3 +1,4 @@
+import ipaddress
 import re
 import socket
 import urllib.parse
@@ -31,6 +32,16 @@ CLOUD_DOMAIN_HINTS = (
     "windows.net",
     "googleapis.com",
     "gcp.",
+)
+
+API_PATH_HINTS = (
+    "/api",
+    "/v1",
+    "/v2",
+    "/v3",
+    "/graphql",
+    "/swagger",
+    "/openapi",
 )
 
 
@@ -79,8 +90,14 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
 
     def _determine_target_type(self, target: str) -> TargetType:
         """Determine the type of target for appropriate tool selection."""
-        target_lower = target.lower()
-        parsed = urllib.parse.urlparse(target) if target.startswith(("http://", "https://")) else None
+        target_lower = target.lower().strip()
+        parsed = urllib.parse.urlparse(target) if target_lower.startswith(("http://", "https://")) else None
+
+        try:
+            ipaddress.ip_address(target_lower)
+            return TargetType.NETWORK_HOST
+        except ValueError:
+            pass
 
         domain_hint = target_lower
         if parsed and parsed.hostname:
@@ -93,14 +110,24 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             return TargetType.BINARY_FILE
 
         if parsed:
-            if "/api/" in parsed.path or parsed.path.endswith("/api"):
+            path_lower = (parsed.path or "").lower()
+            query_lower = (parsed.query or "").lower()
+            host_lower = (parsed.hostname or "").lower()
+
+            if host_lower.startswith("api."):
                 return TargetType.API_ENDPOINT
+
+            if any(path_lower == hint or path_lower.startswith(f"{hint}/") for hint in API_PATH_HINTS):
+                return TargetType.API_ENDPOINT
+
+            if any(token in query_lower for token in ("graphql", "openapi", "swagger", "rest")):
+                return TargetType.API_ENDPOINT
+
             return TargetType.WEB_APPLICATION
 
-        if re.match(r"^(\d{1,3}\.){3}\d{1,3}$", target):
-            return TargetType.NETWORK_HOST
-
-        if re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", target):
+        if re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", target_lower):
+            if target_lower.startswith("api."):
+                return TargetType.API_ENDPOINT
             return TargetType.WEB_APPLICATION
 
         return TargetType.UNKNOWN
@@ -108,13 +135,19 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
     def _resolve_domain(self, target: str) -> List[str]:
         """Resolve domain to IP addresses."""
         try:
-            if target.startswith(("http://", "https://")):
+            if target.lower().startswith(("http://", "https://")):
                 hostname = urllib.parse.urlparse(target).hostname
             else:
                 hostname = target
 
             if hostname:
-                return [socket.gethostbyname(hostname)]
+                resolved = []
+                for family, _, _, _, sockaddr in socket.getaddrinfo(hostname, None):
+                    if family == socket.AF_INET:
+                        resolved.append(sockaddr[0])
+                    elif family == socket.AF_INET6:
+                        resolved.append(sockaddr[0])
+                return sorted(list(set(resolved)))
         except Exception:
             pass
         return []
@@ -122,12 +155,13 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
     def _detect_technologies(self, target: str) -> List[TechnologyStack]:
         """Detect technologies using basic heuristics."""
         technologies = []
+        target_lower = target.lower()
 
-        if "wordpress" in target.lower() or "wp-" in target.lower():
+        if "wordpress" in target_lower or "wp-" in target_lower:
             technologies.append(TechnologyStack.WORDPRESS)
-        if any(ext in target.lower() for ext in [".php", "php"]):
+        if any(ext in target_lower for ext in [".php", "php"]):
             technologies.append(TechnologyStack.PHP)
-        if any(ext in target.lower() for ext in [".asp", ".aspx"]):
+        if any(ext in target_lower for ext in [".asp", ".aspx"]):
             technologies.append(TechnologyStack.DOTNET)
 
         return technologies if technologies else [TechnologyStack.UNKNOWN]
@@ -145,12 +179,15 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
 
     def _detect_cloud_provider(self, target: str) -> Optional[str]:
         """Detect cloud provider from target string."""
-        target_lower = target.lower()
-        if any(hint in target_lower for hint in ("amazonaws.com", "aws.amazon.com", "cloudfront.net", "aws")):
+        target_lower = target.lower().strip()
+        parsed = urllib.parse.urlparse(target_lower) if target_lower.startswith(("http://", "https://")) else None
+        host = (parsed.hostname or target_lower).lower() if parsed else target_lower
+
+        if any(hint in host for hint in ("amazonaws.com", "aws.amazon.com", "cloudfront.net")):
             return "aws"
-        if any(hint in target_lower for hint in ("azure.com", "azurewebsites.net", "windows.net", "azure")):
+        if any(hint in host for hint in ("azure.com", "azurewebsites.net", "windows.net")):
             return "azure"
-        if any(hint in target_lower for hint in ("googleapis.com", "gcp", "google")):
+        if any(hint in host for hint in ("googleapis.com", "gcp.")):
             return "gcp"
         return None
 
@@ -205,7 +242,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
                 primary_tech = tech.value
                 break
 
-        objective_norm = (objective or "comprehensive").strip().lower()
+        objective_norm = objective_alias(objective)
         return f"{profile.target_type.value}|{objective_norm}|{primary_tech}"
 
     def _effective_score(self, tool: str, target_type_value: str, context_key: Optional[str] = None) -> float:
@@ -241,7 +278,12 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         if not selected_tools:
             target_type = profile.target_type.value
             effectiveness_map = self.tool_effectiveness.get(target_type, {})
-            fallback = sorted(effectiveness_map.keys(), key=lambda t: self._effective_score(t, target_type), reverse=True)
+            fallback_context_key = self._build_context_key(profile, objective)
+            fallback = sorted(
+                effectiveness_map.keys(),
+                key=lambda t: self._effective_score(t, target_type, fallback_context_key),
+                reverse=True,
+            )
             selected_tools = fallback[:8]
 
         return selected_tools
@@ -362,15 +404,16 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         if runtime_context is None:
             runtime_context = {}
 
+        objective_key = objective_alias(objective)
         objective_overrides = {
             "api_security": "api_testing",
             "internal_network_ad": "internal_network_ad_assessment",
         }
-        override_pattern = objective_overrides.get(objective)
+        override_pattern = objective_overrides.get(objective_key)
         if override_pattern:
-            pattern = self.attack_patterns[override_pattern]
+            pattern = self.attack_patterns.get(override_pattern, self.attack_patterns.get("web_reconnaissance", []))
         else:
-            pattern = self._select_attack_pattern(profile, objective)
+            pattern = self._select_attack_pattern(profile, objective_key)
 
         effective_mode = planner_mode
         if effective_mode is None and isinstance(runtime_context, dict):
@@ -388,7 +431,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         else:
             ordered_tools = pattern_tools
 
-        context_key = self._build_context_key(profile, objective)
+        context_key = self._build_context_key(profile, objective_key)
         tool_overrides = runtime_context.get("tool_overrides", {}) if isinstance(runtime_context, dict) else {}
         required_caps = self._required_capabilities_for(profile, objective)
         selected_caps_so_far: set = set()
@@ -407,7 +450,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
                 "objective": objective,
                 "target_type": profile.target_type.value,
                 "risk_level": profile.risk_level,
-                "optimization_profile": "stealth" if objective == "stealth" else "normal",
+                "optimization_profile": "stealth" if objective_key == "stealth" else "normal",
                 "technologies": [tech.value for tech in profile.technologies if tech != TechnologyStack.UNKNOWN],
                 "cloud_provider": profile.cloud_provider,
             }
@@ -422,12 +465,12 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             final_params.update(runtime_override)
 
             effectiveness = self._effective_score(tool, profile.target_type.value, context_key)
-            success_prob = effectiveness * profile.confidence_score
+            success_prob = max(0.01, min(0.99, effectiveness * profile.confidence_score))
             exec_time = TIME_ESTIMATES.get(tool, 180)
             reason = explain_selection_reason(
                 tool=tool,
                 profile=profile,
-                objective=objective,
+                objective=objective_key,
                 catalog=self.tool_catalog,
                 required=required_caps,
                 effective_score=effectiveness,
@@ -459,23 +502,27 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         return required_capabilities(profile.target_type.value, objective)
 
     def _select_attack_pattern(self, profile: TargetProfile, objective: str) -> List[Dict[str, Any]]:
+        objective_key = objective_alias(objective)
+
         if profile.target_type == TargetType.WEB_APPLICATION:
-            if objective == "quick":
-                return self.attack_patterns["vulnerability_assessment"][:2]
-            return self.attack_patterns["web_reconnaissance"] + self.attack_patterns["vulnerability_assessment"]
+            if objective_key == "quick":
+                return self.attack_patterns.get("vulnerability_assessment", [])[:2]
+            return self.attack_patterns.get("web_reconnaissance", []) + self.attack_patterns.get(
+                "vulnerability_assessment", []
+            )
 
         if profile.target_type == TargetType.API_ENDPOINT:
-            return self.attack_patterns["api_testing"]
+            return self.attack_patterns.get("api_testing", self.attack_patterns.get("web_reconnaissance", []))
 
         if profile.target_type == TargetType.NETWORK_HOST:
-            if objective == "comprehensive":
-                return self.attack_patterns["comprehensive_network_pentest"]
-            return self.attack_patterns["network_discovery"]
+            if objective_key == "comprehensive":
+                return self.attack_patterns.get("comprehensive_network_pentest", self.attack_patterns.get("network_discovery", []))
+            return self.attack_patterns.get("network_discovery", [])
 
         if profile.target_type == TargetType.BINARY_FILE:
-            if objective == "ctf":
-                return self.attack_patterns["ctf_pwn_challenge"]
-            return self.attack_patterns["binary_exploitation"]
+            if objective_key == "ctf":
+                return self.attack_patterns.get("ctf_pwn_challenge", self.attack_patterns.get("binary_exploitation", []))
+            return self.attack_patterns.get("binary_exploitation", [])
 
         if profile.target_type == TargetType.CLOUD_SERVICE:
             cloud_objectives = {
@@ -484,11 +531,17 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
                 "containers": "container_security_assessment",
                 "iac": "iac_security_assessment",
             }
-            return self.attack_patterns[cloud_objectives.get(objective, "multi_cloud_assessment")]
+            return self.attack_patterns.get(
+                cloud_objectives.get(objective_key, "multi_cloud_assessment"),
+                self.attack_patterns.get("multi_cloud_assessment", []),
+            )
 
         bug_bounty_objectives = {
             "bug_bounty_recon": "bug_bounty_reconnaissance",
             "bug_bounty_hunting": "bug_bounty_vulnerability_hunting",
             "bug_bounty_high_impact": "bug_bounty_high_impact",
         }
-        return self.attack_patterns[bug_bounty_objectives.get(objective, "web_reconnaissance")]
+        return self.attack_patterns.get(
+            bug_bounty_objectives.get(objective_key, "web_reconnaissance"),
+            self.attack_patterns.get("web_reconnaissance", []),
+        )
