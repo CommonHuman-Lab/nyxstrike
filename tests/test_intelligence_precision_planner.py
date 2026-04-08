@@ -59,3 +59,30 @@ def test_create_attack_chain_respects_runtime_overrides():
     nuclei_steps = [step for step in chain.steps if step.tool == "nuclei"]
     if nuclei_steps:
         assert nuclei_steps[0].parameters.get("severity") == "critical"
+
+
+def test_planner_mode_switch_per_call_supports_legacy_and_advanced():
+    profile = decision_engine.analyze_target("https://example.com")
+    advanced_tools = decision_engine.select_optimal_tools(profile, "comprehensive", planner_mode="advanced")
+    legacy_tools = decision_engine.select_optimal_tools(profile, "comprehensive", planner_mode="legacy")
+
+    assert advanced_tools
+    assert legacy_tools
+    assert len(advanced_tools) <= 8
+    assert len(legacy_tools) <= 8
+
+
+def test_planner_mode_switch_global_toggle():
+    original_mode = decision_engine.get_planner_mode()
+    try:
+        decision_engine.enable_legacy_planner()
+        assert decision_engine.get_planner_mode() == "legacy"
+
+        profile = decision_engine.analyze_target("https://example.com/api")
+        selected_tools = decision_engine.select_optimal_tools(profile, "api_security")
+        assert selected_tools
+
+        decision_engine.enable_advanced_planner()
+        assert decision_engine.get_planner_mode() == "advanced"
+    finally:
+        decision_engine.set_planner_mode(original_mode)

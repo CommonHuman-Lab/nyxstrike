@@ -16,7 +16,7 @@ from .decision_engine_constants import (
     initialize_tool_effectiveness,
 )
 from .decision_engine_legacy_optimizers import LegacyParameterOptimizers
-from .tool_catalog import build_tool_catalog
+from .tool_catalog import build_tool_catalog, objective_alias, objective_settings
 from .tool_scoring import explain_selection_reason, rank_tools_precision_first
 
 parameter_optimizer = ParameterOptimizer()
@@ -43,6 +43,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         self.attack_patterns = self._initialize_attack_patterns()
         self.tool_catalog = build_tool_catalog()
         self._use_advanced_optimizer = True
+        self._planner_mode = "advanced"
 
     def _initialize_tool_effectiveness(self) -> Dict[str, Dict[str, float]]:
         """Initialize tool effectiveness ratings for different target types."""
@@ -214,19 +215,28 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             return _tool_stats.blended_effectiveness_contextual(tool, baseline, context_key)
         return _tool_stats.blended_effectiveness(tool, baseline)
 
-    def select_optimal_tools(self, profile: TargetProfile, objective: str = "comprehensive") -> List[str]:
-        """Select optimal tools based on profile with precision-first ranking."""
-        selected_tools = rank_tools_precision_first(
-            profile=profile,
-            objective=objective,
-            tool_effectiveness=self.tool_effectiveness,
-            catalog=self.tool_catalog,
-            effective_score_fn=lambda tool, target_type_value: self._effective_score(
-                tool,
-                target_type_value,
-                self._build_context_key(profile, objective),
-            ),
-        )
+    def select_optimal_tools(
+        self,
+        profile: TargetProfile,
+        objective: str = "comprehensive",
+        planner_mode: Optional[str] = None,
+    ) -> List[str]:
+        """Select optimal tools based on profile with switchable planning modes."""
+        effective_mode = self._resolve_planner_mode(planner_mode)
+        if effective_mode == "legacy":
+            selected_tools = self._select_optimal_tools_legacy(profile, objective)
+        else:
+            selected_tools = rank_tools_precision_first(
+                profile=profile,
+                objective=objective,
+                tool_effectiveness=self.tool_effectiveness,
+                catalog=self.tool_catalog,
+                effective_score_fn=lambda tool, target_type_value: self._effective_score(
+                    tool,
+                    target_type_value,
+                    self._build_context_key(profile, objective),
+                ),
+            )
 
         if not selected_tools:
             target_type = profile.target_type.value
@@ -235,6 +245,46 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             selected_tools = fallback[:8]
 
         return selected_tools
+
+    def _select_optimal_tools_legacy(self, profile: TargetProfile, objective: str = "comprehensive") -> List[str]:
+        """Legacy ranking: effectiveness-only sorting with objective size limits."""
+        target_type = profile.target_type.value
+        effectiveness_map = self.tool_effectiveness.get(target_type, {})
+        if not effectiveness_map:
+            return []
+
+        sorted_tools = sorted(
+            effectiveness_map.keys(),
+            key=lambda tool: self._effective_score(tool, target_type),
+            reverse=True,
+        )
+
+        objective_key = objective_alias(objective)
+        max_tools = int(objective_settings(objective_key).get("max_tools", 8))
+        return sorted_tools[:max_tools]
+
+    def _resolve_planner_mode(self, planner_mode: Optional[str]) -> str:
+        """Resolve planner mode to one of: advanced, legacy."""
+        mode = (planner_mode or self._planner_mode or "advanced").strip().lower()
+        if mode in {"legacy", "classic", "v1"}:
+            return "legacy"
+        return "advanced"
+
+    def set_planner_mode(self, mode: str):
+        """Set global planner mode for this engine instance."""
+        self._planner_mode = self._resolve_planner_mode(mode)
+
+    def get_planner_mode(self) -> str:
+        """Return current global planner mode."""
+        return self._planner_mode
+
+    def enable_advanced_planner(self):
+        """Enable advanced precision-first planner mode."""
+        self._planner_mode = "advanced"
+
+    def enable_legacy_planner(self):
+        """Enable legacy effectiveness-only planner mode."""
+        self._planner_mode = "legacy"
 
     def optimize_parameters(
         self,
@@ -305,6 +355,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         profile: TargetProfile,
         objective: str = "comprehensive",
         runtime_context: Optional[Dict[str, Any]] = None,
+        planner_mode: Optional[str] = None,
     ) -> AttackChain:
         """Create an intelligent attack chain based on target profile."""
         chain = AttackChain(profile)
@@ -321,7 +372,11 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         else:
             pattern = self._select_attack_pattern(profile, objective)
 
-        ranked_tools = self.select_optimal_tools(profile, objective)
+        effective_mode = planner_mode
+        if effective_mode is None and isinstance(runtime_context, dict):
+            effective_mode = runtime_context.get("planner_mode")
+
+        ranked_tools = self.select_optimal_tools(profile, objective, planner_mode=effective_mode)
         ranked_set = set(ranked_tools)
 
         pattern_tools = [step["tool"] for step in pattern]
