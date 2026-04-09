@@ -2,6 +2,8 @@
 
 Precise summary based on GitHub release notes and current branch changes.
 
+## 1.4.0 - nullbytecobra (next)
+
 ## 1.3.0 - shellshark
 - Added new tools/wrappers: `hurl`, `waymore`, `assetfinder`, `shuffledns`, `massdns`, and `gospider`; also improved `testssl.sh` compatibility/fallback.
 - Upgraded intelligence workflows with precision planning, preview mode, and tool selection reasons.
