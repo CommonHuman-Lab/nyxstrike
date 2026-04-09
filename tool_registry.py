@@ -1,5 +1,5 @@
 """
-Tool Registry with Compact Schemas for HexStrike AI Agent
+Tool Registry with compact schemas for the AI agent.
 
 Categorized tool definitions with minimal schemas.
 Only 5-8 tools are loaded per task category to fit small model context windows.
@@ -902,7 +902,7 @@ TOOLS: Dict[str, dict] = {
         "method": "POST",
         "category": "binary",
         "params": {"binary": {"required": True}},
-        "optional": {"project_name": "hexstrike_analysis", "script_file": "", "analysis_timeout": 300, "output_format": "xml", "additional_args": ""},
+        "optional": {"project_name": "analysis_project", "script_file": "", "analysis_timeout": 300, "output_format": "xml", "additional_args": ""},
         "effectiveness": 0.90,
     },
     "objdump": {
@@ -956,7 +956,7 @@ TOOLS: Dict[str, dict] = {
         "method": "POST",
         "category": "forensics",
         "params": {"image_path": {"required": True}},
-        "optional": {"case_name": "hexstrike_case", "additional_args": ""},
+        "optional": {"case_name": "analysis_case", "additional_args": ""},
         "effectiveness": 0.82,
     },
 
