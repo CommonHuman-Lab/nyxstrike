@@ -726,6 +726,88 @@
   line-height: 1.45;
 }
 
+.session-chain-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px dashed color-mix(in srgb, var(--blue) 35%, var(--border));
+  background: color-mix(in srgb, var(--blue) 10%, var(--bg-main));
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.session-chain-suggestion__text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.session-chain-suggestion__text strong {
+  color: var(--text-h);
+  font-size: 11px;
+}
+
+.session-chain-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.session-chain-field-row {
+  display: grid;
+  grid-template-columns: auto minmax(70px, 110px) minmax(120px, 1fr) minmax(120px, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.session-chain-field-row input {
+  margin: 0;
+}
+
+.session-chain-pin-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.session-chain-pin-btn:hover {
+  color: var(--text-h);
+  border-color: var(--blue);
+}
+
+.session-chain-pref-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-chain-pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card2);
+  padding: 8px 10px;
+}
+
+.session-chain-pref-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .session-result-pre {
   margin: 0;
   white-space: pre-wrap;
@@ -840,6 +922,31 @@
 
   .session-workbench {
     grid-template-columns: 1fr;
+  }
+
+  .session-chain-suggestion {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .session-chain-field-row {
+    grid-template-columns: auto minmax(60px, 1fr);
+  }
+
+  .session-chain-field-row > span:nth-child(3),
+  .session-chain-field-row > span:nth-child(4),
+  .session-chain-field-row > span:nth-child(5) {
+    grid-column: 2;
+  }
+
+  .session-chain-pin-btn {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .session-chain-pref-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .session-workbench-tools {

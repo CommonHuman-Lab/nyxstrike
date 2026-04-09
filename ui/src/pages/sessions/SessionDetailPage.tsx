@@ -6,10 +6,16 @@ import { fmtTs } from '../../shared/utils'
 import { SessionDetailWorkbench } from './SessionDetailWorkbench'
 import { TemplateModal } from './TemplateModal'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
+import { InformationModal } from '../../components/InformationModal'
+import { useToast } from '../../components/ToastProvider'
 import {
+  buildStepChainSuggestion,
+  type ChainMappingPreference,
+  extractStepArtifacts,
   normalizeStepsFromSession,
   resolveToolForStep,
   type PersistedStepResult,
+  type StepArtifacts,
   type StepState,
 } from './sessionDetailUtils'
 import './SessionsPage.css'
@@ -26,6 +32,7 @@ export default function SessionDetailPage({
   onBack: () => void
   onToolRun?: (tool: string, params: Record<string, unknown>, result: ToolExecResponse) => void
 }) {
+  const { pushToast } = useToast()
   const [session, setSession] = useState<SessionSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -34,6 +41,7 @@ export default function SessionDetailPage({
   const [showOptionalByStep, setShowOptionalByStep] = useState<Record<string, boolean>>({})
   const [runningStepKey, setRunningStepKey] = useState<string | null>(null)
   const [stepResults, setStepResults] = useState<Record<string, { result?: ToolExecResponse; error?: string }>>({})
+  const [stepArtifacts, setStepArtifacts] = useState<Record<string, StepArtifacts>>({})
   const [stepState, setStepState] = useState<Record<string, StepState>>({})
   const [selectedStepIndex, setSelectedStepIndex] = useState(0)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
@@ -47,9 +55,39 @@ export default function SessionDetailPage({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [completeLoading, setCompleteLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [selectedChainFields, setSelectedChainFields] = useState<Record<string, boolean>>({})
+  const [chainPreferences, setChainPreferences] = useState<ChainMappingPreference[]>([])
+  const [showChainPrefModal, setShowChainPrefModal] = useState(false)
 
   const toolMap = useMemo(() => Object.fromEntries(tools.map(t => [t.name, t])), [tools])
   const steps = session ? normalizeStepsFromSession(session) : []
+  const prefStorageKey = `hexstrike:chain-prefs:${sessionId}`
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(prefStorageKey)
+      if (!raw) {
+        setChainPreferences([])
+        return
+      }
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) {
+        setChainPreferences(parsed.filter(item => !!item && typeof item === 'object'))
+      } else {
+        setChainPreferences([])
+      }
+    } catch {
+      setChainPreferences([])
+    }
+  }, [prefStorageKey])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(prefStorageKey, JSON.stringify(chainPreferences))
+    } catch {
+      // ignore storage failures
+    }
+  }, [chainPreferences, prefStorageKey])
 
   async function loadSession() {
     setLoading(true)
@@ -61,6 +99,7 @@ export default function SessionDetailPage({
       const meta = (r.session.metadata ?? {}) as Record<string, unknown>
       const storedStatus = (meta.tool_status ?? {}) as Record<string, string>
       const storedResults = (meta.step_results ?? {}) as Record<string, PersistedStepResult>
+      const storedArtifacts = (meta.step_artifacts ?? {}) as Record<string, StepArtifacts>
       const storedRunningStepKey = typeof meta.running_step_key === 'string' ? meta.running_step_key : null
 
       const hydratedState: Record<string, StepState> = {}
@@ -85,6 +124,7 @@ export default function SessionDetailPage({
       }
       setStepState(hydratedState)
       setStepResults(hydratedResults)
+      setStepArtifacts(storedArtifacts)
 
       try {
         const processList = await api.processList()
@@ -268,6 +308,82 @@ export default function SessionDetailPage({
   const selectedStepKey = selectedStep && session ? `${session.session_id}:${selectedStepIndex}` : null
   const selectedResult = selectedStepKey ? stepResults[selectedStepKey] : undefined
   const selectedTool = selectedStep ? toolMap[selectedStep.tool] : null
+  const selectedFieldValues = selectedStepKey ? (stepFieldValues[selectedStepKey] ?? {}) : {}
+
+  const chainSuggestion = (() => {
+    if (!session || !selectedTool || !selectedStepKey || !selectedStep) return null
+    return buildStepChainSuggestion({
+      steps,
+      selectedStepIndex,
+      selectedTool,
+      sessionId: session.session_id,
+      target: targetValue.trim() || session.target,
+      stepResults,
+      stepArtifacts,
+      currentValues: selectedFieldValues,
+      preferences: chainPreferences,
+    })
+  })()
+
+  useEffect(() => {
+    if (!chainSuggestion || !selectedStepKey) {
+      setSelectedChainFields({})
+      return
+    }
+    const next: Record<string, boolean> = {}
+    for (const field of chainSuggestion.fields) next[field.param] = true
+    setSelectedChainFields(next)
+  }, [chainSuggestion, selectedStepKey])
+
+  function applyChainSuggestion() {
+    if (!selectedStepKey || !chainSuggestion) return
+    const chosen = chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false)
+    if (chosen.length === 0) {
+      pushToast('info', 'No chain fields selected')
+      return
+    }
+    const updates = Object.fromEntries(chosen.map(field => [field.param, field.value]))
+    setStepFieldValues(prev => ({
+      ...prev,
+      [selectedStepKey]: {
+        ...(prev[selectedStepKey] ?? {}),
+        ...updates,
+      },
+    }))
+    pushToast('success', `Applied ${chosen.length} chained field${chosen.length === 1 ? '' : 's'} from ${chainSuggestion.sourceTool}`)
+  }
+
+  function setChainFieldSelected(param: string, enabled: boolean) {
+    setSelectedChainFields(prev => ({ ...prev, [param]: enabled }))
+  }
+
+  function pinChainField(param: string) {
+    if (!selectedTool || !chainSuggestion) return
+    const field = chainSuggestion.fields.find(f => f.param === param)
+    if (!field) return
+    const preference: ChainMappingPreference = {
+      targetTool: selectedTool.name,
+      param,
+      sourceTool: field.sourceTool,
+      sourceArtifact: field.sourceArtifact,
+    }
+    setChainPreferences(prev => {
+      const next = prev.filter(item => !(item.targetTool === preference.targetTool && item.param === preference.param))
+      next.push(preference)
+      return next
+    })
+    pushToast('success', `Pinned mapping ${selectedTool.name}.${param} -> ${field.sourceTool}/${field.sourceArtifact}`)
+  }
+
+  function removePinnedPreference(index: number) {
+    setChainPreferences(prev => prev.filter((_, i) => i !== index))
+    pushToast('success', 'Pinned mapping removed')
+  }
+
+  function clearPinnedPreferences() {
+    setChainPreferences([])
+    pushToast('success', 'Cleared all pinned mappings')
+  }
 
   function handleTargetValueChange(nextTarget: string) {
     setTargetValue(nextTarget)
@@ -369,6 +485,10 @@ export default function SessionDetailPage({
       const existingMeta = (sessionRef.metadata ?? {}) as Record<string, unknown>
       const existingToolStatus = (existingMeta.tool_status && typeof existingMeta.tool_status === 'object') ? (existingMeta.tool_status as Record<string, string>) : {}
       const existingStepResults = (existingMeta.step_results && typeof existingMeta.step_results === 'object') ? (existingMeta.step_results as Record<string, PersistedStepResult>) : {}
+      const existingArtifacts = (existingMeta.step_artifacts && typeof existingMeta.step_artifacts === 'object') ? (existingMeta.step_artifacts as Record<string, StepArtifacts>) : {}
+      const extractedArtifacts = result.success
+        ? extractStepArtifacts({ step: { ...step, parameters: payload }, result, target: target || sessionRef.target })
+        : undefined
       await api.updateSession(sessionRef.session_id, {
         metadata: {
           ...existingMeta,
@@ -388,6 +508,12 @@ export default function SessionDetailPage({
               stderr: result.stderr,
             },
           },
+          step_artifacts: extractedArtifacts
+            ? {
+              ...existingArtifacts,
+              [stepKey]: extractedArtifacts,
+            }
+            : existingArtifacts,
           last_run: {
             step_key: stepKey,
             tool: step.tool,
@@ -401,6 +527,9 @@ export default function SessionDetailPage({
           running_started_at: null,
         },
       })
+      if (extractedArtifacts) {
+        setStepArtifacts(prev => ({ ...prev, [stepKey]: extractedArtifacts }))
+      }
       await loadSession()
     } catch (e) {
       setStepResults(prev => ({ ...prev, [stepKey]: { error: String(e) } }))
@@ -591,6 +720,9 @@ export default function SessionDetailPage({
           <button className="session-action-btn" onClick={exportToolLogs}>
             <Download size={12} /> Export Tool Logs
           </button>
+          <button className="session-action-btn" onClick={() => setShowChainPrefModal(true)}>
+            Manage Chain Pins ({chainPreferences.length})
+          </button>
           <button className="session-action-btn" onClick={handoverToLlm} disabled={handoffLoading}>
             <Bot size={12} /> {handoffLoading ? 'Handing over…' : 'Handover to LLM'}
           </button>
@@ -639,6 +771,36 @@ export default function SessionDetailPage({
           onConfirm={deleteSession}
           onClose={() => setShowDeleteConfirm(false)}
         />
+
+        <InformationModal
+          isOpen={showChainPrefModal}
+          title="Pinned Chain Mappings"
+          description="Review, remove, or clear your pinned chain mappings for this session."
+          primaryLabel="Clear All"
+          secondaryLabel="Close"
+          primaryVariant="danger"
+          onPrimary={chainPreferences.length > 0 ? clearPinnedPreferences : undefined}
+          onSecondary={() => setShowChainPrefModal(false)}
+          onClose={() => setShowChainPrefModal(false)}
+        >
+          {chainPreferences.length === 0 ? (
+            <p className="section-meta">No pinned mappings yet.</p>
+          ) : (
+            <div className="session-chain-pref-list">
+              {chainPreferences.map((pref, idx) => (
+                <div key={`${pref.targetTool}:${pref.param}:${pref.sourceArtifact}:${idx}`} className="session-chain-pref-row">
+                  <div className="session-chain-pref-text">
+                    <span className="mono">{pref.targetTool}.{pref.param}</span>
+                    <span className="section-meta">{pref.sourceTool ?? 'any tool'} / {pref.sourceArtifact}</span>
+                  </div>
+                  <button className="session-chain-pin-btn" onClick={() => removePinnedPreference(idx)}>
+                    Unpin
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </InformationModal>
       </section>
 
       <SessionDetailWorkbench
@@ -659,6 +821,11 @@ export default function SessionDetailPage({
         showOptionalByStep={showOptionalByStep}
         setShowOptionalByStep={setShowOptionalByStep}
         selectedResult={selectedResult}
+        chainSuggestion={chainSuggestion}
+        selectedChainFields={selectedChainFields}
+        onSetChainFieldSelected={setChainFieldSelected}
+        onPinChainField={pinChainField}
+        onApplyChainSuggestion={applyChainSuggestion}
         onRunStep={runStep}
         onStopRunningStep={stopRunningStep}
         onApplyAttackChainFromResult={applyAttackChainFromSelectedResult}

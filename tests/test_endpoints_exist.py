@@ -968,6 +968,10 @@ class TestIntelligence:
         r = _post(client, "/api/intelligence/select-tools")
         assert_route_exists(r, "/api/intelligence/select-tools")
 
+    def test_compare_planners(self, client):
+        r = _post(client, "/api/intelligence/compare-planners")
+        assert_route_exists(r, "/api/intelligence/compare-planners")
+
     def test_classify_task(self, client):
         r = _post(client, "/api/intelligence/classify-task")
         assert_route_exists(r, "/api/intelligence/classify-task")
