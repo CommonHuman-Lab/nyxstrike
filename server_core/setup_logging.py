@@ -23,7 +23,7 @@ class _PlainFormatter(logging.Formatter):
         formatted = super().format(record)
         return _ANSI_ESCAPE.sub('', formatted)
 
-def setup_logging(log_file: str = 'hexstrike.log') -> logging.Logger:
+def setup_logging(log_file: str = 'app.log') -> logging.Logger:
     """Setup enhanced logging: colored console output + ANSI-stripped file output."""
     root = logging.getLogger()
     root.setLevel(logging.INFO)

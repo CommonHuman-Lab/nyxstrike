@@ -1,7 +1,7 @@
 """
 core/config_core.py
 
-Configuration access utilities for HexStrike core.
+Configuration access utilities for core services.
 
 This module provides functions to retrieve and manage wordlist metadata,
 paths, and general configuration values from the global config object.

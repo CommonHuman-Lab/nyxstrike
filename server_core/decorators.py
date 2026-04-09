@@ -1,5 +1,5 @@
 """
-Shared Flask route decorators for HexStrike API blueprints.
+Shared Flask route decorators for API blueprints.
 """
 
 import functools

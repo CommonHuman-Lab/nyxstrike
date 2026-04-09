@@ -6,7 +6,7 @@ import asyncio
 def register_ghidra_tools(mcp, api_client, logger):
 
     @mcp.tool()
-    async def ghidra_analysis(binary: str, project_name: str = "hexstrike_analysis",
+    async def ghidra_analysis(binary: str, project_name: str = "analysis_project",
                        script_file: str = "", analysis_timeout: int = 300,
                        output_format: str = "xml", additional_args: str = "") -> Dict[str, Any]:
         """

@@ -7,7 +7,7 @@ API_HOST = os.environ.get('HEXSTRIKE_HOST', '127.0.0.1')
 class ModernVisualEngine:
     """Beautiful, modern output formatting with animations and colors"""
 
-    #HexStrike Green -  #2d6718
+    # Legacy green accent - #2d6718
 
     # Enhanced color palette with reddish tones and better highlighting
     COLORS = {
@@ -76,7 +76,7 @@ class ModernVisualEngine:
 
     @staticmethod
     def create_banner() -> str:
-        """Create the enhanced HexStrike banner"""
+        """Create the enhanced application banner."""
         accent = ModernVisualEngine.COLORS['ACCENT_LINE']
         RESET = ModernVisualEngine.COLORS['RESET']
         MATRIX_GREEN = ModernVisualEngine.COLORS['MATRIX_GREEN']
