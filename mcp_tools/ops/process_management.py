@@ -3,11 +3,11 @@
 from typing import Dict, Any
 import asyncio
 
-def register_process_management_tools(mcp, hexstrike_client, logger):
+def register_process_management_tools(mcp, api_client, logger):
     @mcp.tool()
     async def list_active_processes() -> Dict[str, Any]:
         """
-        List all active processes on the HexStrike AI server.
+        List all active processes on the API server.
 
         Returns:
             List of active processes with their status and progress
@@ -15,7 +15,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         logger.info("📊 Listing active processes")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/processes/list")
+            None, lambda: api_client.safe_get("api/processes/list")
         )
         if result.get("success"):
             logger.info(f"✅ Found {result.get('total_count', 0)} active processes")
@@ -37,7 +37,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Checking status of process {pid}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get(f"api/processes/status/{pid}")
+            None, lambda: api_client.safe_get(f"api/processes/status/{pid}")
         )
         if result.get("success"):
             logger.info(f"✅ Process {pid} status retrieved")
@@ -59,7 +59,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         logger.info(f"🛑 Terminating process {pid}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(f"api/processes/terminate/{pid}", {})
+            None, lambda: api_client.safe_post(f"api/processes/terminate/{pid}", {})
         )
         if result.get("success"):
             logger.info(f"✅ Process {pid} terminated successfully")
@@ -81,7 +81,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         logger.info(f"⏸️ Pausing process {pid}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(f"api/processes/pause/{pid}", {})
+            None, lambda: api_client.safe_post(f"api/processes/pause/{pid}", {})
         )
         if result.get("success"):
             logger.info(f"✅ Process {pid} paused successfully")
@@ -103,7 +103,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         logger.info(f"▶️ Resuming process {pid}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(f"api/processes/resume/{pid}", {})
+            None, lambda: api_client.safe_post(f"api/processes/resume/{pid}", {})
         )
         if result.get("success"):
             logger.info(f"✅ Process {pid} resumed successfully")
@@ -122,7 +122,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         logger.info("📊 Getting process dashboard")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/processes/dashboard")
+            None, lambda: api_client.safe_get("api/processes/dashboard")
         )
         if result.get("success", True) and "total_processes" in result:
             total = result.get("total_processes", 0)
@@ -140,7 +140,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
     async def execute_command(command: str, use_cache: bool = True) -> Dict[str, Any]:
         """
-        Execute an arbitrary command on the HexStrike AI server with enhanced logging.
+        Execute an arbitrary command on the API server with enhanced logging.
 
         Args:
             command: The command to execute
@@ -151,7 +151,7 @@ def register_process_management_tools(mcp, hexstrike_client, logger):
         """
         try:
             logger.info(f"⚡ Executing command: {command}")
-            result = hexstrike_client.execute_command(command, use_cache)
+            result = api_client.execute_command(command, use_cache)
             if "error" in result:
                 logger.error(f"❌ Command failed: {result['error']}")
                 return {

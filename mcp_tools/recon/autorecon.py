@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_autorecon_tool(mcp, hexstrike_client, logger):
+def register_autorecon_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def autorecon_scan(
@@ -138,7 +138,7 @@ def register_autorecon_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting AutoRecon comprehensive enumeration: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/autorecon", data)
+            None, lambda: api_client.safe_post("api/tools/autorecon", data)
         )
         if result.get("success"):
             logger.info(f"✅ AutoRecon comprehensive enumeration completed for {target}")
@@ -178,7 +178,7 @@ def register_autorecon_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔄 Starting AutoRecon: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/autorecon", data)
+            None, lambda: api_client.safe_post("api/tools/autorecon", data)
         )
         if result.get("success"):
             logger.info(f"✅ AutoRecon completed for {target}")

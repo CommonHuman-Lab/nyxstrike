@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_api_fuzzer_tool(mcp, hexstrike_client, logger):
+def register_api_fuzzer_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def api_fuzzer(base_url: str, endpoints: str = "", methods: str = "GET,POST,PUT,DELETE", wordlist: str = "/usr/share/wordlists/api/api-endpoints.txt") -> Dict[str, Any]:
@@ -29,7 +29,7 @@ def register_api_fuzzer_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting API fuzzing: {base_url}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/api_fuzzer", data)
+            None, lambda: api_client.safe_post("api/tools/api_fuzzer", data)
         )
 
         if result.get("success"):

@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional
 import asyncio
 
-def register_browser_agent_tool(mcp, hexstrike_client, logger, CliColors):
+def register_browser_agent_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def browser_agent_inspect(url: str, headless: bool = True, wait_time: int = 5,
@@ -34,7 +34,7 @@ def register_browser_agent_tool(mcp, hexstrike_client, logger, CliColors):
         logger.info(f"{CliColors.CRIMSON}🌐 Starting Browser Agent {action}: {url}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/browser-agent", data_payload)
+            None, lambda: api_client.safe_post("api/tools/browser-agent", data_payload)
         )
 
         if result.get("success"):

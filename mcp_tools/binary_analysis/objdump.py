@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_objdump_tool(mcp, hexstrike_client, logger):
+def register_objdump_tool(mcp, api_client, logger):
 
     @mcp.tool()
     async def objdump_analyze(binary: str, disassemble: bool = True, additional_args: str = "") -> Dict[str, Any]:
@@ -26,7 +26,7 @@ def register_objdump_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔧 Starting Objdump analysis: {binary}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/objdump", data)
+            None, lambda: api_client.safe_post("api/tools/objdump", data)
         )
         if result.get("success"):
             logger.info(f"✅ Objdump analysis completed for {binary}")

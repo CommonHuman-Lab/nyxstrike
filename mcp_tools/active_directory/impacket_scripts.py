@@ -2,7 +2,7 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-def register_impacket(mcp, hexstrike_client, logger, CliColors):
+def register_impacket(mcp, api_client, logger, CliColors):
     """
     Register MCP tools for generic Impacket script execution.
 
@@ -14,13 +14,13 @@ def register_impacket(mcp, hexstrike_client, logger, CliColors):
     async def _run_post(endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(endpoint, data)
+            None, lambda: api_client.safe_post(endpoint, data)
         )
 
     async def _run_get(endpoint: str) -> Dict[str, Any]:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get(endpoint)
+            None, lambda: api_client.safe_get(endpoint)
         )
 
     @mcp.tool()
@@ -49,7 +49,7 @@ def register_impacket(mcp, hexstrike_client, logger, CliColors):
             use_recovery: Whether backend should use enhanced recovery logic
 
         Returns:
-            Execution result from the HexStrike backend
+            Execution result from the API backend
         """
         data: Dict[str, Any] = {
             "script": script,

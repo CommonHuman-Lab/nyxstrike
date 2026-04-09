@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_gobuster(mcp, hexstrike_client, logger, CliColors):
+def register_gobuster(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def gobuster_scan(url: str, mode: str = "dir", wordlist: str = "/usr/share/wordlists/dirb/common.txt", additional_args: str = "") -> Dict[str, Any]:
@@ -31,7 +31,7 @@ def register_gobuster(mcp, hexstrike_client, logger, CliColors):
         data["use_recovery"] = True
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/gobuster", data)
+            None, lambda: api_client.safe_post("api/tools/gobuster", data)
         )
 
         if result.get("success"):

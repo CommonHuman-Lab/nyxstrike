@@ -3,7 +3,7 @@
 import asyncio
 from typing import Dict, Any
 
-def register_nmap(mcp, hexstrike_client, logger, CliColors):
+def register_nmap(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def nmap_scan(target: str, scan_type: str = "-sV", ports: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -34,7 +34,7 @@ def register_nmap(mcp, hexstrike_client, logger, CliColors):
         # asyncio event loop remains responsive
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/nmap", data)
+            None, lambda: api_client.safe_post("api/tools/nmap", data)
         )
 
         if result.get("success"):
@@ -95,7 +95,7 @@ def register_nmap(mcp, hexstrike_client, logger, CliColors):
         # asyncio event loop remains responsive
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/nmap-advanced", data)
+            None, lambda: api_client.safe_post("api/tools/nmap-advanced", data)
         )
 
         if result.get("success"):

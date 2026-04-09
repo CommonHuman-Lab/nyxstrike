@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_httpx_tool(mcp, hexstrike_client, logger):
+def register_httpx_tool(mcp, api_client, logger):
     @mcp.tool()
     async def httpx_probe(target: str, probe: bool = True, tech_detect: bool = False,
                    status_code: bool = False, content_length: bool = False,
@@ -40,7 +40,7 @@ def register_httpx_tool(mcp, hexstrike_client, logger):
         logger.info(f"🌍 Starting httpx probe: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/httpx", data)
+            None, lambda: api_client.safe_post("api/tools/httpx", data)
         )
         if result.get("success"):
             logger.info(f"✅ httpx probe completed for {target}")

@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_rpcclient_tool(mcp, hexstrike_client, logger):
+def register_rpcclient_tool(mcp, api_client, logger):
     @mcp.tool()
     async def rpcclient_enumeration(target: str, username: str = "", password: str = "",
                              domain: str = "", commands: str = "enumdomusers;enumdomgroups;querydominfo",
@@ -33,7 +33,7 @@ def register_rpcclient_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting rpcclient: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/rpcclient", data)
+            None, lambda: api_client.safe_post("api/tools/rpcclient", data)
         )
         if result.get("success"):
             logger.info(f"✅ rpcclient completed for {target}")

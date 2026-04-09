@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_test_error_recovery_tool(mcp, hexstrike_client, logger, CliColors):
+def register_test_error_recovery_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def test_error_recovery(tool_name: str, error_type: str = "timeout",
@@ -28,7 +28,7 @@ def register_test_error_recovery_tool(mcp, hexstrike_client, logger, CliColors):
         logger.info(f"{CliColors.RUBY}🧪 Testing error recovery for {tool_name} with {error_type}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/error-handling/test-recovery", data_payload)
+            None, lambda: api_client.safe_post("api/error-handling/test-recovery", data_payload)
         )
 
         if result.get("success"):

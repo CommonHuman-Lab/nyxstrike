@@ -57,7 +57,7 @@ def _build_prior_handovers(session: Dict[str, Any], limit: int = 3) -> List[Dict
     return recent
 
 
-def register_session_handover_tools(mcp, hexstrike_client, logger):
+def register_session_handover_tools(mcp, api_client, logger):
     @mcp.tool()
     async def handover_session(session_id: str, note: str = "") -> Dict[str, Any]:
         """
@@ -79,14 +79,14 @@ def register_session_handover_tools(mcp, hexstrike_client, logger):
 
         loop = asyncio.get_running_loop()
         session_resp = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get(f"api/sessions/{session_id}")
+            None, lambda: api_client.safe_get(f"api/sessions/{session_id}")
         )
         if not session_resp.get("success"):
             logger.error(f"Session {session_id} not found")
             return session_resp
 
         handover_resp = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(
+            None, lambda: api_client.safe_post(
                 f"api/sessions/{session_id}/handover", {"note": note}
             )
         )

@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_nuclei(mcp, hexstrike_client, logger, CliColors):
+def register_nuclei(mcp, api_client, logger, CliColors):
     
     @mcp.tool()
     async def nuclei_scan(target: str, severity: str = "", tags: str = "", template: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -33,7 +33,7 @@ def register_nuclei(mcp, hexstrike_client, logger, CliColors):
         data["use_recovery"] = True
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/nuclei", data)
+            None, lambda: api_client.safe_post("api/tools/nuclei", data)
         )
 
         if result.get("success"):

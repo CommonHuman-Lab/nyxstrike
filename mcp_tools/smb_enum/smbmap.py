@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_smbmap_tool(mcp, hexstrike_client, logger):
+def register_smbmap_tool(mcp, api_client, logger):
     @mcp.tool()
     async def smbmap_scan(target: str, username: str = "", password: str = "", domain: str = "", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -29,7 +29,7 @@ def register_smbmap_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting SMBMap: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/smbmap", data)
+            None, lambda: api_client.safe_post("api/tools/smbmap", data)
         )
         if result.get("success"):
             logger.info(f"✅ SMBMap completed for {target}")

@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_katana_tool(mcp, hexstrike_client, logger):
+def register_katana_tool(mcp, api_client, logger):
     @mcp.tool()
     async def katana_crawl(url: str, depth: int = 3, js_crawl: bool = True,
                     form_extraction: bool = True, output_format: str = "json",
@@ -33,7 +33,7 @@ def register_katana_tool(mcp, hexstrike_client, logger):
         logger.info(f"⚔️  Starting Katana crawl: {url}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/katana", data)
+            None, lambda: api_client.safe_post("api/tools/katana", data)
         )
         if result.get("success"):
             logger.info(f"✅ Katana crawl completed for {url}")

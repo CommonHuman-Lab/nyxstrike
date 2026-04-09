@@ -4,7 +4,7 @@ from typing import Dict, Any
 import asyncio
 
 
-def register_burpsuite_tool(mcp, hexstrike_client, logger, CliColors):
+def register_burpsuite_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def burpsuite_scan(project_file: str = "", config_file: str = "", target: str = "", headless: bool = False, scan_type: str = "", scan_config: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -37,7 +37,7 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, CliColors):
         logger.info(f"🔍 Starting Burp Suite scan")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/burpsuite", data)
+            None, lambda: api_client.safe_post("api/tools/burpsuite", data)
         )
         if result.get("success"):
             logger.info(f"✅ Burp Suite scan completed")
@@ -73,7 +73,7 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, CliColors):
         logger.info(f"{CliColors.BLOOD_RED}🔥 Starting Burp Suite Alternative {scan_type} scan: {target}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/burpsuite-alternative", data_payload)
+            None, lambda: api_client.safe_post("api/tools/burpsuite-alternative", data_payload)
         )
 
         if result.get("success"):

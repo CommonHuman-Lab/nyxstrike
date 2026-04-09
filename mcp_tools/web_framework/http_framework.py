@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional
 import asyncio
 
-def register_http_framework_tool(mcp, hexstrike_client, logger, CliColors):
+def register_http_framework_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def http_framework_test(url: str, method: str = "GET", data: dict = {},
@@ -34,7 +34,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, CliColors):
         logger.info(f"{CliColors.FIRE_RED}🔥 Starting HTTP Framework {action}: {url}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", data_payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", data_payload)
         )
 
         if result.get("success"):
@@ -56,7 +56,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, CliColors):
         payload = {"action": "set_rules", "rules": rules}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result
 
@@ -66,7 +66,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, CliColors):
         payload = {"action": "set_scope", "host": host, "include_subdomains": include_subdomains}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result
 
@@ -76,7 +76,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, CliColors):
         payload = {"action": "repeater", "request": request_spec}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result
 
@@ -97,6 +97,6 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, CliColors):
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result

@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_visual_output_tools(mcp, hexstrike_client, logger):
+def register_visual_output_tools(mcp, api_client, logger):
     @mcp.tool()
     async def get_live_dashboard() -> Dict[str, Any]:
         """
@@ -15,7 +15,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
         logger.info("📊 Fetching live process dashboard")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/processes/dashboard")
+            None, lambda: api_client.safe_get("api/processes/dashboard")
         )
         if result.get("success", True):
             logger.info("✅ Live dashboard retrieved successfully")
@@ -52,7 +52,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
             for vuln in vuln_data:
                 loop = asyncio.get_running_loop()
                 card_result = await loop.run_in_executor(
-                    None, lambda: hexstrike_client.safe_post("api/visual/vulnerability-card", vuln)
+                    None, lambda: api_client.safe_post("api/visual/vulnerability-card", vuln)
                 )
                 if card_result.get("success"):
                     vulnerability_cards.append(card_result.get("vulnerability_card", ""))
@@ -67,7 +67,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
 
             loop = asyncio.get_running_loop()
             summary_result = await loop.run_in_executor(
-                None, lambda: hexstrike_client.safe_post("api/visual/summary-report", summary_data)
+                None, lambda: api_client.safe_post("api/visual/summary-report", summary_data)
             )
 
             logger.info("✅ Vulnerability report created successfully")
@@ -106,7 +106,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
 
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/visual/tool-output", data)
+            None, lambda: api_client.safe_post("api/visual/tool-output", data)
         )
         if result.get("success"):
             logger.info(f"✅ Tool output formatted successfully for {tool_name}")
@@ -145,7 +145,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
 
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/visual/summary-report", summary_data)
+            None, lambda: api_client.safe_post("api/visual/summary-report", summary_data)
         )
         if result.get("success"):
             logger.info("✅ Scan summary created successfully")
@@ -167,7 +167,7 @@ def register_visual_output_tools(mcp, hexstrike_client, logger):
         # Get telemetry data
         loop = asyncio.get_running_loop()
         telemetry_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/telemetry")
+            None, lambda: api_client.safe_get("api/telemetry")
         )
 
         if telemetry_result.get("success", True):

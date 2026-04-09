@@ -2,7 +2,7 @@ from typing import Dict, Any
 import asyncio
 
 
-def register_assetfinder_tool(mcp, hexstrike_client, logger):
+def register_assetfinder_tool(mcp, api_client, logger):
     @mcp.tool()
     async def assetfinder_scan(domain: str, only_subdomains: bool = True, additional_args: str = "") -> Dict[str, Any]:
         """
@@ -24,7 +24,7 @@ def register_assetfinder_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting Assetfinder: {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/assetfinder", data)
+            None, lambda: api_client.safe_post("api/tools/assetfinder", data)
         )
         if result.get("success"):
             logger.info(f"✅ Assetfinder completed for {domain}")

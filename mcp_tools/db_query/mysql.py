@@ -3,7 +3,7 @@
 from typing import Any, Dict
 import asyncio
 
-def register_mysql_tools(mcp, hexstrike_client, logger):
+def register_mysql_tools(mcp, api_client, logger):
     @mcp.tool()
     async def mysql_query(
         host: str,
@@ -13,7 +13,7 @@ def register_mysql_tools(mcp, hexstrike_client, logger):
         query: str = ""
     ) -> Dict[str, Any]:
         """
-        Query a MySQL database using the HexStrike server endpoint.
+        Query a MySQL database using the API server endpoint.
 
         Args:
             host: MySQL server address
@@ -35,7 +35,7 @@ def register_mysql_tools(mcp, hexstrike_client, logger):
         try:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
-                None, lambda: hexstrike_client.safe_post("api/tools/mysql", data)
+                None, lambda: api_client.safe_post("api/tools/mysql", data)
             )
             return result
         except Exception as e:

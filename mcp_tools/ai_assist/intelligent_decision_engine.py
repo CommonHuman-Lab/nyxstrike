@@ -4,7 +4,7 @@ from typing import Dict, Any
 from datetime import datetime
 import asyncio
 
-def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, CliColors):
+def register_intelligent_decision_engine_tools(mcp, api_client, logger, CliColors):
     @mcp.tool()
     async def analyze_target_intelligence(target: str) -> Dict[str, Any]:
         """
@@ -21,7 +21,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         data = {"target": target}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", data)
+            None, lambda: api_client.safe_post("api/intelligence/analyze-target", data)
         )
 
         if result.get("success"):
@@ -52,7 +52,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/select-tools", data)
+            None, lambda: api_client.safe_post("api/intelligence/select-tools", data)
         )
 
         if result.get("success"):
@@ -92,7 +92,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/optimize-parameters", data)
+            None, lambda: api_client.safe_post("api/intelligence/optimize-parameters", data)
         )
 
         if result.get("success"):
@@ -123,7 +123,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/preview-attack-chain", data)
+            None, lambda: api_client.safe_post("api/intelligence/preview-attack-chain", data)
         )
 
         if result.get("success"):
@@ -155,7 +155,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/create-attack-chain", data)
+            None, lambda: api_client.safe_post("api/intelligence/create-attack-chain", data)
         )
 
         if result.get("success"):
@@ -195,7 +195,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", data)
+            None, lambda: api_client.safe_post("api/intelligence/smart-scan", data)
         )
 
         if result.get("success"):
@@ -245,7 +245,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         data = {"target": target}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/technology-detection", data)
+            None, lambda: api_client.safe_post("api/intelligence/technology-detection", data)
         )
 
         if result.get("success"):
@@ -281,7 +281,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         # First analyze the target
         loop = asyncio.get_running_loop()
         analysis_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+            None, lambda: api_client.safe_post("api/intelligence/analyze-target", {"target": target})
         )
 
         if not analysis_result.get("success"):
@@ -291,7 +291,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         objective = "comprehensive" if depth == "deep" else "quick" if depth == "surface" else "comprehensive"
         loop = asyncio.get_running_loop()
         chain_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/create-attack-chain", {
+            None, lambda: api_client.safe_post("api/intelligence/create-attack-chain", {
             "target": target,
             "objective": objective
         })
@@ -303,7 +303,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         # Execute the reconnaissance
         loop = asyncio.get_running_loop()
         scan_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", {
+            None, lambda: api_client.safe_post("api/intelligence/smart-scan", {
             "target": target,
             "objective": objective,
             "max_tools": 8 if depth == "deep" else 3 if depth == "surface" else 5
@@ -339,7 +339,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         # Analyze target first
         loop = asyncio.get_running_loop()
         analysis_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+            None, lambda: api_client.safe_post("api/intelligence/analyze-target", {"target": target})
         )
 
         if not analysis_result.get("success"):
@@ -361,7 +361,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, Cl
         # Execute vulnerability assessment
         loop = asyncio.get_running_loop()
         scan_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", {
+            None, lambda: api_client.safe_post("api/intelligence/smart-scan", {
             "target": target,
             "objective": objective,
             "max_tools": 6

@@ -4,7 +4,7 @@ from typing import Dict, Any
 import time
 import asyncio
 
-def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
+def register_ai_payload_generation_tools(mcp, api_client, logger):
     @mcp.tool()
     async def ai_generate_payload(attack_type: str, complexity: str = "basic", technology: str = "", url: str = "") -> Dict[str, Any]:
         """
@@ -28,7 +28,7 @@ def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
         logger.info(f"🤖 Generating AI payloads for {attack_type} attack")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/ai/generate_payload", data)
+            None, lambda: api_client.safe_post("api/ai/generate_payload", data)
         )
 
         if result.get("success"):
@@ -70,7 +70,7 @@ def register_ai_payload_generation_tools(mcp, hexstrike_client, logger):
         logger.info(f"🧪 Testing AI payload against {target_url}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/ai/test_payload", data)
+            None, lambda: api_client.safe_post("api/ai/test_payload", data)
         )
 
         if result.get("success"):

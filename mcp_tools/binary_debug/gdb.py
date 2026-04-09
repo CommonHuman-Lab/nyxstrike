@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_gdb_tools(mcp, hexstrike_client, logger):
+def register_gdb_tools(mcp, api_client, logger):
     
     @mcp.tool()
     async def gdb_analyze(binary: str, commands: str = "", script_file: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -28,7 +28,7 @@ def register_gdb_tools(mcp, hexstrike_client, logger):
         logger.info(f"🔧 Starting GDB analysis: {binary}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/gdb", data)
+            None, lambda: api_client.safe_post("api/tools/gdb", data)
         )
         if result.get("success"):
             logger.info(f"✅ GDB analysis completed for {binary}")
@@ -62,7 +62,7 @@ def register_gdb_tools(mcp, hexstrike_client, logger):
         logger.info(f"🔧 Starting GDB-PEDA analysis: {binary or f'PID {attach_pid}' or core_file}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/gdb-peda", data)
+            None, lambda: api_client.safe_post("api/tools/gdb-peda", data)
         )
         if result.get("success"):
             logger.info(f"✅ GDB-PEDA analysis completed")

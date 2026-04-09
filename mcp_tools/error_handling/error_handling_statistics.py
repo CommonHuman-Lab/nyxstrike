@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_error_handling_statistics_tool(mcp, hexstrike_client, logger, CliColors):
+def register_error_handling_statistics_tool(mcp, api_client, logger, CliColors):
     @mcp.tool()
     async def error_handling_statistics() -> Dict[str, Any]:
         """
@@ -15,7 +15,7 @@ def register_error_handling_statistics_tool(mcp, hexstrike_client, logger, CliCo
         logger.info(f"{CliColors.ELECTRIC_PURPLE}📊 Retrieving error handling statistics{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/error-handling/statistics")
+            None, lambda: api_client.safe_get("api/error-handling/statistics")
         )
 
         if result.get("success"):

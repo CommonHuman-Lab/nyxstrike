@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_waymore_tool(mcp, hexstrike_client, logger):
+def register_waymore_tool(mcp, api_client, logger):
     @mcp.tool()
     async def waymore_discovery(input: str, mode: str = "U",
                                 output_urls: str = "", output_responses: str = "",
@@ -31,7 +31,7 @@ def register_waymore_tool(mcp, hexstrike_client, logger):
         logger.info(f"🕸️  Starting Waymore discovery: {input} (mode={mode})")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/waymore", data)
+            None, lambda: api_client.safe_post("api/tools/waymore", data)
         )
         if result.get("success"):
             logger.info(f"✅ Waymore discovery completed for {input}")

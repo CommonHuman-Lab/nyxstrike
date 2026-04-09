@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_enum4linux_tool(mcp, hexstrike_client, logger):
+def register_enum4linux_tool(mcp, api_client, logger):
     @mcp.tool()
     async def enum4linux_scan(target: str, additional_args: str = "-a") -> Dict[str, Any]:
         """
@@ -23,7 +23,7 @@ def register_enum4linux_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting Enum4linux: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/enum4linux", data)
+            None, lambda: api_client.safe_post("api/tools/enum4linux", data)
         )
         if result.get("success"):
             logger.info(f"✅ Enum4linux completed for {target}")
@@ -67,7 +67,7 @@ def register_enum4linux_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting Enum4linux-ng: {target}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/enum4linux-ng", data)
+            None, lambda: api_client.safe_post("api/tools/enum4linux-ng", data)
         )
         if result.get("success"):
             logger.info(f"✅ Enum4linux-ng completed for {target}")

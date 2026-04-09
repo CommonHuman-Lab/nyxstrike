@@ -3,11 +3,11 @@
 from typing import Dict, Any
 import asyncio
 
-def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
+def register_file_ops_and_payload_gen_tools(mcp, api_client, logger):
     @mcp.tool()
     async def create_file(filename: str, content: str, binary: bool = False) -> Dict[str, Any]:
         """
-        Create a file with specified content on the HexStrike server.
+        Create a file with specified content on the API server.
 
         Args:
             filename: Name of the file to create
@@ -25,7 +25,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         logger.info(f"📄 Creating file: {filename}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/files/create", data)
+            None, lambda: api_client.safe_post("api/files/create", data)
         )
         if result.get("success"):
             logger.info(f"✅ File created successfully: {filename}")
@@ -36,7 +36,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
     async def modify_file(filename: str, content: str, append: bool = False) -> Dict[str, Any]:
         """
-        Modify an existing file on the HexStrike server.
+        Modify an existing file on the API server.
 
         Args:
             filename: Name of the file to modify
@@ -54,7 +54,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         logger.info(f"✏️  Modifying file: {filename}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/files/modify", data)
+            None, lambda: api_client.safe_post("api/files/modify", data)
         )
         if result.get("success"):
             logger.info(f"✅ File modified successfully: {filename}")
@@ -65,7 +65,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
     async def delete_file(filename: str) -> Dict[str, Any]:
         """
-        Delete a file or directory on the HexStrike server.
+        Delete a file or directory on the API server.
 
         Args:
             filename: Name of the file or directory to delete
@@ -79,7 +79,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         logger.info(f"🗑️  Deleting file: {filename}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/files/delete", data)
+            None, lambda: api_client.safe_post("api/files/delete", data)
         )
         if result.get("success"):
             logger.info(f"✅ File deleted successfully: {filename}")
@@ -90,7 +90,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
     @mcp.tool()
     async def list_files(directory: str = ".") -> Dict[str, Any]:
         """
-        List files in a directory on the HexStrike server.
+        List files in a directory on the API server.
 
         Args:
             directory: Directory to list (relative to server's base directory)
@@ -101,7 +101,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         logger.info(f"📂 Listing files in directory: {directory}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/files/list", {"directory": directory})
+            None, lambda: api_client.safe_get("api/files/list", {"directory": directory})
         )
         if result.get("success"):
             file_count = len(result.get("files", []))
@@ -135,7 +135,7 @@ def register_file_ops_and_payload_gen_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Generating {payload_type} payload: {size} bytes")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/payloads/generate", data)
+            None, lambda: api_client.safe_post("api/payloads/generate", data)
         )
         if result.get("success"):
             logger.info(f"✅ Payload generated successfully")

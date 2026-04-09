@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_falco_runtime_monitoring_tool(mcp, hexstrike_client, logger):
+def register_falco_runtime_monitoring_tool(mcp, api_client, logger):
 
     @mcp.tool()
     async def falco_runtime_monitoring(config_file: str = "/etc/falco/falco.yaml",
@@ -32,7 +32,7 @@ def register_falco_runtime_monitoring_tool(mcp, hexstrike_client, logger):
         logger.info(f"🛡️  Starting Falco runtime monitoring for {duration}s")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/falco", data)
+            None, lambda: api_client.safe_post("api/tools/falco", data)
         )
         if result.get("success"):
             logger.info(f"✅ Falco monitoring completed")
