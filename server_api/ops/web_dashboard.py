@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 api_web_dashboard_bp = Blueprint("api_web_dashboard", __name__)
 
-REMOTE_MASTER_CONFIG_URL = "https://raw.githubusercontent.com/CommonHuman-Lab/hexstrike-ai-community-edition/master/config.py"
+REMOTE_MASTER_CONFIG_URL = "https://raw.githubusercontent.com/CommonHuman-Lab/nyxstrike/master/config.py"
 _update_cache_lock = threading.Lock()
 _update_cache: Dict[str, Any] = {
     "for_version": None,
