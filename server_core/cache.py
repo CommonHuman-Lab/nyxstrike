@@ -12,7 +12,7 @@ COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # 5 minutes default t
 CACHE_SIZE = config_core.get("CACHE_SIZE", 1000)
 CACHE_TTL = config_core.get("CACHE_TTL", 3600)  # 1 hour default TTL
 
-class HexStrikeCache:
+class CommandResultCache:
     """Advanced caching system for command results"""
 
     def __init__(self, max_size: int = CACHE_SIZE, ttl: int = CACHE_TTL):

@@ -1,5 +1,5 @@
 """
-HexStrike shared singletons.
+Core shared singletons.
 
 All stateful service objects are constructed exactly once here.
 Import from this module instead of constructing new instances in each blueprint.
@@ -17,13 +17,13 @@ Usage:
 import server_core.config_core as config_core
 
 # ── Cache & stores ────────────────────────────────────────────────────────────
-from .cache import HexStrikeCache
+from .cache import CommandResultCache
 from .session_store import SessionStore
 from .wordlist_store import WordlistStore
 from .run_history_store import RunHistoryStore
 from .tool_stats_store import ToolStatsStore
 
-cache = HexStrikeCache()
+cache = CommandResultCache()
 session_store = SessionStore()
 wordlist_store = WordlistStore()
 run_history = RunHistoryStore()

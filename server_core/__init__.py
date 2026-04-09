@@ -1,9 +1,9 @@
 """
-HexStrike Core Module
-Shared infrastructure components for the HexStrike framework
+Core Module
+Shared infrastructure components for the framework
 """
 
-from .cache import HexStrikeCache
+from .cache import CommandResultCache
 from .session_store import SessionStore
 from .wordlist_store import WordlistStore
 from .telemetry_collector import TelemetryCollector
@@ -71,7 +71,7 @@ __all__ = [
     # Classes
     "env_manager",
     "ModernVisualEngine",
-    "HexStrikeCache",
+    "CommandResultCache",
     "TelemetryCollector",
     "SessionStore",
     "WordlistStore",
