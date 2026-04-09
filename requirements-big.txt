@@ -1,0 +1,6 @@
+# Heavy optional dependencies.
+# Installed by: ./scripts/install.sh --install-tools --install-big-packages
+
+kube-hunter>=0.6.8
+ScoutSuite>=5.14.0
+shodan>=1.31.0

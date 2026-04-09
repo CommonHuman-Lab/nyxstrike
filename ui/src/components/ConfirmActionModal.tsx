@@ -1,7 +1,7 @@
-import React from 'react'
 import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 import { ActionButton, type ActionButtonVariant } from './ActionButton'
+import { useEscapeClose } from '../hooks/useEscapeClose'
 import './ConfirmActionModal.css'
 
 interface ConfirmActionModalProps {
@@ -29,14 +29,7 @@ export function ConfirmActionModal({
   onConfirm,
   onClose,
 }: ConfirmActionModalProps) {
-  React.useEffect(() => {
-    if (!isOpen) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !isConfirming) onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [isOpen, isConfirming, onClose])
+  useEscapeClose(isOpen && !isConfirming, onClose)
 
   if (!isOpen) return null
 
@@ -72,7 +65,7 @@ export function ConfirmActionModal({
               onClick={() => { void onConfirm() }}
               disabled={isConfirming}
             >
-              {isConfirming ? 'Clearing…' : confirmLabel}
+              {isConfirming ? 'Working…' : confirmLabel}
             </ActionButton>
           </div>
         </div>

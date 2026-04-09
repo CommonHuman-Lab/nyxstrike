@@ -1,3 +1,9 @@
+---
+description: Internal bug bounty shared contract (anti-loop). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # Bug Bounty — Anti-Loop Rules
 
 Seven rules every agent MUST apply before and during execution.

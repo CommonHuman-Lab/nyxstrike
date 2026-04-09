@@ -10,7 +10,15 @@ logger = logging.getLogger(__name__)
 api_settings_bp = Blueprint("api_settings", __name__)
 
 # Keys that may be mutated at runtime via PATCH /api/settings
-_MUTABLE_KEYS = {"COMMAND_TIMEOUT", "CACHE_SIZE", "CACHE_TTL", "TOOL_AVAILABILITY_TTL"}
+_MUTABLE_KEYS = {
+    "COMMAND_TIMEOUT",
+    "REQUEST_TIMEOUT",
+    "COMMAND_INACTIVITY_TIMEOUT",
+    "COMMAND_MAX_RUNTIME",
+    "CACHE_SIZE",
+    "CACHE_TTL",
+    "TOOL_AVAILABILITY_TTL",
+}
 
 
 def _current_settings() -> dict:
@@ -23,11 +31,14 @@ def _current_settings() -> dict:
             "working_dir": os.getcwd(),
             "data_dir": os.environ.get(
                 "HEXSTRIKE_DATA_DIR",
-                os.path.join(os.getcwd(), ".hexstrike_data"),
+                config_core.default_data_dir(),
             ),
         },
         "runtime": {
             "command_timeout": config_core.get("COMMAND_TIMEOUT", 300),
+            "request_timeout": config_core.get("REQUEST_TIMEOUT", 3600),
+            "command_inactivity_timeout": config_core.get("COMMAND_INACTIVITY_TIMEOUT", 900),
+            "command_max_runtime": config_core.get("COMMAND_MAX_RUNTIME", 86400),
             "cache_size": config_core.get("CACHE_SIZE", 1000),
             "cache_ttl": config_core.get("CACHE_TTL", 3600),
             "tool_availability_ttl": config_core.get("TOOL_AVAILABILITY_TTL", 3600),
@@ -70,19 +81,23 @@ def patch_settings():
         errors = {}
 
         key_map = {
-            "command_timeout": ("COMMAND_TIMEOUT", int),
-            "cache_size": ("CACHE_SIZE", int),
-            "cache_ttl": ("CACHE_TTL", int),
-            "tool_availability_ttl": ("TOOL_AVAILABILITY_TTL", int),
+            "command_timeout": ("COMMAND_TIMEOUT", int, 0),
+            "request_timeout": ("REQUEST_TIMEOUT", int, 0),
+            "command_inactivity_timeout": ("COMMAND_INACTIVITY_TIMEOUT", int, 0),
+            "command_max_runtime": ("COMMAND_MAX_RUNTIME", int, 0),
+            "cache_size": ("CACHE_SIZE", int, 1),
+            "cache_ttl": ("CACHE_TTL", int, 1),
+            "tool_availability_ttl": ("TOOL_AVAILABILITY_TTL", int, 1),
         }
 
-        for field, (cfg_key, cast) in key_map.items():
+        for field, (cfg_key, cast, min_value) in key_map.items():
             if field not in runtime:
                 continue
             try:
                 val = cast(runtime[field])
-                if val <= 0:
-                    raise ValueError("must be positive")
+                if val < min_value:
+                    qualifier = "non-negative" if min_value == 0 else "positive"
+                    raise ValueError(f"must be {qualifier}")
                 config_core.set_value(cfg_key, val)
                 updated[field] = val
             except (ValueError, TypeError) as exc:

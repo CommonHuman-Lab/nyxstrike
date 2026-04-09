@@ -1,8 +1,8 @@
 .toast-stack {
   position: fixed;
   right: 18px;
-  bottom: 18px;
-  z-index: 80;
+  bottom: 64px;
+  z-index: 320;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -15,13 +15,17 @@
   max-width: 360px;
   padding: 10px 12px 10px 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(13, 15, 20, 0.88);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), color-mix(in srgb, var(--accent-alt) 6%, transparent)),
+    color-mix(in srgb, var(--bg-card) 90%, transparent);
   color: var(--text-h);
   font-size: 12px;
   font-family: var(--mono);
   line-height: 1.4;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.35),
+    0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
   backdrop-filter: blur(10px);
   animation: toast-in 180ms ease-out;
 }
@@ -34,31 +38,40 @@
   bottom: 8px;
   width: 3px;
   border-radius: 3px;
-  background: var(--text-dim);
+  background: color-mix(in srgb, var(--accent) 55%, var(--text-dim));
 }
 
 .toast-success {
-  border-color: rgba(0, 230, 118, 0.3);
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--success) 10%, transparent), color-mix(in srgb, var(--accent-alt) 5%, transparent)),
+    color-mix(in srgb, var(--bg-card) 90%, transparent);
 }
 
 .toast-success::before {
-  background: var(--green);
+  background: var(--success);
 }
 
 .toast-error {
-  border-color: rgba(255, 77, 77, 0.3);
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--danger) 12%, transparent), color-mix(in srgb, var(--danger) 5%, transparent)),
+    color-mix(in srgb, var(--bg-card) 90%, transparent);
 }
 
 .toast-error::before {
-  background: var(--red);
+  background: var(--danger);
 }
 
 .toast-info {
-  border-color: rgba(79, 195, 247, 0.3);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 11%, transparent), color-mix(in srgb, var(--accent-alt) 7%, transparent)),
+    color-mix(in srgb, var(--bg-card) 90%, transparent);
 }
 
 .toast-info::before {
-  background: var(--blue);
+  background: var(--accent);
 }
 
 @keyframes toast-in {
@@ -74,7 +87,7 @@
 
 @media (max-width: 768px) {
   .toast-stack {
-    bottom: 12px;
+    bottom: 68px;
     left: 12px;
     right: 12px;
   }

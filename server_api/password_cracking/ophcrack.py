@@ -51,7 +51,7 @@ def ophcrack_crack():
             command += f" {additional_args}"
 
         logger.info(f"Starting Ophcrack: {command}")
-        result = execute_command(command)
+        result = execute_command(command, tool="ophcrack")
         logger.info("Ophcrack completed")
         return jsonify(result)
     except Exception as e:

@@ -61,6 +61,7 @@ class ProcessManager:
                             process_obj.kill()  # Force kill if still running
 
                         active_processes[pid]["status"] = "terminated"
+                        active_processes.pop(pid, None)
                         logger.warning(f"🛑 TERMINATED: Process {pid} - {process_info['command'][:50]}...")
                         return True
                 except Exception as e:
@@ -121,4 +122,3 @@ class ProcessManager:
                 except Exception as e:
                     logger.error(f"💥 Error resuming process {pid}: {str(e)}")
             return False
-

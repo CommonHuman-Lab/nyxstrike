@@ -1,12 +1,14 @@
 import json
 import logging
 import os
+import shutil
 from typing import Optional
 import server_core.config_core as config_core
 
 logger = logging.getLogger(__name__)
 
 WORDLISTS_FILE_NAME = "wordlists.json"
+WORDLISTS_DIR_NAME = "wordlists"
 
 class WordlistStore:
     """
@@ -17,7 +19,9 @@ class WordlistStore:
 
     def __init__(self, data_dir: Optional[str] = None) -> None:
         self._data_dir = data_dir or config_core.default_data_dir()
-        self._wordlists_file = os.path.join(self._data_dir, WORDLISTS_FILE_NAME)
+        self._wordlists_dir = os.path.join(self._data_dir, WORDLISTS_DIR_NAME)
+        self._wordlists_file = os.path.join(self._wordlists_dir, WORDLISTS_FILE_NAME)
+        self._legacy_wordlists_file = os.path.join(self._data_dir, WORDLISTS_FILE_NAME)
         self._ensure_dir_and_file()
 
     @property
@@ -25,7 +29,16 @@ class WordlistStore:
         return self._data_dir
 
     def _ensure_dir_and_file(self) -> None:
-        os.makedirs(self._data_dir, exist_ok=True)
+        os.makedirs(self._wordlists_dir, exist_ok=True)
+        if os.path.exists(self._legacy_wordlists_file) and not os.path.exists(self._wordlists_file):
+            try:
+                shutil.move(self._legacy_wordlists_file, self._wordlists_file)
+            except OSError:
+                shutil.copy2(self._legacy_wordlists_file, self._wordlists_file)
+                try:
+                    os.remove(self._legacy_wordlists_file)
+                except OSError:
+                    pass
         if not os.path.exists(self._wordlists_file):
             with open(self._wordlists_file, "w", encoding="utf-8") as f:
                 json.dump({"WORD_LISTS": {}}, f, indent=2)

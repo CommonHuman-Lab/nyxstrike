@@ -28,6 +28,13 @@ def _annotate_process(info: dict, now: float = 0.0) -> None:
     else:
         info["eta_formatted"] = "Unknown"
 
+
+def _json_safe_process(info: dict) -> dict:
+    """Return a JSON-safe copy of process info."""
+    safe = dict(info)
+    safe.pop("process", None)
+    return safe
+
 @api_process_management_bp.route("/api/processes/list", methods=["GET"])
 def list_processes():
     """List all active processes"""
@@ -35,13 +42,15 @@ def list_processes():
         processes = ProcessManager.list_active_processes()
 
         # Add calculated fields for each process
+        safe_processes = {}
         for pid, info in processes.items():
             _annotate_process(info)
+            safe_processes[str(pid)] = _json_safe_process(info)
 
         return jsonify({
             "success": True,
-            "active_processes": processes,
-            "total_count": len(processes)
+            "active_processes": safe_processes,
+            "total_count": len(safe_processes)
         })
     except Exception as e:
         logger.error(f"💥 Error listing processes: {str(e)}")
@@ -59,7 +68,7 @@ def get_process_status(pid):
 
             return jsonify({
                 "success": True,
-                "process": process_info
+                "process": _json_safe_process(process_info)
             })
         else:
             return jsonify({

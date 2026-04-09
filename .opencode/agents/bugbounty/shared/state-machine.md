@@ -1,3 +1,9 @@
+---
+description: Internal bug bounty shared contract (state machine). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # Bug Bounty — State Machine
 
 ## Phase Progression

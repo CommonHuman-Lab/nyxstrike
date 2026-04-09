@@ -39,12 +39,13 @@ export default function TasksPage({ demoData }: TasksPageProps) {
   return (
     <div className="page-content">
       {poolStats && (
-        <WorkerPoolSection data={data} poolStats={poolStats} streamStatus={streamStatus} />
+        <WorkerPoolSection data={data} streamStatus={streamStatus} />
       )}
 
       <ProcessesSection
         processes={processes}
         actionMsg={actionMsg}
+        streamStatus={streamStatus}
         onRefresh={fetchData}
         onPause={pauseProcess}
         onResume={resumeProcess}

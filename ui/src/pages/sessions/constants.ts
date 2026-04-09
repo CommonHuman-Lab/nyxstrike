@@ -1,5 +1,5 @@
 export interface StartMode {
-  key: 'comprehensive' | 'reconnaissance' | 'vulnerability_hunting' | 'osint' | 'manual' | 'from_template'
+  key: 'intelligence' | 'comprehensive' | 'reconnaissance' | 'vulnerability_hunting' | 'OSINT' | 'api_security' | 'internal_network_ad' | 'manual' | 'from_template'
   title: string
   description: string
   details: string
@@ -10,39 +10,12 @@ export interface StartMode {
 
 export const START_MODES: StartMode[] = [
   {
-    key: 'comprehensive',
-    title: 'Comprehensive Assessment',
-    description: 'Balanced full-chain workflow from recon to vulnerability checks.',
-    details: 'Best default for unknown targets.',
-    modalDescription: 'Builds a broad, practical workflow that starts with target profiling and surface mapping, then moves into prioritized vulnerability validation. This is designed for cases where you want full context and a structured path from discovery to actionable findings.',
-    tools: ['nmap', 'httpx', 'katana', 'nuclei', 'nikto', 'ffuf'],
-    placeholder: 'Target URL/domain/IP (example.com)',
-  },
-  {
-    key: 'reconnaissance',
-    title: 'Reconnaissance',
-    description: 'Discovery-first workflow for assets, endpoints, and technologies.',
-    details: 'Use when mapping attack surface.',
-    modalDescription: 'Focuses on enumeration and intelligence gathering with minimal intrusive testing. It maps hosts, services, paths, and technologies so you can decide where deeper testing should happen next.',
-    tools: ['subfinder', 'amass', 'httpx', 'katana', 'waybackurls', 'gau'],
-    placeholder: 'Scope target (example.com or 10.0.0.0/24)',
-  },
-  {
-    key: 'vulnerability_hunting',
-    title: 'Vulnerability Hunting',
-    description: 'Vulnerability-focused chain prioritizing exploitable findings.',
-    details: 'Use when recon is already known.',
-    modalDescription: 'Runs targeted security checks against known attack surface to quickly identify high-value weaknesses. This mode biases toward validating likely vulnerabilities and producing results you can triage and act on fast.',
-    tools: ['nuclei', 'sqlmap', 'dalfox', 'jaeles', 'nikto', 'wpscan'],
-    placeholder: 'Web/API target (https://target.tld)',
-  },
-  {
-    key: 'osint',
-    title: 'OSINT Collection',
-    description: 'Intelligence and external footprint gathering for a target.',
-    details: 'Useful before active probing.',
-    modalDescription: 'Collects passive intelligence from public sources to understand exposure before active scanning. This includes historical URLs, publicly indexed assets, and reconnaissance artifacts useful for planning follow-up testing.',
-    tools: ['theharvester', 'subfinder', 'amass', 'gau', 'waybackurls'],
+    key: 'intelligence',
+    title: 'Intelligent Attack-Chain',
+    description: 'Automated target profiling and attack chain generation.',
+    details: 'Best for quick, AI-driven assessments.',
+    modalDescription: 'Leverages AI to analyze the target and generate a customized attack chain.',
+    tools: [],
     placeholder: 'Domain or org target (target.tld)',
   },
   {

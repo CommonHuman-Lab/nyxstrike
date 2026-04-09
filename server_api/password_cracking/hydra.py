@@ -50,7 +50,7 @@ def hydra():
         command += f" {target} {service}"
 
         logger.info(f"🔑 Starting Hydra attack: {target}:{service}")
-        result = execute_command(command)
+        result = execute_command(command, tool="hydra")
         logger.info(f"📊 Hydra attack completed for {target}")
         return jsonify(result)
     except Exception as e:

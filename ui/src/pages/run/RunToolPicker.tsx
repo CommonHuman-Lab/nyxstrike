@@ -1,3 +1,4 @@
+import { XCircle } from 'lucide-react'
 import type { Tool } from '../../api'
 
 interface RunToolPickerProps {
@@ -26,18 +27,30 @@ export function RunToolPicker({
   return (
     <div className="run-picker">
       <div className="run-picker-controls">
-        <input
-          className="search-input mono"
-          placeholder="Search tools…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <div className="search-input-wrap">
+          <input
+            className="search-input mono"
+            placeholder="Search tools…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search.trim().length > 0 && (
+            <button
+              className="search-clear-btn"
+              onClick={() => setSearch('')}
+              title="Clear search"
+              aria-label="Clear search"
+            >
+              <XCircle size={12} />
+            </button>
+          )}
+        </div>
         <div className="cat-tabs run-cat-tabs">
           {cats.map(c => (
             <button
               key={c}
               className={`cat-tab ${activeCat === c ? 'active' : ''}`}
-              onClick={() => setActiveCat(c)}
+              onClick={() => setActiveCat(activeCat === c ? 'all' : c)}
             >
               {c.replace(/_/g, ' ')}
             </button>

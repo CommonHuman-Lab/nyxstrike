@@ -46,7 +46,7 @@ def aircrack_ng():
         command += f" -b {bssid}"
 
     logger.info(f"🔍 Starting Aircrack-ng analysis with command: {command}")
-    result = execute_command(command, use_cache=False)
+    result = execute_command(command, use_cache=False, tool="aircrack-ng")
     if result.get("success"):
         logger.info("✅ Aircrack-ng analysis completed successfully")
     else:

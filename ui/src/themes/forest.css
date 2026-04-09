@@ -1,0 +1,65 @@
+:root[data-theme='forest'] {
+  --bg: #111a15;
+  --bg-card: #18251d;
+  --bg-card2: #223126;
+  --border: #3d5a46;
+
+  --text: #c9dbc9;
+  --text-h: #eff8ef;
+  --text-dim: #8ba08f;
+
+  --green: #78b866;
+  --green-dim: rgba(120, 184, 102, 0.18);
+
+  --red: #b96363;
+  --red-dim: rgba(185, 99, 99, 0.18);
+
+  --amber: #d2b06d;
+  --amber-dim: rgba(210, 176, 109, 0.18);
+
+  --blue: #7fa6b8;
+  --blue-dim: rgba(127, 166, 184, 0.18);
+
+  --purple: #9d8ab7;
+  --purple-dim: rgba(157, 138, 183, 0.18);
+
+  --cyan: #6ab5aa;
+  --cyan-dim: rgba(106, 181, 170, 0.18);
+
+  --pink: #c187a5;
+  --pink-dim: rgba(193, 135, 165, 0.18);
+
+  --orange: #bf8f62;
+  --orange-dim: rgba(191, 143, 98, 0.18);
+
+  --lime: #a7c66a;
+  --lime-dim: rgba(167, 198, 106, 0.18);
+
+  --teal: #5da086;
+  --teal-dim: rgba(93, 160, 134, 0.18);
+
+  --indigo: #7f8fb8;
+  --indigo-dim: rgba(127, 143, 184, 0.18);
+
+  --gray: #a5b9a8;
+  --gray-dim: rgba(165, 185, 168, 0.15);
+
+  --white-dim: rgba(239, 248, 239, 0.06);
+
+  --accent: #78b866;
+  --accent-alt: #6ab5aa;
+  --accent-warm: #d2b06d;
+
+  --success: var(--green);
+  --warning: var(--amber);
+  --danger: var(--red);
+  --info: var(--blue);
+
+  --glow-green: 0 0 14px rgba(120, 184, 102, 0.48);
+  --glow-blue: 0 0 14px rgba(127, 166, 184, 0.45);
+  --glow-red: 0 0 14px rgba(185, 99, 99, 0.45);
+  --glow-cyan: 0 0 14px rgba(106, 181, 170, 0.45);
+
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, 'Courier New', monospace;
+  --sans: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
+}

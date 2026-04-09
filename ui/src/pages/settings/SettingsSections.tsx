@@ -32,7 +32,7 @@ function SettingsField({ label, unit, hint, value, onChange }: {
         <input
           className="settings-input mono"
           type="number"
-          min={1}
+          min={0}
           value={value}
           onChange={e => onChange(e.target.value)}
         />
@@ -75,10 +75,16 @@ export function ServerEnvironmentSection({ settings }: { settings: Settings }) {
 
 export function RuntimeConfigSection({
   timeout,
+  requestTimeout,
+  inactivityTimeout,
+  maxRuntime,
   cacheSize,
   cacheTtl,
   toolTtl,
   setTimeout_,
+  setRequestTimeout,
+  setInactivityTimeout,
+  setMaxRuntime,
   setCacheSize,
   setCacheTtl,
   setToolTtl,
@@ -86,10 +92,16 @@ export function RuntimeConfigSection({
   onSave,
 }: {
   timeout: string
+  requestTimeout: string
+  inactivityTimeout: string
+  maxRuntime: string
   cacheSize: string
   cacheTtl: string
   toolTtl: string
   setTimeout_: (v: string) => void
+  setRequestTimeout: (v: string) => void
+  setInactivityTimeout: (v: string) => void
+  setMaxRuntime: (v: string) => void
   setCacheSize: (v: string) => void
   setCacheTtl: (v: string) => void
   setToolTtl: (v: string) => void
@@ -100,13 +112,28 @@ export function RuntimeConfigSection({
     <section className="section">
       <div className="section-header">
         <h3>Runtime Config</h3>
-        <span className="section-meta">changes apply immediately, reset on server restart</span>
+        <span className="section-meta">changes apply immediately</span>
       </div>
       <div className="settings-grid">
         <SettingsField
           label="Command Timeout" unit="seconds"
-          hint="Max time a tool process is allowed to run."
+          hint="Per-run hard timeout. Use 0 only in API when you need no hard timeout."
           value={timeout} onChange={setTimeout_}
+        />
+        <SettingsField
+          label="Request Timeout" unit="seconds"
+          hint="How long clients wait for API responses (0 means no client-side request timeout)."
+          value={requestTimeout} onChange={setRequestTimeout}
+        />
+        <SettingsField
+          label="Inactivity Timeout" unit="seconds"
+          hint="Stops commands that produce no output for too long."
+          value={inactivityTimeout} onChange={setInactivityTimeout}
+        />
+        <SettingsField
+          label="Max Runtime" unit="seconds"
+          hint="Safety cap for any single tool execution."
+          value={maxRuntime} onChange={setMaxRuntime}
         />
         <SettingsField
           label="Cache Size" unit="entries"

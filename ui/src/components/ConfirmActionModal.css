@@ -1,9 +1,9 @@
 .confirm-action-modal {
   max-width: 520px;
-  border-color: color-mix(in srgb, var(--red) 28%, #252836);
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--border));
   background:
-    radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--red) 18%, transparent), transparent 42%),
-    linear-gradient(180deg, #151926 0%, #12151f 100%);
+    radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--danger) 18%, transparent), transparent 42%),
+    linear-gradient(180deg, color-mix(in srgb, var(--danger) 8%, transparent) 0%, var(--bg-card) 100%);
 }
 
 .confirm-action-icon {
@@ -13,9 +13,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--red);
-  background: color-mix(in srgb, var(--red) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
 }
 
 .confirm-action-impact {
@@ -25,9 +25,9 @@
 }
 
 .confirm-action-impact-item {
-  border: 1px solid color-mix(in srgb, var(--red) 30%, var(--border));
-  background: color-mix(in srgb, var(--red) 10%, transparent);
-  color: color-mix(in srgb, var(--red) 70%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border));
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: color-mix(in srgb, var(--danger) 70%, var(--text));
   border-radius: 8px;
   padding: 10px 11px;
   font-size: 13px;

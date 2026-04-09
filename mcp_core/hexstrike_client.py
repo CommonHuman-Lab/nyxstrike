@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional
 import server_core.config_core as config_core
 
 DEFAULT_HEXSTRIKE_SERVER = config_core.get("DEFAULT_HEXSTRIKE_SERVER", "http://127.0.0.1:8888")
-DEFAULT_REQUEST_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)
+DEFAULT_REQUEST_TIMEOUT = config_core.get("REQUEST_TIMEOUT", 0)
 MAX_RETRIES = config_core.get("MAX_RETRIES", 3)
 
 class HexStrikeClient:
@@ -15,7 +15,7 @@ class HexStrikeClient:
 
     def __init__(self, server_url: str, auth_token: str = "", timeout: int = DEFAULT_REQUEST_TIMEOUT, verify_ssl: bool = True):
         self.server_url = server_url.rstrip("/")
-        self.timeout = timeout
+        self.timeout = None if timeout is None or int(timeout) <= 0 else int(timeout)
         self.session = requests.Session()
         self._connected = False
         self._connect_lock = threading.Lock()

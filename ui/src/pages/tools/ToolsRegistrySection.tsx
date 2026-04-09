@@ -14,6 +14,8 @@ interface ToolsRegistrySectionProps {
   missingCount: number
   toolsStatus: Record<string, boolean>
   onSelectTool: (tool: Tool) => void
+  onRefreshAvailability?: () => Promise<void>
+  refreshingAvailability?: boolean
 }
 
 export function ToolsRegistrySection({
@@ -29,20 +31,44 @@ export function ToolsRegistrySection({
   missingCount,
   toolsStatus,
   onSelectTool,
+  onRefreshAvailability,
+  refreshingAvailability = false,
 }: ToolsRegistrySectionProps) {
   return (
     <section className="section">
       <div className="section-header">
         <h3>Tool Registry <span className="badge">{filtered.length} / {tools.length}</span></h3>
+        {onRefreshAvailability && (
+          <button
+            className="btn-secondary"
+            onClick={() => void onRefreshAvailability()}
+            disabled={refreshingAvailability}
+            title="Force immediate tool availability re-check"
+          >
+            {refreshingAvailability ? 'Refreshing…' : 'Refresh Availability'}
+          </button>
+        )}
       </div>
       <div className="registry-controls">
         <div className="registry-controls-top">
-          <input
-            className="search-input mono"
-            placeholder="Search tools…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+          <div className="search-input-wrap">
+            <input
+              className="search-input mono"
+              placeholder="Search tools…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search.trim().length > 0 && (
+              <button
+                className="search-clear-btn"
+                onClick={() => setSearch('')}
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <XCircle size={12} />
+              </button>
+            )}
+          </div>
           <button
             className={`registry-missing-toggle${missingOnly ? ' active' : ''}`}
             onClick={() => setMissingOnly(prev => !prev)}
@@ -58,7 +84,7 @@ export function ToolsRegistrySection({
             <button
               key={category}
               className={`cat-tab ${activeCat === category ? 'active' : ''}`}
-              onClick={() => setActiveCat(category)}
+              onClick={() => setActiveCat(activeCat === category ? 'all' : category)}
             >
               {category.replace(/_/g, ' ')}
             </button>

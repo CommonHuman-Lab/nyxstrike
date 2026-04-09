@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Wrench, Database, Shield, XCircle } from 'lucide-react'
-import { type Tool, type WebDashboardResponse } from '../../api'
+import { api, type Tool, type WebDashboardResponse } from '../../api'
 import { StatCard } from '../../components/StatCard'
 import { ToolModal } from '../../components/ToolModal'
+import { useToast } from '../../components/ToastProvider'
 import { filterToolsByOptions, getToolCategories } from '../../shared/toolUtils'
 import { ToolsRegistrySection } from './ToolsRegistrySection'
 import './ToolsPage.css'
@@ -14,21 +15,60 @@ interface ToolsPageProps {
 }
 
 export default function ToolsPage({ health, tools, toolsStatus }: ToolsPageProps) {
+  const { pushToast } = useToast()
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState<string>('all')
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null)
   const [missingOnly, setMissingOnly] = useState(false)
+  const [refreshingAvailability, setRefreshingAvailability] = useState(false)
+  const [localToolsStatus, setLocalToolsStatus] = useState<Record<string, boolean>>(toolsStatus)
+  const [localTotals, setLocalTotals] = useState({
+    available: health.total_tools_available,
+    total: health.total_tools_count,
+  })
+
+  const effectiveToolsStatus = localToolsStatus
+
+  useEffect(() => {
+    if (refreshingAvailability) return
+    setLocalToolsStatus(toolsStatus)
+    setLocalTotals({
+      available: health.total_tools_available,
+      total: health.total_tools_count,
+    })
+  }, [toolsStatus, health.total_tools_available, health.total_tools_count, refreshingAvailability])
 
   const cats = getToolCategories(tools)
   const filtered = filterToolsByOptions(tools, {
-    toolsStatus,
+    toolsStatus: effectiveToolsStatus,
     activeCategory: activeCat,
     search,
     missingOnly,
     includeParentToolSearch: true,
   })
 
-  const missingCount = health.total_tools_count - health.total_tools_available
+  const missingCount = localTotals.total - localTotals.available
+
+  async function refreshAvailabilityNow() {
+    setRefreshingAvailability(true)
+    try {
+      const response = await api.refreshToolAvailability()
+      if (!response.success) {
+        pushToast('error', response.error || 'Failed to refresh availability')
+        return
+      }
+      setLocalToolsStatus(response.tools_status)
+      setLocalTotals({
+        available: response.total_tools_available,
+        total: response.total_tools_count,
+      })
+      pushToast('success', 'Tool availability refreshed')
+    } catch (e) {
+      pushToast('error', `Refresh failed: ${String(e)}`)
+    } finally {
+      setRefreshingAvailability(false)
+    }
+  }
 
   return (
     <div className="page-content tools-page">
@@ -36,7 +76,7 @@ export default function ToolsPage({ health, tools, toolsStatus }: ToolsPageProps
         <ToolModal
           tool={selectedTool}
           onClose={() => setSelectedTool(null)}
-          installed={toolsStatus[selectedTool.name]}
+          installed={effectiveToolsStatus[selectedTool.name]}
         />
       )}
 
@@ -45,8 +85,8 @@ export default function ToolsPage({ health, tools, toolsStatus }: ToolsPageProps
         <StatCard
           icon={<Shield size={20} />}
           label="Kali Tools Installed"
-          value={`${health.total_tools_available} / ${health.total_tools_count}`}
-          sub={`${((health.total_tools_available / Math.max(health.total_tools_count, 1)) * 100).toFixed(0)}% coverage`}
+          value={`${localTotals.available} / ${localTotals.total}`}
+          sub={`${((localTotals.available / Math.max(localTotals.total, 1)) * 100).toFixed(0)}% coverage`}
           accent="var(--green)"        
         />
         <StatCard
@@ -76,8 +116,10 @@ export default function ToolsPage({ health, tools, toolsStatus }: ToolsPageProps
         missingOnly={missingOnly}
         setMissingOnly={setMissingOnly}
         missingCount={missingCount}
-        toolsStatus={toolsStatus}
+        toolsStatus={effectiveToolsStatus}
         onSelectTool={setSelectedTool}
+        onRefreshAvailability={refreshAvailabilityNow}
+        refreshingAvailability={refreshingAvailability}
       />
     </div>
   )

@@ -1,3 +1,9 @@
+---
+description: Internal bug bounty shared contract (tool policy). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # Bug Bounty — Tool Policy
 
 Canonical tool selection reference. Every agent uses this table to pick tools for each phase.

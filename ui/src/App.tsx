@@ -98,13 +98,26 @@ export default function App() {
     } catch { /* ignored */ }
     return 'dark'
   })
+  const [reduceTextureEffects, setReduceTextureEffects] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('hexstrike_reduce_texture_effects') === '1'
+    } catch {
+      return false
+    }
+  })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', themeId)
+    if (reduceTextureEffects) {
+      document.documentElement.setAttribute('data-reduce-textures', '1')
+    } else {
+      document.documentElement.removeAttribute('data-reduce-textures')
+    }
     try {
       localStorage.setItem(THEME_STORAGE_KEY, themeId)
+      localStorage.setItem('hexstrike_reduce_texture_effects', reduceTextureEffects ? '1' : '0')
     } catch { /* ignored */ }
-  }, [themeId])
+  }, [themeId, reduceTextureEffects])
 
   useEffect(() => {
     function onGlobalKeyDown(e: KeyboardEvent) {
@@ -378,6 +391,8 @@ export default function App() {
           fetchAll={fetchAll}
           themeId={themeId}
           setThemeId={setThemeId}
+          reduceTextureEffects={reduceTextureEffects}
+          setReduceTextureEffects={setReduceTextureEffects}
           onOpenCommandPalette={openCommandPalette}
           onSignOut={() => { setAuthed(false); setNeedsAuth(true) }}
         />
@@ -418,6 +433,10 @@ export default function App() {
           error={error}
           history={history}
           toolCategories={toolCategories}
+          themeId={themeId}
+          setThemeId={setThemeId}
+          reduceTextureEffects={reduceTextureEffects}
+          setReduceTextureEffects={setReduceTextureEffects}
         />
       </div>
     </ToastProvider>

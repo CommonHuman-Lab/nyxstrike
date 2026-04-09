@@ -69,7 +69,7 @@ def patator_attack():
             command += f" {additional_args}"
 
         logger.info(f"Starting Patator attack: {command}")
-        result = execute_command(command)
+        result = execute_command(command, tool="patator")
         logger.info("Patator attack completed")
         return jsonify(result)
     except Exception as e:

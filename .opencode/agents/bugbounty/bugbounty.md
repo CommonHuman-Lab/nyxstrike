@@ -1,4 +1,5 @@
 ---
+name: Bug Bounty Agent
 description: Bug bounty leader — give it a program, scope, and goal. It builds an attack plan, waits for your confirmation, then autonomously runs the full recon→enum→fuzz→vuln→report chain using HexStrike MCP tools.
 mode: primary
 color: "#26c6da"

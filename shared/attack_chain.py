@@ -43,7 +43,8 @@ class AttackChain:
                     "expected_outcome": step.expected_outcome,
                     "success_probability": step.success_probability,
                     "execution_time_estimate": step.execution_time_estimate,
-                    "dependencies": step.dependencies
+                    "dependencies": step.dependencies,
+                    "selection_reason": step.selection_reason,
                 }
                 for step in self.steps
             ],

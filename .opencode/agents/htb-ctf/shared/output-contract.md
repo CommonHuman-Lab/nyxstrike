@@ -1,3 +1,9 @@
+---
+description: Internal HTB shared contract (output envelope). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # HTB CTF — Output Contract
 
 Every specialist subagent MUST return a structured JSON envelope as its final message to the Leader. This is what the Leader uses to decide the next step.

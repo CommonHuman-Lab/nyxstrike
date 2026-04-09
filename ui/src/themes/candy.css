@@ -1,57 +1,57 @@
 :root[data-theme='candy'] {
-  --bg: #1e1330;
-  --bg-card: #2a1844;
-  --bg-card2: #38205d;
-  --border: #7646a3;
+  --bg: #2e1f3b;
+  --bg-card: #3a274a;
+  --bg-card2: #4a325f;
+  --border: #9d6da6;
 
-  --text: #ffe7f8;
-  --text-h: #fff8ff;
-  --text-dim: #d1a4eb;
+  --text: #fde9f7;
+  --text-h: #fefefe;
+  --text-dim: #e6c0da;
 
-  --green: #72f0a3;
-  --green-dim: rgba(114, 240, 163, 0.22);
+  --green: #50d4d5;
+  --green-dim: rgba(80, 212, 213, 0.22);
 
-  --red: #ff6a98;
-  --red-dim: rgba(255, 106, 152, 0.24);
+  --red: #e74f9c;
+  --red-dim: rgba(231, 79, 156, 0.24);
 
-  --amber: #ffd166;
-  --amber-dim: rgba(255, 209, 102, 0.24);
+  --amber: #f184c8;
+  --amber-dim: rgba(241, 132, 200, 0.24);
 
-  --blue: #69d2ff;
-  --blue-dim: rgba(105, 210, 255, 0.24);
+  --blue: #a3eff9;
+  --blue-dim: rgba(163, 239, 249, 0.24);
 
-  --purple: #d597ff;
-  --purple-dim: rgba(213, 151, 255, 0.26);
+  --purple: #f184c8;
+  --purple-dim: rgba(241, 132, 200, 0.26);
 
-  --cyan: #6df3ff;
-  --cyan-dim: rgba(109, 243, 255, 0.26);
+  --cyan: #a3eff9;
+  --cyan-dim: rgba(163, 239, 249, 0.26);
 
-  --pink: #ff7bd5;
-  --pink-dim: rgba(255, 123, 213, 0.26);
+  --pink: #e74f9c;
+  --pink-dim: rgba(231, 79, 156, 0.26);
 
-  --orange: #ffa95f;
-  --orange-dim: rgba(255, 169, 95, 0.24);
+  --orange: #f184c8;
+  --orange-dim: rgba(241, 132, 200, 0.24);
 
-  --lime: #dbff7e;
-  --lime-dim: rgba(219, 255, 126, 0.22);
+  --lime: #a3eff9;
+  --lime-dim: rgba(163, 239, 249, 0.22);
 
-  --teal: #79ffd7;
-  --teal-dim: rgba(121, 255, 215, 0.24);
+  --teal: #50d4d5;
+  --teal-dim: rgba(80, 212, 213, 0.24);
 
-  --indigo: #9ea7ff;
-  --indigo-dim: rgba(158, 167, 255, 0.24);
+  --indigo: #a3eff9;
+  --indigo-dim: rgba(163, 239, 249, 0.24);
 
-  --gray: #ebd3f5;
-  --gray-dim: rgba(235, 211, 245, 0.2);
+  --gray: #fefefe;
+  --gray-dim: rgba(254, 254, 254, 0.2);
 
   --white-dim: rgba(255, 255, 255, 0.14);
 
-  --accent: #ff7bd5;
-  --accent-alt: #69d2ff;
-  --accent-warm: #ffa95f;
+  --accent: #e74f9c;
+  --accent-alt: #50d4d5;
+  --accent-warm: #f184c8;
 
-  --glow-green: 0 0 15px rgba(114, 240, 163, 0.7);
-  --glow-blue: 0 0 15px rgba(105, 210, 255, 0.7);
-  --glow-red: 0 0 15px rgba(255, 106, 152, 0.7);
-  --glow-cyan: 0 0 15px rgba(109, 243, 255, 0.7);
+  --glow-green: 0 0 15px rgba(80, 212, 213, 0.68);
+  --glow-blue: 0 0 15px rgba(163, 239, 249, 0.68);
+  --glow-red: 0 0 15px rgba(231, 79, 156, 0.68);
+  --glow-cyan: 0 0 15px rgba(80, 212, 213, 0.68);
 }

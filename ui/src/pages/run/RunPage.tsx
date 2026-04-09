@@ -119,7 +119,7 @@ export function RunPage({
     const tool = tools.find(t => t.name === commandToolRequest.toolName)
     if (tool) {
       selectTool(tool)
-      setSearch(tool.name)
+      setSearch('')
     }
     onCommandToolHandled?.()
   }, [commandToolRequest, tools, onCommandToolHandled])

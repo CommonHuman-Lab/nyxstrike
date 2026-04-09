@@ -1,4 +1,5 @@
 ---
+name: HTB CTF Agent
 description: HTB CTF Leader — give it a target and goal, it builds an attack plan, asks for your confirmation, then orchestrates the full kill chain autonomously using HexStrike MCP tools
 mode: primary
 color: "#ff6b35"

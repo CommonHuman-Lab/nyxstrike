@@ -1,5 +1,5 @@
 import React from 'react'
-import { RefreshCw, XCircle, Server } from 'lucide-react'
+import { ChevronDown, ChevronRight, RefreshCw, XCircle, Server } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { RunHistoryEntry } from '../../shared/types'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
@@ -30,8 +30,23 @@ export function RunHistoryPanel({
   const { pushToast } = useToast()
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [clearing, setClearing] = React.useState(false)
+  const [collapsedDates, setCollapsedDates] = React.useState<Record<string, boolean>>({})
   const visible = filterHistory(history, histSearch)
   const grouped = groupHistoryByDate(visible)
+
+  React.useEffect(() => {
+    setCollapsedDates(prev => {
+      const next: Record<string, boolean> = {}
+      grouped.forEach((group, idx) => {
+        if (Object.prototype.hasOwnProperty.call(prev, group.dateLabel)) {
+          next[group.dateLabel] = prev[group.dateLabel]
+        } else {
+          next[group.dateLabel] = idx !== 0
+        }
+      })
+      return next
+    })
+  }, [grouped])
 
   async function handleConfirmClear() {
     setClearing(true)
@@ -106,33 +121,42 @@ export function RunHistoryPanel({
         </div>
       )}
 
-      {visible.length === 0 ? (
-        <p className="run-history-empty">{histSearch ? 'No matches' : 'No runs yet'}</p>
-      ) : (
-        <>
-          {grouped.map(group => (
-            <React.Fragment key={group.dateLabel}>
-              <div className="run-history-date">{group.dateLabel}</div>
-              {group.entries.map(entry => (
+      <div className="run-history-list">
+        {visible.length === 0 ? (
+          <p className="run-history-empty">{histSearch ? 'No matches' : 'No runs yet'}</p>
+        ) : (
+          <>
+            {grouped.map(group => (
+              <React.Fragment key={group.dateLabel}>
                 <button
-                  key={entry.id}
-                  className={`run-history-item${viewEntry?.id === entry.id ? ' active' : ''}`}
-                  onClick={() => onOpenModalEntry(entry)}
+                  className="run-history-date run-history-date-toggle"
+                  onClick={() => setCollapsedDates(prev => ({ ...prev, [group.dateLabel]: !prev[group.dateLabel] }))}
                 >
-                  <span className={`run-hist-dot ${entry.result.success ? 'ok' : 'fail'}`} />
-                  <span className="run-hist-name mono">{entry.tool}</span>
-                  {entry.source === 'server' && (
-                    <span title="Recorded server-side" className="run-hist-server-icon">
-                      <Server size={10} />
-                    </span>
-                  )}
-                  <span className="run-hist-time">{entry.ts.toLocaleTimeString('en-GB')}</span>
+                  {collapsedDates[group.dateLabel] ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
+                  <span>{group.dateLabel}</span>
+                  <span className="run-history-date-count mono">{group.entries.length}</span>
                 </button>
-              ))}
-            </React.Fragment>
-          ))}
-        </>
-      )}
+                {!collapsedDates[group.dateLabel] && group.entries.map(entry => (
+                  <button
+                    key={entry.id}
+                    className={`run-history-item${viewEntry?.id === entry.id ? ' active' : ''}`}
+                    onClick={() => onOpenModalEntry(entry)}
+                  >
+                    <span className={`run-hist-dot ${entry.result.success ? 'ok' : 'fail'}`} />
+                    <span className="run-hist-name mono">{entry.tool}</span>
+                    {entry.source === 'server' && (
+                      <span title="Recorded server-side" className="run-hist-server-icon">
+                        <Server size={10} />
+                      </span>
+                    )}
+                    <span className="run-hist-time">{entry.ts.toLocaleTimeString('en-GB')}</span>
+                  </button>
+                ))}
+              </React.Fragment>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   )
 }

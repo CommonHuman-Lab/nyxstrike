@@ -1,3 +1,9 @@
+---
+description: Internal bug bounty shared contract (output envelope). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # Bug Bounty — Output Contract
 
 Every subagent's final response to the leader MUST be a single JSON object matching this envelope.

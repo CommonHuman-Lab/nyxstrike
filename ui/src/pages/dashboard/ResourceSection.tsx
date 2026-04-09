@@ -43,12 +43,29 @@ export function ResourceSection({
   history: HistoryPoint[]
 }) {
   const resources = health.resources
+  const localResourcesTime = (() => {
+    const raw = health.resources_timestamp
+    if (!raw) return ''
+
+    const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T')
+    const sanitized = normalized.replace(/([+-]\d{2}:\d{2})Z$/, '$1')
+    const candidates = [sanitized, `${sanitized}Z`, normalized, raw]
+    for (const candidate of candidates) {
+      const parsed = new Date(candidate)
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toLocaleTimeString('en-GB', { hour12: false })
+      }
+    }
+
+    const timeMatch = raw.match(/\b\d{2}:\d{2}:\d{2}\b/)
+    return timeMatch?.[0] ?? ''
+  })()
 
   return (
     <section className="section">
       <div className="section-header">
         <h3>System Resources</h3>
-        <span className="section-meta mono">{health.resources_timestamp?.slice(11, 19)}</span>
+        <span className="section-meta mono">{localResourcesTime}</span>
       </div>
       <div className="resources-layout">
         <div className="gauges-col">

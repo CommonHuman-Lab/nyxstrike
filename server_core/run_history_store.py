@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import shutil
 import threading
 from collections import deque
 from typing import Any, Deque, Dict, List, Optional
@@ -11,6 +12,7 @@ import server_core.config_core as config_core
 logger = logging.getLogger(__name__)
 
 RUN_HISTORY_FILE_NAME = "run_history.json"
+HISTORY_DIR_NAME = "history"
 
 
 class RunHistoryStore:
@@ -23,7 +25,9 @@ class RunHistoryStore:
 
   def __init__(self, data_dir: Optional[str] = None):
     self._data_dir = data_dir or config_core.default_data_dir()
-    self._history_path = os.path.join(self._data_dir, RUN_HISTORY_FILE_NAME)
+    self._history_dir = os.path.join(self._data_dir, HISTORY_DIR_NAME)
+    self._history_path = os.path.join(self._history_dir, RUN_HISTORY_FILE_NAME)
+    self._legacy_history_path = os.path.join(self._data_dir, RUN_HISTORY_FILE_NAME)
     self._lock = threading.Lock()
     self._entries: Deque[Dict[str, Any]] = deque(maxlen=self.MAX_ENTRIES)
     self._id_counter = 0
@@ -66,7 +70,16 @@ class RunHistoryStore:
       self._save_locked()
 
   def _ensure_dir(self) -> None:
-    os.makedirs(self._data_dir, exist_ok=True)
+    os.makedirs(self._history_dir, exist_ok=True)
+    if os.path.exists(self._legacy_history_path) and not os.path.exists(self._history_path):
+      try:
+        shutil.move(self._legacy_history_path, self._history_path)
+      except OSError:
+        shutil.copy2(self._legacy_history_path, self._history_path)
+        try:
+          os.remove(self._legacy_history_path)
+        except OSError:
+          pass
 
   def _load(self) -> None:
     if not os.path.exists(self._history_path):

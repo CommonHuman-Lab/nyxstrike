@@ -1,10 +1,12 @@
-import { ChevronDown, ChevronUp, Download, Play, RefreshCw, Trash2 } from 'lucide-react'
-import type { Dispatch, SetStateAction } from 'react'
+import { ChevronDown, ChevronUp, Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
 import { ParamField } from '../../components/tool-run/ParamField'
 import type { AttackChainStep, Tool, ToolExecResponse } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
 import { exportEntry } from '../../shared/utils'
 import type { StepState } from './sessionDetailUtils'
+import type { ChainSuggestion } from './sessionDetailUtils'
+import { ActionButton } from '../../components/ActionButton'
 
 interface SessionDetailWorkbenchProps {
   isCompleted: boolean
@@ -24,7 +26,14 @@ interface SessionDetailWorkbenchProps {
   showOptionalByStep: Record<string, boolean>
   setShowOptionalByStep: Dispatch<SetStateAction<Record<string, boolean>>>
   selectedResult: { result?: ToolExecResponse; error?: string } | undefined
+  chainSuggestion: ChainSuggestion | null
+  selectedChainFields: Record<string, boolean>
+  onSetChainFieldSelected: (param: string, enabled: boolean) => void
+  onPinChainField: (param: string) => void
+  onApplyChainSuggestion: () => void
   onRunStep: (step: AttackChainStep, index: number) => Promise<void>
+  onStopRunningStep: () => Promise<void>
+  onApplyAttackChainFromResult: () => Promise<void>
   onRemoveTool: (index: number) => Promise<void>
   showAddTool: boolean
   setShowAddTool: Dispatch<SetStateAction<boolean>>
@@ -69,7 +78,14 @@ export function SessionDetailWorkbench({
   showOptionalByStep,
   setShowOptionalByStep,
   selectedResult,
+  chainSuggestion,
+  selectedChainFields,
+  onSetChainFieldSelected,
+  onPinChainField,
+  onApplyChainSuggestion,
   onRunStep,
+  onStopRunningStep,
+  onApplyAttackChainFromResult,
   onRemoveTool,
   showAddTool,
   setShowAddTool,
@@ -80,6 +96,16 @@ export function SessionDetailWorkbench({
 }: SessionDetailWorkbenchProps) {
   const selectedRunning = selectedStepKey ? runningStepKey === selectedStepKey : false
   const resultData = selectedResult?.result
+  const selectedChainCount = chainSuggestion
+    ? chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false).length
+    : 0
+  const addToolInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!showAddTool) return
+    const frame = window.requestAnimationFrame(() => addToolInputRef.current?.focus())
+    return () => window.cancelAnimationFrame(frame)
+  }, [showAddTool])
 
   return (
     <section className="section">
@@ -94,6 +120,7 @@ export function SessionDetailWorkbench({
               {showAddTool && (
                 <div className="session-add-tool-panel">
                   <input
+                    ref={addToolInputRef}
                     className="search-input mono"
                     placeholder="Search tool..."
                     value={addToolSearch}
@@ -114,26 +141,34 @@ export function SessionDetailWorkbench({
 
           {steps.map((step, idx) => {
             const stepKey = `${sessionId}:${idx}`
+            const isRunning = runningStepKey === stepKey
             return (
               <button
                 key={stepKey}
-                className={`session-workbench-tool session-workbench-tool--${stepState[stepKey] ?? 'idle'} ${selectedStepIndex === idx ? 'active' : ''}`}
+                className={`session-workbench-tool session-workbench-tool--${stepState[stepKey] ?? 'idle'} ${isRunning ? 'session-workbench-tool--running' : ''} ${selectedStepIndex === idx ? 'active' : ''}`}
                 onClick={() => setSelectedStepIndex(idx)}
               >
                 <span className="session-workbench-tool-name mono">{step.tool}</span>
-                {!isCompleted && (
-                  <button
-                    type="button"
-                    className="session-remove-tool"
-                    onClick={e => {
-                      e.stopPropagation()
-                      onRemoveTool(idx)
-                    }}
-                    title="Remove tool"
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                )}
+                <span className="session-workbench-tool-actions">
+                  {isRunning && (
+                    <span className="session-running-indicator mono" title="Tool is running">
+                      <RefreshCw size={11} className="spin" /> Running
+                    </span>
+                  )}
+                  {!isCompleted && (
+                    <button
+                      type="button"
+                      className="session-remove-tool"
+                      onClick={e => {
+                        e.stopPropagation()
+                        onRemoveTool(idx)
+                      }}
+                      title="Remove tool"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </span>
               </button>
             )
           })}
@@ -158,15 +193,60 @@ export function SessionDetailWorkbench({
               <div className="session-step-row">
                 <div className="session-step-head">
                   <span className={`session-tool-chip mono session-tool-chip--${stepState[selectedStepKey] ?? 'idle'}`}>{selectedStep.tool}</span>
-                  <button
-                    className="session-run-btn"
-                    onClick={() => onRunStep(selectedStep, selectedStepIndex)}
-                    disabled={isCompleted || selectedRunning}
-                  >
+                  <ActionButton variant="default" disabled={isCompleted || selectedRunning} onClick={() => onRunStep(selectedStep, selectedStepIndex)}>
                     {selectedRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
                     {isCompleted ? 'Completed' : (selectedRunning ? 'Running…' : `Run ${selectedStep.tool}`)}
-                  </button>
+                  </ActionButton>
+                  {selectedRunning && !isCompleted && (
+                    <ActionButton variant="danger" onClick={() => { void onStopRunningStep() }}>
+                      <Square size={12} /> Stop
+                    </ActionButton>
+                  )}
                 </div>
+
+                {selectedTool.desc && <p className="session-tool-description">{selectedTool.desc}</p>}
+
+                {chainSuggestion && (
+                  <div className="session-chain-suggestion">
+                    <div className="session-chain-suggestion__text">
+                      <strong className="mono">Chain hint from {chainSuggestion.sourceTool}</strong>
+                      <span>
+                        {chainSuggestion.summary} Confidence {(chainSuggestion.confidence * 100).toFixed(0)}%
+                      </span>
+                      <div className="session-chain-fields">
+                        {chainSuggestion.fields.map(field => {
+                          const enabled = selectedChainFields[field.param] !== false
+                          return (
+                          <label key={field.param} className={`session-chain-field-row ${enabled ? '' : 'is-disabled'}`}>
+                            <input
+                              type="checkbox"
+                              checked={enabled}
+                              onChange={e => onSetChainFieldSelected(field.param, e.target.checked)}
+                            />
+                            <span className="mono">{field.param}</span>
+                            <span className="mono">{field.value}</span>
+                            <span className="section-meta">{Math.round(field.confidence * 100)}% {field.reason}</span>
+                            <button
+                              type="button"
+                              className="session-chain-pin-btn"
+                              onClick={() => onPinChainField(field.param)}
+                              disabled={isCompleted || selectedRunning}
+                            >
+                              Pin
+                            </button>
+                          </label>
+                        )})}
+                      </div>
+                    </div>
+                    <ActionButton
+                      variant="success"
+                      disabled={isCompleted || selectedRunning || selectedChainCount === 0}
+                      onClick={onApplyChainSuggestion}
+                    >
+                      Use Prior Output ({selectedChainCount})
+                    </ActionButton>
+                  </div>
+                )}
 
                 <div className="session-param-grid">
                   {Object.keys(selectedTool.params).map(key => (
@@ -220,20 +300,17 @@ export function SessionDetailWorkbench({
                       </div>
                       {selectedStepKey && resultData && (
                         <div className="session-result-actions">
-                          <button
-                            className="run-export-btn"
-                            onClick={() => exportResultEntry('txt', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}
-                            title="Export as .txt"
-                          >
-                            <Download size={11} /> TXT
-                          </button>
-                          <button
-                            className="run-export-btn"
-                            onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}
-                            title="Export as .json"
-                          >
+                          <ActionButton variant="default" onClick={() => exportResultEntry('txt', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}>
+                            <Download size={11} /> Export
+                          </ActionButton>
+                          <ActionButton variant="default" onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}>
                             <Download size={11} /> JSON
-                          </button>
+                          </ActionButton>
+                          {selectedStep.tool === 'create-attack-chain' && resultData.success && (
+                            <ActionButton disabled={isCompleted} variant="success" onClick={() => { void onApplyAttackChainFromResult() }}>
+                              Use Chain
+                            </ActionButton>
+                          )}
                         </div>
                       )}
                     </div>

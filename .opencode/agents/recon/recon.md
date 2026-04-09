@@ -1,4 +1,5 @@
 ---
+name: Recon Agent
 description: Recon agent — pure information gathering across domains, IPs, web apps, and APIs. No exploitation, no modification. Delivers a structured markdown summary.
 mode: primary
 color: "#78909c"

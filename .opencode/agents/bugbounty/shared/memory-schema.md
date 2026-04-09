@@ -1,3 +1,9 @@
+---
+description: Internal bug bounty shared contract (memory schema). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # Bug Bounty — Shared State Schema
 
 All agents read and write a single canonical state file:

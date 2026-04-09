@@ -1,7 +1,7 @@
 # List of tools considered always installed (built-in, code-provided or simulated)
 BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner",
-                  "http-framework", "auto_install_missing_apt_tools", 
-                  "analyze-target", "create-attack-chain", "smart-scan",
+                   "http-framework", "auto_install_missing_apt_tools", 
+                  "analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan",
                   "technology-detection"]
 
 # Tools that require dpkg check (Debian-based systems)
@@ -19,7 +19,8 @@ REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
 # Binary name overrides for tools where the executable name differs from the tool name
 BINARY_NAME_OVERRIDES = {
     "scout-suite": "scout",
-    "volatility": "vol"
+    "volatility": "vol",
+    "hurl": "hURL"
 }
 
 # Comprehensive list of tools categorized by functionality for health monitoring and availability checks
@@ -28,8 +29,8 @@ HEALTH_TOOL_CATEGORIES = {
     "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
                 "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],
     "web_recon": ["ffuf", "feroxbuster", "dirsearch", "dotdotpwn", "xsser", "wfuzz",
-                     "arjun", "paramspider", "x8", "jaeles", "dalfox",
-                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "wpscan", "joomscan"],
+                      "arjun", "paramspider", "x8", "jaeles", "dalfox",
+                     "httpx", "wafw00f", "burpsuite", "katana", "hakrawler", "gospider", "wpscan", "joomscan", "testssl"],
     "web_vuln": ["nuclei", "graphql-scanner", "jwt-analyzer", "zaproxy"],
     "brute_force": ["medusa", "patator", "hashid", "ophcrack", "hashcat-utils"],
     "binary": ["gdb", "radare2", "binwalk", "ROPgadget", "checksec", "objdump",
@@ -41,10 +42,10 @@ HEALTH_TOOL_CATEGORIES = {
               "docker-bench-security", "checkov", "terrascan", "falco", "clair",
               "cloudmapper", "pacu"],
     "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
-              "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls", "sublist3r", "parsero"],
+               "social-analyzer", "recon-ng", "maltego", "spiderfoot",
+              "whois", "bbot", "gau", "waybackurls", "waymore", "sublist3r", "assetfinder", "shuffledns", "massdns", "parsero"],
     "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
-    "api": ["api-schema-analyzer", "curl", "http-framework", "anew", "qsreplace", "uro"],
+    "api": ["api-schema-analyzer", "curl", "http-framework", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
                  "airbase-ng", "airdecap-ng", "hcxdumptool", "hcxpcapngtool",
                  "mdk4", "eaphammer", "wifite", "bettercap", "airmon-ng", 
@@ -58,7 +59,9 @@ HEALTH_TOOL_CATEGORIES = {
 
     "ops": ["auto_install_missing_apt_tools"],
 
-    "intelligence": ["analyze-target", "create-attack-chain", "smart-scan", "technology-detection"],
+    "intelligence": ["analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan", "technology-detection"],
+
+    "data_processing": ["hurl", "anew"],
 
     #Not in use: httpie, postman, insomnia, "shodan-cli", "censys-cli", "have-i-been-pwned"
     #"active_directory": [

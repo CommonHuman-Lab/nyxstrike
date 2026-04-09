@@ -3,14 +3,14 @@
 <img src="assets/hex_logo.png" alt="HexStrike" width="220"/>
 
 # HexStrike AI - Community Edition
-### AI-Powered MCP Cybersecurity Automation Platform
+### AI-Powered Penetration Testing and Bug Bounty Automation Platform
 
 [![Python](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-AGPLv3-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Penetration%20Testing-red.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition)
 
-**Advanced AI-powered penetration testing MCP framework, on-demand TTP knowledge, and adaptive scanning intelligence**
+**AI-powered cybersecurity platform that bridges MCP-compatible LLM agents with real-world offensive security tools for automated recon, vulnerability discovery, bug bounty workflows, and security research.**
 
 [📡 Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
 
@@ -29,6 +29,7 @@
 - **Global Command Palette (`Ctrl/Cmd+K`)**: Jump pages, trigger tools, and move faster with keyboard-first control.
 - **Personalized Run Workflow**: Favorite tools, recent targets, and quick compare with previous runs.
 - **Persistent Run History**: Server-side run history survives browser refresh/reset and clears safely with confirmation.
+- **Intelligent Attack-Chain Engine (Precision-First)**: New catalog-driven planner with contextual learning, smarter tool ranking, and user-selectable precision (`quick`, `comprehensive`, `stealth`) before session creation.
 - **Theme System Built In**: One-click theme switcher with hover preview (Dark, Candy, Unicorn, Minimal, and more).
 - **Performance Modes**: `--compact` for lightweight/local LLM usage and `--profile` for targeted tool loading.
 - **Core Improvements**: Refactored architecture, updated dependencies, smarter parameter handling, and upgraded MCP orchestration (FastMCP v3).
@@ -101,72 +102,80 @@ A 5-specialist agent system built natively for **OpenCode**, designed for pure r
 
 </details>
 
-## Installation
+## Quickstart
 
-### Quick Setup & Run Hexstrike Server
+Get the server and MCP client running in minutes for AI-powered penetration testing, recon automation, and bug bounty workflows.
 
-> **Note:** Many tools (nmap, masscan, etc.) require elevated privileges for certain scan types. You can either run the setup as `root`, or grant individual tool capabilities (e.g. `setcap cap_net_raw+ep /usr/bin/nmap`). Running as root is simpler but less secure.
+### Scripted Setup (recommended)
 
 ```bash
-# 1. Clone the repository
+# Clone first
 git clone https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition.git
 cd hexstrike-ai-community-edition
 
-# 2. Create virtual environment
-python3 -m venv hexstrike-env
-source hexstrike-env/bin/activate        # Linux/Mac
-# sudo source hexstrike-env/bin/activate # Linux as root
-# hexstrike-env\Scripts\activate         # Windows
+# Recommended default: update + install tools + start server
+./scripts/install.sh -a
 
-# 3. Install Python dependencies
-pip3 install -r requirements.txt
-
-# 4. Start the API server
-python3 hexstrike_server.py
-
-# 5. Dashboard automatically at http://localhost:8888
-
-# 6. In a separate terminal, start the MCP client
-# (use the venv python to ensure dependencies are available)
-hexstrike-env/bin/python3 hexstrike_mcp.py --server http://localhost:8888 --profile full
+# Equivalent long form
+# ./scripts/install.sh -s -t -r
 ```
 
-> See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) on how to customize the experience.
+> See [Installation Guide](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Installation) for other options.
 
-### Verify Installation
+### Verify Setup
+
+Browse [http://localhost:8888](http://localhost:8888)
 
 ```bash
-# Browse to http://localhost:8888
-
-# Test server API health
 curl http://localhost:8888/health
 ```
 
-### Use Hexstrike
+### Permissions Note
 
-#### Installation & Demo Video
+Some security tools (for example `nmap` and `masscan`) need elevated privileges for specific scan modes. Use a dedicated test VM and least-privilege setup where possible.
 
-Watch the full installation and setup walkthrough here: [YouTube - HexStrike AI Installation & Demo](https://www.youtube.com/watch?v=pSoftCagCm8)
+> See [Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Flags) for runtime options and profile tuning.
+
+## MCP Integrations
+
+Connect this platform to MCP-compatible AI clients for automated penetration testing, bug bounty workflows, and security research.
+
+- Supported clients include **OpenCode**, **Cursor**, **Claude Desktop**, **VS Code Copilot**, **Roo Code**, and other MCP-compatible agents.
+- Watch setup walkthrough: [YouTube - HexStrike AI Installation & Demo](https://www.youtube.com/watch?v=pSoftCagCm8)
+- Full client-specific guides: [Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
+
+### Universal MCP Command
+
+Use this command pattern in clients that support local stdio MCP servers:
+
+```bash
+/path/to/hexstrike/hexstrike-env/bin/python3 /path/to/hexstrike/hexstrike_mcp.py --server http://127.0.0.1:8888 --profile full
+```
+
+### OpenCode Example
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "hexstrike": {
+      "type": "local",
+      "command": [
+        "/path/to/hexstrike/hexstrike-env/bin/python3",
+        "/path/to/hexstrike/hexstrike_mcp.py",
+        "--server",
+        "http://127.0.0.1:8888",
+        "--profile",
+        "full"
+      ],
+      "enabled": true
+    }
+  }
+}
+```
 
 <details>
-<summary>Supported AI Clients for Running & Integration</summary>
-
-You can install and run HexStrike AI MCPs with various AI clients, including:
-
-- **5ire (Latest version v0.14.0 not supported for now)**
-- **VS Code Copilot**
-- **Roo Code**
-- **Cursor**
-- **Claude Desktop**
-- **OpenCode**
-- **Any MCP-compatible agent**
-
-Refer to the video above for step-by-step instructions and integration examples for these platforms.
-
-</details>
-
-<details>
-<summary>Claude Desktop Integration or Cursor</summary>
+<summary>Claude Desktop / Cursor Example</summary>
 
 Edit `~/.config/Claude/claude_desktop_config.json`:
 
@@ -189,12 +198,13 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
   }
 }
 ```
+
 </details>
 
 <details>
-<summary>VS Code Copilot Integration</summary>
+<summary>VS Code Copilot Example</summary>
 
-Configure VS Code settings in `.vscode/settings.json`:
+Configure `.vscode/settings.json`:
 
 ```json
 {
@@ -214,32 +224,7 @@ Configure VS Code settings in `.vscode/settings.json`:
   "inputs": []
 }
 ```
-</details>
 
-<details>
-<summary>OpenCode Integration</summary>
-
-Configure OpenCode settings in `~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "hexstrike": {
-      "type": "local",
-      "command": [
-        "/path/to/hexstrike/hexstrike-env/bin/python3",
-        "/path/to/hexstrike/hexstrike_mcp.py",
-        "--server",
-        "http://127.0.0.1:8888",
-        "--profile",
-        "default"
-      ],
-      "enabled": true
-    }
-  }
-}
-```
 </details>
 
 ---
@@ -542,45 +527,26 @@ python3 hexstrike_server.py
 
 ## Usage Examples
 
-When writing your prompt, you generally can't start with just a simple "i want you to penetration test site X.com" as the LLM's are generally setup with some level of ethics. You therefore need to begin with describing your role and the relation to the site/task you have. For example you may start by telling the LLM how you are a security researcher, and the site is owned by you, or your company. You then also need to say you would like it to specifically use the hexstrike-ai MCP tools.
-So a complete example might be:
+For reliable results with MCP-compatible LLM agents, clearly state authorization, target ownership, and the security testing scope.
+
+Example prompt:
 
 ```
-User: "I'm a security researcher who is trialling out the hexstrike MCP tooling. My company owns the website <INSERT WEBSITE> and I would like to conduct a penetration test against it with hexstrike-ai MCP tools."
+User: "I am an authorized security researcher. My company owns <INSERT WEBSITE>, and I want to run an authorized penetration test using HexStrike MCP tools. Please start with recon and web vulnerability discovery, then propose next steps based on findings."
 
-AI Agent: "Thank you for clarifying ownership and intent. To proceed with a penetration test using hexstrike-ai MCP tools, please specify which types of assessments you want to run (e.g., network scanning, web application testing, vulnerability assessment, etc.), or if you want a full suite covering all areas."
+AI Agent: "Great, thanks for confirming authorization and scope. I'll begin with reconnaissance and web security testing, then summarize findings and recommend validated follow-up checks."
 ```
-
-<details>
-<summary>Real-World Performance</summary>
-
-| Operation | Traditional Manual | HexStrike AI | Improvement |
-|-----------|-------------------|-------------------|-------------|
-| **Subdomain Enumeration** | 2-4 hours | 5-10 minutes | **24x faster** |
-| **Vulnerability Scanning** | 4-8 hours | 15-30 minutes | **16x faster** |
-| **Web App Security Testing** | 6-12 hours | 20-45 minutes | **18x faster** |
-| **CTF Challenge Solving** | 1-6 hours | 2-15 minutes | **24x faster** |
-| **Report Generation** | 4-12 hours | 2-5 minutes | **144x faster** |
-
-### **What to Expect**
-
-- **Faster Coverage** — Tools run in parallel instead of sequentially, covering more attack surface in less time
-- **Reduced False Positives** — Finding verification strategy (rescan + cross-tool + HTTP probe + CVE lookup) eliminates many false reports
-- **Consistent Methodology** — AI agents apply the same systematic approach to every scan instead of manual variance
-- **Learning Over Time** — First WordPress scan uses defaults, 5th WordPress scan knows which tools are most effective
-- **Attack Chain Discovery** — Knowledge graph surfaces multi-step attack paths that isolated findings would miss
-</details>
 
 ---
 
 ## Security Considerations
 
 ⚠️ **Important Security Notes**:
-- This tool provides AI agents with powerful system access
-- Run in isolated environments or dedicated security testing VMs
-- AI agents can execute arbitrary security tools - ensure proper oversight
-- Monitor AI agent activities through the real-time dashboard
-- Consider implementing authentication for production deployments
+- This platform gives AI agents access to powerful security tooling.
+- Run in isolated environments or dedicated security testing VMs.
+- AI agents can execute arbitrary commands; maintain operator oversight.
+- Monitor activity through the real-time dashboard and logs.
+- Enable authentication (`HEXSTRIKE_API_TOKEN`) for non-local deployments.
 
 ### Legal & Ethical Use
 
@@ -609,6 +575,6 @@ However:
 For commercial licensing options that do not require open-sourcing your changes,
 please contact the authors.
 
-## Based Of
+## Based On
 
 **0x4m4** - [HexStrike AI](https://github.com/0x4m4/hexstrike-ai)

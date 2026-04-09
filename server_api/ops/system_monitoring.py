@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Dict
 import logging
 import subprocess
+import sys
 import threading
 import time
 import traceback
@@ -61,7 +62,7 @@ def _refresh_tool_availability() -> None:
             elif tool_to_check in REQUIRE_PIP_CHECK:
                 # For tools that require pip, check if the package is installed
                 result = subprocess.run(
-                    ["pip3", "list"],
+                    [sys.executable, "-m", "pip", "list"],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.DEVNULL,
                     text=True,
@@ -104,12 +105,11 @@ def _refresh_tool_availability() -> None:
 
     installed = sorted(t for t, ok in results.items() if ok)
     missing = sorted(t for t, ok in results.items() if not ok)
-    GREEN = ModernVisualEngine.COLORS['MATRIX_GREEN']
     RED = ModernVisualEngine.COLORS['HACKER_RED']
     RESET = ModernVisualEngine.COLORS['RESET']
     lines = ["Tool availability refreshed: %d/%d available" % (len(installed), len(results))]
-    for tool in installed:
-        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
+#    for tool in installed:
+#        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
     for tool in missing:
         lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
     logger.info("\n".join(lines))
@@ -184,6 +184,7 @@ def generic_command():
         params = request.json
         command = params.get("command", "")
         use_cache = params.get("use_cache", True)
+        timeout = params.get("timeout")
 
         if not command:
             logger.warning("Command endpoint called without command parameter")
@@ -191,7 +192,7 @@ def generic_command():
                 "error": "Command parameter is required"
             }), 400
 
-        result = execute_command(command, use_cache=use_cache)
+        result = execute_command(command, use_cache=use_cache, timeout=timeout)
         return jsonify(result)
     except Exception as e:
         logger.error(f"Error in command endpoint: {str(e)}")
@@ -226,3 +227,29 @@ def get_tool_categories():
     return jsonify({
         "categories": HEALTH_TOOL_CATEGORIES
     })
+
+
+@api_system_monitoring_bp.route("/api/tools/availability/refresh", methods=["POST"])
+def refresh_tool_availability_now():
+    """Force immediate tool availability refresh and return current status."""
+    try:
+        _refresh_tool_availability()
+        with _tool_availability_lock:
+            tools_status = dict(_tool_availability_cache)
+            last_refresh = _tool_availability_last_refresh
+
+        for tool in BUILT_IN_TOOLS:
+            tools_status[tool] = True
+
+        return jsonify({
+            "success": True,
+            "message": "Tool availability refreshed",
+            "total_tools_available": sum(1 for available in tools_status.values() if available),
+            "total_tools_count": len(tools_status),
+            "tool_availability_age_seconds": round(time.time() - last_refresh, 1) if last_refresh > 0 else 0,
+            "tools_status": tools_status,
+            "timestamp": datetime.now().isoformat(),
+        })
+    except Exception as e:
+        logger.error("Error refreshing tool availability: %s", str(e))
+        return jsonify({"success": False, "error": str(e)}), 500

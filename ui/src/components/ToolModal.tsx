@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { CheckCircle, XCircle, Copy, Check } from 'lucide-react'
 import { installHint } from '../constants/installHints'
 import type { Tool } from '../api'
+import { useEscapeClose } from '../hooks/useEscapeClose'
 
 export function ToolModal({ tool, onClose, installed }: {
   tool: Tool
@@ -25,11 +26,7 @@ export function ToolModal({ tool, onClose, installed }: {
     if (e.target === e.currentTarget) onClose()
   }
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useEscapeClose(true, onClose)
 
   return (
     <div className="modal-backdrop" onClick={onBackdrop}>

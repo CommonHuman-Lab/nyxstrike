@@ -4,7 +4,7 @@ import logging
 import re as _re
 import subprocess
 import traceback
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 from wcwidth import wcswidth as _wcswidth
 import server_core.config_core as config_core
@@ -13,6 +13,89 @@ from server_core.modern_visual_engine import ModernVisualEngine
 
 _ANSI = _re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
 _BOX_WIDTH = 66  # visible columns between the two │ borders
+
+
+def _strip_ansi(text: str) -> str:
+    return _ANSI.sub('', text)
+
+
+def _is_decorative_line(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return True
+
+    if _re.fullmatch(r"[A-Z0-9 _\-/\\`'.]{10,}", stripped):
+        letters = [c for c in stripped if c.isalpha()]
+        if letters and sum(c.isupper() for c in letters) / len(letters) > 0.85:
+            return True
+
+    if _re.fullmatch(r"[-_=*~`.:+|/\\<>\[\]{}()#]{6,}", stripped):
+        return True
+
+    visible_chars = [c for c in stripped if not c.isspace()]
+    if not visible_chars:
+        return True
+
+    alpha_num = sum(c.isalnum() for c in visible_chars)
+    ratio = alpha_num / len(visible_chars)
+    return len(visible_chars) >= 10 and ratio < 0.35
+
+
+def _is_banner_text_line(line: str) -> bool:
+    stripped = line.strip()
+    lower = stripped.lower()
+
+    if "http://" in lower or "https://" in lower:
+        return True
+
+    if any(token in lower for token in ("github.com", "discord", "twitter", "blog")):
+        return True
+
+    if _re.fullmatch(r"[A-Z][a-z]+(?:\s+[A-Z][a-z]+){2,}\.??", stripped):
+        return True
+
+    if _re.fullmatch(r"[A-Za-z][A-Za-z ]{8,}:\s+.+[.!?]", stripped):
+        return True
+
+    return False
+
+
+def _strip_leading_banner_block(text: str) -> str:
+    lines = text.splitlines()
+    if not lines:
+        return text
+
+    start = 0
+    while start < len(lines) and not lines[start].strip():
+        start += 1
+
+    if start >= len(lines) or not _is_decorative_line(lines[start]):
+        return text
+
+    i = start
+    non_empty_consumed = 0
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip() or _is_decorative_line(line) or _is_banner_text_line(line):
+            if line.strip():
+                non_empty_consumed += 1
+            i += 1
+            continue
+        break
+
+    if non_empty_consumed < 3:
+        return text
+
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+
+    return "\n".join(lines[i:])
+
+
+def _clean_output(text: str, command: str = "") -> str:
+    cleaned = _strip_ansi(text)
+    cleaned = _strip_leading_banner_block(cleaned)
+    return cleaned
 
 
 def _box_row(content_with_ansi: str) -> str:
@@ -30,10 +113,12 @@ telemetry = TelemetryCollector()
 
 logger = logging.getLogger(__name__)
 COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # Default to 5 minutes if not set
+COMMAND_INACTIVITY_TIMEOUT = config_core.get("COMMAND_INACTIVITY_TIMEOUT", 900)
+COMMAND_MAX_RUNTIME = config_core.get("COMMAND_MAX_RUNTIME", 86400)
 class EnhancedCommandExecutor:
     """Enhanced command executor with caching, progress tracking, and better output handling"""
 
-    def __init__(self, command: str, timeout: int = COMMAND_TIMEOUT):
+    def __init__(self, command: str, timeout: Optional[int] = COMMAND_TIMEOUT):
         self.command = command
         self.timeout = timeout
         self.process = None
@@ -45,8 +130,10 @@ class EnhancedCommandExecutor:
         self.stderr_thread = None
         self.return_code = None
         self.timed_out = False
+        self.timeout_reason = ""
         self.start_time = None
         self.end_time = None
+        self.last_output_time = time.time()
 
     def _read_stdout(self):
         """Thread function to continuously read and display stdout"""
@@ -56,8 +143,9 @@ class EnhancedCommandExecutor:
             for line in iter(self.process.stdout.readline, ''):
                 if line:
                     self._stdout_chunks.append(line)
+                    self.last_output_time = time.time()
                     # Real-time output display
-                    logger.info(f"📤 STDOUT: {line.strip()}")
+                    logger.info(f"📤 STDOUT: {_strip_ansi(line).strip()}")
         except Exception as e:
             logger.error(f"Error reading stdout: {e}")
         finally:
@@ -71,8 +159,9 @@ class EnhancedCommandExecutor:
             for line in iter(self.process.stderr.readline, ''):
                 if line:
                     self._stderr_chunks.append(line)
+                    self.last_output_time = time.time()
                     # Real-time error output display
-                    logger.warning(f"📥 STDERR: {line.strip()}")
+                    logger.warning(f"📥 STDERR: {_strip_ansi(line).strip()}")
         except Exception as e:
             logger.error(f"Error reading stderr: {e}")
         finally:
@@ -88,7 +177,8 @@ class EnhancedCommandExecutor:
             char = progress_chars[i % len(progress_chars)]
 
             # Calculate progress percentage (rough estimate)
-            progress_percent = min((elapsed / self.timeout) * 100, 99.9)
+            progress_base = self.timeout if isinstance(self.timeout, int) and self.timeout > 0 else COMMAND_MAX_RUNTIME
+            progress_percent = min((elapsed / progress_base) * 100, 99.9)
             progress_fraction = progress_percent / 100
 
             # Calculate ETA
@@ -121,7 +211,7 @@ class EnhancedCommandExecutor:
             logger.info(f"{progress_bar} | {elapsed:.1f}s | PID: {self.process.pid}")
             time.sleep(0.8)
             i += 1
-            if elapsed > self.timeout:
+            if isinstance(self.timeout, int) and self.timeout > 0 and elapsed > self.timeout:
                 break
 
     def execute(self) -> Dict[str, Any]:
@@ -136,11 +226,14 @@ class EnhancedCommandExecutor:
         self.stderr_thread = None
         self.return_code = None
         self.timed_out = False
+        self.timeout_reason = ""
         self.end_time = None
         self.start_time = time.time()
+        self.last_output_time = self.start_time
 
         logger.info(f"🚀 EXECUTING: {self.command}")
-        logger.info(f"⏱️  TIMEOUT: {self.timeout}s | PID: Starting...")
+        timeout_label = f"{self.timeout}s" if isinstance(self.timeout, int) and self.timeout > 0 else "none"
+        logger.info(f"⏱️  TIMEOUT: {timeout_label} | PID: Starting...")
 
         try:
             self.process = subprocess.Popen(
@@ -166,15 +259,36 @@ class EnhancedCommandExecutor:
             self.stdout_thread.start()
             self.stderr_thread.start()
 
-            # Start progress tracking only for commands expected to run > 2 s
-            if self.timeout > 2:
+            # Start progress tracking for long-running commands and unlimited timeout mode
+            if self.timeout is None or (isinstance(self.timeout, int) and self.timeout > 2):
                 progress_thread = threading.Thread(target=self._show_progress)
                 progress_thread.daemon = True
                 progress_thread.start()
 
-            # Wait for the process to complete or timeout
+            # Wait for the process to complete, enforcing optional timeout/watchdog constraints
             try:
-                self.return_code = self.process.wait(timeout=self.timeout)
+                wait_timeout = self.timeout if isinstance(self.timeout, int) and self.timeout > 0 else None
+                while self.process.poll() is None:
+                    try:
+                        self.process.wait(timeout=1)
+                    except subprocess.TimeoutExpired:
+                        pass
+
+                    now = time.time()
+                    elapsed = now - self.start_time
+                    inactivity = now - self.last_output_time
+
+                    if wait_timeout is not None and elapsed > wait_timeout:
+                        self.timeout_reason = f"configured timeout ({wait_timeout}s)"
+                        raise subprocess.TimeoutExpired(self.command, wait_timeout)
+                    if COMMAND_INACTIVITY_TIMEOUT > 0 and inactivity > COMMAND_INACTIVITY_TIMEOUT:
+                        self.timeout_reason = f"inactivity timeout ({COMMAND_INACTIVITY_TIMEOUT}s)"
+                        raise subprocess.TimeoutExpired(self.command, COMMAND_INACTIVITY_TIMEOUT)
+                    if COMMAND_MAX_RUNTIME > 0 and elapsed > COMMAND_MAX_RUNTIME:
+                        self.timeout_reason = f"max runtime ({COMMAND_MAX_RUNTIME}s)"
+                        raise subprocess.TimeoutExpired(self.command, COMMAND_MAX_RUNTIME)
+
+                self.return_code = self.process.returncode
                 self.end_time = time.time()
 
                 # Process completed, join the threads
@@ -199,7 +313,8 @@ class EnhancedCommandExecutor:
 
                 # Process timed out but we might have partial results
                 self.timed_out = True
-                logger.warning(f"⏰ TIMEOUT: Command timed out after {self.timeout}s | Terminating PID {self.process.pid}")
+                reason = self.timeout_reason or (f"configured timeout ({self.timeout}s)" if self.timeout else "watchdog timeout")
+                logger.warning(f"⏰ TIMEOUT: Command stopped due to {reason} | Terminating PID {self.process.pid}")
 
                 # Try to terminate gracefully first
                 self.process.terminate()
@@ -215,6 +330,11 @@ class EnhancedCommandExecutor:
 
             # Always consider it a success if we have output, even with timeout
             success = True if self.timed_out and (self.stdout_data or self.stderr_data) else (self.return_code == 0)
+
+            # Normalize noisy terminal output for logs/API consumers
+            if config_core.get("CLEAN_TOOL_OUTPUT", True):
+                self.stdout_data = _clean_output(self.stdout_data, self.command)
+                self.stderr_data = _clean_output(self.stderr_data, self.command)
 
             # Log enhanced final results with summary using ModernVisualEngine
             output_size = len(self.stdout_data) + len(self.stderr_data)
@@ -247,6 +367,7 @@ class EnhancedCommandExecutor:
                 "return_code": self.return_code,
                 "success": success,
                 "timed_out": self.timed_out,
+                "timeout_reason": self.timeout_reason,
                 "partial_results": self.timed_out and (self.stdout_data or self.stderr_data),
                 "execution_time": self.end_time - self.start_time if self.end_time else 0,
                 "timestamp": datetime.now().isoformat()
@@ -266,6 +387,7 @@ class EnhancedCommandExecutor:
                 "return_code": -1,
                 "success": False,
                 "timed_out": False,
+                "timeout_reason": self.timeout_reason,
                 "partial_results": bool(self.stdout_data or self.stderr_data),
                 "execution_time": execution_time,
                 "timestamp": datetime.now().isoformat()

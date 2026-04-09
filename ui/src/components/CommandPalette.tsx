@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Search } from 'lucide-react'
 import type { Tool } from '../api'
 import type { Page } from '../app/routing'
+import { useEscapeClose } from '../hooks/useEscapeClose'
 
 interface CommandPaletteProps {
   open: boolean
@@ -20,7 +21,7 @@ interface PaletteAction {
 }
 
 const PAGE_ACTIONS: Array<{ page: Page; label: string }> = [
-  { page: 'dashboard', label: 'Open Dashboard' },
+  { page: 'dashboard', label: 'Open Home' },
   { page: 'run', label: 'Open Run' },
   { page: 'reports', label: 'Open Reports' },
   { page: 'tasks', label: 'Open Tasks' },
@@ -71,12 +72,13 @@ export function CommandPalette({ open, onClose, setPage, tools, onSelectTool }: 
     setActive(0)
   }, [open])
 
+  useEscapeClose(open, onClose)
+
   useEffect(() => {
     if (!open) return
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault()
-        onClose()
         return
       }
       if (e.key === 'ArrowDown') {
@@ -99,7 +101,7 @@ export function CommandPalette({ open, onClose, setPage, tools, onSelectTool }: 
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, filtered, active, onClose])
+  }, [open, filtered, active])
 
   if (!open) return null
 

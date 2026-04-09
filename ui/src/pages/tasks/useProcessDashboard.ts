@@ -156,6 +156,12 @@ export function useProcessDashboard(
 
     setTimeout(() => setActionMsg(null), 3000)
     await fetchData()
+    if (label === 'Terminated') {
+      setData(prev => prev ? {
+        ...prev,
+        processes: prev.processes.filter(p => p.status !== 'terminated'),
+      } : prev)
+    }
   }, [fetchData])
 
   return {

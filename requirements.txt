@@ -1,11 +1,3 @@
-# HexStrike AI MCP
-#
-# INSTALLATION COMMANDS:
-# python3 -m venv hexstrike_env
-# source hexstrike_env/bin/activate
-# python3 -m pip install -r requirements.txt
-# python3 hexstrike_server.py
-
 # ============================================================================
 # CORE FRAMEWORK DEPENDENCIES (ACTUALLY USED)
 # ============================================================================
@@ -13,94 +5,20 @@ flask>=2.3.0,<4.0.0             # Web framework for API server (flask import)
 requests>=2.31.0,<3.0.0         # HTTP library (requests import)
 psutil>=5.9.0,<6.0.0            # System utilities (psutil import)
 fastmcp[tasks]>=3.1.0    # MCP framework with background task support (Docket backend)
-
-# ============================================================================
-# WEB SCRAPING & AUTOMATION (ACTUALLY USED)
-# ============================================================================
 beautifulsoup4>=4.12.0,<5.0.0   # HTML parsing (from bs4 import BeautifulSoup)
 selenium>=4.15.0,<5.0.0         # Browser automation (selenium imports)
 webdriver-manager>=4.0.0,<5.0.0 # ChromeDriver management (referenced in code)
-
-# ============================================================================
-# ASYNC & NETWORKING (ACTUALLY USED)
-# ============================================================================
 aiohttp>=3.8.0,<4.0.0           # Async HTTP (aiohttp import)
+mitmproxy==12.1.2        # HTTP proxy (mitmproxy imports)
+
+# Optional Python dependencies in requirements-extra.txt
+# Installed with: ./scripts/install.sh --install-tools
 
 # ============================================================================
-# PROXY & TESTING (ACTUALLY USED)
+# BIG Packages
 # ============================================================================
-mitmproxy>=12.1.2        # HTTP proxy (mitmproxy imports)
+# These are heavier packages that may not be needed for basic operation
+# Installed with: ./scripts/install.sh --install-tools --install-big-packages
 
-# ============================================================================
-# CONDITIONALLY USED
-# ============================================================================
-bbot>=2.8.3                  # Bot framework for OSINT
-httpx>=0.28.1                # Fast HTTP client for OSINT
-uro>=1.0.2                   # Unified Reconnaissance OSINT tool
-dirsearch>=0.4.3             # Web path scanner for OSINT
-chardet>=3.0.2,<6.0.0        # Pin chardet; dirsearch pulls 7.x which breaks requests
-volatility3>=2.27.0          # Memory forensics framework 
-PyMySQL>=1.1.2,<2.0.0        # MySQL database connector (conditionally used for database interactions)
-pwntools>=4.15.0,<5.0.0      # Binary exploitation (from pwn import *)
-angr>=9.2.205,<10.0.0        # Binary analysis (import angr)
-bcrypt==4.0.1                # Pin bcrypt version for passlib compatibility (fixes pwntools dependency issue)
-checkov>=3.0.0               # Infrastructure as code security scanner
-ROPgadget>=7.0.0,<8.0.0      # ROP gadget finder
-one_gadget>=1.0.0,<2.0.0     # One-gadget RCE finder
-social-analyzer>=0.45.0      # Social media OSINT tool
-
-#Below is not a happy camper.
-#psycopg2>=2.9.11,<3.0.0      # PostgreSQL database connector (conditionally used for database interactions)
-
-# ============================================================================
-# BIG Packages (INSTALL SEPARATELY)
-# ============================================================================
-#kube-hunter>=0.6.8           # Kubernetes security scanner
-#ScoutSuite>=5.14.0           # Cloud security auditing tool
-#shodan>=1.31.0               # Shodan API client for OSINT
-
-
-# ============================================================================
-# EXTERNAL SECURITY TOOLS (Install separately)
-# ============================================================================
-#
-# HexStrike integrates with 170+ external security tools that must be
-# installed separately from their official sources:
-#
-# 🔍 Network & Reconnaissance (25+ tools):
-# - nmap, masscan, rustscan, autorecon, amass, subfinder, fierce
-# - dnsenum, theharvester, responder, netexec, enum4linux-ng
-#
-# 🌐 Web Application Security (40+ tools):
-# - gobuster, feroxbuster, ffuf, dirb, dirsearch, nuclei, nikto
-# - sqlmap, wpscan, arjun, paramspider, x8, katana, httpx
-# - dalfox, jaeles, hakrawler, gau, waybackurls, wafw00f
-#
-# 🔐 Authentication & Password (12+ tools):
-# - hydra, john, hashcat, medusa, patator, netexec
-# - evil-winrm, hashid, ophcrack
-#
-# 🔬 Binary Analysis & Reverse Engineering (25+ tools):
-# - ghidra, radare2, gdb, binwalk, ropgadget, checksec, strings
-# - volatility3, foremost, steghide, exiftool, angr, pwntools
-#
-# ☁️ Cloud & Container Security (20+ tools):
-# - prowler, scout-suite, trivy, kube-hunter, kube-bench
-# - docker-bench-security, checkov, terrascan, falco
-#
-# 🏆 CTF & Forensics (20+ tools):
-# - volatility3, autopsy, sleuthkit, stegsolve, zsteg, outguess
-# - photorec, testdisk, scalpel, bulk-extractor
-#
-# 🕵️ OSINT & Intelligence (20+ tools):
-# - sherlock, social-analyzer, recon-ng, maltego, spiderfoot
-# - shodan-cli, censys-cli, have-i-been-pwned
-#
-# Installation Notes:
-# 1. Kali Linux 2024.1+ includes most tools by default
-# 2. Ubuntu/Debian users should install tools from official repositories
-# 3. Some tools require compilation from source or additional setup
-# 4. Cloud tools require API keys and authentication configuration
-# 5. Browser Agent requires Chrome/Chromium and ChromeDriver installation
-#
-# For complete installation instructions and setup guides, see README.md
+# Below is not a happy camper.
+# psycopg2>=2.9.11,<3.0.0      # PostgreSQL database connector (conditionally used for database interactions)

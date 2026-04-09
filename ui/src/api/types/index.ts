@@ -7,6 +7,7 @@ export type {
 export type {
   Tool,
   ToolCategoriesResponse,
+  RefreshToolAvailabilityResponse,
   ToolsCatalogResponse,
 } from './tools';
 
@@ -28,6 +29,7 @@ export type {
   PoolStatsResponse,
   ProcessDashboardResponse,
   ProcessEntry,
+  ProcessListResponse,
   ProcessSystemLoad,
 } from './processes';
 
@@ -41,6 +43,7 @@ export type {
   CreateSessionFromTemplatePayload,
   CreateSessionPayload,
   CreateSessionTemplatePayload,
+  UpdateSessionTemplatePayload,
   SessionDeleteResponse,
   SessionDetailResponse,
   SessionHandoverResponse,

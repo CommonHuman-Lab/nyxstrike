@@ -63,7 +63,7 @@ export const DEMO_TOOLS: Tool[] = [
   { name: 'xsser',               desc: 'Cross-site scripting scanner',                                          category: 'web_vuln', endpoint: '/api/tools/xsser',               method: 'POST', params: { url: r() },           optional: { additional_args: '' },                                                              effectiveness: 0.80 },
   { name: 'dotdotpwn',           desc: 'Directory traversal scanner',                                           category: 'web_vuln', endpoint: '/api/tools/dotdotpwn',           method: 'POST', params: { target: r() },        optional: { additional_args: '' },                                                              effectiveness: 0.78 },
   { name: 'jaeles',              desc: 'Web security scanning framework',                                        category: 'web_vuln', endpoint: '/api/tools/jaeles',              method: 'POST', params: { url: r() },           optional: { additional_args: '' },                                                              effectiveness: 0.92 },
-  { name: 'wfuzz',               desc: 'Web fuzzer for directories, parameters, and authentication',             category: 'web_vuln', endpoint: '/api/tools/wfuzz',               method: 'POST', params: { url: r() },           optional: { wordlist: '/usr/share/wordlists/dirb/common.txt', additional_args: '' },            effectiveness: 0.82 },
+  { name: 'wfuzz',               desc: 'Web fuzzer for directories, parameters, and authentication',             category: 'web_vuln', endpoint: '/api/tools/wfuzz',               method: 'POST', params: { url: r() },           optional: { wordlist: '/usr/share/wfuzz/wordlist/general/common.txt', additional_args: '' },            effectiveness: 0.82 },
   { name: 'graphql-scanner',     desc: 'GraphQL introspection and mutation vulnerability scanner',               category: 'web_vuln', endpoint: '/api/tools/graphql_scanner',     method: 'POST', params: { endpoint: r() },      optional: { introspection: true, query_depth: 10, mutations: true },                           effectiveness: 0.85 },
   { name: 'jwt-analyzer',        desc: 'Decode and attack JWT tokens — alg:none, RS256→HS256, brute secret',    category: 'web_vuln', endpoint: '/api/tools/jwt_analyzer',        method: 'POST', params: { jwt_token: r() },     optional: { target_url: '' },                                                                  effectiveness: 0.85 },
   { name: 'api-schema-analyzer', desc: 'Analyse OpenAPI/Swagger/GraphQL schemas for security issues',            category: 'web_vuln', endpoint: '/api/tools/api_schema_analyzer', method: 'POST', params: { schema_url: r() },   optional: { schema_type: 'openapi' },                                                          effectiveness: 0.82 },
@@ -211,6 +211,14 @@ function buildCategoryStats(): Record<string, { total: number; available: number
 export const DEMO_HEALTH: WebDashboardResponse = {
   status: 'healthy',
   version: 'DEMO',
+  update: {
+    current_version: 'DEMO',
+    latest_version: 'DEMO',
+    update_available: false,
+    checked_at: new Date().toISOString(),
+    source: 'demo',
+    error: null,
+  },
   uptime: 172843,
   telemetry: {
     commands_executed: 1482,

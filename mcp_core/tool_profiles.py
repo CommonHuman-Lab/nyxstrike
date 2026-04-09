@@ -151,6 +151,9 @@ TOOL_PROFILES = {
     "recon": [
         lambda mcp, client, logger: register_amass_tool(mcp, client, logger),
         lambda mcp, client, logger: register_subfinder_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_assetfinder_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_shuffledns_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_massdns_tool(mcp, client, logger),
         lambda mcp, client, logger: register_autorecon_tool(mcp, client, logger),
         lambda mcp, client, logger: register_theharvester_tool(mcp, client, logger),
     ],
@@ -188,6 +191,7 @@ TOOL_PROFILES = {
     "web_crawl": [
         lambda mcp, client, logger: register_katana_tool(mcp, client, logger),
         lambda mcp, client, logger: register_hakrawler_tools(mcp, client, logger),
+        lambda mcp, client, logger: register_gospider_tool(mcp, client, logger),
     ],
 
     #Tools for web vulnerability scanning and assessment (e.g., Nikto, WPScan, SQLMap, Jaeles, Dalfox, ZAP, Burp Suite, XSSer).
@@ -226,10 +230,11 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_exploit_db_tool(mcp, client, logger), #aka. exploit-db
     ],
 
-    #Tools for URL discovery and reconnaissance (e.g., Gau, Waybackurls).
+    #Tools for URL discovery and reconnaissance (e.g., Gau, Waybackurls, Waymore).
     "url_recon": [
         lambda mcp, client, logger: register_gau_tool(mcp, client, logger),
         lambda mcp, client, logger: register_waybackurls_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_waymore_tool(mcp, client, logger),
     ],
 
     #Tools for parameter discovery and fuzzing (e.g., Arju0n, ParamSpider, x8).
@@ -247,6 +252,7 @@ TOOL_PROFILES = {
     #Tools for data processing and unique line filtering (e.g., anew).
     "data_processing": [
         lambda mcp, client, logger: register_anew_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_hurl_tool(mcp, client, logger),
     ],
 
     #Tools for URL filtering and duplicate removal (e.g., uro).

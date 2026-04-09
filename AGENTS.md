@@ -139,6 +139,17 @@ If you add a linter, follow existing conventions and keep diffs scoped.
 - Default API port: `HEXSTRIKE_PORT` (default 8888).
 - Command timeouts: `COMMAND_TIMEOUT` in config.
 
+## Intelligence planner
+
+- The Intelligent Decision Engine is catalog-driven.
+- Add or tune tool behavior in `server_core/intelligence/tool_catalog.py`.
+- Use `docs/intelligence_tool_catalog.md` for the add-tool workflow.
+- Run planner tests when modifying catalog/scoring:
+
+```bash
+pytest tests/test_intelligence_precision_planner.py
+```
+
 ## When in doubt
 
 - Mirror the style of the file you are editing.

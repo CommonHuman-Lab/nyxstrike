@@ -1,6 +1,14 @@
 export interface WebDashboardResponse {
   status: string;
   version: string;
+  update: {
+    current_version: string;
+    latest_version: string;
+    update_available: boolean;
+    checked_at: string;
+    source: string;
+    error: string | null;
+  };
   uptime: number;
   telemetry: {
     commands_executed: number;

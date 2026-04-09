@@ -1,3 +1,9 @@
+---
+description: Internal HTB shared contract (tool policy). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # HTB CTF — Tool Policy
 
 Maps attack phases to HexStrike MCP tools. Each specialist agent uses this as its canonical reference for which tools to reach for and in what order.

@@ -73,7 +73,7 @@ def medusa_attack():
             command += f" {additional_args}"
 
         logger.info(f"🔑 Starting Medusa attack: {target}:{module}")
-        result = execute_command(command)
+        result = execute_command(command, tool="medusa")
         logger.info(f"📊 Medusa attack completed for {target}")
         return jsonify(result)
     except Exception as e:

@@ -1,3 +1,9 @@
+---
+description: Internal HTB shared contract (memory schema). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # HTB CTF — Shared Memory Schema
 
 All agents read from and write to a canonical state file at:

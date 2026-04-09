@@ -128,6 +128,12 @@ export const INSTALL_HINTS: Record<string, string> = {
   sublist3r:         'sudo apt install sublist3r',
   parsero:           'sudo apt install parsero',
   joomscan:          'sudo apt install joomscan',
+  hurl:              'sudo apt install hurl',
+  assetfinder:       'sudo apt install assetfinder',
+  shuffledns:        'sudo apt-get install -y massdns; go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest',
+  massdns:           'sudo apt install massdns',
+  gospider:          'sudo apt install gospider',
+
 }
 
 export function installHint(name: string): string {

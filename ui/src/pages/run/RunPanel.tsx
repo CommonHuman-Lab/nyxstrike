@@ -2,7 +2,7 @@ import {
   CheckCircle, XCircle, RefreshCw, Play, AlertCircle,
   ChevronUp, ChevronDown, Download, Star,
 } from 'lucide-react'
-import type { Dispatch, SetStateAction } from 'react'
+import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
 import type { Tool } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
 import { exportEntry } from '../../shared/utils'
@@ -37,8 +37,18 @@ export function RunPanel({
   onRunTool,
   viewEntry,
 }: RunPanelProps) {
+  const formRef = useRef<HTMLDivElement | null>(null)
   const requiredKeys = selected ? Object.keys(selected.params) : []
   const optionalKeys = selected ? Object.keys(selected.optional) : []
+
+  useEffect(() => {
+    if (!selected || running) return
+    const frame = window.requestAnimationFrame(() => {
+      const firstInput = formRef.current?.querySelector<HTMLInputElement>('input.run-field-input:not([disabled])')
+      firstInput?.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [selected?.name, running])
 
   return (
     <div className="run-main">
@@ -69,7 +79,7 @@ export function RunPanel({
           </div>
           <p className="run-form-desc">{selected.desc}</p>
 
-          <div className="run-form">
+          <div className="run-form" ref={formRef}>
             {requiredKeys.map(key => (
               <ParamField
                 key={key}

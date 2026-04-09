@@ -1,3 +1,9 @@
+---
+description: Internal HTB shared contract (state machine). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # HTB CTF — State Machine
 
 The attack lifecycle is a linear phase progression with conditional branches.

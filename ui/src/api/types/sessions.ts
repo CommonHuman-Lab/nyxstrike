@@ -7,6 +7,18 @@ export interface AttackChainStep {
   success_probability?: number;
   execution_time_estimate?: number;
   dependencies?: string[];
+  selection_reason?: {
+    summary?: string;
+    objective?: string;
+    objective_match?: boolean;
+    target_type?: string;
+    target_type_match?: boolean;
+    capabilities?: string[];
+    covers_required?: string[];
+    new_capabilities_added?: string[];
+    noise_score?: number;
+    effective_score?: number;
+  };
 }
 
 export interface SessionSummary {
@@ -169,3 +181,8 @@ export interface CreateSessionTemplatePayload {
   workflow_steps: AttackChainStep[];
   source_session_id?: string;
 }
+
+export type UpdateSessionTemplatePayload = Partial<{
+  name: string;
+  workflow_steps: AttackChainStep[];
+}>;

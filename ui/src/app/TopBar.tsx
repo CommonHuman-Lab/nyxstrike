@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import faviconUrl from '../favicon-16x16.png'
 import {
-  Clock, RefreshCw, Lock, Github,
+  RefreshCw, Lock, Github, Copy, Check,
   LayoutDashboard, Terminal, Play,
   Settings as SettingsIcon, HelpCircle,
-  ListTodo, Wrench, FileText, Layers, Palette,
+  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X,
 } from 'lucide-react'
 import { clearToken, hasToken, type WebDashboardResponse } from '../api'
 import type { Page } from './routing'
 import { THEME_OPTIONS, type ThemeId } from './themes'
+import { InformationModal } from '../components/InformationModal'
 
 interface TopBarProps {
   page: Page
@@ -23,9 +24,23 @@ interface TopBarProps {
   fetchAll: () => Promise<void>
   themeId: ThemeId
   setThemeId: (theme: ThemeId) => void
+  reduceTextureEffects: boolean
+  setReduceTextureEffects: (value: boolean) => void
   onOpenCommandPalette: () => void
   onSignOut: () => void
 }
+
+const MOBILE_PAGE_OPTIONS: Array<{ value: Exclude<Page, 'session-detail'>; label: string }> = [
+  { value: 'dashboard', label: 'Home' },
+  { value: 'run', label: 'Run' },
+  { value: 'logs', label: 'Logs' },
+  { value: 'settings', label: 'Settings' },
+  { value: 'help', label: 'Help' },
+  { value: 'tasks', label: 'Tasks' },
+  { value: 'tools', label: 'Tools' },
+  { value: 'reports', label: 'Reports' },
+  { value: 'sessions', label: 'Sessions' },
+]
 
 function DiscordIcon({ size = 14 }: { size?: number }) {
   return (
@@ -50,38 +65,237 @@ export function TopBar({
   fetchAll,
   themeId,
   setThemeId,
+  reduceTextureEffects,
+  setReduceTextureEffects,
   onOpenCommandPalette,
   onSignOut,
 }: TopBarProps) {
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
-  const themeMenuRef = useRef<HTMLDivElement | null>(null)
+  const REFRESH_BUTTON_DELAY_MS = 3500
+  const [themeModalOpen, setThemeModalOpen] = useState(false)
+  const [themePreviewId, setThemePreviewId] = useState<ThemeId>(themeId)
+  const [themeSelectionId, setThemeSelectionId] = useState<ThemeId>(themeId)
+  const [updateModalOpen, setUpdateModalOpen] = useState(false)
+  const [updateCmdCopied, setUpdateCmdCopied] = useState(false)
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false)
+  const [showRefreshButton, setShowRefreshButton] = useState(false)
+  const [statusPulse, setStatusPulse] = useState(false)
+  const quickActionsRef = useRef<HTMLDivElement | null>(null)
+  const firstRefreshIsoRef = useRef<string | null>(null)
+  const statusPulseIsoRef = useRef<string | null>(null)
+  const [showRefreshInTooltip, setShowRefreshInTooltip] = useState(demo)
+
+  function copyUpdateCommand() {
+    navigator.clipboard.writeText('git pull').then(() => {
+      setUpdateCmdCopied(true)
+      window.setTimeout(() => setUpdateCmdCopied(false), 2000)
+    }).catch(() => {})
+  }
+
+  useEffect(() => {
+    if (!themeModalOpen) {
+      setThemePreviewId(themeId)
+      setThemeSelectionId(themeId)
+      return
+    }
+    document.documentElement.setAttribute('data-theme', themePreviewId)
+  }, [themeModalOpen, themePreviewId, themeId])
+
+  useEffect(() => {
+    if (demo) {
+      setShowRefreshInTooltip(true)
+      return
+    }
+    if (!lastRefresh) return
+    const iso = lastRefresh.toISOString()
+    if (!firstRefreshIsoRef.current) {
+      firstRefreshIsoRef.current = iso
+      return
+    }
+    if (firstRefreshIsoRef.current !== iso) {
+      setShowRefreshInTooltip(true)
+      firstRefreshIsoRef.current = iso
+    }
+  }, [demo, lastRefresh])
+
+  useEffect(() => {
+    if (!lastRefresh || health?.status !== 'healthy') return
+    const iso = lastRefresh.toISOString()
+    if (!statusPulseIsoRef.current) {
+      statusPulseIsoRef.current = iso
+      return
+    }
+    if (statusPulseIsoRef.current === iso) return
+
+    statusPulseIsoRef.current = iso
+    setStatusPulse(true)
+    const timerId = window.setTimeout(() => setStatusPulse(false), 700)
+    return () => window.clearTimeout(timerId)
+  }, [lastRefresh, health?.status])
 
   useEffect(() => {
     function onPointerDown(e: MouseEvent) {
-      if (!themeMenuRef.current) return
-      if (!themeMenuRef.current.contains(e.target as Node)) setThemeMenuOpen(false)
+      if (!quickActionsRef.current) return
+      if (!quickActionsRef.current.contains(e.target as Node)) setQuickActionsOpen(false)
     }
-    if (themeMenuOpen) window.addEventListener('mousedown', onPointerDown)
-    return () => window.removeEventListener('mousedown', onPointerDown)
-  }, [themeMenuOpen])
+
+    function onEscClose(e: KeyboardEvent) {
+      if (e.key === 'Escape') setQuickActionsOpen(false)
+    }
+
+    if (quickActionsOpen) {
+      window.addEventListener('mousedown', onPointerDown)
+      window.addEventListener('keydown', onEscClose)
+    }
+
+    return () => {
+      window.removeEventListener('mousedown', onPointerDown)
+      window.removeEventListener('keydown', onEscClose)
+    }
+  }, [quickActionsOpen])
 
   useEffect(() => {
-    if (!themeMenuOpen) {
-      document.documentElement.setAttribute('data-theme', themeId)
+    if (demo || isStreaming) {
+      setShowRefreshButton(false)
+      return
     }
-  }, [themeMenuOpen, themeId])
+
+    const timerId = window.setTimeout(() => {
+      setShowRefreshButton(true)
+    }, REFRESH_BUTTON_DELAY_MS)
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
+  }, [demo, isStreaming])
+
+  function openThemeModal() {
+    setQuickActionsOpen(false)
+    setThemePreviewId(themeId)
+    setThemeSelectionId(themeId)
+    setThemeModalOpen(true)
+  }
+
+  function closeThemeModal() {
+    document.documentElement.setAttribute('data-theme', themeId)
+    setThemePreviewId(themeId)
+    setThemeSelectionId(themeId)
+    setThemeModalOpen(false)
+  }
+
+  function applyThemeSelection() {
+    setThemeId(themeSelectionId)
+    setThemeModalOpen(false)
+  }
+
+  const healthLabel = health?.status
+    ? health.status.charAt(0).toUpperCase() + health.status.slice(1)
+    : (loading ? 'Connecting…' : error ?? 'Unknown')
+  const streamLabel = isStreaming ? 'Live' : streamingError ? 'Polling' : 'N/A'
+  const refreshPart = showRefreshInTooltip && lastRefresh
+    ? ` | Last refresh: ${lastRefresh.toLocaleTimeString('en-GB')}`
+    : ''
+  const statusTooltip = demo
+    ? `System: ${healthLabel}${refreshPart}`
+    : `System: ${healthLabel} | Updates: ${streamLabel}${refreshPart}${streamingError ? ` (${streamingError})` : ''}`
+
+  const mobilePage = page === 'session-detail' ? 'sessions' : page
 
   return (
-    <header className="topbar">
-      <div className="topbar-brand">
-        <img src={faviconUrl} width={18} height={18} alt="" />
-        <span className="brand-text">HexStrike Community Edition</span>
-        <span className="brand-version mono">{health?.version ?? '…'}</span>
-      </div>
+    <>
+      <InformationModal
+        isOpen={updateModalOpen}
+        title="Update Available"
+        description={health?.update?.latest_version
+          ? `A newer release (${health.update.latest_version}) is available.`
+          : 'A newer release is available.'}
+        primaryLabel="Open GitHub"
+        secondaryLabel="Close"
+        onPrimary={() => {
+          window.open('https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition', '_blank', 'noopener,noreferrer')
+        }}
+        onSecondary={() => setUpdateModalOpen(false)}
+        onClose={() => setUpdateModalOpen(false)}
+      >
+        <div className="modal-section">
+          <span className="modal-label">Update command</span>
+          <div className="modal-code-wrap">
+            <div className="modal-code mono">git pull</div>
+            <button
+              className="modal-copy-btn"
+              onClick={copyUpdateCommand}
+              title="Copy update command"
+            >
+              {updateCmdCopied ? <Check size={13} /> : <Copy size={13} />}
+              {updateCmdCopied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+        <p className="modal-desc">Run <span className="mono">git pull</span> in your project folder, then restart HexStrike.</p>
+      </InformationModal>
+
+      <InformationModal
+        isOpen={themeModalOpen}
+        title="Choose Theme"
+        description="Preview themes live, then apply your selection."
+        className="theme-picker-modal"
+        primaryLabel="Apply Theme"
+        primaryVariant="success"
+        secondaryLabel="Cancel"
+        onPrimary={applyThemeSelection}
+        onSecondary={closeThemeModal}
+        onClose={closeThemeModal}
+      >
+        <label className="theme-picker-toggle-row">
+          <input
+            type="checkbox"
+            checked={reduceTextureEffects}
+            onChange={e => setReduceTextureEffects(e.target.checked)}
+          />
+          <span className="theme-picker-toggle-text">Reduce background texture effects</span>
+        </label>
+        <div className="theme-picker-grid">
+          {THEME_OPTIONS.map(option => (
+            <button
+              key={option.id}
+              className={`theme-picker-card${themeSelectionId === option.id ? ' active' : ''}`}
+              onClick={() => {
+                setThemeSelectionId(option.id)
+                setThemePreviewId(option.id)
+              }}
+              type="button"
+            >
+              <span className="theme-picker-card-label">{option.label}</span>
+              <span className="theme-picker-card-hint">{option.hint}</span>
+            </button>
+          ))}
+        </div>
+      </InformationModal>
+
+      <header className="topbar">
+        <div className="topbar-brand">
+          <img src={faviconUrl} width={18} height={18} alt="" />
+          <span
+            className="brand-text"
+            title={`Version: ${health?.version ?? 'unknown'}`}
+            aria-label={`HexStrike CE version ${health?.version ?? 'unknown'}`}
+          >
+            HexStrike CE
+          </span>
+          {health?.update?.update_available && (
+            <button
+              type="button"
+              className="brand-update-chip mono"
+              onClick={() => setUpdateModalOpen(true)}
+              title={`New version available: ${health.update.latest_version}`}
+            >
+              Update available
+            </button>
+          )}
+        </div>
 
       <nav className="topbar-nav">
         <button className={`nav-tab ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-          <LayoutDashboard size={13} /> Dashboard
+          <LayoutDashboard size={13} /> Home
         </button>
         <button className={`nav-tab ${page === 'run' ? 'active' : ''}`} onClick={() => setPage('run')}>
           <Play size={13} /> Run
@@ -109,33 +323,31 @@ export function TopBar({
         </button>
       </nav>
 
-      <div className="topbar-right">
-        {lastRefresh && (
-          <span className="topbar-meta">
-            <Clock size={12} /> {lastRefresh.toLocaleTimeString('en-GB')}
-          </span>
-        )}
-        {demo ? null : (
-          <>
-            <div
-              className={`status-dot ${isStreaming ? 'online' : streamingError ? 'error' : 'loading'}`}
-              title={isStreaming ? 'Live (streaming)' : streamingError ? streamingError : 'Idle'}
-              style={{ marginRight: 4 }}
-            />
-            <span className="status-label" style={{ fontSize: 12 }}>
-              {isStreaming ? 'Live' : streamingError ? 'Polling' : 'N/A'}
-            </span>
-          </>
-        )}
-        <div className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}`} />
-        <span className="status-label">{health?.status ? health.status.charAt(0).toUpperCase() + health.status.slice(1) : (loading ? 'connecting…' : error ?? 'unknown')}</span>
-        {!isStreaming && (
+        <div className="topbar-right">
+          <label className="topbar-mobile-nav" aria-label="Navigate page">
+            <span className="topbar-mobile-nav-label">Page</span>
+          <select
+            className="topbar-mobile-nav-select"
+            value={mobilePage}
+            onChange={e => setPage(e.target.value as Exclude<Page, 'session-detail'>)}
+          >
+            {MOBILE_PAGE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </label>
+        <div
+          className={`status-dot ${health?.status === 'healthy' ? 'online' : error ? 'error' : 'loading'}${statusPulse ? ' status-dot--pulse' : ''}`}
+          title={statusTooltip}
+          aria-label={statusTooltip}
+        />
+        {showRefreshButton && (
           <button className="icon-btn" onClick={fetchAll} title="Refresh now">
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
           </button>
         )}
         <a
-          className="icon-btn"
+          className="icon-btn topbar-link-btn topbar-action-desktop"
           href="https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition"
           target="_blank"
           rel="noreferrer"
@@ -144,7 +356,7 @@ export function TopBar({
           <Github size={14} />
         </a>
         <a
-          className="icon-btn"
+          className="icon-btn topbar-link-btn topbar-action-desktop"
           href="https://discord.gg/aC8Q2xJFgp"
           target="_blank"
           rel="noreferrer"
@@ -153,39 +365,19 @@ export function TopBar({
           <DiscordIcon />
         </a>
         <button
-          className="icon-btn"
+          className="icon-btn topbar-action-desktop"
           title="Command palette (Ctrl/Cmd+K)"
           onClick={onOpenCommandPalette}
         >
           <span className="palette-icon-k mono">K</span>
         </button>
-        <div className="theme-menu" ref={themeMenuRef}>
-          <button
-            className="icon-btn"
-            title="Change theme"
-            onClick={() => setThemeMenuOpen(v => !v)}
-          >
-            <Palette size={14} />
-          </button>
-          {themeMenuOpen && (
-            <div
-              className="theme-menu-popover"
-              onMouseLeave={() => document.documentElement.setAttribute('data-theme', themeId)}
-            >
-              {THEME_OPTIONS.map(theme => (
-                <button
-                  key={theme.id}
-                  className={`theme-menu-item${themeId === theme.id ? ' active' : ''}`}
-                  onMouseEnter={() => document.documentElement.setAttribute('data-theme', theme.id)}
-                  onClick={() => { setThemeId(theme.id); setThemeMenuOpen(false) }}
-                >
-                  <span className="theme-menu-label">{theme.label}</span>
-                  <span className="theme-menu-hint">{theme.hint}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          className="icon-btn topbar-action-desktop"
+          title="Change theme"
+          onClick={openThemeModal}
+        >
+          <Palette size={14} />
+        </button>
         {hasToken() && (
           <button className="icon-btn" onClick={() => { clearToken(); onSignOut() }} title="Sign out">
             <Lock size={14} />
@@ -193,5 +385,67 @@ export function TopBar({
         )}
       </div>
     </header>
+
+      <div
+        ref={quickActionsRef}
+        className={`quick-actions-fab${quickActionsOpen ? ' open' : ''}`}
+      >
+        <div className="quick-actions-panel" aria-hidden={!quickActionsOpen}>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              onOpenCommandPalette()
+              setQuickActionsOpen(false)
+            }}
+            title="Open command palette"
+          >
+            <span className="quick-actions-item-icon mono">K</span>
+            <span>Command Palette</span>
+          </button>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              openThemeModal()
+            }}
+            title="Choose theme"
+          >
+            <Palette size={14} />
+            <span>Theme Picker</span>
+          </button>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              window.open('https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition', '_blank', 'noopener,noreferrer')
+              setQuickActionsOpen(false)
+            }}
+            title="Open GitHub"
+          >
+            <Github size={14} />
+            <span>GitHub</span>
+          </button>
+          <button
+            className="quick-actions-item"
+            onClick={() => {
+              window.open('https://discord.gg/aC8Q2xJFgp', '_blank', 'noopener,noreferrer')
+              setQuickActionsOpen(false)
+            }}
+            title="Join Discord community"
+          >
+            <DiscordIcon size={14} />
+            <span>Discord</span>
+          </button>
+        </div>
+
+        <button
+          className="quick-actions-trigger"
+          onClick={() => setQuickActionsOpen(v => !v)}
+          aria-expanded={quickActionsOpen}
+          aria-label={quickActionsOpen ? 'Close quick actions' : 'Open quick actions'}
+          title={quickActionsOpen ? 'Close quick actions' : 'Open quick actions'}
+        >
+          {quickActionsOpen ? <X size={16} /> : <PanelBottomOpen size={16} />}
+        </button>
+      </div>
+    </>
   )
 }

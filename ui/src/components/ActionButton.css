@@ -26,13 +26,20 @@
 }
 
 .action-button--default {
-  border-color: var(--border);
-  background: var(--bg-soft);
-  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, transparent), color-mix(in srgb, var(--accent-alt) 6%, transparent)),
+    var(--bg-soft);
+  color: color-mix(in srgb, var(--text-h) 88%, var(--accent));
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .action-button--default:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--text-dim) 60%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent-alt) 8%, transparent)),
+    var(--bg-card2);
+  color: var(--text-h);
 }
 
 .action-button--success {

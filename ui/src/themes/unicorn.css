@@ -1,0 +1,65 @@
+:root[data-theme='unicorn'] {
+  --bg: #2a153f;
+  --bg-card: #3a1e55;
+  --bg-card2: #4d2a70;
+  --border: #b47fe0;
+
+  --text: #f7e9ff;
+  --text-h: #fff8ff;
+  --text-dim: #d9b7ef;
+
+  --green: #7af4d4;
+  --green-dim: rgba(122, 244, 212, 0.22);
+
+  --red: #ff6ba9;
+  --red-dim: rgba(255, 107, 169, 0.23);
+
+  --amber: #ffd67b;
+  --amber-dim: rgba(255, 214, 123, 0.23);
+
+  --blue: #7bd8ff;
+  --blue-dim: rgba(123, 216, 255, 0.23);
+
+  --purple: #d4a0ff;
+  --purple-dim: rgba(212, 160, 255, 0.24);
+
+  --cyan: #8bf7ff;
+  --cyan-dim: rgba(139, 247, 255, 0.23);
+
+  --pink: #ff8fdf;
+  --pink-dim: rgba(255, 143, 223, 0.24);
+
+  --orange: #ffb37b;
+  --orange-dim: rgba(255, 179, 123, 0.23);
+
+  --lime: #d8ff8e;
+  --lime-dim: rgba(216, 255, 142, 0.23);
+
+  --teal: #7ff0df;
+  --teal-dim: rgba(127, 240, 223, 0.23);
+
+  --indigo: #aab5ff;
+  --indigo-dim: rgba(170, 181, 255, 0.23);
+
+  --gray: #f0dfff;
+  --gray-dim: rgba(240, 223, 255, 0.2);
+
+  --white-dim: rgba(255, 255, 255, 0.16);
+
+  --accent: #ff8fdf;
+  --accent-alt: #7bd8ff;
+  --accent-warm: #ffd67b;
+
+  --success: var(--green);
+  --warning: var(--amber);
+  --danger: var(--red);
+  --info: var(--blue);
+
+  --glow-green: 0 0 18px rgba(122, 244, 212, 0.75);
+  --glow-blue: 0 0 18px rgba(123, 216, 255, 0.75);
+  --glow-red: 0 0 18px rgba(255, 107, 169, 0.72);
+  --glow-cyan: 0 0 18px rgba(139, 247, 255, 0.75);
+
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', ui-monospace, 'Courier New', monospace;
+  --sans: 'Poppins', 'Nunito', 'Inter', system-ui, sans-serif;
+}

@@ -353,6 +353,7 @@ class IntelligentErrorHandler:
             "katana": ["gau", "waybackurls", "hakrawler"],
             "gau": ["katana", "waybackurls", "hakrawler"],
             "waybackurls": ["gau", "katana", "hakrawler"],
+            "gospider": ["katana", "hakrawler", "gau"],
 
             # Parameter discovery alternatives
             "arjun": ["paramspider", "x8", "ffuf"],
@@ -369,6 +370,8 @@ class IntelligentErrorHandler:
             "subfinder": ["amass", "assetfinder", "findomain"],
             "amass": ["subfinder", "assetfinder", "findomain"],
             "assetfinder": ["subfinder", "amass", "findomain"],
+            "shuffledns": ["subfinder", "amass", "assetfinder"],
+            "massdns": ["shuffledns", "subfinder", "amass"],
 
             # Cloud security alternatives
             "prowler": ["scout-suite", "cloudmapper"],

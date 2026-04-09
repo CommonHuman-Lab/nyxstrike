@@ -10,3 +10,4 @@ class AttackStep:
     success_probability: float
     execution_time_estimate: int  # seconds
     dependencies: List[str] = field(default_factory=list)
+    selection_reason: Dict[str, Any] = field(default_factory=dict)

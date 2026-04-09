@@ -2,9 +2,29 @@
 
 _config = {
     "APP_NAME": "HexStrike AI Community Edition",
-    "VERSION": "1.2.0 - packetpanther",
+    "VERSION": "1.3.0",
     "DATA_DIR_NAME": ".hexstrike_data",  # Root data directory name (relative to cwd, override with HEXSTRIKE_DATA_DIR env var)
-    "COMMAND_TIMEOUT": 300,
+    "COMMAND_TIMEOUT": 500,
+    "REQUEST_TIMEOUT": 0,
+    "COMMAND_INACTIVITY_TIMEOUT": 900,
+    "COMMAND_MAX_RUNTIME": 86400,
+    "TOOL_TIMEOUT_OVERRIDES": {
+        "hydra": 0,
+        "hashcat": 0,
+        "john": 0,
+        "medusa": 0,
+        "patator": 0,
+        "ophcrack": 0,
+        "wifite": 0,
+        "wifite2": 0,
+        "aircrack-ng": 0,
+        "aircrack_ng": 0,
+        "sqlmap": 1800,
+        "nuclei": 1800,
+        "autorecon": 1800,
+        "amass": 1800,
+    },
+    "CLEAN_TOOL_OUTPUT": True,
     "CACHE_SIZE": 1000,
     "CACHE_TTL": 3600,  # 1 hour
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour

@@ -28,7 +28,18 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.90,
     },
 
-    # ---- Intelligence ----
+    # ---- URL Recon ----
+    "waymore": {
+        "desc": "Find URLs and responses from various archives using waymore.",
+        "endpoint": "/api/tools/waymore",
+        "method": "POST",
+        "category": "osint",
+        "params": {"input": {"required": True}},
+        "optional": {"mode": "U", "output_urls": "", "output_responses": ""},
+        "effectiveness": 0.85,
+    },
+
+  # ---- Intelligence ----
     "analyze-target": {
         "desc": "Analyze target and create comprehensive profile using Intelligent Decision Engine",
         "endpoint": "/api/intelligence/analyze-target",
@@ -47,6 +58,16 @@ TOOLS: Dict[str, dict] = {
         "params": {"target": {"required": True}},
         "optional": {"objective": "comprehensive"},
         "effectiveness": 0.90,
+    },
+
+    "preview-attack-chain": {
+        "desc": "Preview an intelligent attack chain without persisting a session",
+        "endpoint": "/api/intelligence/preview-attack-chain",
+        "method": "POST",
+        "category": "intelligence",
+        "params": {"target": {"required": True}},
+        "optional": {"objective": "comprehensive"},
+        "effectiveness": 0.89,
     },
 
     "smart-scan": {
@@ -148,16 +169,6 @@ TOOLS: Dict[str, dict] = {
         "optional": {"additional_args": ""},
         "effectiveness": 0.85,
     },
-    "nbtscan": {
-        "desc": "NetBIOS name scanner",
-        "endpoint": "/api/tools/nbtscan",
-        "method": "POST",
-        "category": "network_recon",
-        "params": {"target": {"required": True}},
-        "optional": {"additional_args": ""},
-        "effectiveness": 0.75,
-    },
-
 
     # ---- Web Recon ----
     "gobuster": {
@@ -196,6 +207,41 @@ TOOLS: Dict[str, dict] = {
         "optional": {"additional_args": ""},
         "effectiveness": 0.88,
     },
+    "gospider": {
+        "desc": "Web spider for crawling URLs, sitemap, robots, and third-party sources",
+        "endpoint": "/api/tools/gospider",
+        "method": "POST",
+        "category": "web_recon",
+        "params": {},
+        "optional": {
+            "site": "",
+            "sites": "",
+            "proxy": "",
+            "output": "",
+            "user_agent": "web",
+            "cookie": "",
+            "headers": [],
+            "burp": "",
+            "blacklist": "",
+            "threads": 1,
+            "concurrent": 5,
+            "depth": 1,
+            "delay": 0,
+            "random_delay": 0,
+            "timeout": 10,
+            "sitemap": False,
+            "robots": True,
+            "other_source": False,
+            "include_subs": False,
+            "include_other_source": False,
+            "debug": False,
+            "verbose": False,
+            "no_redirect": False,
+            "version": False,
+            "additional_args": ""
+        },
+        "effectiveness": 0.84,
+    },
     "httpx": {
         "desc": "HTTP probing and tech detection",
         "endpoint": "/api/tools/httpx",
@@ -205,13 +251,22 @@ TOOLS: Dict[str, dict] = {
         "optional": {"probe": True, "tech_detect": False, "status_code": False, "title": False, "additional_args": ""},
         "effectiveness": 0.85,
     },
+    "hurl": {
+        "desc": "Hexadecimal & URL encoder + decoder with support for various encodings and transformations",
+        "endpoint": "/api/tools/data_processing/hurl",
+        "method": "POST",
+        "category": "data_processing",
+        "params": {"input": {"required": True}},
+        "optional": {"mode": "base64_encode", "suppress": True, "additional_args": ""},
+        "effectiveness": 0.84,
+    },
     "testssl": {
         "desc": "TLS and SSL analysis with testssl.sh",
         "endpoint": "/api/tools/testssl",
         "method": "POST",
         "category": "web_recon",
-        "params": {},
-        "optional": {"target": "", "protocols": True, "server_defaults": True, "quiet": True, "additional_args": ""},
+        "params": {"target": {"required": True}},
+        "optional": {"protocols": True, "server_defaults": True, "quiet": True, "additional_args": ""},
         "effectiveness": 0.89,
     },
     "dirsearch": {
@@ -523,6 +578,91 @@ TOOLS: Dict[str, dict] = {
         "params": {"domain": {"required": True}},
         "optional": {"silent": True, "all_sources": False, "additional_args": ""},
         "effectiveness": 0.82,
+    },
+    "assetfinder": {
+        "desc": "Passive subdomain discovery using certificate and web sources",
+        "endpoint": "/api/tools/assetfinder",
+        "method": "POST",
+        "category": "osint",
+        "params": {"domain": {"required": True}},
+        "optional": {"only_subdomains": True, "additional_args": ""},
+        "effectiveness": 0.80,
+    },
+    "shuffledns": {
+        "desc": "Active subdomain bruteforce and resolution with wildcard handling",
+        "endpoint": "/api/tools/shuffledns",
+        "method": "POST",
+        "category": "osint",
+        "params": {},
+        "optional": {
+            "domain": "",
+            "domains": [],
+            "auto_domain": False,
+            "list": "",
+            "wordlist": "",
+            "resolver": "",
+            "trusted_resolver": "",
+            "raw_input": "",
+            "mode": "",
+            "threads": 10000,
+            "output": "",
+            "json": False,
+            "wildcard_output": "",
+            "massdns": "",
+            "massdns_cmd": "",
+            "directory": "",
+            "retries": 5,
+            "strict_wildcard": False,
+            "wildcard_threads": 250,
+            "silent": False,
+            "version": False,
+            "verbose": False,
+            "no_color": False,
+            "update": False,
+            "disable_update_check": False,
+            "additional_args": ""
+        },
+        "effectiveness": 0.86,
+    },
+    "massdns": {
+        "desc": "High-performance DNS stub resolver for bulk subdomain resolution",
+        "endpoint": "/api/tools/massdns",
+        "method": "POST",
+        "category": "osint",
+        "params": {"domainlist": {"required": True}},
+        "optional": {
+            "bindto": "",
+            "busy_poll": False,
+            "resolve_count": 50,
+            "drop_group": "",
+            "drop_user": "",
+            "extended_input": False,
+            "filter": "",
+            "flush": False,
+            "ignore": "",
+            "interval": 500,
+            "error_log": "",
+            "norecurse": False,
+            "output": "",
+            "predictable": False,
+            "processes": 1,
+            "quiet": False,
+            "rand_src_ipv6": "",
+            "rcvbuf": 0,
+            "retry": "",
+            "resolvers": "",
+            "root": False,
+            "hashmap_size": 10000,
+            "sndbuf": 0,
+            "status_format": "",
+            "sticky": False,
+            "socket_count": 1,
+            "record_type": "A",
+            "verify_ip": False,
+            "outfile": "",
+            "additional_args": ""
+        },
+        "effectiveness": 0.87,
     },
     "sublist3r": {
         "desc": "Subdomain enumeration using OSINT sources",
@@ -971,7 +1111,7 @@ TOOLS: Dict[str, dict] = {
         "desc": "Append unique lines to a file — deduplication for recon pipelines",
         "endpoint": "/api/tools/anew",
         "method": "POST",
-        "category": "api",
+        "category": "data_processing",
         "params": {"input_data": {"required": True}},
         "optional": {"output_file": "", "additional_args": ""},
         "effectiveness": 0.70,
@@ -1612,7 +1752,7 @@ _INTENT_KEYWORDS: Dict[str, List[str]] = {
     ],
     "web_recon": [
         "directory", "dir", "brute", "fuzz", "ffuf", "crawl",
-        "spider", "wordpress", "wpscan", "vhost", "content", "ferox",
+        "spider", "gospider", "wordpress", "wpscan", "vhost", "content", "ferox",
     ],
     "web_vuln": [
         "vuln", "vulnerability", "nuclei", "sql", "sqli", "xss",
@@ -1627,9 +1767,9 @@ _INTENT_KEYWORDS: Dict[str, List[str]] = {
         "hash", "wordlist", "medusa", "patator", "ophcrack"
     ],
     "osint": [
-        "subdomain", "dns", "osint", "amass", "subfinder", "domain", "recon",
+        "subdomain", "dns", "osint", "amass", "subfinder", "assetfinder", "shuffledns", "massdns", "domain", "recon",
         "url", "fierce", "enumerate", "whois", "bbot", "theharvester", 
-        "gau", "waybackurls"
+        "gau", "waybackurls", "waymore"
     ],
     "binary": [
         "binary", "reverse", "rop", "gadget", "checksec", "firmware", "elf",
@@ -1654,6 +1794,78 @@ _INTENT_KEYWORDS: Dict[str, List[str]] = {
     "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
     "vulnerability_intelligence": ["vulnx", "vulnerability intelligence", "vulnerability research", "cve search", "exploit research"]
 
+}
+
+
+SUGGESTED_APPROACHES: Dict[str, str] = {
+    "network_recon": (
+        "Run port scans (nmap/masscan/rustscan) and service fingerprinting. "
+        "Enumerate SMB, RPC, and SNMP if open. Identify OS, banners, and software versions."
+    ),
+    "web_recon": (
+        "Run directory/content discovery (gobuster/feroxbuster/ffuf). "
+        "Crawl for endpoints and check for common misconfigurations. "
+        "Fingerprint technologies and check for exposed admin panels or backup files."
+    ),
+    "web_vuln": (
+        "Scan discovered endpoints for SQLi, XSS, SSRF, LFI, and template injection "
+        "using nuclei, sqlmap, and dalfox. Check headers and cookies for misconfigurations."
+    ),
+    "exploitation": (
+        "Search Exploit-DB and Metasploit for matching CVEs. "
+        "Generate payloads with msfvenom and attempt initial access. "
+        "Validate exploitability against the detected service versions."
+    ),
+    "brute_force": (
+        "Brute-force login endpoints or crack captured hashes using hydra, medusa, "
+        "john, or hashcat with an appropriate wordlist. Target SSH, FTP, HTTP basic auth, "
+        "and web login forms."
+    ),
+    "osint": (
+        "Enumerate subdomains (subfinder/amass/dnsenum), harvest emails via theHarvester, "
+        "pull historical URLs (gau/waybackurls), and extract secrets from JS files. "
+        "Check certificate transparency logs and WHOIS records."
+    ),
+    "active_directory": (
+        "Run BloodHound/SharpHound collection. Enumerate AD objects via LDAP. "
+        "Look for kerberoastable accounts, AS-REP roastable users, and misconfigured ACLs. "
+        "Use impacket tools for lateral movement."
+    ),
+    "binary": (
+        "Analyse the binary with checksec, strings, and radare2. "
+        "Identify exploitable functions (gets, strcpy, system). "
+        "Build ROP chains if NX is enabled. Use GDB/pwndbg for dynamic analysis."
+    ),
+    "cloud": (
+        "Run prowler/trivy against the cloud environment. "
+        "Check for public S3 buckets, over-permissive IAM roles, exposed metadata endpoints, "
+        "and container image vulnerabilities."
+    ),
+    "wifi_pentest": (
+        "Capture WPA handshakes with airodump-ng or attempt the PMKID attack with hcxdumptool. "
+        "Crack captured hashes with aircrack-ng or hashcat. "
+        "Check for evil twin or rogue AP opportunities."
+    ),
+    "forensics": (
+        "Extract memory artefacts with volatility. Carve files with foremost/binwalk. "
+        "Check for steganography with steghide/stegsolve. "
+        "Inspect file metadata with exiftool. Look for hash length extension vulnerabilities."
+    ),
+    "database": (
+        "Connect to the database and enumerate tables, columns, and user privileges. "
+        "Look for sensitive credential or config tables. "
+        "Attempt privilege escalation via UDFs or misconfigurations."
+    ),
+    "essential": (
+        "Run the core toolkit in sequence: nmap (ports) -> gobuster (content) -> "
+        "nikto (web vulns) -> sqlmap (SQLi) -> hydra (brute-force). "
+        "Covers basic recon through common exploitation vectors."
+    ),
+    "vulnerability_intelligence": (
+        "Search CVE databases and Exploit-DB for the target stack. "
+        "Cross-reference discovered service versions with known vulnerabilities. "
+        "Prioritise CVEs with public PoC or Metasploit modules."
+    ),
 }
 
 

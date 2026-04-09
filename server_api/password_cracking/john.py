@@ -38,7 +38,7 @@ def john():
         command += f" {hash_file}"
 
         logger.info(f"🔐 Starting John the Ripper: {hash_file}")
-        result = execute_command(command)
+        result = execute_command(command, tool="john")
         logger.info(f"📊 John the Ripper completed")
         return jsonify(result)
     except Exception as e:

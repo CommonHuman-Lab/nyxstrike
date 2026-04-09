@@ -18,6 +18,9 @@ export interface Settings {
   };
   runtime: {
     command_timeout: number;
+    request_timeout: number;
+    command_inactivity_timeout: number;
+    command_max_runtime: number;
     cache_size: number;
     cache_ttl: number;
     tool_availability_ttl: number;

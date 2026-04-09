@@ -5,6 +5,72 @@
   gap: 20px;
 }
 
+.settings-appearance-row {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.settings-appearance-card {
+  align-items: center;
+}
+
+.settings-appearance-card--action {
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 8%, transparent), color-mix(in srgb, var(--accent-alt) 7%, transparent)),
+    var(--bg-card);
+}
+
+.settings-maintenance-card {
+  border-color: color-mix(in srgb, var(--warning) 26%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--warning) 8%, transparent), color-mix(in srgb, var(--warning) 4%, transparent)),
+    var(--bg-card);
+}
+
+.settings-appearance-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.settings-appearance-value {
+  font-size: 18px;
+}
+
+.settings-appearance-btn {
+  margin-top: 6px;
+}
+
+.settings-appearance-card--clickable {
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.settings-appearance-card--clickable:hover {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.settings-appearance-card--clickable:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 48%, transparent);
+  outline-offset: 2px;
+}
+
+.settings-appearance-tap-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.settings-appearance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

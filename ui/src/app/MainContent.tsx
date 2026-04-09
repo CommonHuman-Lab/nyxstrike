@@ -6,6 +6,7 @@ import type {
   WebDashboardResponse,
 } from '../api'
 import type { HistoryPoint, RunHistoryEntry } from '../shared/types'
+import type { ThemeId } from './themes'
 import { DashboardPage } from '../pages/dashboard/DashboardPage'
 import { RunPage } from '../pages/run/RunPage'
 import LogsPage from '../pages/logview/LogsPage'
@@ -45,6 +46,10 @@ interface MainContentProps {
   error: string | null
   history: HistoryPoint[]
   toolCategories: Record<string, string[]>
+  themeId: ThemeId
+  setThemeId: (theme: ThemeId) => void
+  reduceTextureEffects: boolean
+  setReduceTextureEffects: (value: boolean) => void
 }
 
 export function MainContent({
@@ -73,10 +78,21 @@ export function MainContent({
   error,
   history,
   toolCategories,
+  themeId,
+  setThemeId,
+  reduceTextureEffects,
+  setReduceTextureEffects,
 }: MainContentProps) {
   return (
     <main className={`main${page === 'run' ? ' main--flush' : ''}`}>
-      {page === 'settings' && <SettingsPage />}
+      {page === 'settings' && (
+        <SettingsPage
+          themeId={themeId}
+          setThemeId={setThemeId}
+          reduceTextureEffects={reduceTextureEffects}
+          setReduceTextureEffects={setReduceTextureEffects}
+        />
+      )}
       {page === 'help' && <HelpPage />}
       {page === 'run' && (
         <RunPage

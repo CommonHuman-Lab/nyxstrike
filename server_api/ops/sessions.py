@@ -318,9 +318,11 @@ def handover_session(session_id):
       f"Session ID: {session_id}",
       f"Target: {session_data.get('target', 'unknown')}",
       f"Status: {session_data.get('status', 'active')}",
+      f"Objective: {session_data.get('objective', '')}",
       f"Tools: {', '.join(step_names)}",
       f"Findings: {session_data.get('total_findings', 0)}",
       f"Iterations: {session_data.get('iterations', 0)}",
+      f"Metadata: {json.dumps(session_data.get('metadata', {}))}",
       f"Note: {note}",
       "Classify next best action for manual execution.",
     ])
@@ -407,19 +409,40 @@ def create_session_template():
 
 @api_sessions_bp.route("/api/sessions/templates/<template_id>", methods=["PATCH"])
 @api_sessions_bp.route("/api/session-templates/<template_id>", methods=["PATCH"])
-def rename_session_template(template_id):
-  """Rename an existing session template."""
+def update_session_template(template_id):
+  """Update an existing session template."""
   try:
     data = request.get_json(force=True) or {}
-    name = str(data.get("name", "")).strip()
-    if not name:
+    has_name = "name" in data
+    has_steps = "workflow_steps" in data
+    if not has_name and not has_steps:
+      return jsonify({"success": False, "error": "No update fields provided"}), 400
+
+    name = str(data.get("name", "")).strip() if has_name else ""
+    if has_name and not name:
       return jsonify({"success": False, "error": "Template name is required"}), 400
+
+    raw_steps = data.get("workflow_steps", []) if has_steps else []
+    if has_steps and not isinstance(raw_steps, list):
+      return jsonify({"success": False, "error": "workflow_steps must be a list"}), 400
+
+    cleaned_steps = []
+    if has_steps:
+      for s in raw_steps:
+        ns = normalize_step(s, "")
+        if ns:
+          cleaned_steps.append(ns)
+      if len(cleaned_steps) == 0:
+        return jsonify({"success": False, "error": "workflow_steps is required"}), 400
 
     template = session_store.load_template(template_id)
     if not template:
       return jsonify({"success": False, "error": "Template not found"}), 404
 
-    template["name"] = name
+    if has_name:
+      template["name"] = name
+    if has_steps:
+      template["workflow_steps"] = cleaned_steps
     template["updated_at"] = int(time.time())
     ok = session_store.save_template(template_id, template)
     if not ok:
@@ -427,7 +450,7 @@ def rename_session_template(template_id):
 
     return jsonify({"success": True, "template": template, "timestamp": datetime.now().isoformat()})
   except Exception as e:
-    logger.error(f"Error renaming session template {template_id}: {e}")
+    logger.error(f"Error updating session template {template_id}: {e}")
     return jsonify({"success": False, "error": str(e)}), 500
 
 

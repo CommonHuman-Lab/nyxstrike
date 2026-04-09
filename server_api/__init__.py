@@ -109,6 +109,9 @@ def register_blueprints(app):
   app.register_blueprint(api_recon_theharvester_bp)
   app.register_blueprint(api_recon_amass_bp)
   app.register_blueprint(api_recon_subfinder_bp)
+  app.register_blueprint(api_recon_assetfinder_bp)
+  app.register_blueprint(api_recon_shuffledns_bp)
+  app.register_blueprint(api_recon_massdns_bp)
   app.register_blueprint(api_recon_autorecon_bp)
   app.register_blueprint(api_recon_bot_bbot_bp)
 
@@ -179,6 +182,7 @@ def register_blueprints(app):
   # Web Crawl
   app.register_blueprint(api_web_crawl_katana_bp)
   app.register_blueprint(api_web_crawl_hakrawler_bp)
+  app.register_blueprint(api_web_crawl_gospider_bp)
 
   # Web Probe
   app.register_blueprint(api_web_probe_httpx_bp)
@@ -191,6 +195,7 @@ def register_blueprints(app):
   # URL Recon
   app.register_blueprint(api_url_recon_gau_bp)
   app.register_blueprint(api_url_recon_waybackurls_bp)
+  app.register_blueprint(api_web_probe_waymore_bp)
 
   # URL Filter
   app.register_blueprint(api_url_filter_uro_bp)
@@ -261,6 +266,7 @@ def register_blueprints(app):
 
   # Data Processing
   app.register_blueprint(api_data_processing_anew_bp)
+  app.register_blueprint(api_data_processing_hurl_bp)
 
   # Container Scanning
   app.register_blueprint(api_container_scan_trivy_bp)

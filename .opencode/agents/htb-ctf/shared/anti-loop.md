@@ -1,3 +1,9 @@
+---
+description: Internal HTB shared contract (anti-loop). Not user-selectable.
+mode: subagent
+hidden: true
+---
+
 # HTB CTF — Anti-Loop Rules
 
 These rules apply to **every agent** in the htb-ctf system. Violating them causes infinite loops, wasted tool calls, and timeouts.

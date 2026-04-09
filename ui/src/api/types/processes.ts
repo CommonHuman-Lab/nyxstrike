@@ -28,3 +28,19 @@ export interface PoolStatsResponse {
   success?: boolean;
   [key: string]: unknown;
 }
+
+export interface ProcessListEntry {
+  pid: number;
+  command: string;
+  status: string;
+  start_time: number;
+  progress: number;
+  last_output: string;
+  bytes_processed: number;
+}
+
+export interface ProcessListResponse {
+  success: boolean;
+  active_processes: Record<string, ProcessListEntry>;
+  total_count: number;
+ }

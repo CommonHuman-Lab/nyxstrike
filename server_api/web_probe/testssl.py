@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import logging
 import shlex
+import shutil
 from server_core.command_executor import execute_command
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,13 @@ def testssl():
         if not isinstance(openssl_timeout, int) or openssl_timeout < 0:
             return jsonify({"error": "openssl_timeout must be a non-negative integer"}), 400
 
-        args = ["testssl.sh"]
+        testssl_executable = shutil.which('testssl') or shutil.which('testssl.sh')
+        if not testssl_executable:
+            logger.error("Neither 'testssl' nor 'testssl.sh' found on system PATH.")
+            return jsonify({"error": "testssl tool not found"}), 400
+
+        # Prepare argument list with the appropriate executable
+        args = [testssl_executable]
 
         if help_mode:
             args.append("--help")
