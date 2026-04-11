@@ -1,0 +1,322 @@
+"""
+server_core/llm_client.py
+
+Provider-agnostic LLM adapter for NyxStrike.
+
+Selects a backend at construction time based on config/env vars and exposes a
+single chat() method. All feature code calls LLMClient — never a backend
+directly — so swapping providers is a one-line config change.
+
+Supported backends:
+  ollama     — local Ollama server (default, no API key needed)
+  openai     — OpenAI or Azure OpenAI via the openai SDK
+  anthropic  — Anthropic Claude via the anthropic SDK
+
+Config keys (checked in order: env var → config_local.json → config.py defaults):
+  NYXSTRIKE_LLM_PROVIDER    ollama | openai | anthropic
+  NYXSTRIKE_LLM_MODEL       model name
+  NYXSTRIKE_LLM_URL         base URL for API (Ollama only)
+  NYXSTRIKE_LLM_API_KEY     API key (not needed for Ollama)
+  NYXSTRIKE_LLM_MAX_LOOPS   max agentic tool loops
+  NYXSTRIKE_LLM_TIMEOUT     request timeout in seconds
+
+Defaults are defined in config.py and can be overridden via config_local.json
+or environment variables without touching source code.
+
+Usage:
+  from server_core.singletons import llm_client
+  if llm_client.is_available():
+      response = llm_client.chat([{"role": "user", "content": "Hello"}])
+"""
+
+import logging
+import os
+from typing import List, Dict, Any, Optional
+
+import requests
+
+import server_core.config_core as config_core
+
+logger = logging.getLogger(__name__)
+
+
+def _cfg(key: str, default: str = "") -> str:
+  """Read config: env var overrides config_core, which overrides default."""
+  return os.environ.get(key) or config_core.get(key, default)
+
+
+# ── Backend implementations ────────────────────────────────────────────────────
+
+class OllamaBackend:
+  """Ollama local model server backend."""
+
+  def __init__(self, base_url: str, model: str, timeout: int) -> None:
+    self._base_url = base_url.rstrip("/")
+    self._model = model
+    self._timeout = timeout
+    self._generate_url = f"{self._base_url}/api/generate"
+    self._tags_url = f"{self._base_url}/api/tags"
+
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+    """Send messages to Ollama and return the response string.
+
+    Ollama's /api/generate doesn't natively support a message list, so we
+    concatenate them into a single prompt string.
+    """
+    prompt = _messages_to_prompt(messages)
+    payload: Dict[str, Any] = {
+      "model": self._model,
+      "prompt": prompt,
+      "stream": False,
+      "options": {
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "num_predict": 4096,
+      },
+    }
+    if stop:
+      payload["options"]["stop"] = stop
+
+    try:
+      resp = requests.post(self._generate_url, json=payload, timeout=self._timeout)
+      resp.raise_for_status()
+      data = resp.json()
+      return data.get("response", "").strip()
+    except requests.exceptions.ConnectionError:
+      raise RuntimeError(
+        f"Cannot connect to Ollama at {self._base_url}. "
+        "Is the server running? Try: ollama serve"
+      )
+    except requests.exceptions.Timeout:
+      raise RuntimeError("Ollama request timed out. Model may still be loading.")
+    except requests.exceptions.HTTPError as exc:
+      raise RuntimeError(f"Ollama HTTP error: {exc}")
+
+  def is_available(self) -> bool:
+    """Return True if Ollama is reachable and the configured model exists."""
+    try:
+      resp = requests.get(self._tags_url, timeout=5)
+      if resp.status_code != 200:
+        return False
+      # Check that the model is actually pulled
+      models = [m.get("name", "") for m in resp.json().get("models", [])]
+      # Match prefix — "llama3.2" matches "llama3.2:latest"
+      return any(m.startswith(self._model) for m in models)
+    except Exception:
+      return False
+
+  @property
+  def provider(self) -> str:
+    return "ollama"
+
+  @property
+  def model(self) -> str:
+    return self._model
+
+
+class OpenAIBackend:
+  """OpenAI / Azure OpenAI backend via the openai SDK."""
+
+  def __init__(self, model: str, api_key: str, base_url: Optional[str], timeout: int) -> None:
+    self._model = model
+    self._timeout = timeout
+    try:
+      import openai  # noqa: F401 — optional dependency
+      self._openai = openai
+      kwargs: Dict[str, Any] = {"api_key": api_key}
+      if base_url:
+        kwargs["base_url"] = base_url
+      self._client = openai.OpenAI(**kwargs)
+    except ImportError:
+      raise RuntimeError(
+        "openai SDK not installed. Run: pip install openai"
+      )
+
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+    kwargs: Dict[str, Any] = {
+      "model": self._model,
+      "messages": messages,
+      "max_tokens": 4096,
+      "temperature": 0.7,
+    }
+    if stop:
+      kwargs["stop"] = stop
+    try:
+      resp = self._client.chat.completions.create(**kwargs)
+      return resp.choices[0].message.content.strip()
+    except Exception as exc:
+      raise RuntimeError(f"OpenAI API error: {exc}")
+
+  def is_available(self) -> bool:
+    try:
+      self._client.models.list()
+      return True
+    except Exception:
+      return False
+
+  @property
+  def provider(self) -> str:
+    return "openai"
+
+  @property
+  def model(self) -> str:
+    return self._model
+
+
+class AnthropicBackend:
+  """Anthropic Claude backend via the anthropic SDK."""
+
+  def __init__(self, model: str, api_key: str, timeout: int) -> None:
+    self._model = model
+    self._timeout = timeout
+    try:
+      import anthropic  # noqa: F401 — optional dependency
+      self._client = anthropic.Anthropic(api_key=api_key)
+    except ImportError:
+      raise RuntimeError(
+        "anthropic SDK not installed. Run: pip install anthropic"
+      )
+
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+    # Anthropic separates system from human/assistant messages
+    system_parts = [m["content"] for m in messages if m["role"] == "system"]
+    user_messages = [m for m in messages if m["role"] != "system"]
+    system_text = "\n\n".join(system_parts)
+    kwargs: Dict[str, Any] = {
+      "model": self._model,
+      "max_tokens": 4096,
+      "messages": user_messages,
+    }
+    if system_text:
+      kwargs["system"] = system_text
+    if stop:
+      kwargs["stop_sequences"] = stop
+    try:
+      resp = self._client.messages.create(**kwargs)
+      return resp.content[0].text.strip()
+    except Exception as exc:
+      raise RuntimeError(f"Anthropic API error: {exc}")
+
+  def is_available(self) -> bool:
+    try:
+      # Cheap check — list models endpoint
+      self._client.models.list()
+      return True
+    except Exception:
+      return False
+
+  @property
+  def provider(self) -> str:
+    return "anthropic"
+
+  @property
+  def model(self) -> str:
+    return self._model
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _messages_to_prompt(messages: List[Dict[str, Any]]) -> str:
+  """Flatten a message list into a single prompt string for backends that
+  don't natively support chat format (e.g. Ollama /api/generate)."""
+  parts = []
+  for m in messages:
+    role = m.get("role", "user")
+    content = m.get("content", "")
+    if role == "system":
+      parts.append(content)
+    elif role == "user":
+      parts.append(f"User: {content}")
+    elif role == "assistant":
+      parts.append(f"Assistant: {content}")
+  return "\n\n".join(parts)
+
+
+# ── Public facade ─────────────────────────────────────────────────────────────
+
+class LLMClient:
+  """Provider-agnostic LLM client.
+
+  Reads configuration at construction time and builds the appropriate backend.
+  If construction fails (e.g. missing SDK, bad config), is_available() returns
+  False and chat() raises RuntimeError — callers should guard with is_available().
+
+  Attributes exposed for logging / persistence:
+    provider  — "ollama" | "openai" | "anthropic"
+    model     — model name string
+    max_loops — configured maximum tool dispatch loops
+  """
+
+  def __init__(self) -> None:
+    provider = _cfg("NYXSTRIKE_LLM_PROVIDER").lower()
+    model = _cfg("NYXSTRIKE_LLM_MODEL")
+    base_url = _cfg("NYXSTRIKE_LLM_URL")
+    api_key = _cfg("NYXSTRIKE_LLM_API_KEY")
+    timeout = int(_cfg("NYXSTRIKE_LLM_TIMEOUT") or 300)
+
+    self.max_loops: int = int(_cfg("NYXSTRIKE_LLM_MAX_LOOPS") or 9)
+    self._backend: Any = None
+    self._init_error: str = ""
+
+    try:
+      if provider == "ollama":
+        self._backend = OllamaBackend(base_url, model, timeout)
+      elif provider == "openai":
+        self._backend = OpenAIBackend(model, api_key, base_url if base_url != DEFAULT_OLLAMA_URL else None, timeout)
+      elif provider == "anthropic":
+        self._backend = AnthropicBackend(model, api_key, timeout)
+      else:
+        raise ValueError(f"Unknown LLM provider: {provider!r}. Choose: ollama, openai, anthropic")
+
+      logger.info(
+        "llm_client: initialized provider=%s model=%s",
+        self._backend.provider,
+        self._backend.model,
+      )
+    except Exception as exc:
+      self._init_error = str(exc)
+      logger.warning("llm_client: initialization failed — %s", exc)
+
+  @property
+  def provider(self) -> str:
+    return self._backend.provider if self._backend else "none"
+
+  @property
+  def model(self) -> str:
+    return self._backend.model if self._backend else ""
+
+  def is_available(self) -> bool:
+    """Return True if the LLM backend is reachable. Never raises."""
+    if self._backend is None:
+      return False
+    try:
+      return self._backend.is_available()
+    except Exception:
+      return False
+
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+    """Send messages and return the model's response string.
+
+    Args:
+      messages: List of {"role": "system"|"user"|"assistant", "content": str}
+      stop:     Optional stop sequences.
+
+    Raises:
+      RuntimeError: If the backend is not initialized or the call fails.
+    """
+    if self._backend is None:
+      raise RuntimeError(
+        f"LLM client not initialized: {self._init_error or 'unknown error'}"
+      )
+    return self._backend.chat(messages, stop)
+
+  def status(self) -> Dict[str, Any]:
+    """Return a status dict suitable for the /llm-status health endpoint."""
+    available = self.is_available()
+    return {
+      "available": available,
+      "provider": self.provider,
+      "model": self.model,
+      "max_loops": self.max_loops,
+      "error": self._init_error if not available else "",
+    }

@@ -30,6 +30,15 @@ _config = {
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour
     "DEFAULT_API_SERVER_URL": "http://127.0.0.1:8888",
     "MAX_RETRIES": 3,
+
+    # ── LLM client ────────────────────────────────────────────────────────────
+    "NYXSTRIKE_LLM_PROVIDER": "ollama",                         # ollama | openai | anthropic
+    "NYXSTRIKE_LLM_MODEL":    "huihui_ai/qwen3.5-abliterated:4b",
+    "NYXSTRIKE_LLM_URL":      "http://localhost:11434",         # Ollama base URL (ignored for openai/anthropic)
+    "NYXSTRIKE_LLM_API_KEY":  "",                               # Required for openai / anthropic
+    "NYXSTRIKE_LLM_TIMEOUT":  300,                              # seconds
+    "NYXSTRIKE_LLM_MAX_LOOPS": 9,
+
     "WORD_LISTS": {
 
         # --- Password Lists ---

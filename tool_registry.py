@@ -17,6 +17,17 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 TOOLS: Dict[str, dict] = {
+    # ---- AI ----
+    "ai_analyze_session": {
+        "desc": "Analyse an existing workflow session with the LLM.",
+        "endpoint": "/api/intelligence/analyze-session",
+        "method": "POST",
+        "category": "ai_assist",
+        "params": {"session_id": {"required": True}},
+        "optional": {},
+        "effectiveness": 0.90,
+    },
+    
     # ---- Vulnerability Intelligence ----
     "vulnx": {
         "desc": "CVE vulnerability intelligence and analysis",
@@ -560,6 +571,25 @@ TOOLS: Dict[str, dict] = {
         "params": {"target": {"required": True}},
         "optional": {},
         "effectiveness": 0.80,
+    },
+    "http-headers": {
+        "desc": "Fetch HTTP response headers via curl -sI (security headers, server info, redirects)",
+        "endpoint": "/api/tools/http-headers",
+        "method": "POST",
+        "category": "web_recon",
+        "params": {"target": {"required": True}},
+        "optional": {"https": False, "follow_redirects": True, "timeout": 10},
+        "effectiveness": 0.82,
+    },
+    "dig": {
+        "desc": "DNS record lookup — A, MX, NS, TXT records via dig +short",
+        "endpoint": "/api/tools/dig",
+        "method": "POST",
+        "category": "osint",
+        "params": {"target": {"required": True}},
+        "optional": {"record_types": ["A", "MX", "NS", "TXT"], "timeout": 15},
+        "effectiveness": 0.83,
+        "parent_tool": "bind9-dnsutils"
     },
     "amass": {
         "desc": "Subdomain enumeration and OSINT",

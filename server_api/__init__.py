@@ -244,6 +244,8 @@ def register_blueprints(app):
 
   # Network Lookup
   app.register_blueprint(api_net_lookup_whois_bp)
+  app.register_blueprint(api_net_lookup_http_headers_bp)
+  app.register_blueprint(api_net_lookup_dig_bp)
 
   # Credential Harvesting
   app.register_blueprint(api_credential_harvest_responder_bp)
@@ -309,6 +311,8 @@ def register_blueprints(app):
 
   # AI Assist
   app.register_blueprint(api_ai_assist_advanced_payload_generation_bp)
+  app.register_blueprint(api_ai_assist_llm_agent_bp)
+  app.register_blueprint(api_ai_assist_ai_recon_session_bp)
 
   # Tools Catalog
   app.register_blueprint(api_tools_catalog_bp)

@@ -1,5 +1,5 @@
 export interface StartMode {
-  key: 'intelligence' | 'comprehensive' | 'reconnaissance' | 'vulnerability_hunting' | 'OSINT' | 'api_security' | 'internal_network_ad' | 'manual' | 'from_template'
+  key: 'intelligence' | 'manual' | 'from_template' | 'ai_recon'
   title: string
   description: string
   details: string
@@ -35,5 +35,14 @@ export const START_MODES: StartMode[] = [
     modalDescription: 'Creates a session from an existing template. You only set target and choose the saved template; all template tools are copied into the new session.',
     tools: [],
     placeholder: 'Target URL/domain/IP (example.com)',
+  },
+  {
+    key: 'ai_recon',
+    title: 'AI Recon',
+    description: 'Recon session pre-loaded with the recon pipeline, ready to run.',
+    details: 'Builds a session with nmap, whois, dig, http-headers, and whatweb.',
+    modalDescription: 'Pre-loaded with the recon pipeline: nmap, whois, dig, http-headers, and whatweb — configured for your target.',
+    tools: ['nmap', 'whois', 'dig', 'http-headers', 'whatweb'],
+    placeholder: 'Domain or IP (example.com / 10.0.0.1)',
   },
 ]

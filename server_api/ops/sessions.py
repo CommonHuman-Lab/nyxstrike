@@ -19,6 +19,7 @@ from server_core.session_flow import (
   update_session,
 )
 from tool_registry import classify_intent
+from server_core.singletons import llm_client as _llm_client
 
 logger = logging.getLogger(__name__)
 
@@ -327,7 +328,7 @@ def handover_session(session_id):
       "Classify next best action for manual execution.",
     ])
 
-    category, confidence = classify_intent(description)
+    category, confidence = classify_intent(description, _llm_client if _llm_client.is_available() else None)
     handover_result = {
       "timestamp": datetime.now().isoformat(),
       "session_id": session_id,

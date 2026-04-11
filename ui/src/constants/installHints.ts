@@ -133,6 +133,7 @@ export const INSTALL_HINTS: Record<string, string> = {
   shuffledns:        'sudo apt-get install -y massdns; go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest',
   massdns:           'sudo apt install massdns',
   gospider:          'sudo apt install gospider',
+  dig:               'sudo apt install bind9-dnsutils',
 
 }
 

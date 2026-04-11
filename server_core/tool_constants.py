@@ -2,7 +2,7 @@
 BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner",
                    "http-framework", "auto_install_missing_apt_tools", 
                   "analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan",
-                  "technology-detection"]
+                  "technology-detection", "ai_analyze_session"]
 
 # Tools that require dpkg check (Debian-based systems)
 REQUIRE_DPKG_CHECK = ["hashcat-utils", "sleuthkit", "impacket-scripts"]
@@ -20,7 +20,7 @@ REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
 BINARY_NAME_OVERRIDES = {
     "scout-suite": "scout",
     "volatility": "vol",
-    "hurl": "hURL"
+    "hurl": "hURL",
 }
 
 # Comprehensive list of tools categorized by functionality for health monitoring and availability checks
@@ -43,7 +43,7 @@ HEALTH_TOOL_CATEGORIES = {
               "cloudmapper", "pacu"],
     "osint": ["amass", "subfinder", "fierce", "dnsenum", "theHarvester", "sherlock",
                "social-analyzer", "recon-ng", "maltego", "spiderfoot",
-              "whois", "bbot", "gau", "waybackurls", "waymore", "sublist3r", "assetfinder", "shuffledns", "massdns", "parsero"],
+              "whois", "bbot", "gau", "waybackurls", "waymore", "sublist3r", "assetfinder", "shuffledns", "massdns", "parsero", "dig"],
     "exploitation": ["msfconsole", "msfvenom", "searchsploit", "commix"],
     "api": ["api-schema-analyzer", "curl", "http-framework", "qsreplace", "uro"],
     "wifi_pentest": ["kismet", "wireshark", "tshark", "tcpdump",
@@ -60,6 +60,7 @@ HEALTH_TOOL_CATEGORIES = {
     "ops": ["auto_install_missing_apt_tools"],
 
     "intelligence": ["analyze-target", "preview-attack-chain", "create-attack-chain", "smart-scan", "technology-detection"],
+    "ai_assist": ["ai_analyze_session"],
 
     "data_processing": ["hurl", "anew"],
 

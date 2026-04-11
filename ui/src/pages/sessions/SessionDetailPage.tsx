@@ -409,12 +409,12 @@ export default function SessionDetailPage({
         if (!tool) continue
 
         const stepKey = `${session.session_id}:${idx}`
-        const current = prev[stepKey] ?? buildInitialFieldValues(tool, step, nextTarget)
+        const current = prev[stepKey] ?? buildInitialFieldValues(tool, step, nextTarget, sessionId)
         let stepChanged = false
         const updated = { ...current }
 
         for (const key of [...Object.keys(tool.params), ...Object.keys(tool.optional)]) {
-          const inferred = inferTargetValue(key, nextTarget)
+          const inferred = inferTargetValue(key, nextTarget, sessionId)
           if (inferred === undefined || updated[key] === inferred) continue
           updated[key] = inferred
           stepChanged = true
@@ -436,7 +436,7 @@ export default function SessionDetailPage({
       if (prev[selectedStepKey]) return prev
       return {
         ...prev,
-        [selectedStepKey]: buildInitialFieldValues(selectedTool, selectedStep, targetValue.trim() || session.target),
+        [selectedStepKey]: buildInitialFieldValues(selectedTool, selectedStep, targetValue.trim() || session.target, sessionId),
       }
     })
     setShowOptionalByStep(prev => ({ ...prev, [selectedStepKey]: prev[selectedStepKey] ?? false }))
@@ -454,7 +454,7 @@ export default function SessionDetailPage({
     }
 
     const target = targetValue.trim()
-    const fieldValues = stepFieldValues[stepKey] ?? buildInitialFieldValues(tool, step, target || sessionRef.target)
+    const fieldValues = stepFieldValues[stepKey] ?? buildInitialFieldValues(tool, step, target || sessionRef.target, sessionId)
     const { payload, missing } = buildRunPayload(tool, fieldValues)
     if (missing.length > 0) {
       setStepResults(prev => ({ ...prev, [stepKey]: { error: `Missing required: ${missing.join(', ')}` } }))

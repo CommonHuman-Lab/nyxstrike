@@ -1,5 +1,6 @@
 import { del, get, patch, post, postWithTimeout, stream } from './client';
 import type {
+  AttackChainStep,
   CacheStatsResponse,
   ClassifyTaskResponse,
   CreateAttackChainResponse,
@@ -96,6 +97,11 @@ export const api = {
     post<CreateAttackChainResponse>('/api/intelligence/create-attack-chain', { target, objective }),
   previewAttackChain: (target: string, objective = 'comprehensive') =>
     post<CreateAttackChainResponse>('/api/intelligence/preview-attack-chain', { target, objective }),
+  aiReconSession: (target: string) =>
+    post<{ success: boolean; steps: AttackChainStep[]; session_name: string; error?: string }>(
+      '/api/intelligence/ai-recon-session',
+      { target },
+    ),
   classifyTask: (description: string) =>
     post<ClassifyTaskResponse>('/api/intelligence/classify-task', { description }),
 };

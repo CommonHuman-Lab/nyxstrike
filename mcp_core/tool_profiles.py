@@ -169,6 +169,8 @@ TOOL_PROFILES = {
     #Tools for network information gathering and lookups (e.g., WHOIS).
     "net_lookup": [
         lambda mcp, client, logger: register_whois(mcp, client, logger),
+        lambda mcp, client, logger: register_http_headers(mcp, client, logger),
+        lambda mcp, client, logger: register_dig(mcp, client, logger),
     ],
 
     #Tools for reconnaissance and enumeration (e.g., BBot).
@@ -358,6 +360,7 @@ TOOL_PROFILES = {
     #Tools for intelligent decision making and tool selection based on task context and goals
     "ai_assist": [
         lambda mcp, client, logger: register_intelligent_decision_engine_tools(mcp, client, logger, CliColors),
+        lambda mcp, client, logger: register_llm_agent_tools(mcp, client, logger, CliColors),
     ],
 
     #Tools for vulnerability intelligence gathering and analysis

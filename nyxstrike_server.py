@@ -117,8 +117,9 @@ def record_tool_run(response):
     "/api/intelligence/smart-scan",
     "/api/intelligence/select-tools",
     "/api/intelligence/technology-detection",
-    "/api/intelligence/preview-attack-chain",
+    #"/api/intelligence/preview-attack-chain",
     "/api/intelligence/create-attack-chain",
+    "/api/intelligence/analyze-session",
   }
   if not is_tool_run and not is_intelligence_run:
     return response

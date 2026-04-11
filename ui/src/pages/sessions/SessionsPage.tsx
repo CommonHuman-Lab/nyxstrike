@@ -381,6 +381,21 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
             session_name: `Template: ${tpl.name}`,
           },
         })
+      } else if (mode.key === 'ai_recon') {
+        const recon = await api.aiReconSession(target)
+        if (!recon.success) throw new Error(recon.error ?? 'AI Recon session creation failed')
+        sessionRes = await api.createSession({
+          target,
+          workflow_steps: recon.steps,
+          source: 'web',
+          objective: 'ai_recon',
+          metadata: {
+            origin: 'ui/sessions/create',
+            mode: 'ai_recon',
+            note: noteValue,
+            session_name: recon.session_name,
+          },
+        })
       } else {
         if (mode.key === 'intelligence') {
           const preview = await api.previewAttackChain(target, intelligencePrecision)
@@ -461,11 +476,15 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   )
 
   const rawActive = data?.active ?? []
-  const active = rawActive.filter(s => (s.status ?? 'active') !== 'completed')
+  const active = rawActive
+    .filter(s => (s.status ?? 'active') !== 'completed')
+    .sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0))
   const completed = [
     ...(data?.completed ?? []),
     ...rawActive.filter(s => (s.status ?? 'active') === 'completed'),
-  ].filter((s, idx, arr) => arr.findIndex(x => x.session_id === s.session_id) === idx)
+  ]
+    .filter((s, idx, arr) => arr.findIndex(x => x.session_id === s.session_id) === idx)
+    .sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0))
   const allFindings = [...active, ...completed].reduce((sum, s) => sum + s.total_findings, 0)
   const uniqueTargets = new Set([...active, ...completed].map(s => s.target)).size
   const editingTemplate = editingTemplateId ? templates.find(t => t.template_id === editingTemplateId) ?? null : null

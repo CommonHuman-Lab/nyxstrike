@@ -11,6 +11,7 @@ Usage:
         cve_intelligence, exploit_generator, vulnerability_correlator,
         decision_engine, bugbounty_manager, fileupload_framework,
         ctf_manager, ctf_tools, ctf_automator, ctf_coordinator,
+        db, llm_client,
     )
 """
 
@@ -79,3 +80,10 @@ ctf_coordinator = CTFTeamCoordinator()
 ROCKYOU_PATH = wordlist_store.get_word_list_path("rockyou")
 COMMON_DIRB_PATH = wordlist_store.get_word_list_path("common_dirb")
 COMMON_DIRSEARCH_PATH = wordlist_store.get_word_list_path("common_dirsearch")
+
+# ── LLM & database (optional — graceful degradation if unavailable) ───────────
+from .db import NyxStrikeDB
+from .llm_client import LLMClient
+
+db = NyxStrikeDB()
+llm_client = LLMClient()
