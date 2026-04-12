@@ -274,11 +274,6 @@ def analyze_session(
   # ── Parse findings ────────────────────────────────────────────────────────────
   vulnerabilities, risk_level, summary = _parse_findings(response)
 
-  logger.info(
-    "analyze_session: session=%s llm_session=%s vulns=%d risk=%s",
-    session_id, llm_session_id, len(vulnerabilities), risk_level,
-  )
-
   # ── Persist completion ────────────────────────────────────────────────────────
   if db:
     db.update_llm_session(
