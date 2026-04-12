@@ -65,6 +65,7 @@ export const api = {
   terminateProcess: (pid: number) => post<ProcessActionResponse>(`/api/processes/terminate/${pid}`),
   pauseProcess: (pid: number) => post<ProcessActionResponse>(`/api/processes/pause/${pid}`),
   resumeProcess: (pid: number) => post<ProcessActionResponse>(`/api/processes/resume/${pid}`),
+  cancelAiTask: (taskId: string) => post<ProcessActionResponse>(`/api/processes/cancel-ai-task/${taskId}`),
 
   cacheStats: () => get<CacheStatsResponse>('/api/cache/stats'),
   clearCache: () => post<{ success: boolean; message: string }>('/api/cache/clear'),

@@ -7,7 +7,7 @@ import time
 from flask import Blueprint, jsonify, Response, stream_with_context
 from datetime import datetime
 import psutil
-from server_core.process_manager import ProcessManager
+from server_core.process_manager import ProcessManager, AITaskManager
 from server_core.modern_visual_engine import ModernVisualEngine
 import logging
 import json
@@ -46,6 +46,22 @@ def list_processes():
         for pid, info in processes.items():
             _annotate_process(info)
             safe_processes[str(pid)] = _json_safe_process(info)
+
+        # Merge in-process AI tasks so the frontend running-step check sees them
+        ai_tasks = AITaskManager.list_active_tasks()
+        for task_id, info in ai_tasks.items():
+            safe_processes[f"ai:{task_id}"] = {
+                "pid": None,
+                "task_id": task_id,
+                "command": info.get("label", "ai_task"),
+                "status": info.get("status", "running"),
+                "start_time": info.get("start_time", 0),
+                "progress": 0.0,
+                "last_output": "",
+                "bytes_processed": 0,
+                "session_id": info.get("session_id", ""),
+                "ai_task": True,
+            }
 
         return jsonify({
             "success": True,
@@ -102,6 +118,24 @@ def terminate_process(pid):
         logger.error(f"💥 Error terminating process {pid}: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
+@api_process_management_bp.route("/api/processes/cancel-ai-task/<task_id>", methods=["POST"])
+def cancel_ai_task(task_id: str):
+    """Cancel an in-process AI task by its task_id (e.g. ai_analyze_xxxxxxxx).
+
+    The underlying LLM HTTP call cannot be interrupted immediately, but the
+    task is removed from the visible registry at once so the UI reflects the
+    cancellation without delay.
+    """
+    try:
+        found = AITaskManager.cancel_task(task_id)
+        if found:
+            logger.info(f"🛑 AI task {task_id} cancel requested")
+            return jsonify({"success": True, "message": f"AI task {task_id} cancelled"})
+        return jsonify({"success": False, "error": f"AI task {task_id} not found"}), 404
+    except Exception as e:
+        logger.error(f"💥 Error cancelling AI task {task_id}: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
 @api_process_management_bp.route("/api/processes/pause/<int:pid>", methods=["POST"])
 def pause_process(pid):
     """Pause a specific process"""
@@ -146,55 +180,73 @@ def resume_process(pid):
         logger.error(f"💥 Error resuming process {pid}: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
+def _build_dashboard_payload() -> dict:
+    """Build the dashboard dict including both OS processes and in-process AI tasks."""
+    processes = ProcessManager.list_active_processes()
+    current_time = time.time()
+    dashboard_visual = ModernVisualEngine.create_live_dashboard(processes)
+
+    entries = []
+
+    for pid, info in processes.items():
+        runtime = current_time - info["start_time"]
+        progress_fraction = info.get("progress", 0)
+        progress_bar = ModernVisualEngine.render_progress_bar(
+            progress_fraction,
+            width=25,
+            style='cyber',
+            eta=info.get("eta", 0)
+        )
+        entries.append({
+            "pid": pid,
+            "command": info["command"][:60] + "..." if len(info["command"]) > 60 else info["command"],
+            "status": info["status"],
+            "runtime": f"{runtime:.1f}s",
+            "progress_percent": f"{progress_fraction * 100:.1f}%",
+            "progress_bar": progress_bar,
+            "eta": f"{info.get('eta', 0):.0f}s" if info.get('eta', 0) > 0 else "Calculating...",
+            "bytes_processed": info.get("bytes_processed", 0),
+            "last_output": info.get("last_output", "")[:100],
+            "ai_task": False,
+            "task_id": None,
+        })
+
+    # Merge in-process AI tasks (no OS PID)
+    for task_id, info in AITaskManager.list_active_tasks().items():
+        runtime = current_time - info.get("start_time", current_time)
+        entries.append({
+            "pid": None,
+            "task_id": task_id,
+            "command": info.get("label", "ai_task"),
+            "status": info.get("status", "running"),
+            "runtime": f"{runtime:.1f}s",
+            "progress_percent": "—",
+            "progress_bar": "",
+            "eta": "—",
+            "bytes_processed": 0,
+            "last_output": "",
+            "ai_task": True,
+        })
+
+    total = len(processes) + len(AITaskManager.list_active_tasks())
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "total_processes": total,
+        "visual_dashboard": dashboard_visual,
+        "processes": entries,
+        "system_load": {
+            "cpu_percent": psutil.cpu_percent(interval=1),
+            "memory_percent": psutil.virtual_memory().percent,
+            "active_connections": len(psutil.net_connections())
+        }
+    }
+
+
 @api_process_management_bp.route("/api/processes/dashboard", methods=["GET"])
 def process_dashboard():
     """Get enhanced process dashboard with visual status using ModernVisualEngine"""
     try:
-        processes = ProcessManager.list_active_processes()
-        current_time = time.time()
-
-        # Create beautiful dashboard using ModernVisualEngine
-        dashboard_visual = ModernVisualEngine.create_live_dashboard(processes)
-
-        dashboard = {
-            "timestamp": datetime.now().isoformat(),
-            "total_processes": len(processes),
-            "visual_dashboard": dashboard_visual,
-            "processes": [],
-            "system_load": {
-                "cpu_percent": psutil.cpu_percent(interval=1),
-                "memory_percent": psutil.virtual_memory().percent,
-                "active_connections": len(psutil.net_connections())
-            }
-        }
-
-        for pid, info in processes.items():
-            runtime = current_time - info["start_time"]
-            progress_fraction = info.get("progress", 0)
-
-            # Create beautiful progress bar using ModernVisualEngine
-            progress_bar = ModernVisualEngine.render_progress_bar(
-                progress_fraction,
-                width=25,
-                style='cyber',
-                eta=info.get("eta", 0)
-            )
-
-            process_status = {
-                "pid": pid,
-                "command": info["command"][:60] + "..." if len(info["command"]) > 60 else info["command"],
-                "status": info["status"],
-                "runtime": f"{runtime:.1f}s",
-                "progress_percent": f"{progress_fraction * 100:.1f}%",
-                "progress_bar": progress_bar,
-                "eta": f"{info.get('eta', 0):.0f}s" if info.get('eta', 0) > 0 else "Calculating...",
-                "bytes_processed": info.get("bytes_processed", 0),
-                "last_output": info.get("last_output", "")[:100]
-            }
-            dashboard["processes"].append(process_status)
-
-        return jsonify(dashboard)
-
+        return jsonify(_build_dashboard_payload())
     except Exception as e:
         logger.error(f"💥 Error getting process dashboard: {str(e)}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
@@ -209,41 +261,7 @@ def stream_process_dashboard():
         last_json = None
         while True:
             try:
-                processes = ProcessManager.list_active_processes()
-                current_time = time.time()
-                dashboard_visual = ModernVisualEngine.create_live_dashboard(processes)
-                dashboard = {
-                    "timestamp": datetime.now().isoformat(),
-                    "total_processes": len(processes),
-                    "visual_dashboard": dashboard_visual,
-                    "processes": [],
-                    "system_load": {
-                        "cpu_percent": psutil.cpu_percent(interval=1),
-                        "memory_percent": psutil.virtual_memory().percent,
-                        "active_connections": len(psutil.net_connections())
-                    }
-                }
-                for pid, info in processes.items():
-                    runtime = current_time - info["start_time"]
-                    progress_fraction = info.get("progress", 0)
-                    progress_bar = ModernVisualEngine.render_progress_bar(
-                        progress_fraction,
-                        width=25,
-                        style='cyber',
-                        eta=info.get("eta", 0)
-                    )
-                    process_status = {
-                        "pid": pid,
-                        "command": info["command"][:60] + "..." if len(info["command"]) > 60 else info["command"],
-                        "status": info["status"],
-                        "runtime": f"{runtime:.1f}s",
-                        "progress_percent": f"{progress_fraction * 100:.1f}%",
-                        "progress_bar": progress_bar,
-                        "eta": f"{info.get('eta', 0):.0f}s" if info.get('eta', 0) > 0 else "Calculating...",
-                        "bytes_processed": info.get("bytes_processed", 0),
-                        "last_output": info.get("last_output", "")[:100]
-                    }
-                    dashboard["processes"].append(process_status)
+                dashboard = _build_dashboard_payload()
                 js = json.dumps(dashboard, separators=(",", ":"))
                 if js != last_json:
                     yield f"data: {js}\n\n"

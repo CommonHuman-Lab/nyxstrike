@@ -1,5 +1,7 @@
 export interface ProcessEntry {
-  pid: number;
+  pid: number | null;
+  task_id?: string | null;
+  ai_task?: boolean;
   command: string;
   status: string;
   runtime: string;

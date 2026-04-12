@@ -122,3 +122,70 @@ class ProcessManager:
                 except Exception as e:
                     logger.error(f"💥 Error resuming process {pid}: {str(e)}")
             return False
+
+
+# ── In-process AI task tracker ──────────────────────────────────────────────
+# Used by built-in tools (e.g. ai_analyze_session) that run entirely inside the
+# Flask worker thread and therefore never produce an OS PID.  The frontend polls
+# /api/processes/list to decide whether a running-step UI should be restored
+# after navigation; merging these tasks into that response closes the gap.
+
+active_ai_tasks = {}  # task_id (str) -> task info dict
+ai_task_lock = threading.Lock()
+
+
+class AITaskManager:
+    """Lightweight tracker for in-process AI tasks that have no OS PID."""
+
+    @staticmethod
+    def register_task(task_id: str, label: str, session_id: str = "") -> None:
+        """Register a new in-flight AI task."""
+        with ai_task_lock:
+            active_ai_tasks[task_id] = {
+                "task_id": task_id,
+                "label": label,
+                "session_id": session_id,
+                "start_time": time.time(),
+                "status": "running",
+            }
+            logger.info("🤖 AI TASK START: %s — %s", task_id, label)
+
+    @staticmethod
+    def unregister_task(task_id: str) -> None:
+        """Remove an AI task from the active registry (call in a finally block)."""
+        with ai_task_lock:
+            if task_id in active_ai_tasks:
+                active_ai_tasks.pop(task_id)
+                logger.info("🤖 AI TASK DONE: %s", task_id)
+
+    @staticmethod
+    def cancel_task(task_id: str) -> bool:
+        """Mark an AI task as cancelled and remove it from the visible registry.
+
+        The underlying LLM HTTP call cannot be interrupted mid-flight, but
+        marking the task cancelled immediately hides it from the UI.  The
+        ``analyze_session_endpoint`` checks ``is_cancelled`` in its finally
+        block and discards the result if True.
+
+        Returns True if the task was found, False otherwise.
+        """
+        with ai_task_lock:
+            if task_id not in active_ai_tasks:
+                return False
+            active_ai_tasks[task_id]["cancelled"] = True
+            active_ai_tasks[task_id]["status"] = "cancelling"
+            logger.info("🤖 AI TASK CANCEL REQUESTED: %s", task_id)
+        return True
+
+    @staticmethod
+    def is_cancelled(task_id: str) -> bool:
+        """Return True if the task has been marked for cancellation."""
+        with ai_task_lock:
+            info = active_ai_tasks.get(task_id)
+            return bool(info and info.get("cancelled"))
+
+    @staticmethod
+    def list_active_tasks() -> dict:
+        """Return a shallow copy of the active AI tasks dict (excluding cancelling ones)."""
+        with ai_task_lock:
+            return {k: v for k, v in active_ai_tasks.items() if v.get("status") != "cancelling"}

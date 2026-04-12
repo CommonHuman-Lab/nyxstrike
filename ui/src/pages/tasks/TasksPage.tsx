@@ -22,6 +22,7 @@ export default function TasksPage({ demoData }: TasksPageProps) {
     pauseProcess,
     resumeProcess,
     terminateProcess,
+    cancelAiTask,
   } = useProcessDashboard(demoData)
 
   if (loading && !data) return (
@@ -50,6 +51,7 @@ export default function TasksPage({ demoData }: TasksPageProps) {
         onPause={pauseProcess}
         onResume={resumeProcess}
         onTerminate={terminateProcess}
+        onCancelAiTask={cancelAiTask}
       />
     </div>
   )

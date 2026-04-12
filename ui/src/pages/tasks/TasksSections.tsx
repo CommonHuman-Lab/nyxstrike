@@ -84,6 +84,7 @@ export function ProcessesSection({
   onPause,
   onResume,
   onTerminate,
+  onCancelAiTask,
 }: {
   processes: ProcessDashboardResponse['processes']
   actionMsg: string | null
@@ -92,6 +93,7 @@ export function ProcessesSection({
   onPause: (pid: number) => Promise<void>
   onResume: (pid: number) => Promise<void>
   onTerminate: (pid: number) => Promise<void>
+  onCancelAiTask: (taskId: string) => Promise<void>
 }) {
   return (
     <section className="section">
@@ -122,6 +124,8 @@ export function ProcessesSection({
             <span>Actions</span>
           </div>
           {processes.map(process => {
+            const isAiTask = Boolean(process.ai_task)
+            const rowKey = isAiTask ? (process.task_id ?? process.command) : String(process.pid)
             const pct = parseFloat(process.progress_percent) || 0
             const barColor = process.status === 'running'
               ? 'var(--green)'
@@ -130,8 +134,10 @@ export function ProcessesSection({
                 : 'var(--text-dim)'
 
             return (
-              <div key={process.pid} className="tasks-row">
-                <span className="mono tasks-pid">{process.pid}</span>
+              <div key={rowKey} className="tasks-row">
+                <span className="mono tasks-pid" title={isAiTask ? (process.task_id ?? '') : ''}>
+                  {isAiTask ? 'AI' : process.pid}
+                </span>
                 <span className="mono tasks-cmd" title={process.command}>{process.command}</span>
                 <span className={`tasks-status tasks-status--${process.status}`}>{process.status}</span>
                 <div className="tasks-progress">
@@ -143,19 +149,26 @@ export function ProcessesSection({
                 <span className="mono">{process.runtime}</span>
                 <span className="mono">{process.eta}</span>
                 <div className="tasks-actions">
-                  {process.status !== 'paused' && (
-                    <button className="tasks-btn tasks-btn--pause" title="Pause" onClick={() => onPause(process.pid)}>
+                  {!isAiTask && process.status !== 'paused' && (
+                    <button className="tasks-btn tasks-btn--pause" title="Pause" onClick={() => onPause(process.pid as number)}>
                       <PauseCircle size={14} />
                     </button>
                   )}
-                  {process.status === 'paused' && (
-                    <button className="tasks-btn tasks-btn--resume" title="Resume" onClick={() => onResume(process.pid)}>
+                  {!isAiTask && process.status === 'paused' && (
+                    <button className="tasks-btn tasks-btn--resume" title="Resume" onClick={() => onResume(process.pid as number)}>
                       <PlayCircle size={14} />
                     </button>
                   )}
-                  <button className="tasks-btn tasks-btn--stop" title="Terminate" onClick={() => onTerminate(process.pid)}>
-                    <StopCircle size={14} />
-                  </button>
+                  {isAiTask ? (
+                    <button className="tasks-btn tasks-btn--stop" title="Cancel AI task"
+                            onClick={() => onCancelAiTask(process.task_id ?? '')}>
+                      <StopCircle size={14} />
+                    </button>
+                  ) : (
+                    <button className="tasks-btn tasks-btn--stop" title="Terminate" onClick={() => onTerminate(process.pid as number)}>
+                      <StopCircle size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
             )

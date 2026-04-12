@@ -54,14 +54,26 @@ def analyze_session_endpoint():
     if not session_id:
       return jsonify({"success": False, "error": "session_id is required"}), 400
 
+    import uuid as _uuid
     from server_core.llm_agent import analyze_session
+    from server_core.process_manager import AITaskManager
 
-    result = analyze_session(
-      session_id=session_id,
-      llm_client=llm_client,
-      db=db,
-      run_history=run_history,
-    )
+    task_id = f"ai_analyze_{_uuid.uuid4().hex[:8]}"
+    AITaskManager.register_task(task_id, "ai_analyze_session", session_id=session_id)
+    cancelled = False
+    try:
+      result = analyze_session(
+        session_id=session_id,
+        llm_client=llm_client,
+        db=db,
+        run_history=run_history,
+      )
+      cancelled = AITaskManager.is_cancelled(task_id)
+    finally:
+      AITaskManager.unregister_task(task_id)
+
+    if cancelled:
+      return jsonify({"success": False, "error": "Analysis was cancelled"}), 200
 
     status_code = 200 if result.get("success") else 502
     return jsonify(result), status_code

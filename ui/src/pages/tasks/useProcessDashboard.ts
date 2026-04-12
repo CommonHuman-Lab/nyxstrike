@@ -14,6 +14,7 @@ interface UseProcessDashboardResult {
   pauseProcess: (pid: number) => Promise<void>
   resumeProcess: (pid: number) => Promise<void>
   terminateProcess: (pid: number) => Promise<void>
+  cancelAiTask: (taskId: string) => Promise<void>
 }
 
 export function useProcessDashboard(
@@ -175,5 +176,6 @@ export function useProcessDashboard(
     pauseProcess: (pid: number) => runAction(() => api.pauseProcess(pid), 'Paused'),
     resumeProcess: (pid: number) => runAction(() => api.resumeProcess(pid), 'Resumed'),
     terminateProcess: (pid: number) => runAction(() => api.terminateProcess(pid), 'Terminated'),
+    cancelAiTask: (taskId: string) => runAction(() => api.cancelAiTask(taskId), 'Cancelled'),
   }
 }
