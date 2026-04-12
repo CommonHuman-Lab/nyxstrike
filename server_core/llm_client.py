@@ -45,6 +45,8 @@ def _cfg(key: str, default: str = "") -> str:
   return os.environ.get(key) or config_core.get(key, default)
 
 
+DEFAULT_OLLAMA_URL = "http://localhost:11434"
+
 # ── Backend implementations ────────────────────────────────────────────────────
 
 class OllamaBackend:
@@ -69,6 +71,8 @@ class OllamaBackend:
       "prompt": prompt,
       "stream": False,
       "options": {
+        "temperature": 0.7,
+        "top_p": 0.9,
         "num_predict": 4096,
       },
     }

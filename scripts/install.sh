@@ -246,14 +246,10 @@ install_ollama_model() {
       echo "Ollama install failed. Skipping AI model setup."
       return
     fi
-  else
-    echo "Ollama already installed: $(ollama --version 2>/dev/null || true)"
   fi
 
   # Step 2: ensure the base model is pulled
-  if ollama list 2>/dev/null | grep -qF "${OLLAMA_MODEL_BASE}"; then
-    echo "Base model already present: ${OLLAMA_MODEL_BASE}"
-  else
+  if ! ollama list 2>/dev/null | grep -qF "${OLLAMA_MODEL_BASE}"; then
     echo "Pulling base model: ${OLLAMA_MODEL_BASE} (this may take a while)..."
     if ! ollama pull "${OLLAMA_MODEL_BASE}"; then
       echo "Failed to pull base model. Skipping AI model creation."
@@ -261,26 +257,24 @@ install_ollama_model() {
     fi
   fi
 
-  # Step 3: check Modelfile exists
-  if [[ ! -f "${modelfile}" ]]; then
-    echo "Modelfile not found at ${modelfile}. Skipping model creation."
-    return
-  fi
+  # # Step 3: check Modelfile exists
+  # if [[ ! -f "${modelfile}" ]]; then
+  #   echo "Modelfile not found at ${modelfile}. Skipping model creation."
+  #   return
+  # fi
 
-  # Step 4: create (or re-create) the named model
-  if ollama list 2>/dev/null | grep -qF "${OLLAMA_MODEL_NAME}"; then
-    echo "Model '${OLLAMA_MODEL_NAME}' already exists. Recreating from Modelfile..."
-  else
-    echo "Creating model '${OLLAMA_MODEL_NAME}' from Modelfile..."
-  fi
+  # # Step 4: create (or re-create) the named model
+  # if ollama list 2>/dev/null | grep -qF "${OLLAMA_MODEL_NAME}"; then
+  #   echo "Model '${OLLAMA_MODEL_NAME}' already exists. Recreating from Modelfile..."
+  # else
+  #   echo "Creating model '${OLLAMA_MODEL_NAME}' from Modelfile..."
+  # fi
 
-  if ! ollama create "${OLLAMA_MODEL_NAME}" -f "${modelfile}"; then
-    echo "Model creation failed. You can retry manually:"
-    echo "  ollama create ${OLLAMA_MODEL_NAME} -f ${modelfile}"
-    return
-  fi
-
-  echo "AI model ready. Run it with: ollama run ${OLLAMA_MODEL_NAME}"
+  # if ! ollama create "${OLLAMA_MODEL_NAME}" -f "${modelfile}"; then
+  #   echo "Model creation failed. You can retry manually:"
+  #   echo "  ollama create ${OLLAMA_MODEL_NAME} -f ${modelfile}"
+  #   return
+  # fi
 }
 
 clone_or_update_git_tools() {
@@ -400,17 +394,12 @@ done
 
 update_self_repo
 
-TOTAL_STEPS=4
-if [[ "${INSTALL_AI_MODEL}" == true ]]; then
-  TOTAL_STEPS=5
-fi
-
-echo "[1/${TOTAL_STEPS}] Preparing virtual environment..."
+echo "[1/4] Preparing virtual environment..."
 if [[ ! -d "${VENV_DIR}" ]]; then
   "${PYTHON_BIN}" -m venv "${VENV_DIR}"
 fi
 
-echo "[2/${TOTAL_STEPS}] Syncing Python dependencies...(will take a while on first run)"
+echo "[2/4] Syncing Python dependencies...(will take a while on first run)"
 install_requirements_file "${ROOT_DIR}/requirements.txt"
 
 if [[ "${INSTALL_TOOLS}" == true && -f "${ROOT_DIR}/requirements-extra.txt" ]]; then
@@ -423,21 +412,21 @@ if [[ "${INSTALL_TOOLS}" == true && "${INSTALL_BIG_PACKAGES}" == true && -f "${R
 fi
 
 if [[ "${INSTALL_TOOLS}" == true ]]; then
-  echo "[3/${TOTAL_STEPS}] Installing external tools..."
+  echo "[3/4] Installing external tools..."
   install_external_tools
 else
-  echo "[3/${TOTAL_STEPS}] Skipping external tools (use --install-tools to enable)."
+  echo "[3/4] Skipping external tools (use --install-tools to enable)."
 fi
 
 if [[ "${INSTALL_TOOLS}" == true ]]; then
-  echo "[4/${TOTAL_STEPS}] Syncing git tool repositories..."
+  echo "[4/4] Syncing git tool repositories..."
   clone_or_update_git_tools
 else
-  echo "[4/${TOTAL_STEPS}] Skipping git tool repositories (use --install-tools to enable)."
+  echo "[4/4] Skipping git tool repositories (use --install-tools to enable)."
 fi
 
 if [[ "${INSTALL_AI_MODEL}" == true ]]; then
-  echo "[5/${TOTAL_STEPS}] Setting up AI model (Ollama + ${OLLAMA_MODEL_NAME})..."
+  echo "[5/5] Setting up AI model..."
   install_ollama_model
 fi
 
