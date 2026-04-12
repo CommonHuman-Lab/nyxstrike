@@ -164,8 +164,6 @@ Configure `.vscode/settings.json`:
 
 </details>
 
----
-
 ### Security Configuration
 
 <details>
