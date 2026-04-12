@@ -6,7 +6,7 @@ from typing import Any, Dict
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, Response, stream_with_context
 import server_core.config_core as config_core
-from server_core.singletons import cache, telemetry, enhanced_process_manager
+from server_core.singletons import cache, telemetry, enhanced_process_manager, llm_client
 import server_api.ops.system_monitoring as _sm
 from server_api.ops.system_monitoring import _get_tool_availability
 from server_core.tool_constants import HEALTH_TOOL_CATEGORIES
@@ -125,6 +125,14 @@ def initialize_update_status_check():
     else:
         logger.info("Version check complete: up to date (%s)", status.get("current_version"))
 
+def _get_llm_status():
+  try:
+    return llm_client.status()
+  except Exception as e:
+    logger.debug("LLM status check failed: %s", e)
+    return {"available": False, "error": str(e)}
+
+
 def build_dashboard_data():
   tools_status = _get_tool_availability()
   essential_tools = HEALTH_TOOL_CATEGORIES["essential"]
@@ -162,6 +170,9 @@ def build_dashboard_data():
 
       # Cache stats
       "cache_stats": cache.get_stats(),
+
+      # LLM status
+      "llm_status": _get_llm_status(),
   }
 
 @api_web_dashboard_bp.route("/web-dashboard", methods=["GET"])
