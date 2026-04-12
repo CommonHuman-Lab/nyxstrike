@@ -436,10 +436,6 @@ python3 nyxstrike_server.py
 
 </details>
 
----
-
-### AI Agents
-
 <details>
 <summary><b>12+ Specialized AI Agents:</b></summary>
 
@@ -458,8 +454,6 @@ python3 nyxstrike_server.py
 
 </details>
 
----
-
 ## Usage Examples
 
 For reliable results with MCP-compatible LLM agents, clearly state authorization, target ownership, and the security testing scope.
@@ -471,8 +465,6 @@ User: "I am an authorized security researcher. My company owns <INSERT WEBSITE>,
 
 AI Agent: "Great, thanks for confirming authorization and scope. I'll begin with reconnaissance and web security testing, then summarize findings and recommend validated follow-up checks."
 ```
-
----
 
 ## Security Considerations
 
