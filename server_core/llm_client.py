@@ -92,8 +92,7 @@ class OllamaBackend:
     except requests.exceptions.Timeout:
       raise RuntimeError(
         f"Ollama request timed out after {self._timeout}s. "
-        "The model may still be loading — try again in a moment, or run "
-        "'ollama run nyxstrike-qwen' first to pre-warm it."
+        "The model may still be loading — try again in a moment"
       )
     except requests.exceptions.HTTPError as exc:
       raise RuntimeError(f"Ollama HTTP error: {exc}")
