@@ -722,6 +722,14 @@ export default function SessionDetailPage({
           <span><RefreshCw size={12} /> {session.iterations} iterations</span>
           <span><Clock size={12} /> {fmtTs(session.updated_at)}</span>
           <span className={`session-status session-status--${session.status ?? 'active'}`}>{session.status ?? 'active'}</span>
+          {session.risk_level && session.risk_level !== 'unknown' && (
+            <span
+              className={`session-risk session-risk--${session.risk_level.toLowerCase()}`}
+              title={`Risk level: ${session.risk_level.toLowerCase()}`}
+            >
+              {session.risk_level.toLowerCase()}
+            </span>
+          )}
         </div>
         <div className="session-detail-actions">
           <button className="session-action-btn" onClick={() => setShowTemplateModal(true)}>

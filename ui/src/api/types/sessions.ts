@@ -26,6 +26,7 @@ export interface SessionSummary {
   target: string;
   status?: string;
   total_findings: number;
+  risk_level?: string;
   iterations: number;
   tools_executed: string[];
   workflow_steps?: AttackChainStep[];
