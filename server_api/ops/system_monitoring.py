@@ -30,6 +30,7 @@ api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
 _tool_availability_cache: Dict[str, bool] = {}
 _tool_availability_lock = threading.Lock()
 _tool_availability_last_refresh: float = 0.0
+_tool_availability_refresh_in_progress = False
 
 # Precompute the flat list of all tools at module load
 ALL_TOOLS_FLAT = list({
@@ -40,79 +41,85 @@ ALL_TOOLS_FLAT = list({
 
 def _refresh_tool_availability() -> None:
     """Probe all tools with `which` in parallel and update the module-level cache."""
-    global _tool_availability_last_refresh
+    global _tool_availability_last_refresh, _tool_availability_refresh_in_progress
 
-    def probe(tool: str) -> tuple:
-        if tool in BINARY_NAME_OVERRIDES:
-            tool_to_check = BINARY_NAME_OVERRIDES[tool]
-        else:
-            tool_to_check = tool
-        if tool_to_check in BUILT_IN_TOOLS:
-            # Always report built-ins as available without probing
-            return tool, True
-        try:
-            if tool_to_check in REQUIRE_DPKG_CHECK:
-                # For tools that require dpkg, check if the package is installed
-                result = subprocess.run(
-                    ["dpkg", "-s", tool_to_check],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                return tool, result.returncode == 0
-            elif tool_to_check in REQUIRE_PIP_CHECK:
-                # For tools that require pip, check if the package is installed
-                result = subprocess.run(
-                    [sys.executable, "-m", "pip", "list"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return tool, tool_to_check in result.stdout
-            elif tool_to_check in REQUIRE_GEM_CHECK:
-                # For tools that require gem, check if the package is installed
-                result = subprocess.run(
-                    ["gem", "list"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return tool, tool_to_check in result.stdout
-            elif tool_to_check in REQUIRE_CARGO_CHECK:
-                # For tools that require cargo, check if the package is installed
-                result = subprocess.run(
-                    ["cargo", "install", "--list"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return tool, tool_to_check in result.stdout
-            else:
-                result = subprocess.run(
-                    ["which", tool_to_check],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                return tool, result.returncode == 0
-        except Exception:
-            return tool, False
-
-    with ThreadPoolExecutor(max_workers=20) as pool:
-        results = dict(pool.map(probe, ALL_TOOLS_FLAT))
-
+    # Prevent concurrent refreshes — only one probe run at a time.
     with _tool_availability_lock:
-        _tool_availability_cache.update(results)
-        _tool_availability_last_refresh = time.time()
+        if _tool_availability_refresh_in_progress:
+            return
+        _tool_availability_refresh_in_progress = True
 
-    installed = sorted(t for t, ok in results.items() if ok)
-    missing = sorted(t for t, ok in results.items() if not ok)
-    RED = ModernVisualEngine.COLORS['HACKER_RED']
-    RESET = ModernVisualEngine.COLORS['RESET']
-    lines = ["Tool availability refreshed: %d/%d available" % (len(installed), len(results))]
-#    for tool in installed:
-#        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
-    for tool in missing:
-        lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
-    logger.info("\n".join(lines))
+    try:
+        def probe(tool: str) -> tuple:
+            if tool in BINARY_NAME_OVERRIDES:
+                tool_to_check = BINARY_NAME_OVERRIDES[tool]
+            else:
+                tool_to_check = tool
+            if tool_to_check in BUILT_IN_TOOLS:
+                # Always report built-ins as available without probing
+                return tool, True
+            try:
+                if tool_to_check in REQUIRE_DPKG_CHECK:
+                    result = subprocess.run(
+                        ["dpkg", "-s", tool_to_check],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    return tool, result.returncode == 0
+                elif tool_to_check in REQUIRE_PIP_CHECK:
+                    result = subprocess.run(
+                        [sys.executable, "-m", "pip", "list"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
+                        text=True,
+                    )
+                    return tool, tool_to_check in result.stdout
+                elif tool_to_check in REQUIRE_GEM_CHECK:
+                    result = subprocess.run(
+                        ["gem", "list"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
+                        text=True,
+                    )
+                    return tool, tool_to_check in result.stdout
+                elif tool_to_check in REQUIRE_CARGO_CHECK:
+                    result = subprocess.run(
+                        ["cargo", "install", "--list"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
+                        text=True,
+                    )
+                    return tool, tool_to_check in result.stdout
+                else:
+                    result = subprocess.run(
+                        ["which", tool_to_check],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    return tool, result.returncode == 0
+            except Exception:
+                return tool, False
+
+        with ThreadPoolExecutor(max_workers=20) as pool:
+            results = dict(pool.map(probe, ALL_TOOLS_FLAT))
+
+        with _tool_availability_lock:
+            _tool_availability_cache.update(results)
+            _tool_availability_last_refresh = time.time()
+
+        installed = sorted(t for t, ok in results.items() if ok)
+        missing = sorted(t for t, ok in results.items() if not ok)
+        RED = ModernVisualEngine.COLORS['HACKER_RED']
+        RESET = ModernVisualEngine.COLORS['RESET']
+        lines = ["Tool availability refreshed: %d/%d available" % (len(installed), len(results))]
+    #    for tool in installed:
+    #        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
+        for tool in missing:
+            lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
+        logger.info("\n".join(lines))
+    finally:
+        with _tool_availability_lock:
+            _tool_availability_refresh_in_progress = False
 
 
 def _get_tool_availability() -> Dict[str, bool]:
