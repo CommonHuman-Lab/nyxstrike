@@ -112,8 +112,8 @@ def _refresh_tool_availability() -> None:
         RED = ModernVisualEngine.COLORS['HACKER_RED']
         RESET = ModernVisualEngine.COLORS['RESET']
         lines = ["Tool availability refreshed: %d/%d available" % (len(installed), len(results))]
-    #    for tool in installed:
-    #        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
+        # for tool in installed:
+        #     lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
         for tool in missing:
             lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
         logger.info("\n".join(lines))
