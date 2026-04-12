@@ -36,6 +36,13 @@ export type {
 export type { CacheStatsResponse } from './cache';
 
 export type {
+  LlmSession,
+  LlmSessionDetailResponse,
+  LlmSessionsResponse,
+  LlmVulnerability,
+} from './llm';
+
+export type {
   AttackChain,
   AttackChainStep,
   ClassifyTaskResponse,

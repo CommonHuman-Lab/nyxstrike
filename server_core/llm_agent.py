@@ -310,6 +310,8 @@ def analyze_session(
     logger.warning("analyze_session: failed to write back to session JSON: %s", _wb_exc)
 
   # ── Build stdout for dashboard display ───────────────────────────────────────
+  completed_at_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
   vuln_lines = []
   for i, v in enumerate(vulnerabilities, 1):
     title = v.get("title", "Unnamed finding")
@@ -322,6 +324,7 @@ def analyze_session(
 
   stdout = (
     f"Session:       {session_id}\n"
+    f"Date:          {completed_at_iso}\n"
     f"Target:        {target}\n"
     f"Logs analysed: {len(relevant_logs)}\n"
     f"Risk level:    {risk_level}\n"
@@ -334,10 +337,12 @@ def analyze_session(
     "stdout": stdout,
     "stderr": "",
     "return_code": 0,
+    "timestamp": completed_at_iso,
     "llm_session_id": llm_session_id,
     "session_id": session_id,
     "target": target,
     "objective": objective,
+    "completed_at": completed_at_iso,
     "provider": llm_client.provider,
     "model": llm_client.model,
     "risk_level": risk_level,

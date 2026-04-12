@@ -13,6 +13,14 @@ import {
 import { TokenGate } from './components/TokenGate'
 import { ToastProvider } from './components/ToastProvider'
 import type { RunHistoryEntry, HistoryPoint } from './shared/types'
+
+/** Extract the `Date: <ISO>` line written by analyze-session into stdout. */
+function parseDateFromStdout(stdout: string): Date | null {
+  const m = stdout.match(/^Date:\s+(\S+)/m)
+  if (!m) return null
+  const d = new Date(m[1])
+  return isNaN(d.getTime()) ? null : d
+}
 import { routeFromHash, type Page } from './app/routing'
 import { getToolsStatusWithParents } from './app/tools'
 import { TopBar } from './app/TopBar'
@@ -227,7 +235,7 @@ export default function App() {
             source: 'server' as const,
             tool: e.tool,
             params: e.params,
-            ts: e.timestamp ? new Date(e.timestamp) : new Date(),
+            ts: e.timestamp ? new Date(e.timestamp) : (parseDateFromStdout(e.stdout ?? '') ?? new Date()),
             result: {
               stdout: e.stdout,
               stderr: e.stderr,

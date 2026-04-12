@@ -8,6 +8,8 @@ import type {
   CreateSessionPayload,
   CreateSessionTemplatePayload,
   UpdateSessionTemplatePayload,
+  LlmSessionsResponse,
+  LlmSessionDetailResponse,
   PatchSettingsResponse,
   PatchWordlistsResponse,
   PoolStatsResponse,
@@ -105,4 +107,8 @@ export const api = {
     ),
   classifyTask: (description: string) =>
     post<ClassifyTaskResponse>('/api/intelligence/classify-task', { description }),
+  llmSessions: (limit = 50) =>
+    get<LlmSessionsResponse>(`/api/intelligence/llm-agent-sessions?limit=${limit}`),
+  llmSessionDetail: (llmSessionId: string) =>
+    get<LlmSessionDetailResponse>(`/api/intelligence/llm-agent-scan/${llmSessionId}`),
 };

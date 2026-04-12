@@ -6,6 +6,7 @@ import { StatCard } from '../../components/StatCard'
 import { RunResultModal } from '../../components/RunResultModal'
 import { type RunHistoryEntry } from '../../shared/types'
 import { ReportsBreakdownSection, ReportsTimelineSection } from './ReportsSections'
+import { AiAnalysisSection } from './AiAnalysisSection'
 import { extractTarget, type GroupBy } from './reportUtils'
 import './ReportsPage.css'
 
@@ -96,6 +97,8 @@ export default function ReportsPage({ runHistory }: ReportsPageProps) {
         toggleExpanded={toggleExpanded}
         onOpenEntry={setModalEntry}
       />
+
+      <AiAnalysisSection />
     </div>
   )
 }
