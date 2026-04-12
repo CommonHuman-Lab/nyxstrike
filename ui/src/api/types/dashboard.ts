@@ -43,10 +43,11 @@ export interface ResourceUsage {
   cpu_percent: number;
   memory_total_gb: number;
   memory_percent: number;
-  memory_available_gb: number;
+  /** Not emitted by /api/system/resources/stream (unused by UI). */
+  memory_available_gb?: number;
   memory_used_gb: number;
   disk_percent: number;
-  disk_free_gb: number;
+  disk_free_gb?: number;
   disk_used_gb: number;
   disk_total_gb: number;
   load_avg?: number[];

@@ -3,7 +3,7 @@ import { api } from '../../api'
 import type { ResourceUsage, SystemResourcesResponse } from '../../api'
 import type { HistoryPoint } from '../../shared/types'
 
-const HISTORY_MAX = 30
+const HISTORY_MAX = 20
 const RECONNECT_CAP_MS = 30_000
 
 export interface SystemResourcesState {
@@ -50,8 +50,10 @@ export function useSystemResources(
           network_bytes_sent: payload.resources.network_bytes_sent,
           network_bytes_recv: payload.resources.network_bytes_recv,
         }
-        const next = [...prev, point]
-        return next.length > HISTORY_MAX ? next.slice(next.length - HISTORY_MAX) : next
+        const combined = [...prev, point]
+        return combined.length <= HISTORY_MAX
+          ? combined
+          : combined.slice(combined.length - HISTORY_MAX)
       })
     }
 

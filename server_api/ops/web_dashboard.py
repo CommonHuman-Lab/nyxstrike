@@ -178,22 +178,32 @@ def build_dashboard_data():
 # ── Dedicated system-resources SSE stream ────────────────────────────────────
 @api_web_dashboard_bp.route("/api/system/resources/stream", methods=["GET"])
 def stream_system_resources():
-    """SSE endpoint — streams current system resource usage every 3 seconds.
+    """SSE endpoint — streams a trimmed resource snapshot every 3 seconds.
 
-    Emits a keepalive comment when stable metrics (disk, memory total) haven't
-    changed so the connection stays open through proxies without wasting bandwidth.
-    The always-changing fields (cpu_percent, memory_percent, network counters) are
-    included in every emitted data event but excluded from change detection so that
-    true disk/tool changes still trigger a real event.
+    Only the fields actually consumed by the UI are emitted:
+      cpu_percent, memory_percent, memory_used_gb, memory_total_gb,
+      disk_percent, disk_used_gb, disk_total_gb,
+      network_bytes_sent, network_bytes_recv, load_avg.
+
+    Change detection ignores the always-volatile metrics (cpu, memory %,
+    network counters) so a keepalive comment is emitted when only those
+    change, and a real data event fires only when disk or load_avg changes.
     """
-    # Fields that fluctuate every sample — exclude from diff, include in payload.
-    _VOLATILE = {"cpu_percent", "memory_percent", "memory_available_gb",
-                 "memory_used_gb", "network_bytes_sent", "network_bytes_recv",
-                 "timestamp"}
+    # Fields included in the stream payload (UI-consumed only).
+    _KEEP = {
+        "cpu_percent", "memory_percent", "memory_used_gb", "memory_total_gb",
+        "disk_percent", "disk_used_gb", "disk_total_gb",
+        "network_bytes_sent", "network_bytes_recv", "load_avg",
+    }
+    # Subset of _KEEP that fluctuates every sample — excluded from diff.
+    _VOLATILE = {"cpu_percent", "memory_percent", "network_bytes_sent", "network_bytes_recv"}
 
-    def _stable_key(usage: dict) -> str:
+    def _trim(usage: dict) -> dict:
+        return {k: v for k, v in usage.items() if k in _KEEP}
+
+    def _stable_key(trimmed: dict) -> str:
         return json.dumps(
-            {k: v for k, v in usage.items() if k not in _VOLATILE},
+            {k: v for k, v in trimmed.items() if k not in _VOLATILE},
             separators=(",", ":"),
             sort_keys=True,
         )
@@ -203,10 +213,11 @@ def stream_system_resources():
         while True:
             try:
                 usage = enhanced_process_manager.resource_monitor.get_current_usage()
+                trimmed = _trim(usage)
                 ts = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-                payload = {"resources": usage, "resources_timestamp": ts}
-                stable = _stable_key(usage)
+                stable = _stable_key(trimmed)
                 if stable != last_stable:
+                    payload = {"resources": trimmed, "resources_timestamp": ts}
                     yield f"data: {json.dumps(payload, separators=(',', ':'))}\n\n"
                     last_stable = stable
                 else:
