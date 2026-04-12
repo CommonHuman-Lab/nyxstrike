@@ -487,8 +487,6 @@ AI Agent: "Great, thanks for confirming authorization and scope. I'll begin with
 - ❌ **Malicious Activities** - No illegal or harmful activities
 - ❌ **Data Theft** - No unauthorized data access or exfiltration
 
----
-
 ## License
 
 This project is licensed under the AGPLv3.
