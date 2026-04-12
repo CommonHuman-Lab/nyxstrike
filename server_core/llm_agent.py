@@ -299,6 +299,16 @@ def analyze_session(
     for vuln in vulnerabilities:
       db.save_llm_vulnerability(llm_session_id, vuln)
 
+  # ── Write findings back to the workflow session JSON ─────────────────────────
+  try:
+    from server_core.session_flow import update_session
+    update_session(session_id, {
+      "risk_level": risk_level,
+      "total_findings": len(vulnerabilities),
+    })
+  except Exception as _wb_exc:
+    logger.warning("analyze_session: failed to write back to session JSON: %s", _wb_exc)
+
   # ── Build stdout for dashboard display ───────────────────────────────────────
   vuln_lines = []
   for i, v in enumerate(vulnerabilities, 1):

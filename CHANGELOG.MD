@@ -5,27 +5,16 @@ Precise summary based on GitHub release notes and current branch changes.
 ## 1.4.0 - nullbytecobra (next)
 
 ### LLM session analysis
-- Added `analyze_session` — passive LLM analysis pass that reads existing workflow session run logs, interprets them, and persists structured findings (vulnerabilities, risk level, summary) to NyxStrikeDB. The LLM does not dispatch tools.
-- Added `POST /api/intelligence/analyze-session` Flask endpoint and `analyze_session` MCP tool.
-- Added `NyxStrikeDB` (SQLite) for persisting LLM analysis sessions and vulnerability findings, with `GET /api/intelligence/llm-agent-scan/<session_id>` and `GET /api/intelligence/llm-agent-sessions` retrieval endpoints.
+- Added `analyze_session` — passive LLM analysis pass that reads existing workflow session run logs, interprets them, and persists structured findings.
+- Added `NyxStrikeDB` (SQLite) for persisting LLM analysis sessions and vulnerability findings.
 - Added `LLMClient` — provider-agnostic LLM adapter supporting Ollama, OpenAI, and Anthropic backends; `GET /api/intelligence/llm-status` health endpoint.
-- Added AI Recon session type with dedicated frontend card (`/api/ai-recon/session`).
+- Added AI Recon session type.
 
 ### New tools
 - Added `http_headers` tool — fetches and displays HTTP response headers for a target URL.
 - Added `dig` tool — DNS lookup via `dig` with configurable record type and nameserver.
-- Refactored `whois` to use the shared `execute_command` pattern.
 
-### Sessions UI
-- Active and completed sessions are now sorted newest-first.
-- Added AI Recon session card variant to the sessions page.
-
-### Configuration
-- All `NYXSTRIKE_LLM_*` settings (`PROVIDER`, `MODEL`, `URL`, `API_KEY`, `TIMEOUT`, `MAX_LOOPS`) are now defined in `config.py` as proper defaults, overridable via `config_local.json` or environment variables — no source edits needed.
-
-### Project rename
-- Renamed project from HexStrike to NyxStrike across all entrypoints, MCP client, config files, assets, docs, and agent definitions (`nyxstrike_server.py`, `nyxstrike_mcp.py`, `nyxstrike-ai-mcp.json`).
-- Standardised internal module naming: `api_client.py`, `cli_colors.py`, cache class names, and logging file names.
+### Others
 - Updated `scripts/run.sh` for dual-venv detection and correct MCP default mode.
 
 ## 1.3.0 - shellshark
