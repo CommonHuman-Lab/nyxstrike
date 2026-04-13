@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # Usage:
 #   ./nyxstrike.sh                        # MCP launcher mode (default, used by 5ire)
-#   ./nyxstrike.sh -a                     # Update + install tools + start server  (recommended)
+#   ./nyxstrike.sh -a                     # Update + start server  (recommended)
 #   ./nyxstrike.sh -a -ai                 # Same + AI model (~8.4 GB RAM)
 #   ./nyxstrike.sh -a -ai-small           # Same + smaller AI model (~2.5 GB RAM)
 #
@@ -469,7 +469,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     -a|--all)
       UPDATE_SELF=true
-      INSTALL_TOOLS=true
       DO_SETUP=true
       RUN_SERVER=true
       shift
@@ -510,7 +509,7 @@ while [[ $# -gt 0 ]]; do
       echo "NyxStrike"
       echo ""
       echo "Setup:"
-      echo "  -a, --all               Start here — update repo + install tools + start server"
+      echo "  -a, --all               Start here — update repo + start server"
       echo "  -s, --update-self       git pull this repo (skips if local changes present)"
       echo "  -t, --install-tools     Install external apt/go/cargo tools and clone git_tools"
       echo "  -b, --install-big-packages  Install heavy optional Python extras (implies -t)"

@@ -49,11 +49,14 @@ cd nyxstrike
 # Start here
 ./nyxstrike.sh -a
 
+# Start and install external tools
+./nyxstrike.sh -a -t
+
 # With AI model (~8.4 GB RAM required)
-./nyxstrike.sh -a -ai
+./nyxstrike.sh -a -t -ai
 
 # With smaller AI model (~2.5 GB RAM, low-spec machines)
-./nyxstrike.sh -a -ai-small
+./nyxstrike.sh -a -t -ai-small
 
 ```
 
