@@ -174,6 +174,9 @@ install_external_tools() {
     if ! command -v apt >/dev/null 2>&1; then
       echo "Skipping apt packages: apt is not available on this system."
     else
+      echo "Updating apt package lists..."
+      sudo apt-get update -qq
+
       local apt_to_install=()
       local apt_entry="" apt_pkg="" apt_bin=""
 
