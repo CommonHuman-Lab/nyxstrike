@@ -41,7 +41,7 @@ def radare2():
         if commands and os.path.exists("/tmp/r2_commands.txt"):
             try:
                 os.remove("/tmp/r2_commands.txt")
-            except:
+            except OSError:
                 pass
 
         logger.info(f"📊 Radare2 analysis completed for {binary}")

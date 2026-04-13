@@ -3,6 +3,7 @@
 from typing import Dict, Any
 from datetime import datetime
 import asyncio
+import json
 
 def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, HexStrikeColors):
     @mcp.tool()
@@ -82,7 +83,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
 
         try:
             context_dict = json.loads(context) if context != "{}" else {}
-        except:
+        except (json.JSONDecodeError, ValueError):
             context_dict = {}
 
         data = {
