@@ -856,6 +856,56 @@
   font-size: 11px;
 }
 
+.session-prior-runs {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.session-prior-runs-label {
+  margin: 0 0 2px 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.session-prior-run {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.session-prior-run-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  background: var(--bg-card);
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 11px;
+  text-align: left;
+}
+
+.session-prior-run-toggle:hover {
+  background: color-mix(in srgb, var(--border) 30%, var(--bg-card));
+  color: var(--text);
+}
+
+.session-prior-run-body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-main);
+}
+
 .session-detail-meta-row {
   display: flex;
   flex-wrap: wrap;

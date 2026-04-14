@@ -9,6 +9,7 @@ import type {
   CreateSessionFromTemplatePayload,
   CreateSessionPayload,
   CreateSessionTemplatePayload,
+  FollowUpSessionResponse,
   GenerateAiReportPayload,
   GenerateReportPayload,
   UpdateFindingPayload,
@@ -196,6 +197,11 @@ export const api = {
     get<LlmSessionDetailResponse>(`/api/intelligence/llm-agent-scan/${llmSessionId}`),
   analyzeSession: (sessionId: string) =>
     post<AnalyzeSessionResponse>('/api/intelligence/analyze-session', {
+      session_id: sessionId,
+      save_to_notes: true,
+    }),
+  followUpSession: (sessionId: string) =>
+    post<FollowUpSessionResponse>('/api/intelligence/follow-up-session', {
       session_id: sessionId,
       save_to_notes: true,
     }),

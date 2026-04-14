@@ -57,6 +57,12 @@ export type PersistedStepResult = {
   stderr?: string
 }
 
+export function normalizePersistedResults(raw: unknown): PersistedStepResult[] {
+  if (Array.isArray(raw)) return raw.filter(v => v && typeof v === 'object') as PersistedStepResult[]
+  if (raw && typeof raw === 'object') return [raw as PersistedStepResult]
+  return []
+}
+
 export type StepArtifacts = {
   urls: string[]
   domains: string[]

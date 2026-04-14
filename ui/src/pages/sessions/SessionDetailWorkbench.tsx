@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Download, FileText, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
-import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { ParamField } from '../../components/tool-run/ParamField'
 import type { AttackChainStep, Tool, ToolExecResponse } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
@@ -27,7 +27,7 @@ interface SessionDetailWorkbenchProps {
   setStepFieldValues: Dispatch<SetStateAction<Record<string, Record<string, string>>>>
   showOptionalByStep: Record<string, boolean>
   setShowOptionalByStep: Dispatch<SetStateAction<Record<string, boolean>>>
-  selectedResult: { result?: ToolExecResponse; error?: string } | undefined
+  selectedResult: { result?: ToolExecResponse; error?: string; priorResults?: ToolExecResponse[] } | undefined
   chainSuggestion: ChainSuggestion | null
   selectedChainFields: Record<string, boolean>
   onSetChainFieldSelected: (param: string, enabled: boolean) => void
@@ -132,6 +132,12 @@ export function SessionDetailWorkbench({
     ? chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false).length
     : 0
   const addToolInputRef = useRef<HTMLInputElement | null>(null)
+  const [expandedPriors, setExpandedPriors] = useState<Record<number, boolean>>({})
+
+  // Reset prior-run expansion state when the selected step changes
+  useEffect(() => {
+    setExpandedPriors({})
+  }, [selectedStepKey])
 
   useEffect(() => {
     if (!showAddTool) return
@@ -368,6 +374,39 @@ export function SessionDetailWorkbench({
                   </>
                 ) : (
                   <p className="section-meta">No result yet for this tool.</p>
+                )}
+                {selectedResult?.priorResults && selectedResult.priorResults.length > 0 && (
+                  <div className="session-prior-runs">
+                    <p className="session-prior-runs-label">Prior runs ({selectedResult.priorResults.length})</p>
+                    {selectedResult.priorResults.map((prior, i) => (
+                      <div key={i} className="session-prior-run">
+                        <button
+                          className="session-prior-run-toggle"
+                          onClick={() => setExpandedPriors(p => ({ ...p, [i]: !p[i] }))}
+                        >
+                          <span className="mono">{prior.success ? 'OK' : 'FAIL'} | exit {prior.return_code} | {safeFixed(prior.execution_time, 2)}s | {new Date(prior.timestamp).toLocaleTimeString()}</span>
+                          {expandedPriors[i] ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                        </button>
+                        {expandedPriors[i] && selectedStepKey && (
+                          <div className="session-prior-run-body">
+                            <div className="session-result-actions">
+                              <ActionButton variant="default" onClick={() => exportResultEntry('txt', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, prior)}>
+                                <Download size={11} /> Export
+                              </ActionButton>
+                              <ActionButton variant="default" onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, prior)}>
+                                <Download size={11} /> JSON
+                              </ActionButton>
+                              <ActionButton variant="default" onClick={() => void exportToNotes(selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, prior)}>
+                                <FileText size={11} /> Notes
+                              </ActionButton>
+                            </div>
+                            <pre className="session-result-pre mono">{prior.stdout || '(no stdout)'}</pre>
+                            {prior.stderr && <pre className="session-result-pre mono">{prior.stderr}</pre>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </>

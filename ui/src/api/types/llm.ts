@@ -49,3 +49,16 @@ export interface AnalyzeSessionResponse {
   saved_path?: string;
   error?: string;
 }
+
+export interface FollowUpSessionResponse {
+  success: boolean;
+  session_id?: string;
+  target?: string;
+  objective?: string;
+  summary?: string;
+  steps?: Array<{ tool: string; params: string; reason: string }>;
+  next_steps?: Array<{ tool: string; reason: string }>;
+  logs_analysed?: number;
+  saved_path?: string;
+  error?: string;
+}

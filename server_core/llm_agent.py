@@ -9,10 +9,17 @@ analyze_session(session_id, llm_client, db, run_history)
   interpretation, and persists structured findings (vulns, risk level,
   summary) to NyxStrikeDB.  The LLM does NOT dispatch any tools.
 
+follow_up_session(session_id, llm_client, db, run_history)
+  Follow-up planning pass — reads the same session data and findings,
+  then asks the LLM to produce a prioritised list of next steps /
+  follow-up tool invocations.  Saves as a structured markdown plan.
+
 Protocol tags (output):
   VULN: <name> | SEVERITY: CRITICAL|HIGH|MEDIUM|LOW|INFO | PORT: <port> | SERVICE: <svc> | DESC: <text> | FIX: <text>
   RISK_LEVEL: CRITICAL|HIGH|MEDIUM|LOW
   SUMMARY: <free text>
+  NEXT: <tool_name> | REASON: <short rationale>
+  STEP: <tool_name> | PARAMS: <key=val,...> | REASON: <rationale>
 
 Design notes:
   - Graceful degradation: if llm_client.is_available() is False the
@@ -541,5 +548,343 @@ def format_analysis_md(
     lines.append("")
   else:
     lines.append("*No next steps recommended.*\n")
+
+  return "\n".join(lines)
+
+
+# ── Follow-up session planning ─────────────────────────────────────────────────
+
+_FOLLOWUP_SYSTEM_PROMPT = """\
+You are NyxStrike, an expert penetration testing planner.
+
+You have been given the details of a completed or in-progress security session,
+including the tools that were run, their raw output, and any findings already
+identified.  Your job is to produce a prioritised, concrete follow-up action
+plan — a list of next tool invocations that would maximise impact given what
+has already been found.
+
+Output format (emit each applicable line):
+  SUMMARY: <one paragraph describing the current state and overall follow-up rationale>
+  STEP: <tool_name> | PARAMS: <key=val,key2=val2,...> | REASON: <one sentence rationale>
+  NEXT: <tool_name> | REASON: <short rationale for a tool to run later, no params needed yet>
+
+Rules:
+  - Do NOT call any tools.  Only plan based on the data provided.
+  - Emit SUMMARY exactly once.
+  - Emit 3–7 STEP: lines ordered by priority (highest impact first).
+  - STEP: tool names must be exact lowercase tool identifiers matching NyxStrike's registry
+    (e.g. nuclei, sqlmap, dalfox, gobuster, nmap_scan, subfinder, nikto_scan).
+  - PARAMS: should be realistic key=value pairs based on what was already discovered.
+    Use the session target as the default value for target/url/domain params.
+    Separate multiple params with commas.  If no specific params are needed, write PARAMS: target=<target>.
+  - Emit 0–3 NEXT: lines for lower-priority or conditional follow-up tools.
+  - NEXT: tool names must also be exact lowercase tool identifiers.
+  - Be specific: reference actual ports, services, paths, and findings from the session data.
+  - If the session has no findings yet, plan a comprehensive initial enumeration.
+"""
+
+_STEP_RE = re.compile(
+  r'STEP:\s*(?P<tool>[^|]+)\s*\|\s*PARAMS:\s*(?P<params>[^|]+)\s*\|\s*REASON:\s*(?P<reason>[^\n]+)',
+  re.IGNORECASE,
+)
+
+
+def _parse_followup(transcript: str) -> Tuple[str, List[Dict], List[Dict]]:
+  """Extract summary, steps, and next_steps from a follow-up LLM response."""
+  # SUMMARY
+  summary_match = _SUMMARY_RE.search(transcript)
+  summary = ""
+  if summary_match:
+    raw = summary_match.group("text").strip()
+    step_pos = _STEP_RE.search(raw)
+    next_pos = _NEXT_RE.search(raw)
+    end_pos = min(
+      step_pos.start() if step_pos else len(raw),
+      next_pos.start() if next_pos else len(raw),
+    )
+    summary = raw[:end_pos].strip()
+
+  # STEP:
+  steps: List[Dict] = []
+  for m in _STEP_RE.finditer(transcript):
+    steps.append({
+      "tool": m.group("tool").strip(),
+      "params": m.group("params").strip(),
+      "reason": m.group("reason").strip(),
+    })
+
+  # NEXT:
+  next_steps: List[Dict] = []
+  for m in _NEXT_RE.finditer(transcript):
+    next_steps.append({
+      "tool": m.group("tool").strip(),
+      "reason": m.group("reason").strip(),
+    })
+
+  return summary, steps, next_steps
+
+
+def follow_up_session(
+  session_id: str,
+  llm_client=None,
+  db=None,
+  run_history=None,
+) -> Dict[str, Any]:
+  """Produce a prioritised follow-up plan for an existing workflow session.
+
+  Reads the session, its tool run logs, and existing findings, then asks
+  the LLM to plan the next concrete tool invocations.  Does not persist
+  findings to NyxStrikeDB — the output is a planning document only.
+
+  Args:
+    session_id:  A ``sess_`` prefixed session ID from SessionStore.
+    llm_client:  LLMClient instance (must be is_available()).
+    db:          NyxStrikeDB instance (used for LLM session tracking).
+    run_history: RunHistoryStore instance for fetching tool logs.
+
+  Returns:
+    Dict with keys: success, session_id, target, objective, summary,
+    steps, next_steps, logs_analysed, full_response, error.
+  """
+  # ── Guard: LLM must be available ─────────────────────────────────────────────
+  if llm_client is None or not llm_client.is_available():
+    return {
+      "success": False,
+      "error": (
+        "LLM is not available. Configure NYXSTRIKE_LLM_PROVIDER / "
+        "NYXSTRIKE_LLM_MODEL and ensure the backend is reachable."
+      ),
+    }
+
+  # ── Load workflow session ─────────────────────────────────────────────────────
+  from server_core.session_flow import load_session_any
+
+  loaded = load_session_any(session_id)
+  if not loaded:
+    return {
+      "success": False,
+      "error": f"Session '{session_id}' not found.",
+    }
+
+  session_dict, _state = loaded
+  target = session_dict.get("target", "")
+  objective = session_dict.get("objective", "")
+  tools_executed: List[str] = session_dict.get("tools_executed", [])
+  created_at_ts: int = int(session_dict.get("created_at", 0) or 0)
+  existing_findings: List[Dict] = list(session_dict.get("findings", []) or [])
+  risk_level: str = session_dict.get("risk_level", "unknown") or "unknown"
+
+  # ── Fetch and filter run logs ─────────────────────────────────────────────────
+  all_logs: List[Dict[str, Any]] = run_history.get_all() if run_history else []
+  relevant_logs = _filter_run_logs(
+    all_logs, tools_executed, target, created_at_ts, session_id=session_id
+  )
+
+  # ── Build follow-up prompt ────────────────────────────────────────────────────
+  llm_session_id = f"llm_{uuid.uuid4().hex[:10]}"
+
+  if not relevant_logs:
+    tool_data_section = (
+      "No tool run logs were found for this session. "
+      "The tools may not have been executed yet, or the logs may have expired."
+    )
+  else:
+    tool_blocks = [_format_run_log_entry(e) for e in relevant_logs]
+    tool_data_section = "\n\n".join(tool_blocks)
+
+  # Summarise existing findings for the prompt
+  if existing_findings:
+    finding_lines = []
+    for f in existing_findings[:20]:  # cap to avoid prompt bloat
+      title = str(f.get("title", "Unnamed")).strip()
+      sev = str(f.get("severity", "info")).upper()
+      desc = str(f.get("description", "")).strip()[:200]
+      finding_lines.append(f"  [{sev}] {title}" + (f" — {desc}" if desc else ""))
+    findings_section = "\n".join(finding_lines)
+  else:
+    findings_section = "  (none yet)"
+
+  user_message = (
+    f"Session ID: {session_id}\n"
+    f"Target: {target}\n"
+    f"Objective: {objective or 'comprehensive security assessment'}\n"
+    f"Current risk level: {risk_level}\n"
+    f"Tools planned: {', '.join(tools_executed) or 'N/A'}\n"
+    f"Logs analysed: {len(relevant_logs)}\n\n"
+    f"--- Existing Findings ({len(existing_findings)}) ---\n\n"
+    f"{findings_section}\n\n"
+    f"--- Tool Output ---\n\n"
+    f"{tool_data_section}\n\n"
+    "Based on the above, produce a prioritised follow-up action plan."
+  )
+
+  messages: List[Dict[str, Any]] = [
+    {"role": "system", "content": _FOLLOWUP_SYSTEM_PROMPT},
+    {"role": "user", "content": user_message},
+  ]
+
+  # ── Persist session start ─────────────────────────────────────────────────────
+  if db:
+    db.create_llm_session(
+      session_id=llm_session_id,
+      target=target,
+      objective=f"follow-up:{session_id}",
+      provider=llm_client.provider,
+      model=llm_client.model,
+    )
+
+  # ── Single LLM call ───────────────────────────────────────────────────────────
+  try:
+    response = llm_client.chat(messages)
+  except RuntimeError as exc:
+    logger.error("follow_up_session: LLM call failed: %s", exc)
+    if db:
+      db.update_llm_session(
+        llm_session_id,
+        status="error",
+        completed_at=datetime.utcnow().isoformat(),
+      )
+    return {
+      "success": False,
+      "stdout": "",
+      "stderr": f"LLM call failed: {exc}",
+      "return_code": 1,
+      "llm_session_id": llm_session_id,
+      "session_id": session_id,
+      "error": f"LLM call failed: {exc}",
+    }
+
+  # ── Parse response ────────────────────────────────────────────────────────────
+  summary, steps, next_steps = _parse_followup(response)
+
+  # ── Persist completion ────────────────────────────────────────────────────────
+  if db:
+    db.update_llm_session(
+      llm_session_id,
+      status="completed",
+      summary=summary,
+      full_response=response,
+      raw_scan_data=user_message[:8000],
+      tool_loops=len(relevant_logs),
+      completed_at=datetime.utcnow().isoformat(),
+    )
+
+  # ── Build stdout ──────────────────────────────────────────────────────────────
+  completed_at_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+  step_lines = []
+  for i, s in enumerate(steps, 1):
+    step_lines.append(f"  [{i}] {s.get('tool', '')} — {s.get('reason', '')}")
+    if s.get("params"):
+      step_lines.append(f"       params: {s['params']}")
+  step_block = "\n".join(step_lines) if step_lines else "  (none)"
+
+  next_lines = []
+  for i, ns in enumerate(next_steps, 1):
+    next_lines.append(f"  [{i}] {ns.get('tool', '')} — {ns.get('reason', '')}")
+  next_block = "\n".join(next_lines) if next_lines else "  (none)"
+
+  stdout = (
+    f"Session:       {session_id}\n"
+    f"Date:          {completed_at_iso}\n"
+    f"Target:        {target}\n"
+    f"Logs analysed: {len(relevant_logs)}\n"
+    f"\nSummary:\n  {summary}\n"
+    f"\nPrioritised steps ({len(steps)}):\n{step_block}\n"
+    f"\nAdditional tools to consider ({len(next_steps)}):\n{next_block}\n"
+  )
+
+  return {
+    "success": True,
+    "stdout": stdout,
+    "stderr": "",
+    "return_code": 0,
+    "timestamp": completed_at_iso,
+    "llm_session_id": llm_session_id,
+    "session_id": session_id,
+    "target": target,
+    "objective": objective,
+    "completed_at": completed_at_iso,
+    "provider": llm_client.provider,
+    "model": llm_client.model,
+    "summary": summary,
+    "steps": steps,
+    "next_steps": next_steps,
+    "logs_analysed": len(relevant_logs),
+    "full_response": response,
+  }
+
+
+def format_followup_md(
+  result: Dict[str, Any],
+  session_id: str,
+  target: str,
+  objective: str = "",
+) -> str:
+  """Format a follow_up_session result dict as a Markdown plan suitable for saving to notes."""
+  generated_at = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+  summary = result.get("summary", "").strip()
+  steps: List[Dict] = result.get("steps", [])
+  next_steps: List[Dict] = result.get("next_steps", [])
+  provider = result.get("provider", "")
+  model = result.get("model", "")
+  logs_analysed = result.get("logs_analysed", 0)
+
+  lines: List[str] = []
+
+  # Header
+  lines.append(f"# AI Follow-up Plan — {target}\n")
+  lines.append(f"*Generated by NyxStrike AI on {generated_at}*\n")
+  if provider and model:
+    lines.append(f"*Provider: {provider} / {model}*\n")
+  lines.append("---\n")
+
+  # Metadata
+  lines.append("## Session Metadata\n")
+  lines.append("| Field | Value |")
+  lines.append("|-------|-------|")
+  lines.append(f"| Session ID | `{session_id}` |")
+  lines.append(f"| Target | `{target}` |")
+  if objective:
+    lines.append(f"| Objective | {objective} |")
+  lines.append(f"| Follow-up Steps | {len(steps)} |")
+  lines.append(f"| Tool Logs Analysed | {logs_analysed} |")
+  lines.append("")
+
+  # Summary
+  lines.append("## Current State & Rationale\n")
+  lines.append(summary if summary else "*No summary generated.*")
+  lines.append("")
+
+  # Prioritised steps
+  lines.append(f"## Prioritised Follow-up Steps ({len(steps)})\n")
+  if steps:
+    for i, s in enumerate(steps, 1):
+      tool = s.get("tool", "").strip()
+      params = s.get("params", "").strip()
+      reason = s.get("reason", "").strip()
+      lines.append(f"### Step {i}: `{tool}`\n")
+      if reason:
+        lines.append(f"**Rationale:** {reason}\n")
+      if params:
+        lines.append("**Parameters:**\n")
+        lines.append("```")
+        for kv in params.split(","):
+          lines.append(kv.strip())
+        lines.append("```")
+      lines.append("")
+  else:
+    lines.append("*No steps generated.*\n")
+
+  # Additional tools
+  lines.append(f"## Additional Tools to Consider ({len(next_steps)})\n")
+  if next_steps:
+    for i, ns in enumerate(next_steps, 1):
+      tool = ns.get("tool", "").strip()
+      reason = ns.get("reason", "").strip()
+      lines.append(f"{i}. `{tool}` — {reason}")
+    lines.append("")
+  else:
+    lines.append("*No additional tools recommended.*\n")
 
   return "\n".join(lines)
