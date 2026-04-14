@@ -19,10 +19,11 @@ Endpoints:
 """
 
 import logging
+from datetime import datetime
 
 from flask import Blueprint, jsonify, request
 
-from server_core.singletons import db, llm_client, run_history
+from server_core.singletons import db, llm_client, run_history, session_store
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +51,13 @@ def analyze_session_endpoint():
   try:
     body = request.get_json(silent=True) or {}
     session_id = (body.get("session_id") or "").strip()
+    save_to_notes = bool(body.get("save_to_notes", False))
 
     if not session_id:
       return jsonify({"success": False, "error": "session_id is required"}), 400
 
     import uuid as _uuid
-    from server_core.llm_agent import analyze_session
+    from server_core.llm_agent import analyze_session, format_analysis_md
     from server_core.process_manager import AITaskManager
 
     task_id = f"ai_analyze_{_uuid.uuid4().hex[:8]}"
@@ -75,8 +77,33 @@ def analyze_session_endpoint():
     if cancelled:
       return jsonify({"success": False, "error": "Analysis was cancelled"}), 200
 
+    # ── Optionally save the analysis as a notes file ──────────────────────────
+    saved_path: str | None = None
+    if result.get("success") and save_to_notes:
+      try:
+        target = result.get("target", session_id)
+        objective = result.get("objective", "")
+        md_content = format_analysis_md(result, session_id, target, objective)
+        base = f"analysis-{datetime.now().strftime('%Y-%m-%d')}"
+        folder = "analysis"
+        for i in range(20):
+          name = base if i == 0 else f"{base}-{i + 1}"
+          if not session_store.note_exists(session_id, name, folder):
+            ok = session_store.save_note(session_id, name, md_content, folder)
+            if ok:
+              saved_path = f"notes/{folder}/{name}.md"
+            break
+        if saved_path is None:
+          logger.warning("analyze_session_endpoint: could not find free filename for notes save")
+      except Exception as save_exc:
+        logger.error("analyze_session_endpoint: failed to save analysis to notes: %s", save_exc)
+
+    response_body = dict(result)
+    if saved_path:
+      response_body["saved_path"] = saved_path
+
     status_code = 200 if result.get("success") else 502
-    return jsonify(result), status_code
+    return jsonify(response_body), status_code
 
   except Exception as exc:
     logger.exception("analyze_session_endpoint: unexpected error")

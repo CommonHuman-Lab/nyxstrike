@@ -1544,6 +1544,8 @@ a.session-action-btn {
   border-collapse: collapse;
   width: 100%;
   font-size: 12px;
+  display: block;
+  overflow-x: auto;
 }
 
 .session-notes-read-body th,

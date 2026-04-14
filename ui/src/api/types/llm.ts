@@ -35,3 +35,17 @@ export interface LlmSessionDetailResponse {
   session: LlmSession;
   vulnerabilities: LlmVulnerability[];
 }
+
+export interface AnalyzeSessionResponse {
+  success: boolean;
+  session_id?: string;
+  target?: string;
+  objective?: string;
+  risk_level?: string;
+  summary?: string;
+  vulnerabilities?: LlmVulnerability[];
+  next_steps?: Array<{ tool: string; reason: string }>;
+  logs_analysed?: number;
+  saved_path?: string;
+  error?: string;
+}

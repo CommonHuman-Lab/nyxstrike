@@ -32,7 +32,7 @@ def _build_ai_recon_steps(target: str) -> list:
             "tool": "nmap",
             "parameters": {
                 "target": target,
-                "additional_args": "-sV -sC -T4",
+                "additional_args": "-sV -sC -T4 -p-",
             },
             "expected_outcome": "Service versions, and basic script results",
             "success_probability": 0.95,
@@ -94,16 +94,6 @@ def _build_ai_recon_steps(target: str) -> list:
             "success_probability": 0.85,
             "execution_time_estimate": 60,
             "dependencies": ["whatweb", "http-headers"],
-        },
-        {
-            "tool": "ai_analyze_session",
-            "parameters": {
-                "session_id": None,  # to be filled in by caller after session creation
-            },
-            "expected_outcome": "AI-generated analysis and next steps based on recon results",
-            "success_probability": 0.80,
-            "execution_time_estimate": 30,
-            "dependencies": ["nmap", "whois", "whatweb", "http-headers", "dig", "nikto"],
         }
     ]
 

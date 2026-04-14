@@ -79,7 +79,7 @@ def _build_ai_profiling_steps(target: str, target_type: str) -> list:
             "tool": "nmap",
             "parameters": {
                 "target": target,
-                "additional_args": "-sV -sC -T4",
+                "additional_args": "-sV -sC -T4 -p-",
             },
             "expected_outcome": "Service versions, and basic script results",
             "success_probability": 0.95,
@@ -173,17 +173,7 @@ def _build_ai_profiling_steps(target: str, target_type: str) -> list:
             "success_probability": 0.85,
             "execution_time_estimate": 60,
             "dependencies": ["nmap"],
-        },
-        {
-            "tool": "ai_analyze_session",
-            "parameters": {
-                "session_id": None,  # back-filled when create_session=true
-            },
-            "expected_outcome": "AI-generated analysis and next steps based on profiling results",
-            "success_probability": 0.80,
-            "execution_time_estimate": 30,
-            "dependencies": [s["tool"] for s in steps] + ["gobuster", "nikto"],
-        },
+        }
     ]
 
     return steps

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import SimpleMDE from 'react-simplemde-editor'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import {
   FileText, Folder, FolderOpen, FolderPlus, Plus, Upload,
   Edit2, Eye, Trash2, Download, X, Save, AlertTriangle,
@@ -244,7 +245,7 @@ function NoteModal({
           ) : mode === 'view' ? (
             <div className="session-notes-read-body note-modal-read-body">
               {content.trim() ? (
-                <ReactMarkdown>{content}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
               ) : (
                 <p style={{ color: 'var(--text-dim)', fontStyle: 'italic', margin: 0 }}>
                   This note is empty. Click Edit to start writing.

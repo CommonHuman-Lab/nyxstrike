@@ -1,6 +1,7 @@
 import { del, get, patch, post, postFormData, postWithTimeout, put, stream } from './client';
 import type {
   AttackChainStep,
+  AnalyzeSessionResponse,
   CacheStatsResponse,
   ClassifyTaskResponse,
   CreateAttackChainResponse,
@@ -193,6 +194,11 @@ export const api = {
     get<LlmSessionsResponse>(`/api/intelligence/llm-agent-sessions?limit=${limit}`),
   llmSessionDetail: (llmSessionId: string) =>
     get<LlmSessionDetailResponse>(`/api/intelligence/llm-agent-scan/${llmSessionId}`),
+  analyzeSession: (sessionId: string) =>
+    post<AnalyzeSessionResponse>('/api/intelligence/analyze-session', {
+      session_id: sessionId,
+      save_to_notes: true,
+    }),
 
   // ── Session Findings ─────────────────────────────────────────────────────
   sessionFindings: (sessionId: string) =>

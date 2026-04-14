@@ -1,0 +1,1 @@
+import{r as e}from"./vendor-markdown-DbyXHOWN.js";var t=e();function n({variant:e=`default`,className:n=``,children:r,...i}){return(0,t.jsx)(`button`,{className:`action-button action-button--${e}${n?` ${n}`:``}`,...i,children:r})}export{n as t};

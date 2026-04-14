@@ -79,17 +79,7 @@ def _build_ai_osint_steps(domain: str) -> list:
             "success_probability": 0.85,
             "execution_time_estimate": 45,
             "dependencies": [],
-        },
-        {
-            "tool": "ai_analyze_session",
-            "parameters": {
-                "session_id": None,  # back-filled when create_session=true
-            },
-            "expected_outcome": "AI-generated OSINT analysis and attack surface summary",
-            "success_probability": 0.80,
-            "execution_time_estimate": 30,
-            "dependencies": ["subfinder", "theharvester", "gau", "waybackurls"],
-        },
+        }
     ]
 
 

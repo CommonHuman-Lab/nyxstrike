@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Bot, RefreshCw, Target, Activity, Clock, Download, FileText, Shield, List } from 'lucide-react'
+import { ArrowLeft, Brain, RefreshCw, Target, Activity, Clock, Download, FileText, Shield, List } from 'lucide-react'
 import { api, type SessionSummary, type AttackChainStep, type Tool, type ToolExecResponse } from '../../api'
 import { buildInitialFieldValues, buildRunPayload, inferTargetValue } from '../../components/tool-run/payload'
 import { fmtTs } from '../../shared/utils'
@@ -12,7 +12,7 @@ import { TemplateModal } from './TemplateModal'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
 import { InformationModal } from '../../components/InformationModal'
 import { useToast } from '../../components/ToastProvider'
-import { registerReportNavigation } from '../../app/reportGeneration'
+import { registerReportNavigation, reportGenStart, reportGenDone, reportGenError } from '../../app/reportGeneration'
 import {
   buildStepChainSuggestion,
   type ChainMappingPreference,
@@ -54,12 +54,11 @@ export default function SessionDetailPage({
   const [templateError, setTemplateError] = useState<string | null>(null)
   const [showAddTool, setShowAddTool] = useState(false)
   const [addToolSearch, setAddToolSearch] = useState('')
-  const [handoffLoading, setHandoffLoading] = useState(false)
-  const [handoffMsg, setHandoffMsg] = useState<string | null>(null)
   const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [completeLoading, setCompleteLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [analyzeLoading, setAnalyzeLoading] = useState(false)
   const [selectedChainFields, setSelectedChainFields] = useState<Record<string, boolean>>({})
   const [chainPreferences, setChainPreferences] = useState<ChainMappingPreference[]>([])
   const [showChainPrefModal, setShowChainPrefModal] = useState(false)
@@ -236,21 +235,28 @@ export default function SessionDetailPage({
     }
   }, [runningStepKey, sessionId])
 
-  async function handoverToLlm() {
+  function analyzeSession() {
     if (!session) return
-    setHandoffLoading(true)
-    try {
-      const note = `Tools: ${steps.map(step => step.tool).join(', ')}`
-      const r = await api.handoverSession(session.session_id, note)
-      const category = r.handover?.category ?? 'unknown'
-      const confidence = r.handover?.confidence ?? 0
-      setHandoffMsg(`LLM handover done -> ${category} (${(confidence * 100).toFixed(0)}% confidence)`)
-      await loadSession()
-    } catch (e) {
-      setHandoffMsg(`Handover failed: ${String(e)}`)
-    } finally {
-      setHandoffLoading(false)
+    const label = `AI Analysis — ${session.target}`
+    setAnalyzeLoading(true)
+    reportGenStart(label)
+    const run = async () => {
+      try {
+        const res = await api.analyzeSession(session.session_id)
+        if (!res.success) {
+          reportGenError(label, res.error ?? 'Analysis failed.')
+          return
+        }
+        reportGenDone(label, res.saved_path ?? 'notes/analysis/')
+        // Refresh session so risk_level badge updates
+        await loadSession()
+      } catch (e) {
+        reportGenError(label, String(e))
+      } finally {
+        setAnalyzeLoading(false)
+      }
     }
+    run()
   }
 
   async function completeSession() {
@@ -260,7 +266,7 @@ export default function SessionDetailPage({
       await api.updateSession(session.session_id, { status: 'completed' })
       onBack()
     } catch (e) {
-      setHandoffMsg(`Complete failed: ${String(e)}`)
+      pushToast('error', `Complete failed: ${String(e)}`)
     } finally {
       setCompleteLoading(false)
       setShowCompleteConfirm(false)
@@ -274,7 +280,7 @@ export default function SessionDetailPage({
       await api.deleteSession(session.session_id)
       onBack()
     } catch (e) {
-      setHandoffMsg(`Delete failed: ${String(e)}`)
+      pushToast('error', `Delete failed: ${String(e)}`)
     } finally {
       setDeleteLoading(false)
       setShowDeleteConfirm(false)
@@ -346,9 +352,9 @@ export default function SessionDetailPage({
       a.download = `${session.session_id}_tool_logs.json`
       a.click()
       URL.revokeObjectURL(url)
-      setHandoffMsg('Tool logs exported')
+      pushToast('success', 'Tool logs exported')
     } catch (e) {
-      setHandoffMsg(`Export failed: ${String(e)}`)
+      pushToast('error', `Export failed: ${String(e)}`)
     }
   }
 
@@ -381,7 +387,7 @@ export default function SessionDetailPage({
       setTemplateError(null)
       setTemplateName('')
       setShowTemplateModal(false)
-      setHandoffMsg(`Template created: ${name}`)
+      pushToast('success', `Template created: ${name}`)
     } catch (e) {
       setTemplateError(String(e))
     }
@@ -658,7 +664,7 @@ export default function SessionDetailPage({
         .filter((pid): pid is number => typeof pid === 'number')
 
       if (candidates.length === 0) {
-        setHandoffMsg('No active process found to terminate')
+        pushToast('error', 'No active process found to terminate')
         setRunningStepKey(null)
         return
       }
@@ -666,7 +672,7 @@ export default function SessionDetailPage({
       const pid = Math.max(...candidates)
       await api.terminateProcess(pid)
       
-      setHandoffMsg(`Stopped running process ${pid}`)
+      pushToast('success', `Stopped running process ${pid}`)
       setRunningStepKey(null)
       setStepState(prev => ({ ...prev, [stepKey]: 'failed' }))
       setStepResults(prev => ({
@@ -692,7 +698,7 @@ export default function SessionDetailPage({
         }
       }
     } catch (e) {
-      setHandoffMsg(`Stop failed: ${String(e)}`)
+      pushToast('error', `Stop failed: ${String(e)}`)
     }
   }
 
@@ -706,7 +712,7 @@ export default function SessionDetailPage({
       await loadSession()
       setSelectedStepIndex(Math.max(0, nextSteps.length - 1))
     } catch (e) {
-      setHandoffMsg(`Add tool failed: ${String(e)}`)
+      pushToast('error', `Add tool failed: ${String(e)}`)
     }
   }
 
@@ -731,7 +737,7 @@ export default function SessionDetailPage({
       : []
 
     if (attackSteps.length === 0) {
-      setHandoffMsg('No attack-chain steps found in result output')
+      pushToast('error', 'No attack-chain steps found in result output')
       return
     }
 
@@ -744,7 +750,7 @@ export default function SessionDetailPage({
     })
 
     if (toAdd.length === 0) {
-      setHandoffMsg('All attack-chain tools are already present in manual execution')
+      pushToast('error', 'All attack-chain tools are already present in manual execution')
       return
     }
 
@@ -753,9 +759,9 @@ export default function SessionDetailPage({
       await api.updateSession(session.session_id, { workflow_steps: nextSteps })
       await loadSession()
       setSelectedStepIndex(Math.max(0, nextSteps.length - toAdd.length))
-      setHandoffMsg(`Added ${toAdd.length} tool(s) from attack chain`) 
+      pushToast('success', `Added ${toAdd.length} tool(s) from attack chain`)
     } catch (e) {
-      setHandoffMsg(`Apply attack chain failed: ${String(e)}`)
+      pushToast('error', `Apply attack chain failed: ${String(e)}`)
     }
   }
 
@@ -771,7 +777,7 @@ export default function SessionDetailPage({
         return Math.min(prev, nextSteps.length - 1)
       })
     } catch (e) {
-      setHandoffMsg(`Remove tool failed: ${String(e)}`)
+      pushToast('error', `Remove tool failed: ${String(e)}`)
     }
   }
 
@@ -818,6 +824,9 @@ export default function SessionDetailPage({
           <button className="session-action-btn" onClick={() => setShowReportModal(true)}>
             <><FileText size={12} /> Generate Report</>
           </button>
+          <button className="session-action-btn" onClick={analyzeSession} disabled={analyzeLoading}>
+            <Brain size={12} /> {analyzeLoading ? 'Analysing…' : 'Analyze Session'}
+          </button>
           <button className="session-action-btn" onClick={() => setShowTemplateModal(true)}>
             Create Template
           </button>
@@ -827,12 +836,8 @@ export default function SessionDetailPage({
           <button className="session-action-btn" onClick={() => setShowChainPrefModal(true)}>
             Manage Chain Pins ({chainPreferences.length})
           </button>
-          <button className="session-action-btn" onClick={handoverToLlm} disabled={handoffLoading}>
-            <Bot size={12} /> {handoffLoading ? 'Handing over…' : 'Handover to LLM'}
-          </button>
           {session.status !== 'completed' && <button className="session-complete-btn" onClick={() => setShowCompleteConfirm(true)}>Complete Session</button>}
           <button className="session-delete-btn" onClick={() => setShowDeleteConfirm(true)}>Delete Session</button>
-          {handoffMsg && <span className="section-meta">{handoffMsg}</span>}
         </div>
 
         <TemplateModal

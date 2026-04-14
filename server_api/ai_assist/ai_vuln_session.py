@@ -86,17 +86,7 @@ def _build_ai_vuln_steps(target: str) -> list:
             "success_probability": 0.85,
             "execution_time_estimate": 60,
             "dependencies": [],
-        },
-        {
-            "tool": "ai_analyze_session",
-            "parameters": {
-                "session_id": None,  # back-filled when create_session=true
-            },
-            "expected_outcome": "AI-generated vulnerability analysis and remediation guidance",
-            "success_probability": 0.80,
-            "execution_time_estimate": 30,
-            "dependencies": ["nuclei", "sqlmap", "dalfox", "nikto"],
-        },
+        }
     ]
 
 

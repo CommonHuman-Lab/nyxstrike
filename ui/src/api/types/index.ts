@@ -42,6 +42,7 @@ export type {
 export type { CacheStatsResponse } from './cache';
 
 export type {
+  AnalyzeSessionResponse,
   LlmSession,
   LlmSessionDetailResponse,
   LlmSessionsResponse,
