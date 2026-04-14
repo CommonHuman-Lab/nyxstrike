@@ -1,0 +1,70 @@
+.command-palette {
+  width: min(760px, 95vw);
+  max-height: 72vh;
+}
+
+.command-palette-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.command-palette-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-h);
+  font-size: 13px;
+  outline: none;
+}
+
+.command-palette-list {
+  overflow-y: auto;
+  max-height: calc(72vh - 52px);
+}
+
+.command-palette-item {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+}
+
+.command-palette-item:hover,
+.command-palette-item.active {
+  background: var(--bg-card2);
+}
+
+.command-palette-label {
+  color: var(--text-h);
+  font-size: 12px;
+}
+
+.command-palette-hint {
+  color: var(--text-dim);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.command-palette-empty {
+  padding: 14px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  .command-palette {
+    width: min(94vw, 860px);
+  }
+}
