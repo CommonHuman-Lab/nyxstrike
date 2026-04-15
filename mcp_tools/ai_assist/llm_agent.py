@@ -102,7 +102,8 @@ def register_llm_agent_tools(mcp, api_client, logger, CliColors=None):
 
     return result
 
-  @mcp.tool()(session_id: str) -> Dict[str, Any]:
+  @mcp.tool()
+  async def llm_agent_scan_result(session_id: str) -> Dict[str, Any]:
     """
     Retrieve the results of a completed LLM agent scan session.
 
