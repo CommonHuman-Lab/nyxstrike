@@ -37,7 +37,7 @@ INSTALL_AI_MODEL=false
 AI_SMALL_MODE=false
 AI_LARGE_MODE=false
 
-OLLAMA_MODEL_BASE="huihui_ai/qwen3.5-abliterated:9b"
+OLLAMA_MODEL_BASE="huihui_ai/qwen3.5-abliterated:4b"
 OLLAMA_MODEL_NAME="nyxstrike-qwen"
 
 # --- run flags ---
@@ -479,7 +479,7 @@ while [[ $# -gt 0 ]]; do
     -ai)
       INSTALL_AI_MODEL=true
       AI_LARGE_MODE=true
-      OLLAMA_MODEL_BASE="huihui_ai/qwen3.5-abliterated:9b"
+      OLLAMA_MODEL_BASE="huihui_ai/gemma-4-abliterated:e4b"
       OLLAMA_MODEL_NAME="nyxstrike-qwen"
       DO_SETUP=true
       shift

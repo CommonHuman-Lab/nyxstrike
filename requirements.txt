@@ -9,7 +9,7 @@ beautifulsoup4>=4.12.0,<5.0.0   # HTML parsing (from bs4 import BeautifulSoup)
 selenium>=4.15.0,<5.0.0         # Browser automation (selenium imports)
 webdriver-manager>=4.0.0,<5.0.0 # ChromeDriver management (referenced in code)
 aiohttp>=3.8.0,<4.0.0           # Async HTTP (aiohttp import)
-mitmproxy==12.1.2        # HTTP proxy (mitmproxy imports)
+mitmproxy==12.2.2        # HTTP proxy (mitmproxy imports)
 
 # Optional Python dependencies in requirements-extra.txt
 # Installed with: ./scripts/install.sh --install-tools
