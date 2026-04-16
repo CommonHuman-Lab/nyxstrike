@@ -481,6 +481,7 @@ while [[ $# -gt 0 ]]; do
       AI_LARGE_MODE=true
       OLLAMA_MODEL_BASE="huihui_ai/gemma-4-abliterated:e4b"
       OLLAMA_MODEL_NAME="nyxstrike-qwen"
+      export NYXSTRIKE_LLM_WARMUP=1
       DO_SETUP=true
       shift
       ;;
@@ -489,6 +490,7 @@ while [[ $# -gt 0 ]]; do
       AI_SMALL_MODE=true
       OLLAMA_MODEL_BASE="huihui_ai/qwen3.5-abliterated:4b"
       OLLAMA_MODEL_NAME="nyxstrike-qwen"
+      export NYXSTRIKE_LLM_WARMUP=1
       DO_SETUP=true
       shift
       ;;
