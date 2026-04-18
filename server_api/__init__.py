@@ -181,6 +181,7 @@ def register_blueprints(app):
   app.register_blueprint(api_web_scan_wpscan_bp)
   app.register_blueprint(api_web_scan_joomscan_bp)
   app.register_blueprint(api_web_scan_whatweb_bp)
+  app.register_blueprint(api_web_scan_interactsh_bp)
 
   # Web Crawl
   app.register_blueprint(api_web_crawl_katana_bp)

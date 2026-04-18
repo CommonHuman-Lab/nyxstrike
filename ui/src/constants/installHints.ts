@@ -128,6 +128,7 @@ export const INSTALL_HINTS: Record<string, string> = {
   sublist3r:         'sudo apt install sublist3r',
   parsero:           'sudo apt install parsero',
   joomscan:          'sudo apt install joomscan',
+  interactsh:        'go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest',
   hurl:              'sudo apt install hurl',
   assetfinder:       'sudo apt install assetfinder',
   shuffledns:        'sudo apt-get install -y massdns; go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest',

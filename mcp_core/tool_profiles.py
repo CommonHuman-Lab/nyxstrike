@@ -206,6 +206,7 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_burpsuite_tool(mcp, client, logger, CliColors),
         lambda mcp, client, logger: register_zap_tool(mcp, client, logger),
         lambda mcp, client, logger: register_xsser_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_web_scan_interactsh_tool(mcp, client, logger),
     ],
 
     "fingerprint": [

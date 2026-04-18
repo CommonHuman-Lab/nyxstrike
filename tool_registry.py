@@ -317,6 +317,23 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.90,
     },
 
+    "interactsh": {
+        "desc": "Out-of-band interaction client for detecting blind vulnerabilities (SSRF, XSS, DNS exfiltration)",
+        "endpoint": "/api/tools/web_scan/interactsh",
+        "method": "POST",
+        "category": "web_scan",
+        "params": {},
+        "optional": {
+            "server": "",
+            "token": "",
+            "n": 1,
+            "poll_interval": 5,
+            "timeout": 60,
+            "additional_args": "",
+        },
+        "effectiveness": 0.88,
+    },
+
     # ---- Web Vuln ----
     "nuclei": {
         "desc": "Template-based vulnerability scanner",
