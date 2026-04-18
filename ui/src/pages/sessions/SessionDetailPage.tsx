@@ -32,11 +32,13 @@ export default function SessionDetailPage({
   tools,
   onBack,
   onToolRun,
+  llmAvailable = false,
 }: {
   sessionId: string
   tools: Tool[]
   onBack: () => void
   onToolRun?: (tool: string, params: Record<string, unknown>, result: ToolExecResponse) => void
+  llmAvailable?: boolean
 }) {
   const { pushToast } = useToast()
   const [session, setSession] = useState<SessionSummary | null>(null)
@@ -871,10 +873,20 @@ export default function SessionDetailPage({
           <button className="session-action-btn" onClick={() => setShowReportModal(true)}>
             <><FileText size={12} /> Generate Report</>
           </button>
-          <button className="session-action-btn" onClick={analyzeSession} disabled={analyzeLoading}>
+          <button
+            className="session-action-btn"
+            onClick={analyzeSession}
+            disabled={analyzeLoading || !llmAvailable}
+            title={!llmAvailable ? 'No LLM configured — start server with -ai or -ai-small' : undefined}
+          >
             <Brain size={12} /> {analyzeLoading ? 'Analysing…' : 'Analyze Session'}
           </button>
-          <button className="session-action-btn" onClick={followUpSession} disabled={followUpLoading}>
+          <button
+            className="session-action-btn"
+            onClick={followUpSession}
+            disabled={followUpLoading || !llmAvailable}
+            title={!llmAvailable ? 'No LLM configured — start server with -ai or -ai-small' : undefined}
+          >
             <Brain size={12} /> {followUpLoading ? 'Planning…' : 'AI Follow-up'}
           </button>
           <button className="session-action-btn" onClick={() => setShowTemplateModal(true)}>
@@ -997,6 +1009,7 @@ export default function SessionDetailPage({
         isOpen={showReportModal}
         session={session}
         onClose={() => setShowReportModal(false)}
+        llmAvailable={llmAvailable}
       />
 
       {activeTab === 'workflow' && <SessionDetailWorkbench

@@ -141,6 +141,7 @@ export function MainContent({
             tools={tools}
             onBack={() => setPage('sessions')}
             onToolRun={addBrowserRunEntry}
+            llmAvailable={health?.llm_status?.available ?? false}
           />
         )}
         {page === 'logs' && (

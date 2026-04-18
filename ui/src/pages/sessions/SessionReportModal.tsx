@@ -11,13 +11,14 @@ interface Props {
   isOpen: boolean
   session: SessionSummary
   onClose: () => void
+  llmAvailable?: boolean
 }
 
 function todaySlug(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-export function SessionReportModal({ isOpen, session, onClose }: Props) {
+export function SessionReportModal({ isOpen, session, onClose, llmAvailable = false }: Props) {
   useEscapeClose(isOpen, onClose)
 
   const [mode, setMode] = useState<ReportMode>('structured')
@@ -161,6 +162,8 @@ export function SessionReportModal({ isOpen, session, onClose }: Props) {
           <button
             className={`report-modal-tab${mode === 'ai' ? ' report-modal-tab--active' : ''}`}
             onClick={() => { setMode('ai'); setPreview(null); setError(null) }}
+            disabled={!llmAvailable}
+            title={!llmAvailable ? 'No LLM configured. Start the server with --ai or --ai-small to enable AI-assisted reports.' : undefined}
           >
             <Brain size={12} /> AI-Assisted
           </button>

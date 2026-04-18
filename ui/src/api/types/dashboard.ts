@@ -34,6 +34,12 @@ export interface WebDashboardResponse {
     misses: number;
     size: number;
   };
+  llm_status?: {
+    available: boolean;
+    provider?: string;
+    model?: string;
+    error?: string;
+  };
 }
 
 export type HealthResponse = WebDashboardResponse;
