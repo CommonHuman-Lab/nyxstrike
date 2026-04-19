@@ -27,6 +27,15 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageProps) {
           <button className="chat-retry-btn" onClick={onRetry}>Retry</button>
         )}
       </div>
+      {!isUser && !message.streaming && message.stats && (
+        <div className="chat-message-stats">
+          {message.stats.eval_count} tokens
+          {' \u00b7 '}
+          {message.stats.tokens_per_sec} tok/s
+          {' \u00b7 '}
+          {message.stats.total_duration_s}s
+        </div>
+      )}
     </div>
   )
 }

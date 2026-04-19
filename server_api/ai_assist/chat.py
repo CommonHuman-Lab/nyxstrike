@@ -249,14 +249,21 @@ def send_chat_message(chat_session_id: str):
 
     def generate():
       full_response = []
+      response_stats = None
       try:
         for chunk in llm_client.stream_chat(llm_messages):
+          if isinstance(chunk, dict):
+            # Stats metadata from the final Ollama chunk
+            response_stats = chunk
+            yield f"data: [STATS] {json.dumps(chunk)}\n\n"
+            continue
           full_response.append(chunk)
           # SSE format: data: <payload>\n\n
           yield f"data: {json.dumps(chunk)}\n\n"
-        # Persist the complete assistant response
+        # Persist the complete assistant response (with stats if available)
         complete = "".join(full_response)
-        db.add_chat_message(chat_session_id, "assistant", complete)
+        stats_json = json.dumps(response_stats) if response_stats else None
+        db.add_chat_message(chat_session_id, "assistant", complete, stats=stats_json)
         yield "data: [DONE]\n\n"
       except GeneratorExit:
         # Client disconnected (stop button) — save whatever arrived

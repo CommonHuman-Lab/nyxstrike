@@ -7,12 +7,21 @@ function getAuthToken(): string | null {
   return sessionStorage.getItem('nyxstrike_token')
 }
 
+export interface ChatStats {
+  eval_count: number
+  prompt_eval_count: number
+  total_duration_s: number
+  eval_duration_s: number
+  tokens_per_sec: number
+}
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
   streaming?: boolean
   error?: boolean
+  stats?: ChatStats
 }
 
 const BACKOFF_MS = [500, 1000, 2000, 4000]
@@ -30,6 +39,7 @@ export function useChatStream(chatSessionId: string | null) {
           id: String(m.id),
           role: m.role,
           content: m.content,
+          ...(m.stats ? { stats: JSON.parse(m.stats) } : {}),
         })))
       }
     } catch { /* ignore */ }
@@ -93,6 +103,16 @@ export function useChatStream(chatSessionId: string | null) {
             ))
             setStreaming(false)
             return
+          }
+
+          if (payload.startsWith('[STATS]')) {
+            try {
+              const stats = JSON.parse(payload.slice(7).trim()) as ChatStats
+              setMessages(prev => prev.map(m =>
+                m.id === assistantMsgId ? { ...m, stats } : m
+              ))
+            } catch { /* malformed stats, skip */ }
+            continue
           }
 
           if (payload.startsWith('[ERROR]')) {

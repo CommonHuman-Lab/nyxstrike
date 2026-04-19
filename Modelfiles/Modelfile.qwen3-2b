@@ -1,5 +1,5 @@
 FROM huihui_ai/qwen3.5-abliterated:2B
-PARAMETER num_ctx 4096
+PARAMETER num_ctx 16384
 PARAMETER num_predict 4096
 PARAMETER temperature 0.7
 PARAMETER top_p 0.9

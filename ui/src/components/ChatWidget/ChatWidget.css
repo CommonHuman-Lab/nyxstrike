@@ -247,9 +247,9 @@
 }
 
 /* ── Messages ────────────────────────────────────────────────────────────── */
-.chat-message { display: flex; }
-.chat-message--user { justify-content: flex-end; }
-.chat-message--assistant { justify-content: flex-start; }
+.chat-message { display: flex; flex-direction: column; }
+.chat-message--user { align-items: flex-end; }
+.chat-message--assistant { align-items: flex-start; }
 .chat-message-bubble {
   max-width: 85%;
   padding: 8px 11px;
@@ -307,6 +307,15 @@
   padding: 2px 8px;
 }
 .chat-retry-btn:hover { opacity: 0.8; }
+
+/* Response stats */
+.chat-message-stats {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 2px;
+  padding-left: 4px;
+  font-family: monospace;
+}
 
 /* Markdown inside assistant bubbles */
 .chat-message-markdown { font-size: 13px; }

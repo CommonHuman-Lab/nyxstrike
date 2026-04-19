@@ -21,6 +21,7 @@ export interface ChatMessageItem {
   chat_session_id: string;
   role: 'user' | 'assistant';
   content: string;
+  stats?: string | null;
   is_summarized: boolean;
   created_at: string;
 }
