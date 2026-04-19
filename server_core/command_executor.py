@@ -1,9 +1,13 @@
 import os
 import shlex
+import psutil
 from typing import Any, Dict, Optional
 from server_core import config_core
 from server_core.enhanced_command_executor import EnhancedCommandExecutor
 from server_core.singletons import cache as _cache
+
+# CPU threshold above which tool commands are niced down.
+_CPU_NICE_THRESHOLD = config_core.get("CPU_NICE_THRESHOLD", 85)
 
 COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # Default to 5 minutes if not set
 
@@ -92,6 +96,7 @@ def execute_command(
   """
   active_cache = cache if cache is not None else (_cache if use_cache else None)
 
+  # Cache key always uses the original command — before any runtime adjustments.
   if active_cache is not None:
     cached_result = active_cache.get(command, {})
     if cached_result:
@@ -99,11 +104,28 @@ def execute_command(
 
   effective_timeout = _resolve_timeout(command, tool, timeout)
 
-  _executor.command = command
+  # Apply CPU niceness after the cache check so the cache key is unaffected.
+  # interval=None is non-blocking — uses CPU% measured since the last psutil call.
+  exec_command = command
+  try:
+    if psutil.cpu_percent(interval=None) > _CPU_NICE_THRESHOLD:
+      if not exec_command.startswith("nice "):
+        exec_command = f"nice -n 10 {exec_command}"
+  except Exception:
+    pass  # never let a psutil hiccup block a tool call
+
+  _executor.command = exec_command
   _executor.timeout = effective_timeout
   result = _executor.execute()
 
   if active_cache is not None and result.get("success", False):
     active_cache.set(command, {}, result)
+
+  # Record into the performance dashboard (lazy — wakes EnhancedProcessManager)
+  try:
+    from server_core.singletons import enhanced_process_manager as _epm
+    _epm.performance_dashboard.record_execution(exec_command, result)
+  except Exception:
+    pass  # dashboard recording must never break a tool call
 
   return result

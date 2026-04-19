@@ -25,6 +25,7 @@ _config = {
         "amass": 1800,
     },
     "CLEAN_TOOL_OUTPUT": True,
+    "CPU_NICE_THRESHOLD": 85,  # CPU% above which tool commands are niced down (nice -n 10)
     "CACHE_SIZE": 1000,
     "CACHE_TTL": 3600,  # 1 hour
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour
