@@ -25,6 +25,11 @@ export interface Settings {
     cache_ttl: number;
     tool_availability_ttl: number;
   };
+  chat: {
+    system_prompt: string;
+    summarization_threshold: number;
+    context_injection_chars: number;
+  };
   wordlists: WordlistEntry[];
 }
 

@@ -16,6 +16,8 @@ Design notes:
 Current tables:
   llm_sessions        — one row per LLM analysis session
   llm_vulnerabilities — parsed vulnerabilities linked to a session
+  chat_sessions       — named chat conversation threads
+  chat_messages       — individual messages within a chat thread
 """
 
 import json
@@ -89,6 +91,23 @@ class NyxStrikeDB:
           description TEXT,
           fix_text    TEXT,
           created_at  TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+          id         TEXT PRIMARY KEY,
+          name       TEXT DEFAULT '',
+          summary    TEXT DEFAULT '',
+          created_at TEXT DEFAULT (datetime('now')),
+          updated_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id              INTEGER PRIMARY KEY AUTOINCREMENT,
+          chat_session_id TEXT REFERENCES chat_sessions(id) ON DELETE CASCADE,
+          role            TEXT NOT NULL,
+          content         TEXT NOT NULL,
+          is_summarized   INTEGER DEFAULT 0,
+          created_at      TEXT DEFAULT (datetime('now'))
         );
       """)
       self._conn.commit()
@@ -198,6 +217,120 @@ class NyxStrikeDB:
         (session_id,),
       )
       return self._rows_to_list(cur.fetchall())
+
+  # ── Chat Sessions ─────────────────────────────────────────────────────────────
+
+  def create_chat_session(self, session_id: str, name: str = "") -> Dict[str, Any]:
+    """Insert a new chat session and return it as a dict."""
+    with self._lock:
+      self._conn.execute(
+        "INSERT OR IGNORE INTO chat_sessions (id, name) VALUES (?, ?)",
+        (session_id, name),
+      )
+      self._conn.commit()
+      cur = self._conn.execute("SELECT * FROM chat_sessions WHERE id = ?", (session_id,))
+      return self._row_to_dict(cur.fetchone()) or {}
+
+  def rename_chat_session(self, session_id: str, name: str) -> None:
+    """Update the name of a chat session."""
+    with self._lock:
+      self._conn.execute(
+        "UPDATE chat_sessions SET name = ?, updated_at = datetime('now') WHERE id = ?",
+        (name, session_id),
+      )
+      self._conn.commit()
+
+  def update_chat_summary(self, session_id: str, summary: str) -> None:
+    """Replace the rolling summary for a chat session."""
+    with self._lock:
+      self._conn.execute(
+        "UPDATE chat_sessions SET summary = ?, updated_at = datetime('now') WHERE id = ?",
+        (summary, session_id),
+      )
+      self._conn.commit()
+
+  def delete_chat_session(self, session_id: str) -> None:
+    """Delete a chat session and all its messages (CASCADE)."""
+    with self._lock:
+      self._conn.execute("DELETE FROM chat_sessions WHERE id = ?", (session_id,))
+      self._conn.commit()
+
+  def get_chat_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+    """Return a single chat session dict, or None."""
+    with self._lock:
+      cur = self._conn.execute("SELECT * FROM chat_sessions WHERE id = ?", (session_id,))
+      return self._row_to_dict(cur.fetchone())
+
+  def list_chat_sessions(self) -> List[Dict[str, Any]]:
+    """Return all chat sessions, newest first."""
+    with self._lock:
+      cur = self._conn.execute(
+        "SELECT * FROM chat_sessions ORDER BY updated_at DESC"
+      )
+      return self._rows_to_list(cur.fetchall())
+
+  # ── Chat Messages ─────────────────────────────────────────────────────────────
+
+  def add_chat_message(self, chat_session_id: str, role: str, content: str) -> int:
+    """Insert a message and return its rowid."""
+    with self._lock:
+      cur = self._conn.execute(
+        """
+        INSERT INTO chat_messages (chat_session_id, role, content)
+        VALUES (?, ?, ?)
+        """,
+        (chat_session_id, role, content),
+      )
+      self._conn.execute(
+        "UPDATE chat_sessions SET updated_at = datetime('now') WHERE id = ?",
+        (chat_session_id,),
+      )
+      self._conn.commit()
+      return cur.lastrowid  # type: ignore[return-value]
+
+  def get_active_chat_messages(self, chat_session_id: str) -> List[Dict[str, Any]]:
+    """Return non-summarized messages for a session, oldest first."""
+    with self._lock:
+      cur = self._conn.execute(
+        """
+        SELECT * FROM chat_messages
+        WHERE chat_session_id = ? AND is_summarized = 0
+        ORDER BY id ASC
+        """,
+        (chat_session_id,),
+      )
+      return self._rows_to_list(cur.fetchall())
+
+  def get_all_chat_messages(self, chat_session_id: str) -> List[Dict[str, Any]]:
+    """Return all messages (including summarized) for a session, oldest first."""
+    with self._lock:
+      cur = self._conn.execute(
+        "SELECT * FROM chat_messages WHERE chat_session_id = ? ORDER BY id ASC",
+        (chat_session_id,),
+      )
+      return self._rows_to_list(cur.fetchall())
+
+  def mark_messages_summarized(self, message_ids: List[int]) -> None:
+    """Mark a batch of messages as folded into the rolling summary."""
+    if not message_ids:
+      return
+    placeholders = ",".join("?" for _ in message_ids)
+    with self._lock:
+      self._conn.execute(
+        f"UPDATE chat_messages SET is_summarized = 1 WHERE id IN ({placeholders})",
+        message_ids,
+      )
+      self._conn.commit()
+
+  def count_active_chat_messages(self, chat_session_id: str) -> int:
+    """Return count of non-summarized messages for a session."""
+    with self._lock:
+      cur = self._conn.execute(
+        "SELECT COUNT(*) FROM chat_messages WHERE chat_session_id = ? AND is_summarized = 0",
+        (chat_session_id,),
+      )
+      row = cur.fetchone()
+      return row[0] if row else 0
 
   # ── Lifecycle ─────────────────────────────────────────────────────────────────
 

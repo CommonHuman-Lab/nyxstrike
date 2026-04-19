@@ -42,6 +42,14 @@ export type {
 export type { CacheStatsResponse } from './cache';
 
 export type {
+  ChatSession,
+  ChatSessionsResponse,
+  ChatSessionResponse,
+  ChatMessageItem,
+  ChatMessagesResponse,
+} from './chat';
+
+export type {
   AnalyzeSessionResponse,
   FollowUpSessionResponse,
   LlmSession,

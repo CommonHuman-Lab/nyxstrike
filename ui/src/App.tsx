@@ -27,6 +27,7 @@ import { THEME_STORAGE_KEY, isThemeId, type ThemeId } from './app/themes'
 import { MainContent } from './app/MainContent'
 import { CommandPalette } from './components/CommandPalette'
 import { ReportGenerationBubble } from './components/ReportGenerationBubble'
+import { ChatWidget } from './components/ChatWidget'
 import './App.css'
 
 const POLL_MS = 10_000
@@ -440,6 +441,11 @@ export default function App() {
           onSelectTool={handleCommandSelectTool}
         />
         <ReportGenerationBubble />
+        <ChatWidget
+          llmAvailable={health?.llm_status?.available ?? false}
+          currentPage={page}
+          currentSessionId={activeSessionId}
+        />
         {demo && (
           <div className="demo-banner">
             <FlaskConical size={13} />

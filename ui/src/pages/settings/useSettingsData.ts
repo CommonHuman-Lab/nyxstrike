@@ -16,6 +16,9 @@ type SettingsCache = {
   cacheTtl: string
   toolTtl: string
   wordlistsDraft: WordlistEntry[]
+  systemPrompt: string
+  summarizationThreshold: string
+  contextInjectionChars: string
 }
 
 let settingsCache: SettingsCache | null = null
@@ -44,6 +47,9 @@ export function useSettingsData() {
   const [cacheTtl, setCacheTtl] = useState(settingsCache?.cacheTtl ?? '')
   const [toolTtl, setToolTtl] = useState(settingsCache?.toolTtl ?? '')
   const [wordlistsDraft, setWordlistsDraft] = useState<WordlistEntry[]>(settingsCache?.wordlistsDraft ?? [])
+  const [systemPrompt, setSystemPrompt] = useState(settingsCache?.systemPrompt ?? '')
+  const [summarizationThreshold, setSummarizationThreshold] = useState(settingsCache?.summarizationThreshold ?? '')
+  const [contextInjectionChars, setContextInjectionChars] = useState(settingsCache?.contextInjectionChars ?? '')
 
   function applySettings(response: Settings) {
     const nextCache: SettingsCache = {
@@ -56,6 +62,9 @@ export function useSettingsData() {
       cacheTtl: String(response.runtime.cache_ttl),
       toolTtl: String(response.runtime.tool_availability_ttl),
       wordlistsDraft: response.wordlists.map(w => ({ ...w })),
+      systemPrompt: response.chat?.system_prompt ?? '',
+      summarizationThreshold: String(response.chat?.summarization_threshold ?? 20),
+      contextInjectionChars: String(response.chat?.context_injection_chars ?? 4000),
     }
     settingsCache = nextCache
     setSettings(nextCache.settings)
@@ -67,6 +76,9 @@ export function useSettingsData() {
     setCacheTtl(nextCache.cacheTtl)
     setToolTtl(nextCache.toolTtl)
     setWordlistsDraft(nextCache.wordlistsDraft)
+    setSystemPrompt(nextCache.systemPrompt)
+    setSummarizationThreshold(nextCache.summarizationThreshold)
+    setContextInjectionChars(nextCache.contextInjectionChars)
   }
 
   useEffect(() => {
@@ -138,8 +150,28 @@ export function useSettingsData() {
     }
   }
 
-  async function clearCache() {
-    setClearingCache(true)
+  async function saveChatSettings() {
+    setSaving(true)
+    try {
+      const res = await api.patchSettings({}, {
+        system_prompt: systemPrompt,
+        summarization_threshold: Number(summarizationThreshold),
+        context_injection_chars: Number(contextInjectionChars),
+      })
+      if (!res.success) {
+        pushToast('error', 'Failed to save chat settings')
+        return
+      }
+      if (res.settings) applySettings(res.settings)
+      pushToast('success', 'Chat settings saved')
+    } catch {
+      pushToast('error', 'Failed to save chat settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function clearCache() {    setClearingCache(true)
     try {
       const res = await api.clearCache()
       if (res.success) {
@@ -169,6 +201,9 @@ export function useSettingsData() {
     cacheTtl,
     toolTtl,
     wordlistsDraft,
+    systemPrompt,
+    summarizationThreshold,
+    contextInjectionChars,
     setTimeout_,
     setRequestTimeout,
     setInactivityTimeout,
@@ -176,11 +211,15 @@ export function useSettingsData() {
     setCacheSize,
     setCacheTtl,
     setToolTtl,
+    setSystemPrompt,
+    setSummarizationThreshold,
+    setContextInjectionChars,
     addWordlist,
     removeWordlist,
     updateWordlist,
     saveRuntime,
     saveWordlists,
+    saveChatSettings,
     clearCache,
     withCurrentTypeOption: (current: string) => withCurrentOption(WORDLIST_TYPE_OPTIONS, current),
     withCurrentSpeedOption: (current: string) => withCurrentOption(SPEED_OPTIONS, current),

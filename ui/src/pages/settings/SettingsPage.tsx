@@ -4,6 +4,7 @@ import { InformationModal } from '../../components/InformationModal'
 import { THEME_OPTIONS, type ThemeId } from '../../app/themes'
 import { useSettingsData } from './useSettingsData'
 import {
+  ChatSettingsSection,
   RuntimeConfigSection,
   ServerEnvironmentSection,
   WordlistsSection,
@@ -73,10 +74,17 @@ export default function SettingsPage({
     updateWordlist,
     saveRuntime,
     saveWordlists,
+    saveChatSettings,
     clearCache,
     withCurrentTypeOption,
     withCurrentSpeedOption,
     withCurrentCoverageOption,
+    systemPrompt,
+    summarizationThreshold,
+    contextInjectionChars,
+    setSystemPrompt,
+    setSummarizationThreshold,
+    setContextInjectionChars,
   } = useSettingsData()
 
   if (loading) {
@@ -203,6 +211,17 @@ export default function SettingsPage({
         withCurrentTypeOption={withCurrentTypeOption}
         withCurrentSpeedOption={withCurrentSpeedOption}
         withCurrentCoverageOption={withCurrentCoverageOption}
+      />
+
+      <ChatSettingsSection
+        systemPrompt={systemPrompt}
+        setSystemPrompt={setSystemPrompt}
+        summarizationThreshold={summarizationThreshold}
+        setSummarizationThreshold={setSummarizationThreshold}
+        contextInjectionChars={contextInjectionChars}
+        setContextInjectionChars={setContextInjectionChars}
+        saving={saving}
+        onSave={saveChatSettings}
       />
     </div>
   )

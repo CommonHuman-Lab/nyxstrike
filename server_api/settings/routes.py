@@ -18,6 +18,9 @@ _MUTABLE_KEYS = {
     "CACHE_SIZE",
     "CACHE_TTL",
     "TOOL_AVAILABILITY_TTL",
+    "CHAT_SYSTEM_PROMPT",
+    "CHAT_SUMMARIZATION_THRESHOLD",
+    "CHAT_CONTEXT_INJECTION_CHARS",
 }
 
 
@@ -44,6 +47,11 @@ def _current_settings() -> dict:
             "tool_availability_ttl": config_core.get("TOOL_AVAILABILITY_TTL", 3600),
         },
         "wordlists": _wordlists_summary(),
+        "chat": {
+            "system_prompt": config_core.get("CHAT_SYSTEM_PROMPT", "You are NyxStrike, an expert penetration testing AI assistant."),
+            "summarization_threshold": config_core.get("CHAT_SUMMARIZATION_THRESHOLD", 20),
+            "context_injection_chars": config_core.get("CHAT_CONTEXT_INJECTION_CHARS", 4000),
+        },
     }
 
 
@@ -77,6 +85,7 @@ def patch_settings():
     try:
         body = request.get_json(force=True, silent=True) or {}
         runtime = body.get("runtime", {})
+        chat = body.get("chat", {})
         updated = {}
         errors = {}
 
@@ -102,6 +111,25 @@ def patch_settings():
                 updated[field] = val
             except (ValueError, TypeError) as exc:
                 errors[field] = str(exc)
+
+        # Chat settings
+        chat_key_map = {
+            "system_prompt": ("CHAT_SYSTEM_PROMPT", str, None),
+            "summarization_threshold": ("CHAT_SUMMARIZATION_THRESHOLD", int, 1),
+            "context_injection_chars": ("CHAT_CONTEXT_INJECTION_CHARS", int, 0),
+        }
+        for field, (cfg_key, cast, min_value) in chat_key_map.items():
+            if field not in chat:
+                continue
+            try:
+                val = cast(chat[field])
+                if min_value is not None and val < min_value:
+                    qualifier = "non-negative" if min_value == 0 else "positive"
+                    raise ValueError(f"must be {qualifier}")
+                config_core.set_value(cfg_key, val)
+                updated[f"chat.{field}"] = val
+            except (ValueError, TypeError) as exc:
+                errors[f"chat.{field}"] = str(exc)
 
         if errors:
             return jsonify({"success": False, "errors": errors, "updated": updated}), 400

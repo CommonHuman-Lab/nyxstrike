@@ -3,6 +3,9 @@ import type {
   AttackChainStep,
   AnalyzeSessionResponse,
   CacheStatsResponse,
+  ChatSessionsResponse,
+  ChatSessionResponse,
+  ChatMessagesResponse,
   ClassifyTaskResponse,
   CreateAttackChainResponse,
   CreateFindingPayload,
@@ -67,8 +70,8 @@ export const api = {
   refreshToolAvailability: () => post<RefreshToolAvailabilityResponse>('/api/tools/availability/refresh'),
 
   getSettings: () => get<SettingsResponse>('/api/settings'),
-  patchSettings: (runtime: Partial<Settings['runtime']>) =>
-    patch<PatchSettingsResponse>('/api/settings', { runtime }),
+  patchSettings: (runtime: Partial<Settings['runtime']>, chat?: Partial<Settings['chat']>) =>
+    patch<PatchSettingsResponse>('/api/settings', { runtime, ...(chat ? { chat } : {}) }),
   patchWordlists: (wordlists: WordlistEntry[]) =>
     patch<PatchWordlistsResponse>('/api/settings/wordlists', { wordlists }),
 
@@ -223,4 +226,12 @@ export const api = {
     post<SessionAiReportResponse>(`/api/sessions/${sessionId}/report/ai`, options),
   /** Returns the URL to trigger a notes zip download in the browser */
   exportSessionNotesUrl: (sessionId: string) => `/api/sessions/${sessionId}/notes/export`,
+
+  // ── Chat Widget ──────────────────────────────────────────────────────────
+  chat: {
+    listSessions: () => get<ChatSessionsResponse>('/api/chat/sessions'),
+    createSession: () => post<ChatSessionResponse>('/api/chat/sessions'),
+    deleteSession: (chatSessionId: string) => del<{ success: boolean }>(`/api/chat/sessions/${chatSessionId}`),
+    getMessages: (chatSessionId: string) => get<ChatMessagesResponse>(`/api/chat/sessions/${chatSessionId}/messages`),
+  },
 };

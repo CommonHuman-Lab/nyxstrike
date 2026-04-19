@@ -43,6 +43,27 @@ function SettingsField({ label, unit, hint, value, onChange }: {
   )
 }
 
+export function SettingsTextarea({ label, hint, value, onChange, rows = 4 }: {
+  label: string
+  hint: string
+  value: string
+  onChange: (v: string) => void
+  rows?: number
+}) {
+  return (
+    <div className="settings-field">
+      <label className="settings-label">{label}</label>
+      <textarea
+        className="settings-input settings-textarea mono"
+        rows={rows}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+      <span className="settings-hint-inline">{hint}</span>
+    </div>
+  )
+}
+
 export function ServerEnvironmentSection({ settings }: { settings: Settings }) {
   return (
     <section className="section">
@@ -281,6 +302,63 @@ export function WordlistsSection({
       <p className="settings-hint">
         Changes are stored in <code>wordlists.json</code>. Entries here override defaults from <code>config.py</code>.
       </p>
+    </section>
+  )
+}
+
+export function ChatSettingsSection({
+  systemPrompt,
+  setSystemPrompt,
+  summarizationThreshold,
+  setSummarizationThreshold,
+  contextInjectionChars,
+  setContextInjectionChars,
+  saving,
+  onSave,
+}: {
+  systemPrompt: string
+  setSystemPrompt: (v: string) => void
+  summarizationThreshold: string
+  setSummarizationThreshold: (v: string) => void
+  contextInjectionChars: string
+  setContextInjectionChars: (v: string) => void
+  saving: boolean
+  onSave: () => Promise<void>
+}) {
+  return (
+    <section className="section">
+      <div className="section-header">
+        <h3>Chat Widget</h3>
+        <span className="section-meta">changes apply immediately</span>
+      </div>
+      <div className="settings-grid">
+        <SettingsTextarea
+          label="System Prompt"
+          hint="The system persona sent to the LLM at the start of every chat."
+          value={systemPrompt}
+          onChange={setSystemPrompt}
+          rows={5}
+        />
+        <SettingsField
+          label="Summarization Threshold"
+          unit="messages"
+          hint="When non-summarized message count exceeds this, the oldest half are summarized."
+          value={summarizationThreshold}
+          onChange={setSummarizationThreshold}
+        />
+        <SettingsField
+          label="Context Injection Chars"
+          unit="chars"
+          hint="Max characters of session context injected into the chat prompt."
+          value={contextInjectionChars}
+          onChange={setContextInjectionChars}
+        />
+      </div>
+      <div className="settings-actions">
+        <ActionButton variant="success" onClick={onSave} disabled={saving}>
+          <Save size={14} /> {saving ? 'Saving…' : 'Save Chat Settings'}
+        </ActionButton>
+      </div>
     </section>
   )
 }

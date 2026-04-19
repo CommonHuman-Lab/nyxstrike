@@ -39,6 +39,15 @@ _config = {
     "NYXSTRIKE_LLM_TIMEOUT":  600,                              # seconds
     "NYXSTRIKE_LLM_MAX_LOOPS": 9,
 
+    # ── Chat widget ───────────────────────────────────────────────────────────
+    "CHAT_SYSTEM_PROMPT": (
+        "You are NyxStrike, an expert penetration testing AI assistant embedded in a "
+        "security operations platform. You help operators understand scan results, plan "
+        "attacks, interpret findings, and write reports. Be concise, technical, and actionable."
+    ),
+    "CHAT_SUMMARIZATION_THRESHOLD": 20,   # non-summarized messages before rolling summary kicks in
+    "CHAT_CONTEXT_INJECTION_CHARS": 4000, # max chars of session scan output injected as context
+
     "WORD_LISTS": {
 
         # --- Password Lists ---

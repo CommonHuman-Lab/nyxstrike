@@ -30,8 +30,9 @@ Usage:
 """
 
 import logging
+import json
 import os
-from typing import List, Dict, Any, Optional
+from typing import Generator, List, Dict, Any, Optional
 
 import requests
 
@@ -130,6 +131,49 @@ class OllamaBackend:
     except Exception as exc:
       logger.warning("Ollama warm-up failed (non-fatal): %s", exc)
 
+  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+    """Stream tokens from Ollama one chunk at a time via NDJSON."""
+    prompt = _messages_to_prompt(messages)
+    payload: Dict[str, Any] = {
+      "model": self._model,
+      "prompt": prompt,
+      "stream": True,
+      "options": {"temperature": 0.7, "top_p": 0.9, "num_predict": 4096},
+    }
+    try:
+      with requests.post(self._generate_url, json=payload, timeout=self._timeout, stream=True) as resp:
+        resp.raise_for_status()
+        for line in resp.iter_lines():
+          if not line:
+            continue
+          try:
+            data = json.loads(line)
+          except json.JSONDecodeError:
+            continue
+          chunk = data.get("response", "")
+          if chunk:
+            yield chunk
+          if data.get("done"):
+            break
+    except requests.exceptions.ConnectionError:
+      raise RuntimeError(f"Cannot connect to Ollama at {self._base_url}.")
+    except requests.exceptions.Timeout:
+      raise RuntimeError(f"Ollama stream timed out after {self._timeout}s.")
+    except requests.exceptions.HTTPError as exc:
+      raise RuntimeError(f"Ollama HTTP error: {exc}")
+
+  def generate_summary(self, messages: List[Dict[str, Any]]) -> str:
+    """Summarize a list of messages into a short paragraph (non-streaming)."""
+    conversation = "\n".join(
+      f"{m['role'].capitalize()}: {m['content']}" for m in messages
+    )
+    summary_prompt = (
+      "Summarize the following conversation in 2-3 sentences, "
+      "preserving key facts, targets, commands, and findings. "
+      "Be concise and technical.\n\n" + conversation
+    )
+    return self.chat([{"role": "user", "content": summary_prompt}])
+
   @property
   def provider(self) -> str:
     return "ollama"
@@ -137,7 +181,6 @@ class OllamaBackend:
   @property
   def model(self) -> str:
     return self._model
-
 
 class OpenAIBackend:
   """OpenAI / Azure OpenAI backend via the openai SDK."""
@@ -172,12 +215,38 @@ class OpenAIBackend:
     except Exception as exc:
       raise RuntimeError(f"OpenAI API error: {exc}")
 
-  def is_available(self) -> bool:
+  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+    """Stream tokens from OpenAI one delta at a time."""
+    kwargs: Dict[str, Any] = {
+      "model": self._model,
+      "messages": messages,
+      "max_tokens": 4096,
+      "temperature": 0.7,
+      "stream": True,
+    }
     try:
-      self._client.models.list()
-      return True
-    except Exception:
-      return False
+      stream = self._client.chat.completions.create(**kwargs)
+      for chunk in stream:
+        delta = chunk.choices[0].delta.content if chunk.choices else None
+        if delta:
+          yield delta
+    except Exception as exc:
+      raise RuntimeError(f"OpenAI streaming error: {exc}")
+
+  def generate_summary(self, messages: List[Dict[str, Any]]) -> str:
+    """Summarize a list of messages into a short paragraph (non-streaming)."""
+    conversation = "\n".join(
+      f"{m['role'].capitalize()}: {m['content']}" for m in messages
+    )
+    summary_prompt = (
+      "Summarize the following conversation in 2-3 sentences, "
+      "preserving key facts, targets, commands, and findings. "
+      "Be concise and technical.\n\n" + conversation
+    )
+    return self.chat([{"role": "user", "content": summary_prompt}])
+
+  def is_available(self) -> bool:
+    return True
 
   @property
   def provider(self) -> str:
@@ -221,6 +290,38 @@ class AnthropicBackend:
       return resp.content[0].text.strip()
     except Exception as exc:
       raise RuntimeError(f"Anthropic API error: {exc}")
+
+  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+    """Stream tokens from Anthropic one delta at a time."""
+    system_parts = [m["content"] for m in messages if m["role"] == "system"]
+    user_messages = [m for m in messages if m["role"] != "system"]
+    system_text = "\n\n".join(system_parts)
+    kwargs: Dict[str, Any] = {
+      "model": self._model,
+      "max_tokens": 4096,
+      "messages": user_messages,
+    }
+    if system_text:
+      kwargs["system"] = system_text
+    try:
+      with self._client.messages.stream(**kwargs) as stream:
+        for text in stream.text_stream:
+          if text:
+            yield text
+    except Exception as exc:
+      raise RuntimeError(f"Anthropic streaming error: {exc}")
+
+  def generate_summary(self, messages: List[Dict[str, Any]]) -> str:
+    """Summarize a list of messages into a short paragraph (non-streaming)."""
+    conversation = "\n".join(
+      f"{m['role'].capitalize()}: {m['content']}" for m in messages
+    )
+    summary_prompt = (
+      "Summarize the following conversation in 2-3 sentences, "
+      "preserving key facts, targets, commands, and findings. "
+      "Be concise and technical.\n\n" + conversation
+    )
+    return self.chat([{"role": "user", "content": summary_prompt}])
 
   def is_available(self) -> bool:
     try:
@@ -273,15 +374,20 @@ class LLMClient:
   """
 
   def __init__(self) -> None:
+    self.max_loops: int = int(_cfg("NYXSTRIKE_LLM_MAX_LOOPS") or 9)
+    self._backend: Any = None
+    self._init_error: str = ""
+
+    # Only initialise a backend when AI mode is explicitly enabled..
+    import os as _os
+    if _os.environ.get("NYXSTRIKE_LLM_WARMUP") != "1":
+      return
+
     provider = _cfg("NYXSTRIKE_LLM_PROVIDER").lower()
     model = _cfg("NYXSTRIKE_LLM_MODEL")
     base_url = _cfg("NYXSTRIKE_LLM_URL")
     api_key = _cfg("NYXSTRIKE_LLM_API_KEY")
     timeout = int(_cfg("NYXSTRIKE_LLM_TIMEOUT") or 300)
-
-    self.max_loops: int = int(_cfg("NYXSTRIKE_LLM_MAX_LOOPS") or 9)
-    self._backend: Any = None
-    self._init_error: str = ""
 
     try:
       if provider == "ollama":
@@ -341,6 +447,52 @@ class LLMClient:
         f"LLM client not initialized: {self._init_error or 'unknown error'}"
       )
     return self._backend.chat(messages, stop)
+
+  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+    """Stream the model's response token-by-token.
+
+    Args:
+      messages: List of {"role": "system"|"user"|"assistant", "content": str}
+
+    Yields:
+      String chunks as they arrive from the model.
+
+    Raises:
+      RuntimeError: If the backend is not initialized or streaming fails.
+    """
+    if self._backend is None:
+      raise RuntimeError(
+        f"LLM client not initialized: {self._init_error or 'unknown error'}"
+      )
+    if not hasattr(self._backend, "stream_chat"):
+      raise RuntimeError(f"Backend {self.provider!r} does not support streaming")
+    yield from self._backend.stream_chat(messages)
+
+  def generate_summary(self, messages: List[Dict[str, Any]]) -> str:
+    """Summarize a message list into a short paragraph.
+
+    Used for rolling context compression in chat sessions.
+    Falls back to non-streaming chat() internally.
+
+    Raises:
+      RuntimeError: If the backend is not initialized or the call fails.
+    """
+    if self._backend is None:
+      raise RuntimeError(
+        f"LLM client not initialized: {self._init_error or 'unknown error'}"
+      )
+    if hasattr(self._backend, "generate_summary"):
+      return self._backend.generate_summary(messages)
+    # Fallback: use chat() directly
+    conversation = "\n".join(
+      f"{m['role'].capitalize()}: {m['content']}" for m in messages
+    )
+    prompt = (
+      "Summarize the following conversation in 2-3 sentences, "
+      "preserving key facts, targets, commands, and findings. "
+      "Be concise and technical.\n\n" + conversation
+    )
+    return self.chat([{"role": "user", "content": prompt}])
 
   def status(self) -> Dict[str, Any]:
     """Return a status dict suitable for the /llm-status health endpoint."""

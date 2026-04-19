@@ -314,6 +314,7 @@ def register_blueprints(app):
   app.register_blueprint(api_bugbounty_workflow_bug_bounty_recon_bp)
 
   # AI Assist
+  app.register_blueprint(api_chat_bp)
   app.register_blueprint(api_ai_assist_advanced_payload_generation_bp)
   app.register_blueprint(api_ai_assist_llm_agent_bp)
   app.register_blueprint(api_ai_assist_ai_recon_session_bp)
