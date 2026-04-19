@@ -65,6 +65,7 @@ TOOL_PROFILES = {
     #Tools for API fuzzing and endpoint discovery (e.g., API Fuzzer with intelligent parameter discovery).
     "api_fuzz": [
         lambda mcp, client, logger: register_api_fuzzer_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_api_fuzz_schemathesis_tool(mcp, client, logger),
     ],
 
     #Tools for API scanning (e.g., GraphQL Scanner with enhanced security testing).
@@ -418,6 +419,7 @@ DEFAULT_PROFILE = [
     "data_processing",
     "error_handling",
     "wifi_pentest",
+    "api_audit",
 
     # System tools"
     "monitoring",
