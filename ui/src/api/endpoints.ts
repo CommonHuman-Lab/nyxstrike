@@ -232,6 +232,7 @@ export const api = {
     listSessions: () => get<ChatSessionsResponse>('/api/chat/sessions'),
     createSession: () => post<ChatSessionResponse>('/api/chat/sessions'),
     deleteSession: (chatSessionId: string) => del<{ success: boolean }>(`/api/chat/sessions/${chatSessionId}`),
+    renameSession: (chatSessionId: string, name: string) => patch<{ success: boolean }>(`/api/chat/sessions/${chatSessionId}`, { name }),
     getMessages: (chatSessionId: string) => get<ChatMessagesResponse>(`/api/chat/sessions/${chatSessionId}/messages`),
   },
 };

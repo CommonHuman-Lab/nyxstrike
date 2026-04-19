@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Plus, Trash2, MessageSquare } from 'lucide-react'
 import { ConfirmActionModal } from '../ConfirmActionModal'
 import type { ChatSession } from '../../api'
@@ -9,6 +9,7 @@ interface ChatSidebarProps {
   onSelectSession: (id: string) => void
   onCreateSession: () => void
   onDeleteSession: (id: string) => void
+  onRenameSession: (id: string, name: string) => void
 }
 
 export function ChatSidebar({
@@ -17,8 +18,35 @@ export function ChatSidebar({
   onSelectSession,
   onCreateSession,
   onDeleteSession,
+  onRenameSession,
 }: ChatSidebarProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editingId && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [editingId])
+
+  function startEdit(session: ChatSession) {
+    setEditingId(session.id)
+    setEditValue(session.name || 'New chat')
+  }
+
+  function commitEdit() {
+    if (editingId && editValue.trim()) {
+      onRenameSession(editingId, editValue.trim())
+    }
+    setEditingId(null)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
 
   return (
     <div className="chat-sidebar">
@@ -37,12 +65,28 @@ export function ChatSidebar({
           <div
             key={session.id}
             className={`chat-session-item${session.id === activeSessionId ? ' active' : ''}`}
-            onClick={() => onSelectSession(session.id)}
+            onClick={() => { if (editingId !== session.id) onSelectSession(session.id) }}
+            onDoubleClick={e => { e.stopPropagation(); startEdit(session) }}
           >
             <MessageSquare size={12} className="chat-session-icon" />
-            <span className="chat-session-name">
-              {session.name || 'New chat'}
-            </span>
+            {editingId === session.id ? (
+              <input
+                ref={inputRef}
+                className="chat-session-rename-input"
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                onBlur={commitEdit}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitEdit()
+                  if (e.key === 'Escape') cancelEdit()
+                }}
+                onClick={e => e.stopPropagation()}
+              />
+            ) : (
+              <span className="chat-session-name">
+                {session.name || 'New chat'}
+              </span>
+            )}
             <button
               className="chat-session-delete"
               onClick={e => { e.stopPropagation(); setConfirmDeleteId(session.id) }}
