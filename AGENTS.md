@@ -4,7 +4,7 @@
 
 ## Quick orientation
 
-- Project: NyxStrike (Python 3.8+)
+- Project: NyxStrike (Python 3.13+)
 - Primary entrypoints: `nyxstrike_server.py`, `nyxstrike_mcp.py`
 - Config helpers: `config.py`, `core/config_core.py`
 - Tools registry: `tool_registry.py`

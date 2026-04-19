@@ -3,7 +3,7 @@
 <img src="assets/nyxstrike-logo.png" alt="NyxStrike" width="220"/>
 
 # NyxStrike
-*Formerly known as Hexstrike AI Community Edition*
+*Previously: Hexstrike AI Community Edition**
 
 ### AI-Powered Penetration Testing and Bug Bounty Automation Platform
 
@@ -190,4 +190,4 @@ Licensed under the [AGPLv3](LICENSE). You are free to use, modify, and distribut
 
 ## Credits
 
-**[hexstrike-ai](https://github.com/0x4m4/hexstrike-ai)** by **0x4m4**.
+Originally inspired by [hexstrike-ai](https://github.com/0x4m4/hexstrike-ai) by [0x4m4](https://github.com/0x4m4).
