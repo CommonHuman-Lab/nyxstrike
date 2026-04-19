@@ -351,13 +351,17 @@ install_ollama_model() {
   fi
 
   if [[ -n "${OLLAMA_MODELFILE}" && -f "${OLLAMA_MODELFILE}" ]]; then
-    echo "Creating custom model '${OLLAMA_MODEL_NAME}' from ${OLLAMA_MODELFILE}..."
-    if ! ollama create "${OLLAMA_MODEL_NAME}" -f "${OLLAMA_MODELFILE}"; then
-      echo "Failed to create custom model. Falling back to base model."
-      write_model_to_config_local "${OLLAMA_MODEL_BASE}"
-      return
+    if ollama list 2>/dev/null | grep -qF "${OLLAMA_MODEL_NAME}"; then
+      write_model_to_config_local "${OLLAMA_MODEL_NAME}"
+    else
+      echo "Creating custom model '${OLLAMA_MODEL_NAME}' from ${OLLAMA_MODELFILE}..."
+      if ! ollama create "${OLLAMA_MODEL_NAME}" -f "${OLLAMA_MODELFILE}"; then
+        echo "Failed to create custom model. Falling back to base model."
+        write_model_to_config_local "${OLLAMA_MODEL_BASE}"
+        return
+      fi
+      write_model_to_config_local "${OLLAMA_MODEL_NAME}"
     fi
-    write_model_to_config_local "${OLLAMA_MODEL_NAME}"
   elif [[ "${AI_SMALL_MODE}" == true || "${AI_LARGE_MODE}" == true ]]; then
     write_model_to_config_local "${OLLAMA_MODEL_BASE}"
   fi

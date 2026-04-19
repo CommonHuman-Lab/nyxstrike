@@ -261,4 +261,4 @@ if __name__ == "__main__":
     import flask.cli as _flask_cli
     _flask_cli.show_server_banner = lambda *_a, **_kw: None
 
-    app.run(host=API_HOST, port=API_PORT, debug=DEBUG_MODE)
+    app.run(host=API_HOST, port=API_PORT, debug=DEBUG_MODE, threaded=True)
