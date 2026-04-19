@@ -15,7 +15,7 @@ class EnhancedProcessManager:
     """Advanced process management with intelligent resource allocation"""
 
     def __init__(self):
-        self.process_pool = ProcessPool(min_workers=4, max_workers=32)
+        self.process_pool = ProcessPool(min_workers=2, max_workers=32)
         self.cache = AdvancedCache(max_size=2000, default_ttl=1800)  # 30 minutes default TTL
         self.resource_monitor = ResourceMonitor()
         self.process_registry = {}
