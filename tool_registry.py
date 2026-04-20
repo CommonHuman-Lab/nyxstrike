@@ -1440,6 +1440,33 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.80,
         "parent_tool": "ffuf",
     },
+    "schemathesis": {
+        "desc": "Property-based API testing driven by OpenAPI/GraphQL schemas (schemathesis)",
+        "endpoint": "/api/tools/api_fuzz/schemathesis",
+        "method": "POST",
+        "category": "api",
+        "params": {"schema": {"required": True}},
+        "optional": {
+            "base_url": "",
+            "checks": "all",
+            "workers": 1,
+            "max_examples": 100,
+            "headers": "",
+            "auth": "",
+            "request_timeout": 10,
+            "timeout": 600,
+            "phases": "",
+            "mode": "",
+            "rate_limit": "",
+            "report_formats": "",
+            "report_dir": "",
+            "include_operation_id": "",
+            "exclude_operation_id": "",
+            "max_failures": 0,
+            "additional_args": "",
+        },
+        "effectiveness": 0.88,
+    },
 
     # ---- OSINT ----
     "sherlock": {

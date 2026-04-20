@@ -225,6 +225,7 @@ def register_blueprints(app):
 
   # API Fuzzing
   app.register_blueprint(api_api_fuzz_api_fuzzer_bp)
+  app.register_blueprint(api_api_fuzz_schemathesis_bp)
 
   # API Scanning
   app.register_blueprint(api_api_scan_graphql_scanner_bp)
