@@ -187,6 +187,24 @@ def delete_chat_session(chat_session_id: str):
     return jsonify({"success": False, "error": str(exc)}), 500
 
 
+@api_chat_bp.route("/api/chat/sessions/<chat_session_id>", methods=["PATCH"])
+def rename_chat_session(chat_session_id: str):
+  """Rename a chat session."""
+  try:
+    body = request.get_json(force=True, silent=True) or {}
+    name = (body.get("name") or "").strip()
+    if not name:
+      return jsonify({"success": False, "error": "name is required"}), 400
+    sess = db.get_chat_session(chat_session_id)
+    if not sess:
+      return jsonify({"success": False, "error": "Session not found"}), 404
+    db.rename_chat_session(chat_session_id, name)
+    return jsonify({"success": True})
+  except Exception as exc:
+    logger.error("rename_chat_session: %s", exc)
+    return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @api_chat_bp.route("/api/chat/sessions/<chat_session_id>/messages", methods=["GET"])
 def get_chat_messages(chat_session_id: str):
   """Return the full visible message history for a session."""
@@ -249,20 +267,28 @@ def send_chat_message(chat_session_id: str):
 
     def generate():
       full_response = []
+      response_stats = None
       try:
+        yield "data: [THINKING]\n\n"
         for chunk in llm_client.stream_chat(llm_messages):
+          if isinstance(chunk, dict):
+            # Stats metadata from the final Ollama chunk
+            response_stats = chunk
+            yield f"data: [STATS] {json.dumps(chunk)}\n\n"
+            continue
           full_response.append(chunk)
           # SSE format: data: <payload>\n\n
           yield f"data: {json.dumps(chunk)}\n\n"
-        # Persist the complete assistant response
+        # Persist the complete assistant response (with stats if available)
         complete = "".join(full_response)
-        db.add_chat_message(chat_session_id, "assistant", complete)
+        stats_json = json.dumps(response_stats) if response_stats else None
+        db.add_chat_message(chat_session_id, "assistant", complete, stats=stats_json)
         yield "data: [DONE]\n\n"
       except GeneratorExit:
         # Client disconnected (stop button) — save whatever arrived
         if full_response:
           partial = "".join(full_response)
-          db.add_chat_message(chat_session_id, "assistant", partial + " [stopped]")
+          db.add_chat_message(chat_session_id, "assistant", partial)
         logger.debug("chat: stream cancelled by client for session %s", chat_session_id)
       except Exception as exc:
         logger.error("chat: stream error: %s", exc)

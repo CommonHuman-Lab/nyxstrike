@@ -308,7 +308,7 @@ def analyze_session(
 
   # ── Single LLM call ───────────────────────────────────────────────────────────
   try:
-    response = llm_client.chat(messages)
+    response = llm_client.chat(messages, think=True, num_ctx=llm_client.num_ctx_analyse)
   except RuntimeError as exc:
     logger.error("analyze_session: LLM call failed: %s", exc)
     if db:
@@ -753,7 +753,7 @@ def follow_up_session(
 
   # ── Single LLM call ───────────────────────────────────────────────────────────
   try:
-    response = llm_client.chat(messages)
+    response = llm_client.chat(messages, think=True, num_ctx=llm_client.num_ctx_analyse)
   except RuntimeError as exc:
     logger.error("follow_up_session: LLM call failed: %s", exc)
     if db:

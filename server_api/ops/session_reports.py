@@ -418,7 +418,7 @@ Write a concise executive summary (3-5 paragraphs) suitable for a technical audi
 Write in professional security assessment style. Be specific and actionable. Do not use placeholder text."""
 
   try:
-    response = _llm_client.chat([{"role": "user", "content": prompt}])
+    response = _llm_client.chat([{"role": "user", "content": prompt}], think=True, num_ctx=_llm_client.num_ctx_analyse)
     return str(response).strip()
   except Exception as e:
     logger.error(f"LLM executive summary generation failed: {e}")

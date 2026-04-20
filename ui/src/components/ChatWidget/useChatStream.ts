@@ -7,15 +7,30 @@ function getAuthToken(): string | null {
   return sessionStorage.getItem('nyxstrike_token')
 }
 
+export interface ChatStats {
+  eval_count: number
+  prompt_eval_count: number
+  total_duration_s: number
+  eval_duration_s: number
+  tokens_per_sec: number
+}
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   content: string
   streaming?: boolean
+  thinking?: boolean
   error?: boolean
+  stats?: ChatStats
+  timestamp?: string
 }
 
 const BACKOFF_MS = [500, 1000, 2000, 4000]
+
+function nowISO(): string {
+  return new Date().toISOString()
+}
 
 export function useChatStream(chatSessionId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -30,6 +45,8 @@ export function useChatStream(chatSessionId: string | null) {
           id: String(m.id),
           role: m.role,
           content: m.content,
+          timestamp: m.created_at,
+          ...(m.stats ? { stats: JSON.parse(m.stats) } : {}),
         })))
       }
     } catch { /* ignore */ }
@@ -43,12 +60,12 @@ export function useChatStream(chatSessionId: string | null) {
     if (!chatSessionId || streaming) return
 
     // Add user message
-    const userMsgId = `user-${Date.now()}`
-    setMessages(prev => [...prev, { id: userMsgId, role: 'user', content: message }])
+    const userMsgId = `user-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    setMessages(prev => [...prev, { id: userMsgId, role: 'user', content: message, timestamp: nowISO() }])
 
     // Add placeholder assistant message (typing indicator)
-    const assistantMsgId = `assistant-${Date.now()}`
-    setMessages(prev => [...prev, { id: assistantMsgId, role: 'assistant', content: '', streaming: true }])
+    const assistantMsgId = `assistant-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    setMessages(prev => [...prev, { id: assistantMsgId, role: 'assistant', content: '', streaming: true, timestamp: nowISO() }])
     setStreaming(true)
 
     const controller = new AbortController()
@@ -89,29 +106,46 @@ export function useChatStream(chatSessionId: string | null) {
 
           if (payload === '[DONE]') {
             setMessages(prev => prev.map(m =>
-              m.id === assistantMsgId ? { ...m, streaming: false } : m
+              m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
             ))
             setStreaming(false)
             return
+          }
+
+          if (payload === '[THINKING]') {
+            setMessages(prev => prev.map(m =>
+              m.id === assistantMsgId ? { ...m, thinking: true } : m
+            ))
+            continue
+          }
+
+          if (payload.startsWith('[STATS]')) {
+            try {
+              const stats = JSON.parse(payload.slice(7).trim()) as ChatStats
+              setMessages(prev => prev.map(m =>
+                m.id === assistantMsgId ? { ...m, stats } : m
+              ))
+            } catch { /* malformed stats, skip */ }
+            continue
           }
 
           if (payload.startsWith('[ERROR]')) {
             const errMsg = payload.slice(7).trim()
             setMessages(prev => prev.map(m =>
               m.id === assistantMsgId
-                ? { ...m, content: errMsg, streaming: false, error: true }
+                ? { ...m, content: errMsg, streaming: false, thinking: false, error: true }
                 : m
             ))
             setStreaming(false)
             return
           }
 
-          // Parse JSON token
+          // Parse JSON token — first real token clears thinking state
           try {
             const token = JSON.parse(payload)
             setMessages(prev => prev.map(m =>
               m.id === assistantMsgId
-                ? { ...m, content: m.content + token }
+                ? { ...m, content: m.content + token, thinking: false }
                 : m
             ))
           } catch { /* malformed chunk, skip */ }
@@ -120,7 +154,7 @@ export function useChatStream(chatSessionId: string | null) {
 
       // Stream ended without [DONE]
       setMessages(prev => prev.map(m =>
-        m.id === assistantMsgId ? { ...m, streaming: false } : m
+        m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
       ))
       setStreaming(false)
 
@@ -128,7 +162,7 @@ export function useChatStream(chatSessionId: string | null) {
       if (err instanceof Error && err.name === 'AbortError') {
         // User stopped — mark as done, content already streamed
         setMessages(prev => prev.map(m =>
-          m.id === assistantMsgId ? { ...m, streaming: false } : m
+          m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
         ))
         setStreaming(false)
         return
@@ -139,7 +173,7 @@ export function useChatStream(chatSessionId: string | null) {
         const delay = BACKOFF_MS[retryCount]
         setMessages(prev => prev.map(m =>
           m.id === assistantMsgId
-            ? { ...m, content: `Connection error, retrying in ${delay / 1000}s…`, streaming: true }
+            ? { ...m, content: `Connection error, retrying in ${delay / 1000}s…`, streaming: true, thinking: false }
             : m
         ))
         await new Promise(r => setTimeout(r, delay))
@@ -152,7 +186,7 @@ export function useChatStream(chatSessionId: string | null) {
 
       setMessages(prev => prev.map(m =>
         m.id === assistantMsgId
-          ? { ...m, content: 'Failed to connect after multiple retries.', streaming: false, error: true }
+          ? { ...m, content: 'Failed to connect after multiple retries.', streaming: false, thinking: false, error: true }
           : m
       ))
       setStreaming(false)

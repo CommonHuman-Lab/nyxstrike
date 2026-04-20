@@ -106,12 +106,28 @@ class NyxStrikeDB:
           chat_session_id TEXT REFERENCES chat_sessions(id) ON DELETE CASCADE,
           role            TEXT NOT NULL,
           content         TEXT NOT NULL,
+          stats           TEXT DEFAULT NULL,
           is_summarized   INTEGER DEFAULT 0,
           created_at      TEXT DEFAULT (datetime('now'))
         );
       """)
       self._conn.commit()
+
+    # ── Auto-migrations ───────────────────────────────────────────────────────
+    self._migrate_chat_messages_stats()
+
     logger.debug("db: tables verified")
+
+  # ── Auto-migrations ─────────────────────────────────────────────────────────
+
+  def _migrate_chat_messages_stats(self) -> None:
+    """Add stats column to chat_messages if missing (existing DBs)."""
+    cur = self._conn.execute("PRAGMA table_info(chat_messages)")
+    columns = {row[1] for row in cur.fetchall()}
+    if "stats" not in columns:
+      self._conn.execute("ALTER TABLE chat_messages ADD COLUMN stats TEXT DEFAULT NULL")
+      self._conn.commit()
+      logger.info("db: migrated chat_messages — added stats column")
 
   # ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -271,15 +287,15 @@ class NyxStrikeDB:
 
   # ── Chat Messages ─────────────────────────────────────────────────────────────
 
-  def add_chat_message(self, chat_session_id: str, role: str, content: str) -> int:
+  def add_chat_message(self, chat_session_id: str, role: str, content: str, stats: Optional[str] = None) -> int:
     """Insert a message and return its rowid."""
     with self._lock:
       cur = self._conn.execute(
         """
-        INSERT INTO chat_messages (chat_session_id, role, content)
-        VALUES (?, ?, ?)
+        INSERT INTO chat_messages (chat_session_id, role, content, stats)
+        VALUES (?, ?, ?, ?)
         """,
-        (chat_session_id, role, content),
+        (chat_session_id, role, content, stats),
       )
       self._conn.execute(
         "UPDATE chat_sessions SET updated_at = datetime('now') WHERE id = ?",

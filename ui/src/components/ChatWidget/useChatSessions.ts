@@ -4,7 +4,7 @@ import type { ChatSession } from '../../api'
 
 export function useChatSessions() {
   const [sessions, setSessions] = useState<ChatSession[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const loadSessions = useCallback(async () => {
     setLoading(true)
@@ -44,5 +44,12 @@ export function useChatSessions() {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, name } : s))
   }
 
-  return { sessions, loading, createSession, deleteSession, updateSessionName, reload: loadSessions }
+  async function renameSession(id: string, name: string): Promise<void> {
+    try {
+      await api.chat.renameSession(id, name)
+      setSessions(prev => prev.map(s => s.id === id ? { ...s, name } : s))
+    } catch { /* ignore */ }
+  }
+
+  return { sessions, loading, createSession, deleteSession, updateSessionName, renameSession, reload: loadSessions }
 }

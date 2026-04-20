@@ -33,16 +33,28 @@ export function renderMarkdown(raw: string): ReactNode {
     const line = lines[i]
 
     // Fenced code block
-    const fenceMatch = line.match(/^```(\w*)$/)
+    const fenceMatch = line.match(/^(`{3,})(\w*)$/)
     if (fenceMatch) {
-      const lang = fenceMatch[1] || ''
+      const fence = fenceMatch[1]
+      const lang = fenceMatch[2] || ''
       const codeLines: string[] = []
+      let depth = 1
       i++
-      while (i < lines.length && !lines[i].startsWith('```')) {
-        codeLines.push(lines[i])
+      while (i < lines.length && depth > 0) {
+        const l = lines[i].trimEnd()
+        if (l === fence) {
+          depth--
+          if (depth === 0) break
+          codeLines.push(lines[i])
+        } else if (l.match(new RegExp(`^${fence}\\w+$`))) {
+          depth++
+          codeLines.push(lines[i])
+        } else {
+          codeLines.push(lines[i])
+        }
         i++
       }
-      i++ // skip closing ```
+      i++ // skip closing fence
       nodes.push(createElement(CodeBlock, { key: key++, code: codeLines.join('\n'), language: lang }))
       continue
     }
@@ -57,6 +69,50 @@ export function renderMarkdown(raw: string): ReactNode {
         i++
       }
       nodes.push(createElement('ul', { key: key++, className: 'chat-md-list' }, ...items))
+      continue
+    }
+
+    // Horizontal rule
+    if (line.match(/^---+$/)) {
+      nodes.push(createElement('hr', { key: key++, style: { border: 'none', borderTop: '1px solid var(--border)', margin: '8px 0' } }))
+      i++
+      continue
+    }
+
+    // Blockquote
+    if (line.startsWith('> ')) {
+      const quoteLines: string[] = []
+      while (i < lines.length && lines[i].startsWith('> ')) {
+        quoteLines.push(lines[i].slice(2))
+        i++
+      }
+      nodes.push(createElement('blockquote', { key: key++, style: { margin: '4px 0', paddingLeft: '8px', borderLeft: '3px solid var(--border)', color: 'var(--text-dim)' } }, ...quoteLines.map((l, j) => createElement('p', { key: j, className: 'chat-md-p' }, renderInline(l)))))
+      continue
+    }
+
+    // Table
+    if (line.includes('|') && line.trim().startsWith('|')) {
+      const tableRows: string[][] = []
+      while (i < lines.length && lines[i].includes('|') && lines[i].trim().startsWith('|')) {
+        const cells = lines[i].split('|').slice(1, -1).map(c => c.trim())
+        // Skip separator rows like | :--- | :--- |
+        if (!cells.every(c => /^[:\-\s]+$/.test(c))) {
+          tableRows.push(cells)
+        }
+        i++
+      }
+      if (tableRows.length > 0) {
+        const header = tableRows[0]
+        const body = tableRows.slice(1)
+        nodes.push(createElement('table', { key: key++, style: { fontSize: '12px', borderCollapse: 'collapse', margin: '4px 0', width: '100%' } },
+          createElement('thead', null,
+            createElement('tr', null, ...header.map((h, j) => createElement('th', { key: j, style: { textAlign: 'left', padding: '3px 6px', borderBottom: '1px solid var(--border)', fontWeight: 600 } }, renderInline(h))))
+          ),
+          body.length > 0 ? createElement('tbody', null,
+            ...body.map((row, ri) => createElement('tr', { key: ri }, ...row.map((c, ci) => createElement('td', { key: ci, style: { padding: '3px 6px', borderBottom: '1px solid rgba(255,255,255,0.06)' } }, renderInline(c)))))
+          ) : null
+        ))
+      }
       continue
     }
 

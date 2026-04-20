@@ -41,10 +41,11 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
 
-  const { sessions, loading, createSession, deleteSession, updateSessionName } = useChatSessions()
+  const { sessions, loading, createSession, deleteSession, updateSessionName, renameSession } = useChatSessions()
   const { messages, streaming, send, stop, loadHistory, clearMessages } = useChatStream(activeSessionId)
 
   const widgetRef = useRef<HTMLDivElement>(null)
+  const autoCreatedRef = useRef(false)
 
   // Keyboard shortcut Ctrl+Shift+C
   useEffect(() => {
@@ -66,7 +67,8 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
     if (loading) return
     if (!activeSessionId && sessions.length > 0) {
       setActiveSessionId(sessions[0].id)
-    } else if (!activeSessionId && sessions.length === 0) {
+    } else if (!activeSessionId && sessions.length === 0 && !autoCreatedRef.current) {
+      autoCreatedRef.current = true
       handleCreateSession()
     }
   }, [sessions, activeSessionId, loading]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -189,9 +191,10 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
               <ChatSidebar
                 sessions={sessions}
                 activeSessionId={activeSessionId}
-                onSelectSession={id => { setActiveSessionId(id); setSidebarOpen(false) }}
+                onSelectSession={id => { setActiveSessionId(id) }}
                 onCreateSession={handleCreateSession}
                 onDeleteSession={handleDeleteSession}
+                onRenameSession={renameSession}
               />
             )}
 

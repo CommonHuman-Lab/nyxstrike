@@ -26,6 +26,7 @@ _config = {
     },
     "CLEAN_TOOL_OUTPUT": True,
     "CPU_NICE_THRESHOLD": 85,  # CPU% above which tool commands are niced down (nice -n 10)
+    "LLM_KEEP_ALIVE": 300,    # Seconds to keep the Ollama model in VRAM after each inference (default 5 min)
     "CACHE_SIZE": 1000,
     "CACHE_TTL": 3600,  # 1 hour
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour
@@ -39,12 +40,17 @@ _config = {
     "NYXSTRIKE_LLM_API_KEY":  "",                               # Required for openai / anthropic
     "NYXSTRIKE_LLM_TIMEOUT":  600,                              # seconds
     "NYXSTRIKE_LLM_MAX_LOOPS": 9,
+    "NYXSTRIKE_LLM_THINK":    False,                            # Enable model thinking/reasoning (Ollama only, e.g. Qwen3)
+    "NYXSTRIKE_LLM_NUM_CTX":  4096,                             # Context window size for chat (Ollama only)
+    "NYXSTRIKE_LLM_NUM_CTX_ANALYSE": 16384,                     # Context window size for AI Analyse / AI Report (Ollama only)
 
     # ── Chat widget ───────────────────────────────────────────────────────────
     "CHAT_SYSTEM_PROMPT": (
         "You are NyxStrike, an expert penetration testing AI assistant embedded in a "
         "security operations platform. You help operators understand scan results, plan "
-        "attacks, interpret findings, and write reports. Be concise, technical, and actionable."
+        "attacks, interpret findings, and write reports. Be concise, technical, and actionable. "
+        "When the user greets you casually or makes small talk, respond naturally and warmly — "
+        "you are a teammate, not a robot. Match the tone of the conversation."
     ),
     "CHAT_SUMMARIZATION_THRESHOLD": 20,   # non-summarized messages before rolling summary kicks in
     "CHAT_CONTEXT_INJECTION_CHARS": 4000, # max chars of session scan output injected as context

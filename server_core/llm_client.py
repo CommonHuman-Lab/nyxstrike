@@ -19,6 +19,7 @@ Config keys (checked in order: env var → config_local.json → config.py defau
   NYXSTRIKE_LLM_API_KEY     API key (not needed for Ollama)
   NYXSTRIKE_LLM_MAX_LOOPS   max agentic tool loops
   NYXSTRIKE_LLM_TIMEOUT     request timeout in seconds
+  NYXSTRIKE_LLM_THINK       enable model thinking/reasoning (default: false, Ollama only)
 
 Defaults are defined in config.py and can be overridden via config_local.json
 or environment variables without touching source code.
@@ -53,34 +54,32 @@ DEFAULT_OLLAMA_URL = "http://localhost:11434"
 class OllamaBackend:
   """Ollama local model server backend."""
 
-  def __init__(self, base_url: str, model: str, timeout: int) -> None:
+  def __init__(self, base_url: str, model: str, timeout: int, think: bool = False, num_ctx: int = 4096) -> None:
     self._base_url = base_url.rstrip("/")
     self._model = model
     self._timeout = timeout
-    self._generate_url = f"{self._base_url}/api/generate"
+    self._think = think
+    self._num_ctx = num_ctx
+    self._chat_url = f"{self._base_url}/api/chat"
     self._tags_url = f"{self._base_url}/api/tags"
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
-    """Send messages to Ollama and return the response string.
-
-    Ollama's /api/generate doesn't natively support a message list, so we
-    concatenate them into a single prompt string.
-    """
-    prompt = _messages_to_prompt(messages)
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
+    """Send messages to Ollama /api/chat and return the response string."""
     payload: Dict[str, Any] = {
       "model": self._model,
-      "prompt": prompt,
+      "messages": messages,
       "stream": False,
-      "options": {},
+      "think": think if think is not None else self._think,
+      "options": {"num_ctx": num_ctx or self._num_ctx},
     }
     if stop:
       payload["options"]["stop"] = stop
 
     try:
-      resp = requests.post(self._generate_url, json=payload, timeout=self._timeout)
+      resp = requests.post(self._chat_url, json=payload, timeout=self._timeout)
       resp.raise_for_status()
       data = resp.json()
-      return data.get("response", "").strip()
+      return data.get("message", {}).get("content", "").strip()
     except requests.exceptions.ConnectionError:
       raise RuntimeError(
         f"Cannot connect to Ollama at {self._base_url}. "
@@ -119,25 +118,38 @@ class OllamaBackend:
     try:
       logger.info("Warming up Ollama model '%s'...", self._model)
       requests.post(
-        self._generate_url,
-        json={"model": self._model, "prompt": "hi", "stream": False, "options": {"num_predict": 1}},
+        self._chat_url,
+        json={
+          "model": self._model,
+          "messages": [{"role": "user", "content": "hi"}],
+          "stream": False,
+          "think": False,
+          "options": {"num_predict": 1},
+        },
         timeout=self._timeout,
       )
       logger.info("Ollama model '%s' warm-up complete.", self._model)
     except Exception as exc:
       logger.warning("Ollama warm-up failed (non-fatal): %s", exc)
 
-  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
-    """Stream tokens from Ollama one chunk at a time via NDJSON."""
-    prompt = _messages_to_prompt(messages)
+  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator:
+    """Stream tokens from Ollama one chunk at a time via NDJSON.
+
+    Yields:
+      str — content token chunks
+      dict — final item: response stats (eval_count, duration, tokens/sec, etc.)
+    """
+    keep_alive = int(os.environ.get("NYXSTRIKE_LLM_KEEP_ALIVE") or 300)
     payload: Dict[str, Any] = {
       "model": self._model,
-      "prompt": prompt,
+      "messages": messages,
       "stream": True,
-      "options": {},
+      "think": self._think,
+      "keep_alive": keep_alive,
+      "options": {"num_ctx": num_ctx or self._num_ctx},
     }
     try:
-      with requests.post(self._generate_url, json=payload, timeout=self._timeout, stream=True) as resp:
+      with requests.post(self._chat_url, json=payload, timeout=self._timeout, stream=True) as resp:
         resp.raise_for_status()
         for line in resp.iter_lines():
           if not line:
@@ -146,10 +158,26 @@ class OllamaBackend:
             data = json.loads(line)
           except json.JSONDecodeError:
             continue
-          chunk = data.get("response", "")
+          chunk = data.get("message", {}).get("content", "")
           if chunk:
             yield chunk
           if data.get("done"):
+            # Extract stats from the final chunk
+            eval_count = data.get("eval_count", 0)
+            eval_duration = data.get("eval_duration", 0)
+            total_duration = data.get("total_duration", 0)
+            prompt_eval_count = data.get("prompt_eval_count", 0)
+            # Durations are in nanoseconds
+            eval_secs = eval_duration / 1e9 if eval_duration else 0
+            total_secs = total_duration / 1e9 if total_duration else 0
+            tokens_per_sec = eval_count / eval_secs if eval_secs > 0 else 0
+            yield {
+              "eval_count": eval_count,
+              "prompt_eval_count": prompt_eval_count,
+              "total_duration_s": round(total_secs, 2),
+              "eval_duration_s": round(eval_secs, 2),
+              "tokens_per_sec": round(tokens_per_sec, 1),
+            }
             break
     except requests.exceptions.ConnectionError:
       raise RuntimeError(f"Cannot connect to Ollama at {self._base_url}.")
@@ -196,7 +224,7 @@ class OpenAIBackend:
         "openai SDK not installed. Run: pip install openai"
       )
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
     kwargs: Dict[str, Any] = {
       "model": self._model,
       "messages": messages,
@@ -211,7 +239,7 @@ class OpenAIBackend:
     except Exception as exc:
       raise RuntimeError(f"OpenAI API error: {exc}")
 
-  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator[str, None, None]:
     """Stream tokens from OpenAI one delta at a time."""
     kwargs: Dict[str, Any] = {
       "model": self._model,
@@ -267,7 +295,7 @@ class AnthropicBackend:
         "anthropic SDK not installed. Run: pip install anthropic"
       )
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
     # Anthropic separates system from human/assistant messages
     system_parts = [m["content"] for m in messages if m["role"] == "system"]
     user_messages = [m for m in messages if m["role"] != "system"]
@@ -287,7 +315,7 @@ class AnthropicBackend:
     except Exception as exc:
       raise RuntimeError(f"Anthropic API error: {exc}")
 
-  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator[str, None, None]:
     """Stream tokens from Anthropic one delta at a time."""
     system_parts = [m["content"] for m in messages if m["role"] == "system"]
     user_messages = [m for m in messages if m["role"] != "system"]
@@ -336,24 +364,6 @@ class AnthropicBackend:
     return self._model
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _messages_to_prompt(messages: List[Dict[str, Any]]) -> str:
-  """Flatten a message list into a single prompt string for backends that
-  don't natively support chat format (e.g. Ollama /api/generate)."""
-  parts = []
-  for m in messages:
-    role = m.get("role", "user")
-    content = m.get("content", "")
-    if role == "system":
-      parts.append(content)
-    elif role == "user":
-      parts.append(f"User: {content}")
-    elif role == "assistant":
-      parts.append(f"Assistant: {content}")
-  return "\n\n".join(parts)
-
-
 # ── Public facade ─────────────────────────────────────────────────────────────
 
 class LLMClient:
@@ -384,10 +394,14 @@ class LLMClient:
     base_url = _cfg("NYXSTRIKE_LLM_URL")
     api_key = _cfg("NYXSTRIKE_LLM_API_KEY")
     timeout = int(_cfg("NYXSTRIKE_LLM_TIMEOUT") or 300)
+    think_raw = _cfg("NYXSTRIKE_LLM_THINK")
+    think = str(think_raw).lower() in ("1", "true", "yes")
+    num_ctx = int(_cfg("NYXSTRIKE_LLM_NUM_CTX") or 4096)
+    self._num_ctx_analyse = int(_cfg("NYXSTRIKE_LLM_NUM_CTX_ANALYSE") or 16384)
 
     try:
       if provider == "ollama":
-        self._backend = OllamaBackend(base_url, model, timeout)
+        self._backend = OllamaBackend(base_url, model, timeout, think, num_ctx)
       elif provider == "openai":
         self._backend = OpenAIBackend(model, api_key, base_url if base_url != DEFAULT_OLLAMA_URL else None, timeout)
       elif provider == "anthropic":
@@ -412,6 +426,10 @@ class LLMClient:
   def model(self) -> str:
     return self._backend.model if self._backend else ""
 
+  @property
+  def num_ctx_analyse(self) -> int:
+    return getattr(self, '_num_ctx_analyse', 16384)
+
   def is_available(self) -> bool:
     """Return True if the LLM backend is reachable. Never raises."""
     if self._backend is None:
@@ -428,12 +446,14 @@ class LLMClient:
     if hasattr(self._backend, "warm_up"):
       self._backend.warm_up()
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = []) -> str:
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
     """Send messages and return the model's response string.
 
     Args:
       messages: List of {"role": "system"|"user"|"assistant", "content": str}
       stop:     Optional stop sequences.
+      think:    Override thinking mode for this call (None = use default).
+      num_ctx:  Override context window size for this call (None = use default).
 
     Raises:
       RuntimeError: If the backend is not initialized or the call fails.
@@ -442,13 +462,14 @@ class LLMClient:
       raise RuntimeError(
         f"LLM client not initialized: {self._init_error or 'unknown error'}"
       )
-    return self._backend.chat(messages, stop)
+    return self._backend.chat(messages, stop, think=think, num_ctx=num_ctx)
 
-  def stream_chat(self, messages: List[Dict[str, Any]]) -> Generator[str, None, None]:
+  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator:
     """Stream the model's response token-by-token.
 
     Args:
       messages: List of {"role": "system"|"user"|"assistant", "content": str}
+      num_ctx:  Override context window size (None = use default).
 
     Yields:
       String chunks as they arrive from the model.
@@ -462,7 +483,7 @@ class LLMClient:
       )
     if not hasattr(self._backend, "stream_chat"):
       raise RuntimeError(f"Backend {self.provider!r} does not support streaming")
-    yield from self._backend.stream_chat(messages)
+    yield from self._backend.stream_chat(messages, num_ctx=num_ctx)
 
   def generate_summary(self, messages: List[Dict[str, Any]]) -> str:
     """Summarize a message list into a short paragraph.
