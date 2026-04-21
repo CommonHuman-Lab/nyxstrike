@@ -86,6 +86,8 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
     if (sess) {
       setActiveSessionId(sess.id)
       clearMessages()
+    } else {
+      autoCreatedRef.current = false
     }
   }
 
@@ -157,7 +159,7 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
   if (!llmAvailable) return null
 
   const activeSession = sessions.find(s => s.id === activeSessionId)
-  const sessionLabel = activeSession?.name || (activeSessionId ? 'New chat' : 'No session')
+  const sessionLabel = activeSession?.name || (activeSessionId ? 'New chat' : 'Starting…')
 
   return (
     <>
