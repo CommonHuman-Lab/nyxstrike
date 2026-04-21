@@ -9,6 +9,7 @@ interface ChatSidebarProps {
   onSelectSession: (id: string) => void
   onCreateSession: () => void
   onDeleteSession: (id: string) => void
+  onDeleteAllSessions: () => void
   onRenameSession: (id: string, name: string) => void
 }
 
@@ -18,9 +19,11 @@ export function ChatSidebar({
   onSelectSession,
   onCreateSession,
   onDeleteSession,
+  onDeleteAllSessions,
   onRenameSession,
 }: ChatSidebarProps) {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -98,6 +101,19 @@ export function ChatSidebar({
         ))}
       </div>
 
+      {sessions.length > 0 && (
+        <div className="chat-sidebar-footer">
+          <button
+            className="chat-delete-all-btn"
+            onClick={() => setConfirmDeleteAll(true)}
+            title="Delete all chats"
+          >
+            <Trash2 size={11} />
+            Delete all
+          </button>
+        </div>
+      )}
+
       <ConfirmActionModal
         isOpen={confirmDeleteId !== null}
         title="Delete chat?"
@@ -109,6 +125,19 @@ export function ChatSidebar({
           setConfirmDeleteId(null)
         }}
         onClose={() => setConfirmDeleteId(null)}
+      />
+
+      <ConfirmActionModal
+        isOpen={confirmDeleteAll}
+        title="Delete all chats?"
+        description="This will permanently delete all chat sessions and their messages. This cannot be undone."
+        confirmLabel="Delete all"
+        confirmVariant="danger"
+        onConfirm={() => {
+          onDeleteAllSessions()
+          setConfirmDeleteAll(false)
+        }}
+        onClose={() => setConfirmDeleteAll(false)}
       />
     </div>
   )

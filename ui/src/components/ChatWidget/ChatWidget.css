@@ -119,6 +119,29 @@
   padding: 12px;
   text-align: center;
 }
+.chat-sidebar-footer {
+  padding: 8px 10px;
+  border-top: 1px solid var(--border);
+}
+.chat-delete-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.chat-delete-all-btn:hover {
+  color: var(--danger, #f87171);
+  border-color: var(--danger, #f87171);
+  background: rgba(248, 113, 113, 0.08);
+}
 .chat-session-item {
   display: flex;
   align-items: center;

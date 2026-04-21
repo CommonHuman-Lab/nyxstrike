@@ -40,6 +40,13 @@ export function useChatSessions() {
     } catch { /* ignore */ }
   }
 
+  async function deleteAllSessions(): Promise<void> {
+    // Delete sequentially; best-effort — remove from local state regardless
+    const ids = sessions.map(s => s.id)
+    await Promise.allSettled(ids.map(id => api.chat.deleteSession(id)))
+    setSessions([])
+  }
+
   function updateSessionName(id: string, name: string) {
     setSessions(prev => prev.map(s => s.id === id ? { ...s, name } : s))
   }
@@ -51,5 +58,5 @@ export function useChatSessions() {
     } catch { /* ignore */ }
   }
 
-  return { sessions, loading, createSession, deleteSession, updateSessionName, renameSession, reload: loadSessions }
+  return { sessions, loading, createSession, deleteSession, deleteAllSessions, updateSessionName, renameSession, reload: loadSessions }
 }

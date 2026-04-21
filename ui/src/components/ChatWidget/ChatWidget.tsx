@@ -41,7 +41,7 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
 
-  const { sessions, loading, createSession, deleteSession, updateSessionName, renameSession } = useChatSessions()
+  const { sessions, loading, createSession, deleteSession, deleteAllSessions, updateSessionName, renameSession } = useChatSessions()
   const { messages, streaming, send, stop, loadHistory, clearMessages } = useChatStream(activeSessionId)
 
   const widgetRef = useRef<HTMLDivElement>(null)
@@ -102,6 +102,12 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
         clearMessages()
       }
     }
+  }
+
+  async function handleDeleteAllSessions() {
+    await deleteAllSessions()
+    setActiveSessionId(null)
+    clearMessages()
   }
 
   function handleSend(text: string) {
@@ -196,6 +202,7 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
                 onSelectSession={id => { setActiveSessionId(id) }}
                 onCreateSession={handleCreateSession}
                 onDeleteSession={handleDeleteSession}
+                onDeleteAllSessions={handleDeleteAllSessions}
                 onRenameSession={renameSession}
               />
             )}
