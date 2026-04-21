@@ -14,7 +14,7 @@
 
 **AI-driven penetration testing and bug bounty automation platform that connects MCP-compatible LLM agents to 185+ real-world offensive security tools through a single REST API and web dashboard.**
 
-[📡 Wiki](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki)
+[📡 Wiki](https://github.com/CommonHuman-Lab/nyxstrike/wiki)
 
 <p align="center">
   <a href="https://discord.gg/aC8Q2xJFgp">
@@ -48,7 +48,7 @@ cd nyxstrike
 ./nyxstrike.sh -a -t -ai-small     # + smaller AI model (~2.5 GB RAM)
 ```
 
-> Full flag reference: [Wiki — Installation & Flags](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Installation-and-Flags)
+> Full flag reference: [Wiki — Installation & Flags](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Installation-and-Flags)
 
 ### Verify Setup
 
@@ -97,7 +97,7 @@ Connect NyxStrike to any MCP-compatible AI client — OpenCode, Cursor, Claude D
 }
 ```
 
-> Config snippets for Claude Desktop, Cursor, VS Code Copilot, and security options: [Wiki — MCP Setup](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/MCP-Setup)
+> Config snippets for Claude Desktop, Cursor, VS Code Copilot, and security options: [Wiki — MCP Setup](https://github.com/CommonHuman-Lab/nyxstrike/wiki/MCP-Setup)
 
 ---
 
@@ -111,7 +111,7 @@ Connect NyxStrike to any MCP-compatible AI client — OpenCode, Cursor, Claude D
 | **Sessions & Operator Workbench** | Every engagement lives in a structured session with 4-tab workbench (Workflow, Findings, Notes, Timeline), artifact chaining, AI analysis, and report generation |
 | **Purpose-Built AI Agents** | Standalone agents for bug bounty, CTF, CVE intelligence, exploit generation, OSINT, and more — with intelligent failure recovery |
 
-> [Full feature breakdown](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Features)
+> [Full feature breakdown](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Features)
 
 ---
 
@@ -119,7 +119,7 @@ Connect NyxStrike to any MCP-compatible AI client — OpenCode, Cursor, Claude D
 
 185+ tools across 12 categories — network recon, web exploitation, WiFi pentesting, binary analysis, cloud auditing, SMB/AD, OSINT, password cracking, CTF forensics, API security, exploitation, and more.
 
-> [Full tool list by category](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Tool-Arsenal)
+> [Full tool list by category](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Tool-Arsenal)
 
 ---
 
@@ -127,7 +127,7 @@ Connect NyxStrike to any MCP-compatible AI client — OpenCode, Cursor, Claude D
 
 Every engagement lives in a structured session with a 4-tab workbench (Workflow, Findings, Notes, Timeline), artifact chaining, AI analysis, and report generation. Choose from 7 session creation modes — including intelligence-planned, manual, and 4 AI-driven variants. After each step, the chain engine maps tool output to the next logical action for operator review and approval.
 
-> [Full session & workbench docs](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Dashboard-and-Sessions)
+> [Full session & workbench docs](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Dashboard-and-Sessions)
 
 ---
 
@@ -135,7 +135,7 @@ Every engagement lives in a structured session with a 4-tab workbench (Workflow,
 
 9 pre-built playbooks (web recon, web vuln, nmap recon, subdomain enum, SMB enum, binary analysis, exploitation, password cracking, cloud audit) mounted as MCP resources — the agent follows these automatically.
 
-> [Full playbook details](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Skills)
+> [Full playbook details](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Skills)
 
 ---
 
@@ -143,7 +143,7 @@ Every engagement lives in a structured session with a 4-tab workbench (Workflow,
 
 Always state authorization, ownership, and scope explicitly when prompting. See the wiki for full prompt examples across recon, exploitation, bug bounty, and CTF workflows.
 
-> [Usage examples](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Usage-Examples)
+> [Usage examples](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Usage-Examples)
 
 ---
 
