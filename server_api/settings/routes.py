@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 from flask import Blueprint, jsonify, request
 import server_core.config_core as config_core
 from server_core.singletons import wordlist_store
+from server_core.intelligence.chat_personalities import CHAT_PERSONALITIES
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,9 @@ _MUTABLE_KEYS = {
     "CACHE_SIZE",
     "CACHE_TTL",
     "TOOL_AVAILABILITY_TTL",
+    "CHAT_PERSONALITY",
     "CHAT_SYSTEM_PROMPT",
+    "CHAT_CUSTOM_PROMPT",
     "CHAT_SUMMARIZATION_THRESHOLD",
     "CHAT_CONTEXT_INJECTION_CHARS",
 }
@@ -48,9 +51,12 @@ def _current_settings() -> dict:
         },
         "wordlists": _wordlists_summary(),
         "chat": {
+            "personality": config_core.get("CHAT_PERSONALITY", "nyxstrike"),
             "system_prompt": config_core.get("CHAT_SYSTEM_PROMPT", "You are NyxStrike, an expert penetration testing AI assistant."),
+            "custom_prompt": config_core.get("CHAT_CUSTOM_PROMPT", ""),
             "summarization_threshold": config_core.get("CHAT_SUMMARIZATION_THRESHOLD", 20),
             "context_injection_chars": config_core.get("CHAT_CONTEXT_INJECTION_CHARS", 4000),
+            "personality_presets": CHAT_PERSONALITIES,
         },
     }
 
@@ -114,7 +120,9 @@ def patch_settings():
 
         # Chat settings
         chat_key_map = {
+            "personality": ("CHAT_PERSONALITY", str, None),
             "system_prompt": ("CHAT_SYSTEM_PROMPT", str, None),
+            "custom_prompt": ("CHAT_CUSTOM_PROMPT", str, None),
             "summarization_threshold": ("CHAT_SUMMARIZATION_THRESHOLD", int, 1),
             "context_injection_chars": ("CHAT_CONTEXT_INJECTION_CHARS", int, 0),
         }

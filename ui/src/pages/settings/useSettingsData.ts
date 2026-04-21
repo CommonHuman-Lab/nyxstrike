@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type Settings, type WordlistEntry } from '../../api'
+import { api, type Settings, type WordlistEntry, type PersonalityPreset } from '../../api'
 import { useToast } from '../../components/ToastProvider'
 
 const WORDLIST_TYPE_OPTIONS = ['password', 'directory', 'params', 'subdomain', 'username', 'general']
@@ -16,7 +16,9 @@ type SettingsCache = {
   cacheTtl: string
   toolTtl: string
   wordlistsDraft: WordlistEntry[]
-  systemPrompt: string
+  chatPersonality: string
+  customPrompt: string
+  personalityPresets: PersonalityPreset[]
   summarizationThreshold: string
   contextInjectionChars: string
 }
@@ -47,7 +49,9 @@ export function useSettingsData() {
   const [cacheTtl, setCacheTtl] = useState(settingsCache?.cacheTtl ?? '')
   const [toolTtl, setToolTtl] = useState(settingsCache?.toolTtl ?? '')
   const [wordlistsDraft, setWordlistsDraft] = useState<WordlistEntry[]>(settingsCache?.wordlistsDraft ?? [])
-  const [systemPrompt, setSystemPrompt] = useState(settingsCache?.systemPrompt ?? '')
+  const [chatPersonality, setChatPersonality] = useState(settingsCache?.chatPersonality ?? 'nyxstrike')
+  const [customPrompt, setCustomPrompt] = useState(settingsCache?.customPrompt ?? '')
+  const [personalityPresets, setPersonalityPresets] = useState<PersonalityPreset[]>(settingsCache?.personalityPresets ?? [])
   const [summarizationThreshold, setSummarizationThreshold] = useState(settingsCache?.summarizationThreshold ?? '')
   const [contextInjectionChars, setContextInjectionChars] = useState(settingsCache?.contextInjectionChars ?? '')
 
@@ -62,7 +66,9 @@ export function useSettingsData() {
       cacheTtl: String(response.runtime.cache_ttl),
       toolTtl: String(response.runtime.tool_availability_ttl),
       wordlistsDraft: response.wordlists.map(w => ({ ...w })),
-      systemPrompt: response.chat?.system_prompt ?? '',
+      chatPersonality: response.chat?.personality ?? 'nyxstrike',
+      customPrompt: response.chat?.custom_prompt ?? '',
+      personalityPresets: response.chat?.personality_presets ?? [],
       summarizationThreshold: String(response.chat?.summarization_threshold ?? 20),
       contextInjectionChars: String(response.chat?.context_injection_chars ?? 4000),
     }
@@ -76,7 +82,9 @@ export function useSettingsData() {
     setCacheTtl(nextCache.cacheTtl)
     setToolTtl(nextCache.toolTtl)
     setWordlistsDraft(nextCache.wordlistsDraft)
-    setSystemPrompt(nextCache.systemPrompt)
+    setChatPersonality(nextCache.chatPersonality)
+    setCustomPrompt(nextCache.customPrompt)
+    setPersonalityPresets(nextCache.personalityPresets)
     setSummarizationThreshold(nextCache.summarizationThreshold)
     setContextInjectionChars(nextCache.contextInjectionChars)
   }
@@ -153,8 +161,16 @@ export function useSettingsData() {
   async function saveChatSettings() {
     setSaving(true)
     try {
+      // Resolve the active system_prompt from the selected personality
+      const resolvedPrompt =
+        chatPersonality === 'custom'
+          ? customPrompt
+          : personalityPresets.find(p => p.id === chatPersonality)?.prompt ?? customPrompt
+
       const res = await api.patchSettings({}, {
-        system_prompt: systemPrompt,
+        personality: chatPersonality,
+        system_prompt: resolvedPrompt,
+        custom_prompt: customPrompt,
         summarization_threshold: Number(summarizationThreshold),
         context_injection_chars: Number(contextInjectionChars),
       })
@@ -201,7 +217,9 @@ export function useSettingsData() {
     cacheTtl,
     toolTtl,
     wordlistsDraft,
-    systemPrompt,
+    chatPersonality,
+    customPrompt,
+    personalityPresets,
     summarizationThreshold,
     contextInjectionChars,
     setTimeout_,
@@ -211,7 +229,8 @@ export function useSettingsData() {
     setCacheSize,
     setCacheTtl,
     setToolTtl,
-    setSystemPrompt,
+    setChatPersonality,
+    setCustomPrompt,
     setSummarizationThreshold,
     setContextInjectionChars,
     addWordlist,
@@ -226,3 +245,4 @@ export function useSettingsData() {
     withCurrentCoverageOption: (current: string) => withCurrentOption(COVERAGE_OPTIONS, current),
   }
 }
+

@@ -1,5 +1,5 @@
 import { Save, Plus, Trash2 } from 'lucide-react'
-import type { Settings, WordlistEntry } from '../../api'
+import type { Settings, WordlistEntry, PersonalityPreset } from '../../api'
 import { ActionButton } from '../../components/ActionButton'
 
 function SettingsRow({ label, value, mono, accent }: {
@@ -307,8 +307,11 @@ export function WordlistsSection({
 }
 
 export function ChatSettingsSection({
-  systemPrompt,
-  setSystemPrompt,
+  chatPersonality,
+  setChatPersonality,
+  customPrompt,
+  setCustomPrompt,
+  personalityPresets,
   summarizationThreshold,
   setSummarizationThreshold,
   contextInjectionChars,
@@ -316,8 +319,11 @@ export function ChatSettingsSection({
   saving,
   onSave,
 }: {
-  systemPrompt: string
-  setSystemPrompt: (v: string) => void
+  chatPersonality: string
+  setChatPersonality: (v: string) => void
+  customPrompt: string
+  setCustomPrompt: (v: string) => void
+  personalityPresets: PersonalityPreset[]
   summarizationThreshold: string
   setSummarizationThreshold: (v: string) => void
   contextInjectionChars: string
@@ -325,6 +331,8 @@ export function ChatSettingsSection({
   saving: boolean
   onSave: () => Promise<void>
 }) {
+  const options = [...personalityPresets.map(p => ({ id: p.id, label: p.label })), { id: 'custom', label: 'Custom' }]
+
   return (
     <section className="section">
       <div className="section-header">
@@ -332,13 +340,28 @@ export function ChatSettingsSection({
         <span className="section-meta">changes apply immediately</span>
       </div>
       <div className="settings-grid">
-        <SettingsTextarea
-          label="System Prompt"
-          hint="The system persona sent to the LLM at the start of every chat."
-          value={systemPrompt}
-          onChange={setSystemPrompt}
-          rows={5}
-        />
+        <div className="settings-field">
+          <label className="settings-label">Personality</label>
+          <select
+            className="settings-input settings-select-full"
+            value={chatPersonality}
+            onChange={e => setChatPersonality(e.target.value)}
+          >
+            {options.map(p => (
+              <option key={p.id} value={p.id}>{p.label}</option>
+            ))}
+          </select>
+          <span className="settings-hint-inline">The system persona sent to the LLM at the start of every chat.</span>
+        </div>
+        {chatPersonality === 'custom' && (
+          <SettingsTextarea
+            label="Custom Prompt"
+            hint="Your custom system prompt. Saved independently and preserved when switching presets."
+            value={customPrompt}
+            onChange={setCustomPrompt}
+            rows={5}
+          />
+        )}
         <SettingsField
           label="Summarization Threshold"
           unit="messages"

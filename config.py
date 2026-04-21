@@ -45,6 +45,7 @@ _config = {
     "NYXSTRIKE_LLM_NUM_CTX_ANALYSE": 16384,                     # Context window size for AI Analyse / AI Report (Ollama only)
 
     # ── Chat widget ───────────────────────────────────────────────────────────
+    "CHAT_PERSONALITY": "nyxstrike",  # active personality preset id (see server_core/intelligence/chat_personalities.py)
     "CHAT_SYSTEM_PROMPT": (
         "You are NyxStrike, an expert penetration testing AI assistant embedded in a "
         "security operations platform. You help operators understand scan results, plan "
@@ -52,6 +53,7 @@ _config = {
         "When the user greets you casually or makes small talk, respond naturally and warmly — "
         "you are a teammate, not a robot. Match the tone of the conversation."
     ),
+    "CHAT_CUSTOM_PROMPT": "",  # saved custom system prompt (used when CHAT_PERSONALITY == "custom")
     "CHAT_SUMMARIZATION_THRESHOLD": 20,   # non-summarized messages before rolling summary kicks in
     "CHAT_CONTEXT_INJECTION_CHARS": 4000, # max chars of session scan output injected as context
 

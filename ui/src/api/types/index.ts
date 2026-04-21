@@ -16,6 +16,7 @@ export type {
 export type {
   PatchSettingsResponse,
   PatchWordlistsResponse,
+  PersonalityPreset,
   Settings,
   SettingsResponse,
   WordlistEntry,

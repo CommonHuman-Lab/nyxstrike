@@ -79,10 +79,13 @@ export default function SettingsPage({
     withCurrentTypeOption,
     withCurrentSpeedOption,
     withCurrentCoverageOption,
-    systemPrompt,
+    chatPersonality,
+    customPrompt,
+    personalityPresets,
     summarizationThreshold,
     contextInjectionChars,
-    setSystemPrompt,
+    setChatPersonality,
+    setCustomPrompt,
     setSummarizationThreshold,
     setContextInjectionChars,
   } = useSettingsData()
@@ -214,8 +217,11 @@ export default function SettingsPage({
       />
 
       <ChatSettingsSection
-        systemPrompt={systemPrompt}
-        setSystemPrompt={setSystemPrompt}
+        chatPersonality={chatPersonality}
+        setChatPersonality={setChatPersonality}
+        customPrompt={customPrompt}
+        setCustomPrompt={setCustomPrompt}
+        personalityPresets={personalityPresets}
         summarizationThreshold={summarizationThreshold}
         setSummarizationThreshold={setSummarizationThreshold}
         contextInjectionChars={contextInjectionChars}

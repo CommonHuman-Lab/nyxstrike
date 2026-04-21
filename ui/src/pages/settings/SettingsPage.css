@@ -136,6 +136,11 @@ select.settings-input {
   padding-right: 26px;
 }
 
+.settings-select-full {
+  width: 100%;
+  max-width: 260px;
+}
+
 .settings-unit {
   font-size: 12px;
   color: var(--text-dim);
