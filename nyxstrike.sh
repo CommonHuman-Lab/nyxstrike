@@ -125,8 +125,8 @@ CARGO_PACKAGES=(
 # Leave requirements file empty when no extra setup is needed.
 GIT_REPOS=(
 #  "https://github.com/nsonaniya2010/SubDomainizer.git|requirements.txt"
-  "https://github.com/rastating/dnmasscan.git|"
-  "https://github.com/hannob/tlshelpers.git|"
+#  "https://github.com/rastating/dnmasscan.git|"
+#  "https://github.com/hannob/tlshelpers.git|"
 )
 
 # ---------------------------------------------------------------------------
