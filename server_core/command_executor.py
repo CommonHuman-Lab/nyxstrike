@@ -11,11 +11,6 @@ _CPU_NICE_THRESHOLD = config_core.get("CPU_NICE_THRESHOLD", 85)
 
 COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # Default to 5 minutes if not set
 
-# Reuse a single executor instance rather than constructing one per call.
-# EnhancedCommandExecutor stores per-execution state only in instance variables
-# that are reset inside execute(), so sharing the instance across calls is safe.
-_executor = EnhancedCommandExecutor("", timeout=COMMAND_TIMEOUT)
-
 
 def _normalize_timeout(raw_timeout: Any) -> Optional[int]:
   """Normalize timeout values where <=0 means no hard timeout."""
@@ -114,8 +109,7 @@ def execute_command(
   except Exception:
     pass  # never let a psutil hiccup block a tool call
 
-  _executor.command = exec_command
-  _executor.timeout = effective_timeout
+  _executor = EnhancedCommandExecutor(exec_command, timeout=effective_timeout)
   result = _executor.execute()
 
   if active_cache is not None and result.get("success", False):

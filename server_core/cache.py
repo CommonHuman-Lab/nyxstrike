@@ -25,7 +25,7 @@ class CommandResultCache:
     def _generate_key(self, command: str, params: Dict[str, Any]) -> str:
         """Generate cache key from command and parameters"""
         key_data = f"{command}:{json.dumps(params, sort_keys=True)}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.sha256(key_data.encode()).hexdigest()
 
     def _is_expired(self, timestamp: float) -> bool:
         """Check if cache entry is expired"""

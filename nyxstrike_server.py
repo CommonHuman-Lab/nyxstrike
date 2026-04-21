@@ -17,6 +17,7 @@ from flask import Flask, request, abort, jsonify
 import server_core.config_core as config_core
 from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import run_history, tool_stats
+from server_core.session_flow import append_event as _append_event, append_run_log as _append_run_log
 from server_api import register_blueprints
 from server_api.ops.web_dashboard import initialize_update_status_check
 
@@ -169,7 +170,6 @@ def record_tool_run(response):
     # Emit a tool_run event on the associated session when a session_id is present
     if session_id:
       try:
-        from server_core.session_flow import append_event as _append_event, append_run_log as _append_run_log
         status_label = "succeeded" if ran_ok else "completed"
         _append_event(session_id, "tool_run", f"Tool {tool_name} {status_label}", {
           "tool": tool_name,
@@ -191,7 +191,7 @@ def record_tool_run(response):
           "timestamp": body.get("timestamp", ""),
         })
       except Exception:
-        pass
+        logger.debug("session_flow recording failed for tool %s", tool_name, exc_info=True)
   return response
 
 @app.errorhandler(Exception)
