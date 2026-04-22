@@ -31,3 +31,13 @@ export interface ChatMessagesResponse {
   messages: ChatMessageItem[];
   session: ChatSession;
 }
+
+export interface ToolConfirmRequest {
+  approved: boolean;
+}
+
+export interface ToolCallPending {
+  tool_name: string;
+  arguments: Record<string, unknown>;
+  description: string;
+}

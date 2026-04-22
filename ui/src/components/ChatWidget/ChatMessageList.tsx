@@ -6,11 +6,12 @@ import type { ChatMessage } from './useChatStream'
 interface ChatMessageListProps {
   messages: ChatMessage[]
   onRetry?: (message: ChatMessage) => void
+  onConfirmTool?: (msgId: string, approved: boolean) => void
 }
 
 const SCROLL_THRESHOLD = 60
 
-export function ChatMessageList({ messages, onRetry }: ChatMessageListProps) {
+export function ChatMessageList({ messages, onRetry, onConfirmTool }: ChatMessageListProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const [pinned, setPinned] = useState(true)
@@ -22,7 +23,6 @@ export function ChatMessageList({ messages, onRetry }: ChatMessageListProps) {
     return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD
   }, [])
 
-  // Track scroll position
   useEffect(() => {
     const el = listRef.current
     if (!el) return
@@ -35,7 +35,6 @@ export function ChatMessageList({ messages, onRetry }: ChatMessageListProps) {
     return () => el.removeEventListener('scroll', onScroll)
   }, [isNearBottom])
 
-  // Auto-scroll when pinned and messages change
   useEffect(() => {
     if (pinned) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -63,6 +62,11 @@ export function ChatMessageList({ messages, onRetry }: ChatMessageListProps) {
             key={msg.id}
             message={msg}
             onRetry={msg.error && onRetry ? () => onRetry(msg) : undefined}
+            onConfirmTool={
+              msg.toolCallPending && onConfirmTool
+                ? (approved) => onConfirmTool(msg.id, approved)
+                : undefined
+            }
           />
         ))}
         <div ref={bottomRef} />

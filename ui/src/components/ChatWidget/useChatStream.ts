@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { api } from '../../api'
-import type { ChatMessageItem } from '../../api'
+import type { ChatMessageItem, ToolCallPending } from '../../api'
 
 // Read auth token from sessionStorage (same as client.ts)
 function getAuthToken(): string | null {
@@ -24,6 +24,8 @@ export interface ChatMessage {
   error?: boolean
   stats?: ChatStats
   timestamp?: string
+  /** Set when the model is requesting a tool call — awaiting operator confirmation. */
+  toolCallPending?: ToolCallPending
 }
 
 const BACKOFF_MS = [500, 1000, 2000, 4000]
@@ -50,6 +52,102 @@ export function useChatStream(chatSessionId: string | null) {
         })))
       }
     } catch { /* ignore */ }
+  }, [])
+
+  /**
+   * Read an SSE stream from ``response`` and update the assistant message
+   * identified by ``assistantMsgId``.  Returns a promise that resolves when
+   * the stream ends (DONE / ERROR / network close).
+   */
+  const _consumeStream = useCallback(async (
+    response: globalThis.Response,
+    assistantMsgId: string,
+  ): Promise<'done' | 'tool_pending'> => {
+    if (!response.body) throw new Error('No response body')
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const events = buffer.split('\n\n')
+      buffer = events.pop() ?? ''
+
+      for (const event of events) {
+        const dataLine = event.trim()
+        if (!dataLine.startsWith('data: ')) continue
+        const payload = dataLine.slice(6)
+
+        if (payload === '[DONE]') {
+          setMessages(prev => prev.map(m =>
+            m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
+          ))
+          setStreaming(false)
+          return 'done'
+        }
+
+        if (payload === '[THINKING]') {
+          setMessages(prev => prev.map(m =>
+            m.id === assistantMsgId ? { ...m, thinking: true } : m
+          ))
+          continue
+        }
+
+        if (payload.startsWith('[STATS]')) {
+          try {
+            const stats = JSON.parse(payload.slice(7).trim()) as ChatStats
+            setMessages(prev => prev.map(m =>
+              m.id === assistantMsgId ? { ...m, stats } : m
+            ))
+          } catch { /* malformed stats, skip */ }
+          continue
+        }
+
+        if (payload.startsWith('[ERROR]')) {
+          const errMsg = payload.slice(7).trim()
+          setMessages(prev => prev.map(m =>
+            m.id === assistantMsgId
+              ? { ...m, content: errMsg, streaming: false, thinking: false, error: true }
+              : m
+          ))
+          setStreaming(false)
+          return 'done'
+        }
+
+        if (payload.startsWith('[TOOL_CALL_PENDING]')) {
+          try {
+            const pending = JSON.parse(payload.slice(19).trim()) as ToolCallPending
+            setMessages(prev => prev.map(m =>
+              m.id === assistantMsgId
+                ? { ...m, content: '', streaming: false, thinking: false, toolCallPending: pending }
+                : m
+            ))
+          } catch { /* malformed, skip */ }
+          setStreaming(false)
+          return 'tool_pending'
+        }
+
+        // Parse JSON token — first real token clears thinking state
+        try {
+          const token = JSON.parse(payload)
+          setMessages(prev => prev.map(m =>
+            m.id === assistantMsgId
+              ? { ...m, content: m.content + token, thinking: false }
+              : m
+          ))
+        } catch { /* malformed chunk, skip */ }
+      }
+    }
+
+    // Stream ended without [DONE]
+    setMessages(prev => prev.map(m =>
+      m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
+    ))
+    setStreaming(false)
+    return 'done'
   }, [])
 
   const send = useCallback(async (
@@ -87,80 +185,10 @@ export function useChatStream(chatSessionId: string | null) {
         throw new Error(`HTTP ${res.status}`)
       }
 
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const events = buffer.split('\n\n')
-        buffer = events.pop() ?? ''
-
-        for (const event of events) {
-          const dataLine = event.trim()
-          if (!dataLine.startsWith('data: ')) continue
-          const payload = dataLine.slice(6)
-
-          if (payload === '[DONE]') {
-            setMessages(prev => prev.map(m =>
-              m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
-            ))
-            setStreaming(false)
-            return
-          }
-
-          if (payload === '[THINKING]') {
-            setMessages(prev => prev.map(m =>
-              m.id === assistantMsgId ? { ...m, thinking: true } : m
-            ))
-            continue
-          }
-
-          if (payload.startsWith('[STATS]')) {
-            try {
-              const stats = JSON.parse(payload.slice(7).trim()) as ChatStats
-              setMessages(prev => prev.map(m =>
-                m.id === assistantMsgId ? { ...m, stats } : m
-              ))
-            } catch { /* malformed stats, skip */ }
-            continue
-          }
-
-          if (payload.startsWith('[ERROR]')) {
-            const errMsg = payload.slice(7).trim()
-            setMessages(prev => prev.map(m =>
-              m.id === assistantMsgId
-                ? { ...m, content: errMsg, streaming: false, thinking: false, error: true }
-                : m
-            ))
-            setStreaming(false)
-            return
-          }
-
-          // Parse JSON token — first real token clears thinking state
-          try {
-            const token = JSON.parse(payload)
-            setMessages(prev => prev.map(m =>
-              m.id === assistantMsgId
-                ? { ...m, content: m.content + token, thinking: false }
-                : m
-            ))
-          } catch { /* malformed chunk, skip */ }
-        }
-      }
-
-      // Stream ended without [DONE]
-      setMessages(prev => prev.map(m =>
-        m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
-      ))
-      setStreaming(false)
+      await _consumeStream(res, assistantMsgId)
 
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') {
-        // User stopped — mark as done, content already streamed
         setMessages(prev => prev.map(m =>
           m.id === assistantMsgId ? { ...m, streaming: false, thinking: false } : m
         ))
@@ -177,7 +205,6 @@ export function useChatStream(chatSessionId: string | null) {
             : m
         ))
         await new Promise(r => setTimeout(r, delay))
-        // Remove the placeholder and retry
         setMessages(prev => prev.filter(m => m.id !== assistantMsgId && m.id !== userMsgId))
         setStreaming(false)
         send(message, context, retryCount + 1)
@@ -191,7 +218,50 @@ export function useChatStream(chatSessionId: string | null) {
       ))
       setStreaming(false)
     }
-  }, [chatSessionId, streaming])
+  }, [chatSessionId, streaming, _consumeStream])
+
+  /** Confirm or reject a pending tool call, then stream the follow-up. */
+  const confirmToolCall = useCallback(async (
+    pendingMsgId: string,
+    approved: boolean,
+  ) => {
+    if (!chatSessionId || streaming) return
+
+    // Replace the pending card with a "running…" / "cancelled" indicator
+    setMessages(prev => prev.map(m =>
+      m.id === pendingMsgId
+        ? { ...m, toolCallPending: undefined, streaming: approved, thinking: approved, content: '' }
+        : m
+    ))
+    if (approved) setStreaming(true)
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    const token = getAuthToken()
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    try {
+      const res = await fetch(`/api/chat/sessions/${chatSessionId}/tool-confirm`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ approved }),
+      })
+
+      if (!res.ok || !res.body) {
+        throw new Error(`HTTP ${res.status}`)
+      }
+
+      // Stream the follow-up response into the same message slot
+      await _consumeStream(res, pendingMsgId)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setMessages(prev => prev.map(m =>
+        m.id === pendingMsgId
+          ? { ...m, content: `Error: ${msg}`, streaming: false, thinking: false, error: true }
+          : m
+      ))
+      setStreaming(false)
+    }
+  }, [chatSessionId, streaming, _consumeStream])
 
   function stop() {
     abortRef.current?.abort()
@@ -202,14 +272,13 @@ export function useChatStream(chatSessionId: string | null) {
   }
 
   function addRetryMessage(originalMsg: string, context: { page: string; session_id: string }) {
-    // Remove last error message and resend
     setMessages(prev => {
       const last = prev[prev.length - 1]
-      if (last?.error) return prev.slice(0, -2) // remove user + error pair
+      if (last?.error) return prev.slice(0, -2)
       return prev
     })
     setTimeout(() => send(originalMsg, context), 0)
   }
 
-  return { messages, streaming, send, stop, loadHistory, clearMessages, addRetryMessage }
+  return { messages, streaming, send, stop, loadHistory, clearMessages, addRetryMessage, confirmToolCall }
 }

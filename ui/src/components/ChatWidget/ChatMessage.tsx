@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Copy, Check } from 'lucide-react'
+import { Copy, Check, Terminal, ShieldAlert } from 'lucide-react'
 import { renderMarkdown } from './renderMarkdown'
 import type { ChatMessage } from './useChatStream'
 
 interface ChatMessageProps {
   message: ChatMessage
   onRetry?: () => void
+  onConfirmTool?: (approved: boolean) => void
 }
 
 function formatTime(iso?: string): string {
@@ -14,7 +15,54 @@ function formatTime(iso?: string): string {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
-export function ChatMessageBubble({ message, onRetry }: ChatMessageProps) {
+function ToolCallCard({ message, onConfirmTool }: { message: ChatMessage; onConfirmTool?: (approved: boolean) => void }) {
+  const tc = message.toolCallPending!
+  const args = tc.arguments || {}
+  const argLines = Object.entries(args)
+  return (
+    <div className="chat-tool-call-card">
+      <div className="chat-tool-call-header">
+        <Terminal size={13} />
+        <span className="chat-tool-call-name">{tc.tool_name}</span>
+      </div>
+      {tc.description && (
+        <p className="chat-tool-call-desc">{tc.description}</p>
+      )}
+      {argLines.length > 0 && (
+        <div className="chat-tool-call-args">
+          {argLines.map(([k, v]) => (
+            <div key={k} className="chat-tool-call-arg">
+              <span className="chat-tool-call-arg-key">{k}</span>
+              <span className="chat-tool-call-arg-val">{String(v)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="chat-tool-call-warning">
+        <ShieldAlert size={12} />
+        <span>Operator confirmation required before execution</span>
+      </div>
+      {onConfirmTool && (
+        <div className="chat-tool-call-actions">
+          <button
+            className="chat-tool-call-btn chat-tool-call-btn--approve"
+            onClick={() => onConfirmTool(true)}
+          >
+            Approve &amp; Run
+          </button>
+          <button
+            className="chat-tool-call-btn chat-tool-call-btn--reject"
+            onClick={() => onConfirmTool(false)}
+          >
+            Reject
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function ChatMessageBubble({ message, onRetry, onConfirmTool }: ChatMessageProps) {
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
 
@@ -28,7 +76,9 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageProps) {
   return (
     <div className={`chat-message chat-message--${isUser ? 'user' : 'assistant'}${message.error ? ' chat-message--error' : ''}`}>
       <div className="chat-message-bubble">
-        {message.thinking && message.content === '' ? (
+        {message.toolCallPending ? (
+          <ToolCallCard message={message} onConfirmTool={onConfirmTool} />
+        ) : message.thinking && message.content === '' ? (
           <span className="chat-thinking-indicator">Thinking…</span>
         ) : message.streaming && message.content === '' ? (
           <span className="chat-typing-indicator">
@@ -44,7 +94,7 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageProps) {
         {message.error && onRetry && (
           <button className="chat-retry-btn" onClick={onRetry}>Retry</button>
         )}
-        {!isUser && !message.streaming && !message.error && message.content && (
+        {!isUser && !message.streaming && !message.error && !message.toolCallPending && message.content && (
           <button
             className="chat-copy-btn"
             onClick={copyContent}
@@ -54,7 +104,7 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageProps) {
           </button>
         )}
       </div>
-      {!isUser && !message.streaming && (message.stats || message.timestamp) && (
+      {!isUser && !message.streaming && !message.toolCallPending && (message.stats || message.timestamp) && (
         <div className="chat-message-meta">
           <span className="chat-message-stats">
             {message.stats && (
@@ -79,3 +129,5 @@ export function ChatMessageBubble({ message, onRetry }: ChatMessageProps) {
     </div>
   )
 }
+
+

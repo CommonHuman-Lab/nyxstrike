@@ -551,3 +551,100 @@
   justify-content: center;
 }
 .chat-emoji-item:hover { background: var(--bg-card2); }
+
+/* ── Tool call confirmation card ─────────────────────────────────────────── */
+.chat-tool-call-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card2);
+  padding: 10px 12px;
+  font-size: 12px;
+  max-width: 85%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.chat-tool-call-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.chat-tool-call-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.chat-tool-call-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.chat-tool-call-args {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 6px 8px;
+}
+.chat-tool-call-arg {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  font-family: var(--mono);
+  line-height: 1.4;
+}
+.chat-tool-call-arg-key {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.chat-tool-call-arg-val {
+  color: var(--text);
+  word-break: break-all;
+}
+.chat-tool-call-warning {
+  font-size: 11px;
+  color: var(--warning, #fbbf24);
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.chat-tool-call-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.chat-tool-call-btn--approve,
+.chat-tool-call-btn--reject {
+  flex: 1;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 0;
+  transition: opacity 0.15s;
+}
+.chat-tool-call-btn--approve {
+  background: var(--accent);
+  color: var(--bg);
+}
+.chat-tool-call-btn--approve:hover { opacity: 0.85; }
+.chat-tool-call-btn--reject {
+  background: var(--bg);
+  border: 1px solid var(--danger, #f87171);
+  color: var(--danger, #f87171);
+}
+.chat-tool-call-btn--reject:hover { background: rgba(248, 113, 113, 0.1); }
+.chat-tool-call-btn--approve:disabled,
+.chat-tool-call-btn--reject:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

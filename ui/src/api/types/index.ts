@@ -48,6 +48,8 @@ export type {
   ChatSessionResponse,
   ChatMessageItem,
   ChatMessagesResponse,
+  ToolCallPending,
+  ToolConfirmRequest,
 } from './chat';
 
 export type {

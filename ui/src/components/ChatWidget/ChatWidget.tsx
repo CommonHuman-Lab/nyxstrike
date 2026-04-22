@@ -42,7 +42,7 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
 
   const { sessions, loading, createSession, deleteSession, deleteAllSessions, updateSessionName, renameSession } = useChatSessions()
-  const { messages, streaming, send, stop, loadHistory, clearMessages } = useChatStream(activeSessionId)
+  const { messages, streaming, send, stop, loadHistory, clearMessages, confirmToolCall } = useChatStream(activeSessionId)
 
   const widgetRef = useRef<HTMLDivElement>(null)
   const autoCreatedRef = useRef(false)
@@ -234,6 +234,7 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
               <ChatMessageList
                 messages={messages}
                 onRetry={handleRetry}
+                onConfirmTool={confirmToolCall}
               />
 
               {/* Input */}

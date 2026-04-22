@@ -63,8 +63,16 @@ class OllamaBackend:
     self._chat_url = f"{self._base_url}/api/chat"
     self._tags_url = f"{self._base_url}/api/tags"
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
-    """Send messages to Ollama /api/chat and return the response string."""
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None, tools: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """Send messages to Ollama /api/chat and return the response.
+
+    When ``tools`` is provided the model may return tool_calls instead of (or
+    in addition to) plain text content.  The return value is always a dict:
+      {"content": str, "tool_calls": list | None}
+
+    When called without tools the content string is still the primary value;
+    callers that only care about text can do ``result["content"]``.
+    """
     payload: Dict[str, Any] = {
       "model": self._model,
       "messages": messages,
@@ -74,12 +82,18 @@ class OllamaBackend:
     }
     if stop:
       payload["options"]["stop"] = stop
+    if tools:
+      payload["tools"] = tools
 
     try:
       resp = requests.post(self._chat_url, json=payload, timeout=self._timeout)
       resp.raise_for_status()
       data = resp.json()
-      return data.get("message", {}).get("content", "").strip()
+      msg = data.get("message", {})
+      return {
+        "content": (msg.get("content") or "").strip(),
+        "tool_calls": msg.get("tool_calls") or None,
+      }
     except requests.exceptions.ConnectionError:
       raise RuntimeError(
         f"Cannot connect to Ollama at {self._base_url}. "
@@ -196,7 +210,8 @@ class OllamaBackend:
       "preserving key facts, targets, commands, and findings. "
       "Be concise and technical.\n\n" + conversation
     )
-    return self.chat([{"role": "user", "content": summary_prompt}])
+    result = self.chat([{"role": "user", "content": summary_prompt}])
+    return result["content"] if isinstance(result, dict) else result
 
   @property
   def provider(self) -> str:
@@ -446,14 +461,21 @@ class LLMClient:
     if hasattr(self._backend, "warm_up"):
       self._backend.warm_up()
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
-    """Send messages and return the model's response string.
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None, tools: Optional[List[Dict[str, Any]]] = None) -> Any:
+    """Send messages and return the model's response.
+
+    When ``tools`` is omitted (the common case) returns a plain ``str``.
+    When ``tools`` is provided returns a dict:
+      {"content": str, "tool_calls": list | None}
+    so callers can inspect requested tool invocations.
 
     Args:
       messages: List of {"role": "system"|"user"|"assistant", "content": str}
       stop:     Optional stop sequences.
       think:    Override thinking mode for this call (None = use default).
       num_ctx:  Override context window size for this call (None = use default).
+      tools:    Optional list of Ollama-format tool schemas.  If provided the
+                model may respond with tool_calls instead of plain text.
 
     Raises:
       RuntimeError: If the backend is not initialized or the call fails.
@@ -462,7 +484,22 @@ class LLMClient:
       raise RuntimeError(
         f"LLM client not initialized: {self._init_error or 'unknown error'}"
       )
-    return self._backend.chat(messages, stop, think=think, num_ctx=num_ctx)
+    # Only OllamaBackend accepts tools; other backends fall back to plain text.
+    if tools and hasattr(self._backend, 'chat'):
+      try:
+        result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx, tools=tools)
+      except TypeError:
+        # Backend doesn't accept tools kwarg — strip and call without
+        result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx)
+      # Normalise: if the backend returned a plain string, box it up
+      if isinstance(result, str):
+        return result
+      return result  # dict with content + tool_calls
+    # No tools requested — return plain string for backward compat
+    result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx)
+    if isinstance(result, dict):
+      return result["content"]
+    return result
 
   def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator:
     """Stream the model's response token-by-token.
