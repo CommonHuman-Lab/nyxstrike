@@ -303,6 +303,13 @@
   color: var(--danger, #f87171);
 }
 
+.chat-message-bubble--tool {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  max-width: none;
+}
+
 /* Typing dots */
 .chat-typing-indicator {
   display: flex;
@@ -553,36 +560,42 @@
 .chat-emoji-item:hover { background: var(--bg-card2); }
 
 /* ── Tool call confirmation card ─────────────────────────────────────────── */
+/* ── Tool Call Card ──────────────────────────────────────────────────────── */
 .chat-tool-call-card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg-card2);
-  padding: 10px 12px;
-  font-size: 12px;
-  max-width: 85%;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  max-width: 340px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 .chat-tool-call-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: var(--text-dim);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  gap: 7px;
+}
+.chat-tool-call-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 .chat-tool-call-name {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--accent);
 }
 .chat-tool-call-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-dim);
+  margin: 0;
+  line-height: 1.45;
 }
 .chat-tool-call-args {
   display: flex;
@@ -590,12 +603,13 @@
   gap: 3px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: 4px;
   padding: 6px 8px;
 }
 .chat-tool-call-arg {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
   font-size: 11px;
   font-family: var(--mono);
   line-height: 1.4;
@@ -609,42 +623,59 @@
   word-break: break-all;
 }
 .chat-tool-call-warning {
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--warning, #fbbf24);
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  background: color-mix(in srgb, var(--warning, #fbbf24) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning, #fbbf24) 25%, transparent);
   border-radius: 4px;
   padding: 4px 8px;
 }
 .chat-tool-call-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-top: 2px;
 }
-.chat-tool-call-btn--approve,
-.chat-tool-call-btn--reject {
+.chat-tool-call-btn {
   flex: 1;
-  border-radius: 5px;
-  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 5px 0;
-  transition: opacity 0.15s;
+  letter-spacing: 0.03em;
+  padding: 5px 8px;
+  transition: background 0.15s, box-shadow 0.15s, opacity 0.15s;
+  font-family: inherit;
 }
 .chat-tool-call-btn--approve {
-  background: var(--accent);
-  color: var(--bg);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent);
 }
-.chat-tool-call-btn--approve:hover { opacity: 0.85; }
+.chat-tool-call-btn--approve:hover {
+  background: color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 20%, transparent);
+}
 .chat-tool-call-btn--reject {
-  background: var(--bg);
-  border: 1px solid var(--danger, #f87171);
+  background: color-mix(in srgb, var(--danger, #f87171) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger, #f87171) 40%, transparent);
   color: var(--danger, #f87171);
 }
-.chat-tool-call-btn--reject:hover { background: rgba(248, 113, 113, 0.1); }
+.chat-tool-call-btn--reject:hover {
+  background: color-mix(in srgb, var(--danger, #f87171) 20%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--danger, #f87171) 15%, transparent);
+}
 .chat-tool-call-btn--approve:disabled,
 .chat-tool-call-btn--reject:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: default;
+  box-shadow: none;
 }
