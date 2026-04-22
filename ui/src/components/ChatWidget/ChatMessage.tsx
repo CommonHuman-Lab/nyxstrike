@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, Check, Terminal, ShieldAlert } from 'lucide-react'
+import { Copy, Check, Terminal, ShieldAlert, CheckCircle, XCircle } from 'lucide-react'
 import { renderMarkdown } from './renderMarkdown'
 import type { ChatMessage } from './useChatStream'
 
@@ -22,8 +22,8 @@ function ToolCallCard({ message, onConfirmTool }: { message: ChatMessage; onConf
   return (
     <div className="chat-tool-call-card">
       <div className="chat-tool-call-header">
-        <Terminal size={13} />
-        <span className="chat-tool-call-name">{tc.tool_name}</span>
+        <Terminal size={12} className="chat-tool-call-icon" />
+        <span className="chat-tool-call-name">{tc.tool_name.replace(/_/g, ' ').toUpperCase()}</span>
       </div>
       {tc.description && (
         <p className="chat-tool-call-desc">{tc.description}</p>
@@ -39,7 +39,7 @@ function ToolCallCard({ message, onConfirmTool }: { message: ChatMessage; onConf
         </div>
       )}
       <div className="chat-tool-call-warning">
-        <ShieldAlert size={12} />
+        <ShieldAlert size={11} />
         <span>Operator confirmation required before execution</span>
       </div>
       {onConfirmTool && (
@@ -48,12 +48,14 @@ function ToolCallCard({ message, onConfirmTool }: { message: ChatMessage; onConf
             className="chat-tool-call-btn chat-tool-call-btn--approve"
             onClick={() => onConfirmTool(true)}
           >
+            <CheckCircle size={12} />
             Approve &amp; Run
           </button>
           <button
             className="chat-tool-call-btn chat-tool-call-btn--reject"
             onClick={() => onConfirmTool(false)}
           >
+            <XCircle size={12} />
             Reject
           </button>
         </div>
@@ -75,7 +77,7 @@ export function ChatMessageBubble({ message, onRetry, onConfirmTool }: ChatMessa
 
   return (
     <div className={`chat-message chat-message--${isUser ? 'user' : 'assistant'}${message.error ? ' chat-message--error' : ''}`}>
-      <div className="chat-message-bubble">
+      <div className={`chat-message-bubble${message.toolCallPending ? ' chat-message-bubble--tool' : ''}`}>
         {message.toolCallPending ? (
           <ToolCallCard message={message} onConfirmTool={onConfirmTool} />
         ) : message.thinking && message.content === '' ? (
