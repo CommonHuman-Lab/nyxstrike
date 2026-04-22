@@ -15,6 +15,21 @@ export interface ChatStats {
   tokens_per_sec: number
 }
 
+export interface ToolCallResolved {
+  tool_name: string
+  arguments?: Record<string, unknown>
+  cancelled: boolean
+  /** Populated for executed tool calls from the persisted result JSON */
+  result?: {
+    stdout?: string
+    stderr?: string
+    execution_time?: number
+    return_code?: number
+    success?: boolean
+    timed_out?: boolean
+  }
+}
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -26,12 +41,67 @@ export interface ChatMessage {
   timestamp?: string
   /** Set when the model is requesting a tool call — awaiting operator confirmation. */
   toolCallPending?: ToolCallPending
+  /** Set when a historical message encodes a resolved (approved or cancelled) tool call. */
+  toolCallResolved?: ToolCallResolved
 }
 
 const BACKOFF_MS = [500, 1000, 2000, 4000]
 
 function nowISO(): string {
   return new Date().toISOString()
+}
+
+/**
+ * Detect messages persisted by the server for tool-call events and convert
+ * them into structured `toolCallResolved` data so the UI can render them as
+ * styled cards rather than raw text.
+ *
+ * Patterns:
+ *   "[Tool call requested: **name**]\nArguments: `{...}`"
+ *   "[Tool call cancelled by operator: name]"
+ */
+function parseToolCallContent(content: string): ToolCallResolved | null {
+  // Cancelled
+  const cancelMatch = content.match(/^\[Tool call cancelled by operator:\s*([^\]]+)\]/)
+  if (cancelMatch) {
+    return { tool_name: cancelMatch[1].trim(), cancelled: true }
+  }
+  // Requested (pending approval — no result yet)
+  const requestMatch = content.match(/^\[Tool call requested:\s*\*\*([^*]+)\*\*\]/)
+  if (requestMatch) {
+    let args: Record<string, unknown> = {}
+    const argsMatch = content.match(/Arguments:\s*`([^`]+)`/)
+    if (argsMatch) {
+      try { args = JSON.parse(argsMatch[1]) } catch { /* ignore */ }
+    }
+    return { tool_name: requestMatch[1].trim(), arguments: args, cancelled: false }
+  }
+  // Executed — [Tool executed: **name**]\nArguments: `{...}`\nResult:\n```json\n{...}\n```
+  const execMatch = content.match(/^\[Tool executed:\s*\*\*([^*]+)\*\*\]/)
+  if (execMatch) {
+    let args: Record<string, unknown> = {}
+    const argsMatch = content.match(/Arguments:\s*`([^`]+)`/)
+    if (argsMatch) {
+      try { args = JSON.parse(argsMatch[1]) } catch { /* ignore */ }
+    }
+    let result: ToolCallResolved['result'] = {}
+    const resultMatch = content.match(/```json\n([\s\S]+?)\n```/)
+    if (resultMatch) {
+      try {
+        const parsed = JSON.parse(resultMatch[1])
+        result = {
+          stdout: parsed.stdout ?? '',
+          stderr: parsed.stderr ?? '',
+          execution_time: parsed.execution_time,
+          return_code: parsed.return_code,
+          success: parsed.success,
+          timed_out: parsed.timed_out,
+        }
+      } catch { /* ignore */ }
+    }
+    return { tool_name: execMatch[1].trim(), arguments: args, cancelled: false, result }
+  }
+  return null
 }
 
 export function useChatStream(chatSessionId: string | null) {
@@ -43,13 +113,17 @@ export function useChatStream(chatSessionId: string | null) {
     try {
       const res = await api.chat.getMessages(sessionId)
       if (res.success) {
-        setMessages(res.messages.map((m: ChatMessageItem) => ({
-          id: String(m.id),
-          role: m.role,
-          content: m.content,
-          timestamp: m.created_at,
-          ...(m.stats ? { stats: JSON.parse(m.stats) } : {}),
-        })))
+        setMessages(res.messages.map((m: ChatMessageItem) => {
+          const resolved = m.role === 'assistant' ? parseToolCallContent(m.content) : null
+          return {
+            id: String(m.id),
+            role: m.role,
+            content: resolved ? '' : m.content,
+            timestamp: m.created_at,
+            ...(m.stats ? { stats: JSON.parse(m.stats) } : {}),
+            ...(resolved ? { toolCallResolved: resolved } : {}),
+          }
+        }))
       }
     } catch { /* ignore */ }
   }, [])

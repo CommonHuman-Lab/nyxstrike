@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Copy, Check, Terminal, ShieldAlert, CheckCircle, XCircle } from 'lucide-react'
+import { Copy, Check, Terminal, ShieldAlert, CheckCircle, XCircle, Ban } from 'lucide-react'
 import { renderMarkdown } from './renderMarkdown'
-import type { ChatMessage } from './useChatStream'
+import type { ChatMessage, ToolCallResolved } from './useChatStream'
 
 interface ChatMessageProps {
   message: ChatMessage
@@ -13,6 +13,51 @@ function formatTime(iso?: string): string {
   if (!iso) return ''
   const d = new Date(iso)
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+function ToolCallResolvedCard({ tc }: { tc: ToolCallResolved }) {
+  const argLines = Object.entries(tc.arguments || {})
+  const r = tc.result
+  const output = (r?.stdout ?? '').trim()
+  const errOutput = (r?.stderr ?? '').trim()
+  const hasResult = !!r
+  return (
+    <div className={`chat-tool-call-card chat-tool-call-card--resolved${tc.cancelled ? ' chat-tool-call-card--cancelled' : ''}`}>
+      <div className="chat-tool-call-header">
+        <Terminal size={12} className="chat-tool-call-icon" />
+        <span className="chat-tool-call-name">{tc.tool_name.replace(/_/g, ' ').toUpperCase()}</span>
+        {tc.cancelled && (
+          <span className="chat-tool-call-badge">
+            <Ban size={10} /> Cancelled
+          </span>
+        )}
+        {hasResult && (
+          <span className={`chat-tool-call-badge${r?.success === false ? ' chat-tool-call-badge--danger' : ''}`}>
+            {r?.success === false
+              ? <><XCircle size={10} /> Failed</>
+              : <><CheckCircle size={10} /> Done · {r?.execution_time?.toFixed(2)}s</>
+            }
+          </span>
+        )}
+      </div>
+      {argLines.length > 0 && (
+        <div className="chat-tool-call-args">
+          {argLines.map(([k, v]) => (
+            <div key={k} className="chat-tool-call-arg">
+              <span className="chat-tool-call-arg-key">{k}</span>
+              <span className="chat-tool-call-arg-val">{String(v)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {(output || errOutput) && (
+        <div className="chat-tool-call-output">
+          {output && <pre className="chat-tool-call-stdout">{output}</pre>}
+          {errOutput && <pre className="chat-tool-call-stderr">{errOutput}</pre>}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ToolCallCard({ message, onConfirmTool }: { message: ChatMessage; onConfirmTool?: (approved: boolean) => void }) {
@@ -77,9 +122,11 @@ export function ChatMessageBubble({ message, onRetry, onConfirmTool }: ChatMessa
 
   return (
     <div className={`chat-message chat-message--${isUser ? 'user' : 'assistant'}${message.error ? ' chat-message--error' : ''}`}>
-      <div className={`chat-message-bubble${message.toolCallPending ? ' chat-message-bubble--tool' : ''}`}>
+      <div className={`chat-message-bubble${(message.toolCallPending || message.toolCallResolved) ? ' chat-message-bubble--tool' : ''}`}>
         {message.toolCallPending ? (
           <ToolCallCard message={message} onConfirmTool={onConfirmTool} />
+        ) : message.toolCallResolved ? (
+          <ToolCallResolvedCard tc={message.toolCallResolved} />
         ) : message.thinking && message.content === '' ? (
           <span className="chat-thinking-indicator">Thinking…</span>
         ) : message.streaming && message.content === '' ? (
@@ -96,7 +143,7 @@ export function ChatMessageBubble({ message, onRetry, onConfirmTool }: ChatMessa
         {message.error && onRetry && (
           <button className="chat-retry-btn" onClick={onRetry}>Retry</button>
         )}
-        {!isUser && !message.streaming && !message.error && !message.toolCallPending && message.content && (
+        {!isUser && !message.streaming && !message.error && !message.toolCallPending && !message.toolCallResolved && message.content && (
           <button
             className="chat-copy-btn"
             onClick={copyContent}
@@ -106,7 +153,7 @@ export function ChatMessageBubble({ message, onRetry, onConfirmTool }: ChatMessa
           </button>
         )}
       </div>
-      {!isUser && !message.streaming && !message.toolCallPending && (message.stats || message.timestamp) && (
+      {!isUser && !message.streaming && !message.toolCallPending && !message.toolCallResolved && (message.stats || message.timestamp) && (
         <div className="chat-message-meta">
           <span className="chat-message-stats">
             {message.stats && (
