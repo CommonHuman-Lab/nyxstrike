@@ -32,6 +32,7 @@ _config = {
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour
     "DEFAULT_API_SERVER_URL": "http://127.0.0.1:8888",
     "MAX_RETRIES": 3,
+    "METASPLOIT_SESSION_WAIT": 10,  # Seconds to wait after exploit -j before listing sessions
 
     # ── LLM client ────────────────────────────────────────────────────────────
     "NYXSTRIKE_LLM_PROVIDER": "ollama",                         # ollama | openai | anthropic
