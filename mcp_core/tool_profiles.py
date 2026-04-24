@@ -386,11 +386,6 @@ TOOL_PROFILES = {
     "process_management": [
         lambda mcp, client, logger: register_process_management_tools(mcp, client, logger),
     ],
-
-    #Tools for auto-installation of missing tools on the API server
-    "auto_install": [
-        lambda mcp, client, logger: register_auto_install_tools(mcp, client, logger),
-    ],
 }
 
 # Profile dependencies

@@ -1049,19 +1049,6 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.82,
     },
 
-    # ---- OPS ----
-    "auto_install_missing_apt_tools": {
-        "desc": "REQUIRES root! - Automatically install missing tools",
-        "endpoint": "/api/tools/auto-install-missing-apt",
-        "method": "POST",
-        "category": "ops",
-        "params": {},
-        "optional": {},
-        "effectiveness": 0.90,
-    },
-
-
-
     # ---- Binary Debug ----
     "gdb": {
         "desc": "GNU debugger — dynamic binary analysis and exploit dev",

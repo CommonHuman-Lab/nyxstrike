@@ -8,12 +8,18 @@ Belt (this file) + suspenders (module-level patches in test_endpoints_exist.py).
 
 Patched paths
 ─────────────
-1. server_core.command_executor.execute_command      — primary tool gateway
-2. server_core.enhanced_command_executor.subprocess  — async/process-pool gateway
-3. server_core.enhanced_process_manager.subprocess   — process manager gateway
-4. server_core.python_env_manager.subprocess         — pip-install gateway
-5. server_core.singletons.cache                      — cache singleton
-6. server_core.singletons.telemetry                  — telemetry singleton
+1.  server_core.command_executor.execute_command           — primary tool gateway
+2.  server_core.enhanced_command_executor.subprocess       — async/process-pool gateway
+3.  server_core.enhanced_process_manager.subprocess        — process manager gateway
+4.  server_core.python_env_manager.subprocess              — pip-install gateway
+5.  server_api.wifi_pentest.hcxdumptool.subprocess         — direct hcxdumptool BPF calls
+6.  server_api.active_directory.impacket_scripts.subprocess — impacket direct calls
+7.  server_api.ops.system_monitoring.subprocess            — tool-availability probes
+8.  server_api.ctf.binary_analyzer.subprocess              — file/checksec/strings/ROPgadget calls
+9.  server_api.ctf.forensics_analyzer.subprocess           — exiftool/binwalk/steghide calls
+10. server_core.ai_exploit_generator — imports subprocess locally; covered by module patches above
+11. server_core.singletons.cache                           — cache singleton
+12. server_core.singletons.telemetry                       — telemetry singleton
 """
 
 import subprocess
@@ -60,6 +66,11 @@ _patches = [
     patch("server_core.enhanced_command_executor.subprocess", _MOCK_SUBPROCESS),
     patch("server_core.enhanced_process_manager.subprocess", _MOCK_SUBPROCESS),
     patch("server_core.python_env_manager.subprocess", _MOCK_SUBPROCESS),
+    patch("server_api.wifi_pentest.hcxdumptool.subprocess", _MOCK_SUBPROCESS),
+    patch("server_api.active_directory.impacket_scripts.subprocess", _MOCK_SUBPROCESS),
+    patch("server_api.ops.system_monitoring.subprocess", _MOCK_SUBPROCESS),
+    patch("server_api.ctf.binary_analyzer.subprocess", _MOCK_SUBPROCESS),
+    patch("server_api.ctf.forensics_analyzer.subprocess", _MOCK_SUBPROCESS),
     patch("server_core.singletons.cache", _CACHE_MOCK),
     patch("server_core.singletons.telemetry", _TELEMETRY_MOCK),
 ]
