@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_masscan_tool(mcp, hexstrike_client, logger):
+def register_masscan_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def masscan_high_speed(target: str, ports: str = "1-65535", rate: int = 1000,
@@ -38,7 +38,7 @@ def register_masscan_tool(mcp, hexstrike_client, logger):
         logger.info(f"🚀 Starting Masscan: {target} at rate {rate}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/masscan", data)
+            None, lambda: api_client.safe_post("api/tools/masscan", data)
         )
         if result.get("success"):
             logger.info(f"✅ Masscan completed for {target}")

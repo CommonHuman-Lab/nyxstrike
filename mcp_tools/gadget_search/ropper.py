@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_ropper_tool(mcp, hexstrike_client, logger):
+def register_ropper_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def ropper_gadget_search(binary: str, gadget_type: str = "rop", quality: int = 1,
@@ -34,7 +34,7 @@ def register_ropper_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔧 Starting ropper analysis: {binary}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/ropper", data)
+            None, lambda: api_client.safe_post("api/tools/ropper", data)
         )
         if result.get("success"):
             logger.info(f"✅ ropper analysis completed")

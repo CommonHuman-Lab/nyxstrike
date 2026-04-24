@@ -6,6 +6,7 @@ export type Page =
   | 'run'
   | 'tasks'
   | 'tools'
+  | 'plugins'
   | 'reports'
   | 'sessions'
   | 'session-detail';
@@ -18,6 +19,7 @@ const VALID_PAGES = new Set<Page>([
   'run',
   'tasks',
   'tools',
+  'plugins',
   'reports',
   'sessions',
   'session-detail',

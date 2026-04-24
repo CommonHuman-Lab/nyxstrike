@@ -1,9 +1,9 @@
-# Global configuration for HexStrike AI Community Edition
+# Global configuration for NyxStrike
 
 _config = {
-    "APP_NAME": "HexStrike AI Community Edition",
-    "VERSION": "1.3.0",
-    "DATA_DIR_NAME": ".hexstrike_data",  # Root data directory name (relative to cwd, override with HEXSTRIKE_DATA_DIR env var)
+    "APP_NAME": "NyxStrike",
+    "VERSION": "1.4.0",
+    "DATA_DIR_NAME": ".nyxstrike_data",  # Root data directory name (relative to cwd, override with NYXSTRIKE_DATA_DIR env var)
     "COMMAND_TIMEOUT": 500,
     "REQUEST_TIMEOUT": 0,
     "COMMAND_INACTIVITY_TIMEOUT": 900,
@@ -25,11 +25,39 @@ _config = {
         "amass": 1800,
     },
     "CLEAN_TOOL_OUTPUT": True,
+    "CPU_NICE_THRESHOLD": 85,  # CPU% above which tool commands are niced down (nice -n 10)
+    "LLM_KEEP_ALIVE": 300,    # Seconds to keep the Ollama model in VRAM after each inference (default 5 min)
     "CACHE_SIZE": 1000,
     "CACHE_TTL": 3600,  # 1 hour
     "TOOL_AVAILABILITY_TTL": 3600,  # 1 hour
-    "DEFAULT_HEXSTRIKE_SERVER": "http://127.0.0.1:8888",
+    "DEFAULT_API_SERVER_URL": "http://127.0.0.1:8888",
     "MAX_RETRIES": 3,
+    "METASPLOIT_SESSION_WAIT": 10,  # Seconds to wait after exploit -j before listing sessions
+
+    # ── LLM client ────────────────────────────────────────────────────────────
+    "NYXSTRIKE_LLM_PROVIDER": "ollama",                         # ollama | openai | anthropic
+    "NYXSTRIKE_LLM_MODEL":    "nyxstrike-ai",                   # Ollama model name or OpenAI/Anthropic model name",
+    "NYXSTRIKE_LLM_URL":      "http://localhost:11434",         # Ollama base URL (ignored for openai/anthropic)
+    "NYXSTRIKE_LLM_API_KEY":  "",                               # Required for openai / anthropic
+    "NYXSTRIKE_LLM_TIMEOUT":  600,                              # seconds
+    "NYXSTRIKE_LLM_MAX_LOOPS": 9,
+    "NYXSTRIKE_LLM_THINK":    False,                            # Enable model thinking/reasoning (Ollama only, e.g. Qwen3)
+    "NYXSTRIKE_LLM_NUM_CTX":  4096,                             # Context window size for chat (Ollama only)
+    "NYXSTRIKE_LLM_NUM_CTX_ANALYSE": 16384,                     # Context window size for AI Analyse / AI Report (Ollama only)
+
+    # ── Chat widget ───────────────────────────────────────────────────────────
+    "CHAT_PERSONALITY": "nyxstrike",  # active personality preset id (see server_core/intelligence/chat_personalities.py)
+    "CHAT_SYSTEM_PROMPT": (
+        "You are NyxStrike, an expert penetration testing AI assistant embedded in a "
+        "security operations platform. You help operators understand scan results, plan "
+        "attacks, interpret findings, and write reports. Be concise, technical, and actionable. "
+        "When the user greets you casually or makes small talk, respond naturally and warmly — "
+        "you are a teammate, not a robot. Match the tone of the conversation."
+    ),
+    "CHAT_CUSTOM_PROMPT": "",  # saved custom system prompt (used when CHAT_PERSONALITY == "custom")
+    "CHAT_SUMMARIZATION_THRESHOLD": 20,   # non-summarized messages before rolling summary kicks in
+    "CHAT_CONTEXT_INJECTION_CHARS": 4000, # max chars of session scan output injected as context
+
     "WORD_LISTS": {
 
         # --- Password Lists ---

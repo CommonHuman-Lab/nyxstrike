@@ -5,7 +5,7 @@ description: Subdomain and DNS enumeration workflow using subfinder, amass, dnse
 
 # subdomain-enum
 
-Subdomain and DNS reconnaissance workflow for HexStrike AI. Use this skill when a user wants to enumerate subdomains, discover DNS records, find email addresses, or build a full attack surface map for a domain.
+Subdomain and DNS reconnaissance workflow for NyxStrike. Use this skill when a user wants to enumerate subdomains, discover DNS records, find email addresses, or build a full attack surface map for a domain.
 
 ## Workflow
 
@@ -100,7 +100,7 @@ subfinder → amass → dnsenum/fierce → theharvester
 - Historical URLs from gau/waybackurls often expose parameters that are still live but not linked from the main site.
 - Zone transfers (dnsenum) are rare but high-value — always attempt them.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

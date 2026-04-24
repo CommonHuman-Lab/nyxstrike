@@ -3,19 +3,7 @@
   border-color: color-mix(in srgb, var(--danger) 30%, var(--border));
   background:
     radial-gradient(circle at 85% -10%, color-mix(in srgb, var(--danger) 18%, transparent), transparent 42%),
-    linear-gradient(180deg, color-mix(in srgb, var(--danger) 8%, transparent) 0%, var(--bg-card) 100%);
-}
-
-.confirm-action-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+    linear-gradient(180deg, color-mix(in srgb, var(--danger) 8%, var(--bg-card)) 0%, var(--bg-card) 100%);
 }
 
 .confirm-action-impact {

@@ -1,0 +1,30 @@
+# NyxStrike Plugin Manifest
+#
+# Declare plugins here by type.  The server reads this file at startup and
+# loads every enabled plugin — skipping any with errors so the server always
+# starts cleanly.
+#
+# ── Supported plugin types ────────────────────────────────────────────────
+#
+#   tools        Flask API endpoint + FastMCP tool
+#                Folder: plugins/tools/<name>/
+#                Required files: plugin.yaml  server_api.py  mcp_tool.py
+#
+# (future types: workflows, agents, reports, …)
+#
+# ── Plugin entry fields ───────────────────────────────────────────────────
+#
+#   name     (required) folder name inside the type directory
+#   enabled  (optional, default true)  set to false to skip without deleting
+#
+# ── Adding a tool plugin ──────────────────────────────────────────────────
+#
+#   1. Copy  plugins/tools/example_net_ping/  to  plugins/tools/<your_name>/
+#   2. Edit  plugin.yaml, server_api.py, mcp_tool.py
+#   3. Add an entry below and restart the server
+#
+# ─────────────────────────────────────────────────────────────────────────
+
+tools:
+  - name: example_net_ping
+    enabled: false

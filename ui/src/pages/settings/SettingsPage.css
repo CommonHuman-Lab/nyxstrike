@@ -136,6 +136,11 @@ select.settings-input {
   padding-right: 26px;
 }
 
+.settings-select-full {
+  width: 100%;
+  max-width: 260px;
+}
+
 .settings-unit {
   font-size: 12px;
   color: var(--text-dim);
@@ -266,6 +271,22 @@ select.settings-input {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.settings-textarea {
+  width: 100%;
+  min-height: 120px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-h);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--mono);
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+.settings-textarea:focus { border-color: var(--green); }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {

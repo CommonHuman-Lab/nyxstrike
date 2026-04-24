@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { RefreshCw } from 'lucide-react'
 import type { Dispatch, RefObject, SetStateAction } from 'react'
 import type {
@@ -5,20 +6,33 @@ import type {
   ToolExecResponse,
   WebDashboardResponse,
 } from '../api'
-import type { HistoryPoint, RunHistoryEntry } from '../shared/types'
+import type { RunHistoryEntry } from '../shared/types'
 import type { ThemeId } from './themes'
-import { DashboardPage } from '../pages/dashboard/DashboardPage'
-import { RunPage } from '../pages/run/RunPage'
-import LogsPage from '../pages/logview/LogsPage'
-import SettingsPage from '../pages/settings/SettingsPage'
-import HelpPage from '../pages/help/HelpPage'
-import TasksPage from '../pages/tasks/TasksPage'
-import ToolsPage from '../pages/tools/ToolsPage'
-import ReportsPage from '../pages/reports/ReportsPage'
-import SessionsPage from '../pages/sessions/SessionsPage'
-import SessionDetailPage from '../pages/sessions/SessionDetailPage'
-import { DEMO_PROCESSES, DEMO_SESSIONS } from './demo'
 import type { Page } from './routing'
+
+// Eagerly loaded — always visible on any page
+import { DashboardPage } from '../pages/dashboard/DashboardPage'
+
+// Lazy-loaded page chunks — each becomes its own JS chunk
+const RunPage           = lazy(() => import('../pages/run/RunPage').then(m => ({ default: m.RunPage })))
+const LogsPage          = lazy(() => import('../pages/logview/LogsPage'))
+const SettingsPage      = lazy(() => import('../pages/settings/SettingsPage'))
+const HelpPage          = lazy(() => import('../pages/help/HelpPage'))
+const TasksPage         = lazy(() => import('../pages/tasks/TasksPage'))
+const ToolsPage         = lazy(() => import('../pages/tools/ToolsPage'))
+const PluginsPage       = lazy(() => import('../pages/plugins/PluginsPage'))
+const ReportsPage       = lazy(() => import('../pages/reports/ReportsPage'))
+const SessionsPage      = lazy(() => import('../pages/sessions/SessionsPage'))
+const SessionDetailPage = lazy(() => import('../pages/sessions/SessionDetailPage'))
+
+/** Minimal spinner shown while a lazy chunk is loading */
+function PageLoader() {
+  return (
+    <div className="loading-state">
+      <RefreshCw size={24} className="spin" color="var(--green)" />
+    </div>
+  )
+}
 
 interface MainContentProps {
   page: Page
@@ -44,12 +58,15 @@ interface MainContentProps {
   logEndRef: RefObject<HTMLDivElement | null>
   loading: boolean
   error: string | null
-  history: HistoryPoint[]
   toolCategories: Record<string, string[]>
   themeId: ThemeId
   setThemeId: (theme: ThemeId) => void
   reduceTextureEffects: boolean
   setReduceTextureEffects: (value: boolean) => void
+  /** Demo data injected from App (avoids importing demo.ts here) */
+  demoProcesses?: unknown
+  demoSessions?: unknown
+  demoCpuHistory?: unknown
 }
 
 export function MainContent({
@@ -76,86 +93,99 @@ export function MainContent({
   logEndRef,
   loading,
   error,
-  history,
   toolCategories,
   themeId,
   setThemeId,
   reduceTextureEffects,
   setReduceTextureEffects,
+  demoProcesses,
+  demoSessions,
+  demoCpuHistory,
 }: MainContentProps) {
   return (
     <main className={`main${page === 'run' ? ' main--flush' : ''}`}>
-      {page === 'settings' && (
-        <SettingsPage
-          themeId={themeId}
-          setThemeId={setThemeId}
-          reduceTextureEffects={reduceTextureEffects}
-          setReduceTextureEffects={setReduceTextureEffects}
-        />
-      )}
-      {page === 'help' && <HelpPage />}
-      {page === 'run' && (
-        <RunPage
-          tools={tools}
-          toolsStatus={toolsStatusWithParents}
-          runHistory={runHistory}
-          setRunHistory={setRunHistory}
-          commandToolRequest={commandToolRequest}
-          onCommandToolHandled={onCommandToolHandled}
-          onRefresh={fetchServerRunHistory}
-          onClearHistory={clearServerRunHistory}
-        />
-      )}
-      {page === 'tasks' && <TasksPage demoData={demo ? { processes: DEMO_PROCESSES } : undefined} />}
-      {page === 'tools' && health && (
-        <ToolsPage health={health} tools={tools} toolsStatus={toolsStatusWithParents} />
-      )}
-      {page === 'reports' && <ReportsPage runHistory={runHistory} />}
-      {page === 'sessions' && <SessionsPage demoData={demo ? { sessions: DEMO_SESSIONS } : undefined} onOpenSession={openSessionDetail} />}
-      {page === 'session-detail' && activeSessionId && (
-        <SessionDetailPage
-          sessionId={activeSessionId}
-          tools={tools}
-          onBack={() => setPage('sessions')}
-          onToolRun={addBrowserRunEntry}
-        />
-      )}
-      {page === 'logs' && (
-        <LogsPage
-          logLines={logLines}
-          logAutoScroll={logAutoScroll}
-          setLogAutoScroll={setLogAutoScroll}
-          logLimit={logLimit}
-          setLogLimit={setLogLimit}
-          logEndRef={logEndRef}
-        />
-      )}
-      {page === 'dashboard' && (
-        <>
-          {loading && !health && (
-            <div className="loading-state">
-              <RefreshCw size={24} className="spin" color="var(--green)" />
-              <p>Connecting to server…</p>
-            </div>
-          )}
-          {error && !health && (
-            <div className="error-banner">
-              {error} — is the server running on port 8888?
-            </div>
-          )}
-          {health && (
-            <DashboardPage
-              health={health}
-              tools={tools}
-              history={history}
-              runHistory={runHistory}
-              loading={loading}
-              error={error}
-              toolCategories={toolCategories}
-            />
-          )}
-        </>
-      )}
+      <Suspense fallback={<PageLoader />}>
+        {page === 'settings' && (
+          <SettingsPage
+            themeId={themeId}
+            setThemeId={setThemeId}
+            reduceTextureEffects={reduceTextureEffects}
+            setReduceTextureEffects={setReduceTextureEffects}
+          />
+        )}
+        {page === 'help' && <HelpPage />}
+        {page === 'run' && (
+          <RunPage
+            tools={tools}
+            toolsStatus={toolsStatusWithParents}
+            runHistory={runHistory}
+            setRunHistory={setRunHistory}
+            commandToolRequest={commandToolRequest}
+            onCommandToolHandled={onCommandToolHandled}
+            onRefresh={fetchServerRunHistory}
+            onClearHistory={clearServerRunHistory}
+          />
+        )}
+        {page === 'tasks' && (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <TasksPage demoData={demo && demoProcesses ? { processes: demoProcesses as any } : undefined} />
+        )}
+        {page === 'tools' && health && (
+          <ToolsPage health={health} tools={tools} toolsStatus={toolsStatusWithParents} />
+        )}
+        {page === 'plugins' && <PluginsPage />}
+        {page === 'reports' && <ReportsPage runHistory={runHistory} />}
+        {page === 'sessions' && (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <SessionsPage demoData={demo && demoSessions ? { sessions: demoSessions as any } : undefined} onOpenSession={openSessionDetail} />
+        )}
+        {page === 'session-detail' && activeSessionId && (
+          <SessionDetailPage
+            sessionId={activeSessionId}
+            tools={tools}
+            onBack={() => setPage('sessions')}
+            onToolRun={addBrowserRunEntry}
+            llmAvailable={health?.llm_status?.available ?? false}
+          />
+        )}
+        {page === 'logs' && (
+          <LogsPage
+            logLines={logLines}
+            logAutoScroll={logAutoScroll}
+            setLogAutoScroll={setLogAutoScroll}
+            logLimit={logLimit}
+            setLogLimit={setLogLimit}
+            logEndRef={logEndRef}
+          />
+        )}
+        {page === 'dashboard' && (
+          <>
+            {loading && !health && (
+              <div className="loading-state">
+                <RefreshCw size={24} className="spin" color="var(--green)" />
+                <p>Connecting to server…</p>
+              </div>
+            )}
+            {error && !health && (
+              <div className="error-banner">
+                {error} — is the server running on port 8888?
+              </div>
+            )}
+            {health && (
+              <DashboardPage
+                health={health}
+                tools={tools}
+                runHistory={runHistory}
+                loading={loading}
+                error={error}
+                toolCategories={toolCategories}
+                demo={demo}
+                demoCpuHistory={demoCpuHistory}
+              />
+            )}
+          </>
+        )}
+      </Suspense>
     </main>
   )
 }

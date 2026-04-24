@@ -19,7 +19,7 @@ class HTTPTestingFramework:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'HexStrike-HTTP-Framework/1.0 (Advanced Security Testing)'
+            'User-Agent': 'Security-HTTP-Framework/1.0 (Advanced Security Testing)'
         })
         self.proxy_history = []
         self.vulnerabilities = []

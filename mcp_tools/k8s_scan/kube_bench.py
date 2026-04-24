@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_kube_bench_tool(mcp, hexstrike_client, logger):
+def register_kube_bench_tool(mcp, api_client, logger):
 
     @mcp.tool()
     async def kube_bench_cis(targets: str = "", version: str = "", config_dir: str = "",
@@ -31,7 +31,7 @@ def register_kube_bench_tool(mcp, hexstrike_client, logger):
         logger.info(f"☁️  Starting kube-bench CIS benchmark")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/kube-bench", data)
+            None, lambda: api_client.safe_post("api/tools/kube-bench", data)
         )
         if result.get("success"):
             logger.info(f"✅ kube-bench benchmark completed")

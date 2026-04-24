@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_anew_tool(mcp, hexstrike_client, logger):
+def register_anew_tool(mcp, api_client, logger):
     @mcp.tool()
     async def anew_data_processing(input_data: str, output_file: str = "",
                             additional_args: str = "") -> Dict[str, Any]:
@@ -26,7 +26,7 @@ def register_anew_tool(mcp, hexstrike_client, logger):
         logger.info("📝 Starting anew data processing")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/anew", data)
+            None, lambda: api_client.safe_post("api/tools/anew", data)
         )
         if result.get("success"):
             logger.info("✅ anew data processing completed")

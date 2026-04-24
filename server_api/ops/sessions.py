@@ -19,6 +19,7 @@ from server_core.session_flow import (
   update_session,
 )
 from tool_registry import classify_intent
+from server_core.singletons import llm_client as _llm_client
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +67,12 @@ def _summary_from_data(data, fallback_sid):
         workflow_steps.append(ns)
   return {
     "session_id": data.get("session_id", fallback_sid),
+    "name": data.get("name", ""),
+    "description": data.get("description", ""),
     "target": data.get("target", "unknown"),
     "status": data.get("status", "active"),
     "total_findings": data.get("total_findings", 0),
+    "risk_level": data.get("risk_level", "unknown"),
     "iterations": data.get("iterations", 0),
     "tools_executed": data.get("tools_executed", []),
     "workflow_steps": workflow_steps if isinstance(workflow_steps, list) else [],
@@ -76,6 +80,8 @@ def _summary_from_data(data, fallback_sid):
     "objective": data.get("objective", ""),
     "metadata": data.get("metadata", {}),
     "handover_history": data.get("handover_history", []),
+    "findings": data.get("findings", []),
+    "event_log": data.get("event_log", []),
     "created_at": data.get("created_at", 0),
     "updated_at": data.get("updated_at", 0),
   }
@@ -143,6 +149,8 @@ def create_session_from_web_or_workflow():
       objective=data.get("objective", ""),
       metadata=data.get("metadata", {}),
       session_id=data.get("session_id"),
+      name=data.get("name", ""),
+      description=data.get("description", ""),
     )
 
     return jsonify({
@@ -246,9 +254,12 @@ def patch_session(session_id):
   try:
     data = request.get_json(force=True) or {}
     allowed = {
+      "name",
+      "description",
       "target",
       "status",
       "total_findings",
+      "risk_level",
       "iterations",
       "workflow_steps",
       "objective",
@@ -327,7 +338,7 @@ def handover_session(session_id):
       "Classify next best action for manual execution.",
     ])
 
-    category, confidence = classify_intent(description)
+    category, confidence = classify_intent(description, _llm_client if _llm_client.is_available() else None)
     handover_result = {
       "timestamp": datetime.now().isoformat(),
       "session_id": session_id,

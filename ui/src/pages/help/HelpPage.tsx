@@ -6,7 +6,7 @@ import './HelpPage.css'
 
 export default function HelpPage() {
   const [activeIde, setActiveIde] = useState('claude')
-  const [installPath, setInstallPath] = useState('/path/to/hexstrike-ai-community-edition')
+  const [installPath, setInstallPath] = useState('/path/to/nyxstrike')
   const [pathDetected, setPathDetected] = useState(false)
   const ide = IDE_CONFIGS.find(i => i.id === activeIde) ?? IDE_CONFIGS[0]
 

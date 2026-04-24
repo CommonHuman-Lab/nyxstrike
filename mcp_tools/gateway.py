@@ -4,7 +4,7 @@ from typing import Dict, Any
 import json
 import asyncio
 
-def register_gateway_tools(mcp, hexstrike_client):
+def register_gateway_tools(mcp, api_client):
     @mcp.tool()
     async def classify_task(description: str) -> Dict[str, Any]:
         """
@@ -19,7 +19,7 @@ def register_gateway_tools(mcp, hexstrike_client):
         """
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/classify-task", {"description": description})
+            None, lambda: api_client.safe_post("api/intelligence/classify-task", {"description": description})
         )
         if result.get("success"):
             result["usage"] = "Use run_tool with a tool name and params from the recommended list"
@@ -64,7 +64,7 @@ def register_gateway_tools(mcp, hexstrike_client):
         endpoint = tool_def["endpoint"].lstrip("/")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(endpoint, parsed_params)
+            None, lambda: api_client.safe_post(endpoint, parsed_params)
         )
 
         return result

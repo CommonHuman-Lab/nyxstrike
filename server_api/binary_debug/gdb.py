@@ -47,7 +47,7 @@ def gdb():
         if commands and os.path.exists("/tmp/gdb_commands.txt"):
             try:
                 os.remove("/tmp/gdb_commands.txt")
-            except:
+            except OSError:
                 pass
 
         logger.info(f"📊 GDB analysis completed for {binary}")

@@ -4,7 +4,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_patator_tool(mcp, hexstrike_client, logger):
+def register_patator_tool(mcp, api_client, logger):
     @mcp.tool()
     async def patator_attack(
         module: str,
@@ -46,7 +46,7 @@ def register_patator_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔑 Starting Patator attack: {target}:{module}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/patator", data)
+            None, lambda: api_client.safe_post("api/tools/patator", data)
         )
         if result.get("success"):
             logger.info(f"✅ Patator attack completed for {target}")

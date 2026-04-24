@@ -1,0 +1,45 @@
+name: example_net_ping
+version: "1.0.0"
+description: "ICMP ping a host and return latency, packet loss, and round-trip stats. A minimal reference plugin — fork this folder to build your own."
+author: "community"
+category: net_scan
+tags:
+  - network
+  - recon
+  - ping
+endpoint: /api/plugins/net_ping
+mcp_tool_name: nyxstrike_net_ping
+effectiveness: 0.55
+
+# check — how to verify the underlying tool/package is installed.
+# Omit this block (or set type: builtin) for pure-Python plugins that
+# need no external binary — they are always reported as available.
+#
+# Supported types:
+#   builtin  — always available, no probe (default when block is omitted)
+#   which    — `which <binary>` — for tools on $PATH
+#   dpkg     — `dpkg -s <package>` — Debian/Ubuntu apt packages
+#   pip      — `pip list` contains <package> — Python packages
+#   gem      — `gem list` contains <package> — Ruby gems
+#   cargo    — `cargo install --list` contains <package> — Rust crates
+#
+# binary   — optional override when the executable name differs from
+#            mcp_tool_name (e.g. binary: ping for nyxstrike_net_ping).
+# install  — human-readable hint shown in the dashboard when the tool
+#            is reported as missing.
+check:
+  type: which
+  binary: ping
+  install: "pre-installed on most systems; on Debian: apt install iputils-ping"
+
+params:
+  target:
+    required: true
+    description: "Hostname or IP address to ping"
+optional:
+  count:
+    default: 4
+    description: "Number of ICMP packets to send"
+  timeout:
+    default: 10
+    description: "Timeout in seconds per ping packet"

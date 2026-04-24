@@ -5,7 +5,7 @@ description: Cloud and container security auditing workflow using prowler, trivy
 
 # cloud-audit
 
-Cloud and container security auditing workflow for HexStrike AI. Use this skill when a user wants to audit AWS/Azure/GCP configurations, scan container images for CVEs, assess a Kubernetes cluster, or check Docker host security.
+Cloud and container security auditing workflow for NyxStrike. Use this skill when a user wants to audit AWS/Azure/GCP configurations, scan container images for CVEs, assess a Kubernetes cluster, or check Docker host security.
 
 ## Workflow
 
@@ -143,7 +143,7 @@ Kube-hunter checks for:
 - Kube-hunter `--active` mode actually attempts exploits — only use with explicit authorisation.
 - Run trivy against base images as well as final images — vulnerabilities often come from upstream layers.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

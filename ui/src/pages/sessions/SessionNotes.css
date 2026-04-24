@@ -1,0 +1,867 @@
+/* ── Session Notes ───────────────────────────────────────────────────────────── */
+
+.session-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.session-notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.session-notes-count {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.session-notes-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* New note input row */
+.session-notes-new-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.session-notes-name-input {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+}
+
+.session-notes-name-input:focus {
+  border-color: var(--green);
+}
+
+.session-notes-name-ext {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--mono, monospace);
+}
+
+.session-notes-error-inline {
+  font-size: 11px;
+  color: var(--red, #f87171);
+  width: 100%;
+}
+
+/* Conflict / delete confirm banner */
+.session-notes-conflict-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--yellow, #ca8a04);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  flex-wrap: wrap;
+}
+
+.session-notes-conflict-banner svg {
+  color: var(--yellow, #ca8a04);
+  flex-shrink: 0;
+}
+
+/* Error */
+.session-notes-error {
+  padding: 8px 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--red, #f87171);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--red, #f87171);
+  margin-bottom: 10px;
+}
+
+.notes-empty-text {
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0;
+}
+
+.note-folder-prefix {
+  color: var(--text-dim);
+  margin-right: 2px;
+}
+
+.session-new-folder-icon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+/* Empty state */
+.session-notes-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+}
+
+.session-notes-empty p {
+  margin: 0;
+}
+
+/* Note list */
+.session-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Search bar */
+.session-notes-search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.session-notes-search-icon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.session-notes-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.session-notes-search-input::placeholder {
+  color: var(--text-dim);
+}
+
+.session-notes-search-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.session-notes-search-clear:hover {
+  color: var(--text);
+}
+
+/* Breadcrumb */
+.session-notes-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.session-notes-breadcrumb-sep {
+  color: var(--text-dim);
+}
+
+.session-notes-breadcrumb-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-notes-breadcrumb-item:hover {
+  color: var(--text);
+  background: var(--bg-card2);
+}
+
+.session-notes-breadcrumb-item--active {
+  color: var(--text);
+  cursor: default;
+}
+
+.session-notes-breadcrumb-item--active:hover {
+  background: none;
+}
+
+/* Folder card */
+.session-note-folder-card {
+  border-color: var(--border);
+}
+
+.session-note-folder-card:hover {
+  border-color: var(--blue, #60a5fa);
+}
+
+.session-note-folder-card .session-note-card-name {
+  color: var(--blue, #60a5fa);
+}
+
+.session-note-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+
+.session-note-card:hover {
+  border-color: var(--green);
+}
+
+.session-note-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.session-note-card-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-note-card-meta {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.session-note-card-snippet {
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-style: italic;
+  margin-top: 1px;
+}
+
+.session-note-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Download anchor styled as action btn */
+a.session-action-btn {
+  text-decoration: none;
+}
+
+/* Danger variant */
+.session-action-btn--danger {
+  color: var(--red, #f87171);
+  border-color: var(--red, #f87171);
+}
+
+.session-action-btn--danger:hover {
+  background: color-mix(in srgb, var(--red, #f87171) 10%, transparent);
+}
+
+/* Primary variant */
+.session-action-btn--primary {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.session-action-btn--primary:hover {
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+/* ── Note Modal ───────────────────────────────────────────────────────────── */
+
+.note-modal-backdrop {
+  z-index: 1100;
+}
+
+.note-modal {
+  width: min(1200px, 96vw);
+  max-width: min(1200px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.note-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.note-modal-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+  flex-shrink: 0;
+}
+
+.note-modal-name {
+  font-family: var(--mono, monospace);
+  font-size: 13px;
+}
+
+.note-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.note-modal-close {
+  margin-left: 4px;
+}
+
+.note-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Editor fills the modal body */
+.note-modal-editor-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+/* ── Editor loading spinner (shown while EasyMDE initialises) ── */
+.editor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 420px;
+}
+
+/* ── Editor fade-in once ready ── */
+.editor-ready {
+  animation: editor-fade-in 0.25s ease forwards;
+}
+
+@keyframes editor-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.note-modal-editor-wrap .EasyMDEContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .CodeMirror {
+  background: var(--bg-card2, #1a1a2e);
+  color: var(--text, #e2e8f0);
+  border: 1px solid var(--border, #2a2a3e);
+  border-top: none;
+  font-family: var(--mono, monospace);
+  font-size: 13px;
+  min-height: 360px;
+  flex: 1;
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .editor-toolbar {
+  background: var(--bg, #12121e);
+  border: 1px solid var(--border, #2a2a3e);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .editor-toolbar button {
+  color: var(--text-dim, #94a3b8);
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .editor-toolbar button:hover,
+.note-modal-editor-wrap .EasyMDEContainer .editor-toolbar button.active {
+  background: var(--bg-card2, #1a1a2e);
+  color: var(--green, #4ade80);
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .editor-toolbar i.separator {
+  border-color: var(--border, #2a2a3e);
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .editor-preview {
+  background: var(--bg-card2, #1a1a2e);
+  color: var(--text, #e2e8f0);
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .CodeMirror .CodeMirror-cursor {
+  border-color: var(--green, #4ade80);
+}
+
+.note-modal-editor-wrap .EasyMDEContainer .CodeMirror-selected {
+  background: color-mix(in srgb, var(--green, #4ade80) 15%, transparent);
+}
+
+/* Read body inside modal */
+.note-modal-read-body {
+  padding: 16px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  overflow-x: auto;
+}
+
+.session-notes-read-body h1,
+.session-notes-read-body h2,
+.session-notes-read-body h3,
+.session-notes-read-body h4 {
+  color: var(--text);
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+  font-weight: 600;
+}
+
+.session-notes-read-body h1 { font-size: 1.4em; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.session-notes-read-body h2 { font-size: 1.2em; }
+.session-notes-read-body h3 { font-size: 1.05em; }
+
+.session-notes-read-body p {
+  margin: 0.6em 0;
+}
+
+.session-notes-read-body a {
+  color: var(--green);
+}
+
+.session-notes-read-body code {
+  font-family: var(--mono, monospace);
+  font-size: 0.9em;
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--green);
+}
+
+.session-notes-read-body pre {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  overflow-x: auto;
+}
+
+.session-notes-read-body pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+}
+
+.session-notes-read-body blockquote {
+  border-left: 3px solid var(--green);
+  margin: 0.8em 0;
+  padding: 4px 12px;
+  color: var(--text-dim);
+}
+
+.session-notes-read-body ul,
+.session-notes-read-body ol {
+  padding-left: 1.4em;
+  margin: 0.5em 0;
+}
+
+.session-notes-read-body li {
+  margin: 0.2em 0;
+}
+
+.session-notes-read-body table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  display: block;
+  overflow-x: auto;
+}
+
+.session-notes-read-body th,
+.session-notes-read-body td {
+  border: 1px solid var(--border);
+  padding: 5px 10px;
+  text-align: left;
+}
+
+.session-notes-read-body th {
+  background: var(--bg);
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.session-notes-read-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.2em 0;
+}
+
+/* ── Folder accordion ─────────────────────────────────────────────────────── */
+
+.session-notes-folder-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.session-note-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  user-select: none;
+}
+
+.session-note-folder-row:hover {
+  border-color: var(--blue, #60a5fa);
+}
+
+.session-note-folder-chevron {
+  color: var(--text-dim);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.session-note-folder-icon {
+  color: var(--blue, #60a5fa);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.session-note-folder-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--blue, #60a5fa);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-note-folder-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.session-note-folder-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.session-notes-folder-contents {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0 2px 18px;
+}
+
+.session-note-card--indented {
+  border-left: 2px solid var(--blue, #60a5fa);
+}
+
+.session-notes-folder-empty {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin: 0;
+  padding: 6px 4px;
+}
+
+/* ── Folder selects (new-note row + modal) ────────────────────────────────── */
+
+.session-notes-folder-select,
+.note-modal-folder-select {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 6px;
+  cursor: pointer;
+  outline: none;
+}
+
+.session-notes-folder-select:focus,
+.note-modal-folder-select:focus {
+  border-color: var(--green);
+}
+
+.session-notes-folder-select:disabled,
+.note-modal-folder-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Folder inline rename ─────────────────────────────────────────────────── */
+
+.session-note-folder-rename-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-note-folder-rename-input {
+  background: var(--bg-card2);
+  border: 1px solid var(--green);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 3px 7px;
+  outline: none;
+  flex: 1;
+  min-width: 80px;
+  max-width: 220px;
+}
+
+.session-note-folder-rename-input:disabled {
+  opacity: 0.55;
+}
+
+/* ── Upload Note Modal ────────────────────────────────────────────────────── */
+
+.upload-note-modal {
+  width: min(520px, 96vw);
+  max-width: min(520px, 96vw);
+}
+
+.upload-note-modal-header {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.upload-note-modal-body {
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.upload-note-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* Drop zone */
+.upload-note-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 28px 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 90px;
+}
+
+.upload-note-dropzone:hover,
+.upload-note-dropzone--has-file {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 5%, transparent);
+}
+
+.upload-note-dropzone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.upload-note-dropzone-prompt code {
+  background: var(--bg-card2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.upload-note-file-chosen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.upload-note-file-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.upload-note-file-size {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* Fields */
+.upload-note-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.upload-note-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.upload-note-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.upload-note-name-input {
+  flex: 1;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.upload-note-name-input:focus {
+  border-color: var(--green);
+}
+
+.upload-note-name-input:disabled {
+  opacity: 0.55;
+}
+
+.upload-note-name-ext {
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.upload-note-field-hint {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.upload-note-folder-select {
+  align-self: flex-start;
+}
+
+/* Conflict + error */
+.upload-note-conflict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--yellow, #e5c07b);
+  background: color-mix(in srgb, var(--yellow, #e5c07b) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--yellow, #e5c07b) 25%, transparent);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.upload-note-error {
+  font-size: 12px;
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--red) 25%, transparent);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+

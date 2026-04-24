@@ -19,7 +19,7 @@ def whatweb():
                 "error": "URL parameter is required"
             }), 400
 
-        command = f"whatweb -v -a {url}"
+        command = f"whatweb -v -a 3 {url}"
 
         logger.info(f"🔍 Starting WhatWeb: {url}")
         result = execute_command(command)

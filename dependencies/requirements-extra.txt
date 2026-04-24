@@ -1,0 +1,17 @@
+# Optional Python dependencies for tool integrations.
+# Installed by: ./scripts/install.sh --install-tools
+
+bbot>=2.8.3
+httpx>=0.28.1
+uro>=1.0.2
+dirsearch>=0.4.3
+waymore
+chardet>=3.0.2,<6.0.0
+volatility3>=2.27.0
+pwntools>=4.15.0,<5.0.0
+angr>=9.2.205,<10.0.0
+# bcrypt==4.0.1
+checkov>=3.0.0
+ROPgadget>=7.0.0,<8.0.0
+one_gadget>=1.0.0,<2.0.0
+social-analyzer>=0.45.0

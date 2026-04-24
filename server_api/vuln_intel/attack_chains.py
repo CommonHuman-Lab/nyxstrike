@@ -55,7 +55,7 @@ def discover_attack_chains():
 
                             if exploit_result.get("success"):
                                 enhanced_stage["exploit_code"] = exploit_result.get("exploit_code", "")[:500] + "..."
-                        except:
+                        except Exception:
                             enhanced_stage["exploit_available"] = False
 
                     enhanced_stages.append(enhanced_stage)

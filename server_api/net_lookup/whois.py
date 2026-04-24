@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import logging
-import subprocess
+from server_core.command_executor import execute_command
 
 logger = logging.getLogger(__name__)
 
@@ -18,15 +18,6 @@ def whois():
     if not target:
         return jsonify({"error": "Missing 'target' parameter"}), 400
 
-    try:
-        result = subprocess.run(
-            ["whois", target],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=30,
-            text=True
-        )
-        output = result.stdout if result.returncode == 0 else result.stderr
-        return jsonify({"success": result.returncode == 0, "output": output})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+    result = execute_command(f"whois {target}", use_cache=False, timeout=30)
+    output = result.get("stdout") or result.get("stderr") or ""
+    return jsonify({"success": result.get("success", False), "output": output})

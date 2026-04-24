@@ -5,7 +5,7 @@ description: Web vulnerability scanning workflow covering SQLi, XSS, template in
 
 # web-vuln
 
-Web vulnerability scanning workflow for HexStrike AI. Use this skill when a user wants to find SQL injection, XSS, SSRF, misconfigurations, or run a broad CVE scan against a web target.
+Web vulnerability scanning workflow for NyxStrike. Use this skill when a user wants to find SQL injection, XSS, SSRF, misconfigurations, or run a broad CVE scan against a web target.
 
 ## Workflow
 
@@ -111,7 +111,7 @@ run_tool(tool="jaeles", url="https://<target>")
 - Use `--batch` with sqlmap to avoid interactive prompts in automated runs.
 - Combine nuclei tag filters: `tags="cve,rce,lfi"` for high-impact checks only.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

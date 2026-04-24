@@ -1,7 +1,11 @@
 import type { RunHistoryEntry } from './types'
 
-export function fmt(n: number, dec = 1): string {
-  return n.toFixed(dec)
+export function safeFixed(n: number | undefined | null, dec = 1, fallback = '—'): string {
+  return typeof n === 'number' && isFinite(n) ? n.toFixed(dec) : fallback
+}
+
+export function fmt(n: number | undefined | null, dec = 1): string {
+  return safeFixed(n, dec, '—')
 }
 
 export function fmtTs(ts: number): string {
@@ -59,7 +63,7 @@ export function exportEntry(entry: RunHistoryEntry, format: 'txt' | 'json') {
       `Timestamp:  ${entry.ts.toISOString()}`,
       `Success:    ${r.success}`,
       `Exit code:  ${r.return_code}`,
-      `Time:       ${r.execution_time.toFixed(2)}s`,
+      `Time:       ${safeFixed(r.execution_time, 2)}s`,
       r.timed_out ? `Timed out:  yes` : '',
       r.partial_results ? `Partial:    yes` : '',
       paramStr ? `\nParams:\n${paramStr}` : '',

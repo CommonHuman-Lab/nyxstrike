@@ -47,7 +47,7 @@ export function InformationModal({
       <div className={`modal information-modal${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-header">
           <div className="modal-title-row">
-            <span className="information-modal-icon" aria-hidden="true">
+            <span className="modal-icon modal-icon--accent" aria-hidden="true">
               <Info size={14} />
             </span>
             <span className="modal-name">{title}</span>

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "nyxstrike-ai": {
+      "command": "/path/to/nyxstrike/nyxstrike-env/bin/python",
+      "args": [
+        "/path/to/nyxstrike/nyxstrike_mcp.py",
+        "--server",
+        "http://127.0.0.1:8888",
+        "--profile", 
+        "full"
+      ],
+      "description": "NyxStrike - Advanced Cybersecurity Automation Platform. Turn off alwaysAllow if you dont want autonomous execution!",
+      "timeout": 300,
+      "alwaysAllow": []
+    }
+  }
+}

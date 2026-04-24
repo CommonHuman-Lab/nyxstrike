@@ -4,6 +4,7 @@ import type { WebDashboardResponse } from '../../api'
 import type { HistoryPoint } from '../../shared/types'
 import { fmt, formatBytes } from '../../shared/utils'
 import { GaugeBar } from '../../components/GaugeBar'
+import { useSystemResources } from './useSystemResources'
 
 function ResourceChart({ data }: { data: HistoryPoint[] }) {
   const ticks = data.map(d => ({ ...d, time: new Date(d.t).toLocaleTimeString('en-GB') }))
@@ -36,15 +37,21 @@ function ResourceChart({ data }: { data: HistoryPoint[] }) {
 }
 
 export function ResourceSection({
-  health,
-  history,
+  demoResources,
+  demoHistory,
 }: {
-  health: WebDashboardResponse
-  history: HistoryPoint[]
+  /** Pass demo resource data when running in demo mode; omit for live stream. */
+  demoResources?: WebDashboardResponse['resources']
+  /** Pre-seeded history points for demo mode chart. */
+  demoHistory?: HistoryPoint[]
 }) {
-  const resources = health.resources
+  const { resources, resources_timestamp, history } = useSystemResources(
+    demoResources,
+    demoHistory
+  )
+
   const localResourcesTime = (() => {
-    const raw = health.resources_timestamp
+    const raw = resources_timestamp
     if (!raw) return ''
 
     const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T')
@@ -60,6 +67,17 @@ export function ResourceSection({
     const timeMatch = raw.match(/\b\d{2}:\d{2}:\d{2}\b/)
     return timeMatch?.[0] ?? ''
   })()
+
+  if (!resources) {
+    return (
+      <section className="section">
+        <div className="section-header">
+          <h3>System Resources</h3>
+        </div>
+        <p className="chart-placeholder">Connecting…</p>
+      </section>
+    )
+  }
 
   return (
     <section className="section">

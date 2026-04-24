@@ -117,6 +117,8 @@ def create_session(
     objective: str = "",
     metadata: Optional[Dict[str, Any]] = None,
     session_id: Optional[str] = None,
+    name: str = "",
+    description: str = "",
 ) -> Dict[str, Any]:
     ts = now_ts()
     sid = session_id or generate_session_id()
@@ -125,15 +127,27 @@ def create_session(
 
     session_dict: Dict[str, Any] = {
         "session_id": sid,
+        "name": name or "",
+        "description": description or "",
         "target": target,
         "status": "active",
         "total_findings": 0,
+        "findings": [],
         "iterations": 0,
         "tools_executed": [s["tool"] for s in step_list],
         "workflow_steps": step_list,
         "source": source,
         "objective": objective,
         "handover_history": [],
+        "run_log": [],
+        "event_log": [
+            {
+                "type": "session_created",
+                "timestamp": ts,
+                "message": f"Session created for target: {target}",
+                "data": {"source": source, "step_count": len(step_list)},
+            }
+        ],
         "created_at": ts,
         "updated_at": ts,
     }
@@ -142,6 +156,47 @@ def create_session(
 
     session_store.save(sid, session_dict)
     return session_dict
+
+
+def append_event(session_id: str, event_type: str, message: str, data: Optional[Dict[str, Any]] = None) -> None:
+    """Append an event to the session event log. Non-fatal — fails silently on missing session."""
+    loaded = load_session_any(session_id)
+    if not loaded:
+        return
+    session_dict, _state = loaded
+    event_log = session_dict.get("event_log", [])
+    if not isinstance(event_log, list):
+        event_log = []
+    event_log.append({
+        "type": event_type,
+        "timestamp": now_ts(),
+        "message": message,
+        "data": data or {},
+    })
+    session_dict["event_log"] = event_log
+    session_dict["updated_at"] = now_ts()
+    if str(session_dict.get("status", "")).lower() == "completed" or _state == "completed":
+        session_store.archive(session_id, session_dict)
+    else:
+        session_store.save(session_id, session_dict)
+
+
+def append_run_log(session_id: str, entry: Dict[str, Any]) -> None:
+    """Append a tool run entry to the session's run_log. Non-fatal — fails silently."""
+    loaded = load_session_any(session_id)
+    if not loaded:
+        return
+    session_dict, _state = loaded
+    run_log = session_dict.get("run_log", [])
+    if not isinstance(run_log, list):
+        run_log = []
+    run_log.append(entry)
+    session_dict["run_log"] = run_log
+    session_dict["updated_at"] = now_ts()
+    if str(session_dict.get("status", "")).lower() == "completed" or _state == "completed":
+        session_store.archive(session_id, session_dict)
+    else:
+        session_store.save(session_id, session_dict)
 
 
 def load_session_any(session_id: str) -> Optional[Tuple[Dict[str, Any], str]]:
@@ -160,16 +215,51 @@ def update_session(session_id: str, updates: Dict[str, Any]) -> Optional[Dict[st
         return None
 
     session_dict, state = loaded
+    ts = now_ts()
+
+    # Track status change for event log
+    old_status = str(session_dict.get("status", "")).lower()
+    new_status = str(updates.get("status", old_status)).lower()
+
     for key, value in updates.items():
         session_dict[key] = value
 
-    session_dict["updated_at"] = now_ts()
+    session_dict["updated_at"] = ts
 
     if "workflow_steps" in updates and isinstance(updates["workflow_steps"], list):
         steps = [normalize_step(s, session_dict.get("target", "")) for s in updates["workflow_steps"]]
         session_dict["workflow_steps"] = [s for s in steps if s]
         session_dict["tools_executed"] = [s["tool"] for s in session_dict["workflow_steps"]]
 
+    # Auto-append event log entries for notable changes
+    event_log = session_dict.get("event_log", [])
+    if not isinstance(event_log, list):
+        event_log = []
+
+    if new_status != old_status:
+        event_log.append({
+            "type": "status_changed",
+            "timestamp": ts,
+            "message": f"Session status changed from {old_status} to {new_status}",
+            "data": {"old_status": old_status, "new_status": new_status},
+        })
+
+    if "handover_history" in updates and isinstance(updates["handover_history"], list):
+        history = updates["handover_history"]
+        if history:
+            latest = history[-1]
+            event_log.append({
+                "type": "handover",
+                "timestamp": ts,
+                "message": f"Session handed over — category: {latest.get('category', 'unknown')}",
+                "data": {
+                    "category": latest.get("category", "unknown"),
+                    "confidence": latest.get("confidence", 0),
+                    "note": latest.get("note", ""),
+                },
+            })
+
+    session_dict["event_log"] = event_log
     target_status = str(session_dict.get("status", "")).lower()
 
     if target_status == "completed":

@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import type { Tool } from '../api'
 import type { Page } from '../app/routing'
 import { useEscapeClose } from '../hooks/useEscapeClose'
+import './CommandPalette.css'
 
 interface CommandPaletteProps {
   open: boolean

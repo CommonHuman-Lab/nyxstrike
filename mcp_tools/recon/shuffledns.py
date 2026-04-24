@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 import asyncio
 
 
-def register_shuffledns_tool(mcp, hexstrike_client, logger):
+def register_shuffledns_tool(mcp, api_client, logger):
     @mcp.tool()
     async def shuffledns_scan(
         domain: str = "",
@@ -98,7 +98,7 @@ def register_shuffledns_tool(mcp, hexstrike_client, logger):
         logger.info("🔍 Starting shuffleDNS scan")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/shuffledns", data)
+            None, lambda: api_client.safe_post("api/tools/shuffledns", data)
         )
         if result.get("success"):
             logger.info("✅ shuffleDNS completed")

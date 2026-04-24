@@ -16,10 +16,10 @@ export const IDE_CONFIGS: IdeConfig[] = [
     note: 'Also works for Cursor — same config format.',
     json: (p: string) => JSON.stringify({
       mcpServers: {
-        'hexstrike-ai': {
-          command: `${p}/hexstrike-env/bin/python3`,
-          args: [`${p}/hexstrike_mcp.py`, '--server', 'http://localhost:8888', '--profile', 'full'],
-          description: 'HexStrike AI Community Edition',
+        'nyxstrike-ai': {
+          command: `${p}/nyxstrike-env/bin/python3`,
+          args: [`${p}/nyxstrike_mcp.py`, '--server', 'http://localhost:8888', '--profile', 'full'],
+          description: 'NyxStrike',
           timeout: 300,
           disabled: false,
         },
@@ -34,10 +34,10 @@ export const IDE_CONFIGS: IdeConfig[] = [
     note: 'Place in your workspace .vscode/settings.json or open User Settings JSON.',
     json: (p: string) => JSON.stringify({
       servers: {
-        hexstrike: {
+        nyxstrike: {
           type: 'stdio',
-          command: `${p}/hexstrike-env/bin/python3`,
-          args: [`${p}/hexstrike_mcp.py`, '--server', 'http://127.0.0.1:8888', '--profile', 'full'],
+          command: `${p}/nyxstrike-env/bin/python3`,
+          args: [`${p}/nyxstrike_mcp.py`, '--server', 'http://127.0.0.1:8888', '--profile', 'full'],
         },
       },
       inputs: [],
@@ -52,11 +52,11 @@ export const IDE_CONFIGS: IdeConfig[] = [
     json: (p: string) => JSON.stringify({
       $schema: 'https://opencode.ai/config.json',
       mcp: {
-        hexstrike: {
+        nyxstrike: {
           type: 'local',
           command: [
-            `${p}/hexstrike-env/bin/python3`,
-            `${p}/hexstrike_mcp.py`,
+            `${p}/nyxstrike-env/bin/python3`,
+            `${p}/nyxstrike_mcp.py`,
             '--server',
             'http://127.0.0.1:8888',
             '--profile',
@@ -75,9 +75,9 @@ export const IDE_CONFIGS: IdeConfig[] = [
     note: 'Open Roo Code → MCP Servers → Edit Config and paste the block below.',
     json: (p: string) => JSON.stringify({
       mcpServers: {
-        hexstrike: {
-          command: `${p}/hexstrike-env/bin/python3`,
-          args: [`${p}/hexstrike_mcp.py`, '--server', 'http://127.0.0.1:8888', '--profile', 'full'],
+        nyxstrike: {
+          command: `${p}/nyxstrike-env/bin/python3`,
+          args: [`${p}/nyxstrike_mcp.py`, '--server', 'http://127.0.0.1:8888', '--profile', 'full'],
           timeout: 300,
         },
       },

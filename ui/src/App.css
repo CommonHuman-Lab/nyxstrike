@@ -675,10 +675,25 @@
   color: var(--text-dim);
 }
 
+.section-header--clickable {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.section-header--clickable:hover {
+  background: color-mix(in srgb, var(--bg-card2) 80%, var(--bg-card));
+}
+
+.section-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .section-meta {
   font-size: 11px;
   color: var(--text-dim);
 }
+.section-meta--padded { padding: 16px 0; }
 
 .badge {
   background: var(--green-dim);
@@ -1172,6 +1187,17 @@
 }
 
 .spin { animation: spin 1s linear infinite; }
+.spin--sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: transparent;
+}
+.spin--green {
+  border-color: var(--green);
+  border-top-color: transparent;
+}
 
 /* ── Nav Tabs ────────────────────────────────────────────────────────────── */
 .topbar-nav {
@@ -1450,13 +1476,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1300;
   padding: 20px;
 }
 
 .modal {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, transparent), transparent 26%),
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, var(--bg-card)), var(--bg-card) 26%),
     var(--bg-card);
   border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
   border-radius: 10px;
@@ -1736,3 +1762,48 @@
 }
 
 /* ── Tasks Page ─────────────────────────────────────────────────────────────── */
+
+/* ── Utility: Progress Bar ──────────────────────────────────────────────────── */
+.progress-bar {
+  height: 6px;
+  background: var(--bg-card2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-bar__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* ── Utility: Table Header ──────────────────────────────────────────────────── */
+.table-thead {
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Utility: Modal Icon ────────────────────────────────────────────────────── */
+.modal-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.modal-icon--accent {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.modal-icon--danger {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+}
+

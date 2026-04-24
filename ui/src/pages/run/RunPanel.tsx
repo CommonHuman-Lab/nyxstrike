@@ -5,7 +5,7 @@ import {
 import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
 import type { Tool } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
-import { exportEntry } from '../../shared/utils'
+import { exportEntry, safeFixed } from '../../shared/utils'
 import { ParamField } from '../../components/tool-run/ParamField'
 
 interface RunPanelProps {
@@ -131,7 +131,7 @@ export function RunPanel({
                       {viewEntry.result.success ? 'Success' : 'Failed'}
                     </span>
                     <span className="run-output-meta mono">exit {viewEntry.result.return_code}</span>
-                    <span className="run-output-meta mono">{viewEntry.result.execution_time.toFixed(2)}s</span>
+                    <span className="run-output-meta mono">{safeFixed(viewEntry.result.execution_time, 2)}s</span>
                     {viewEntry.result.timed_out && <span className="run-output-meta amber">Timed out</span>}
                     {viewEntry.result.partial_results && <span className="run-output-meta amber">Partial</span>}
                     <div className="run-export-btns">

@@ -1,12 +1,14 @@
-import { ChevronDown, ChevronUp, Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
-import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
+import { ChevronDown, ChevronUp, Download, FileText, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { ParamField } from '../../components/tool-run/ParamField'
 import type { AttackChainStep, Tool, ToolExecResponse } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
-import { exportEntry } from '../../shared/utils'
+import { exportEntry, safeFixed } from '../../shared/utils'
 import type { StepState } from './sessionDetailUtils'
 import type { ChainSuggestion } from './sessionDetailUtils'
 import { ActionButton } from '../../components/ActionButton'
+import { api } from '../../api'
+import { useToast } from '../../components/ToastProvider'
 
 interface SessionDetailWorkbenchProps {
   isCompleted: boolean
@@ -25,7 +27,7 @@ interface SessionDetailWorkbenchProps {
   setStepFieldValues: Dispatch<SetStateAction<Record<string, Record<string, string>>>>
   showOptionalByStep: Record<string, boolean>
   setShowOptionalByStep: Dispatch<SetStateAction<Record<string, boolean>>>
-  selectedResult: { result?: ToolExecResponse; error?: string } | undefined
+  selectedResult: { result?: ToolExecResponse; error?: string; priorResults?: ToolExecResponse[] } | undefined
   chainSuggestion: ChainSuggestion | null
   selectedChainFields: Record<string, boolean>
   onSetChainFieldSelected: (param: string, enabled: boolean) => void
@@ -58,6 +60,35 @@ function exportResultEntry(
     source: 'browser',
   }
   exportEntry(entry, format)
+}
+
+function buildNoteContent(
+  tool: string,
+  params: Record<string, string>,
+  result: ToolExecResponse
+): string {
+  const date = new Date(result.timestamp).toISOString()
+  const lines: string[] = [
+    `# ${tool}`,
+    '',
+    `**Date:** ${date}`,
+    `**Status:** ${result.success ? 'Success' : 'Failed'} | exit ${result.return_code} | ${result.execution_time.toFixed(2)}s`,
+    '',
+  ]
+  if (Object.keys(params).length > 0) {
+    lines.push('## Parameters', '')
+    for (const [k, v] of Object.entries(params)) {
+      lines.push(`- **${k}:** \`${v}\``)
+    }
+    lines.push('')
+  }
+  if (result.stdout) {
+    lines.push('## Output', '', '```', result.stdout, '```', '')
+  }
+  if (result.stderr) {
+    lines.push('## Stderr', '', '```', result.stderr, '```', '')
+  }
+  return lines.join('\n')
 }
 
 export function SessionDetailWorkbench({
@@ -94,18 +125,39 @@ export function SessionDetailWorkbench({
   addCandidates,
   onAddTool,
 }: SessionDetailWorkbenchProps) {
+  const { pushToast } = useToast()
   const selectedRunning = selectedStepKey ? runningStepKey === selectedStepKey : false
   const resultData = selectedResult?.result
   const selectedChainCount = chainSuggestion
     ? chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false).length
     : 0
   const addToolInputRef = useRef<HTMLInputElement | null>(null)
+  const [expandedPriors, setExpandedPriors] = useState<Record<number, boolean>>({})
+
+  // Reset prior-run expansion state when the selected step changes
+  useEffect(() => {
+    setExpandedPriors({})
+  }, [selectedStepKey])
 
   useEffect(() => {
     if (!showAddTool) return
     const frame = window.requestAnimationFrame(() => addToolInputRef.current?.focus())
     return () => window.cancelAnimationFrame(frame)
   }, [showAddTool])
+
+  async function exportToNotes(tool: string, params: Record<string, string>, result: ToolExecResponse) {
+    const date = new Date(result.timestamp)
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '')
+    const toolSlug = tool.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40)
+    const filename = `${toolSlug}_${dateStr}`
+    const content = buildNoteContent(tool, params, result)
+    try {
+      await api.createSessionNote(sessionId, filename, content, 'outputs')
+      pushToast('success', `Exported to notes/outputs/${filename}.md`)
+    } catch {
+      pushToast('error', 'Failed to export to notes')
+    }
+  }
 
   return (
     <section className="section">
@@ -193,7 +245,7 @@ export function SessionDetailWorkbench({
               <div className="session-step-row">
                 <div className="session-step-head">
                   <span className={`session-tool-chip mono session-tool-chip--${stepState[selectedStepKey] ?? 'idle'}`}>{selectedStep.tool}</span>
-                  <ActionButton variant="default" disabled={isCompleted || selectedRunning} onClick={() => onRunStep(selectedStep, selectedStepIndex)}>
+                  <ActionButton variant={selectedRunning ? 'running' : 'default'} disabled={isCompleted || (selectedRunning ? false : false)} onClick={selectedRunning || isCompleted ? undefined : () => onRunStep(selectedStep, selectedStepIndex)}>
                     {selectedRunning ? <RefreshCw size={12} className="spin" /> : <Play size={12} />}
                     {isCompleted ? 'Completed' : (selectedRunning ? 'Running…' : `Run ${selectedStep.tool}`)}
                   </ActionButton>
@@ -211,7 +263,7 @@ export function SessionDetailWorkbench({
                     <div className="session-chain-suggestion__text">
                       <strong className="mono">Chain hint from {chainSuggestion.sourceTool}</strong>
                       <span>
-                        {chainSuggestion.summary} Confidence {(chainSuggestion.confidence * 100).toFixed(0)}%
+                        {chainSuggestion.summary} Confidence {safeFixed((chainSuggestion.confidence ?? 0) * 100, 0)}%
                       </span>
                       <div className="session-chain-fields">
                         {chainSuggestion.fields.map(field => {
@@ -296,7 +348,7 @@ export function SessionDetailWorkbench({
                   <>
                     <div className="session-result-head">
                       <div className="session-step-result mono">
-                        {resultData.success ? 'OK' : 'FAIL'} | exit {resultData.return_code} | {resultData.execution_time.toFixed(2)}s
+                        {resultData.success ? 'OK' : 'FAIL'} | exit {resultData.return_code} | {safeFixed(resultData.execution_time, 2)}s
                       </div>
                       {selectedStepKey && resultData && (
                         <div className="session-result-actions">
@@ -305,6 +357,9 @@ export function SessionDetailWorkbench({
                           </ActionButton>
                           <ActionButton variant="default" onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}>
                             <Download size={11} /> JSON
+                          </ActionButton>
+                          <ActionButton variant="default" onClick={() => void exportToNotes(selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, resultData)}>
+                            <FileText size={11} /> Notes
                           </ActionButton>
                           {selectedStep.tool === 'create-attack-chain' && resultData.success && (
                             <ActionButton disabled={isCompleted} variant="success" onClick={() => { void onApplyAttackChainFromResult() }}>
@@ -319,6 +374,39 @@ export function SessionDetailWorkbench({
                   </>
                 ) : (
                   <p className="section-meta">No result yet for this tool.</p>
+                )}
+                {selectedResult?.priorResults && selectedResult.priorResults.length > 0 && (
+                  <div className="session-prior-runs">
+                    <p className="session-prior-runs-label">Prior runs ({selectedResult.priorResults.length})</p>
+                    {selectedResult.priorResults.map((prior, i) => (
+                      <div key={i} className="session-prior-run">
+                        <button
+                          className="session-prior-run-toggle"
+                          onClick={() => setExpandedPriors(p => ({ ...p, [i]: !p[i] }))}
+                        >
+                          <span className="mono">{prior.success ? 'OK' : 'FAIL'} | exit {prior.return_code} | {safeFixed(prior.execution_time, 2)}s | {new Date(prior.timestamp).toLocaleTimeString()}</span>
+                          {expandedPriors[i] ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
+                        </button>
+                        {expandedPriors[i] && selectedStepKey && (
+                          <div className="session-prior-run-body">
+                            <div className="session-result-actions">
+                              <ActionButton variant="default" onClick={() => exportResultEntry('txt', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, prior)}>
+                                <Download size={11} /> Export
+                              </ActionButton>
+                              <ActionButton variant="default" onClick={() => exportResultEntry('json', selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, prior)}>
+                                <Download size={11} /> JSON
+                              </ActionButton>
+                              <ActionButton variant="default" onClick={() => void exportToNotes(selectedStep.tool, stepFieldValues[selectedStepKey] ?? {}, prior)}>
+                                <FileText size={11} /> Notes
+                              </ActionButton>
+                            </div>
+                            <pre className="session-result-pre mono">{prior.stdout || '(no stdout)'}</pre>
+                            {prior.stderr && <pre className="session-result-pre mono">{prior.stderr}</pre>}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </>

@@ -5,7 +5,7 @@ description: Binary analysis and reverse engineering workflow using checksec, st
 
 # binary-analysis
 
-Binary analysis and reverse engineering workflow for HexStrike AI. Use this skill when a user has a binary file to analyse, wants to find vulnerabilities, extract strings/firmware, build ROP chains, or debug execution.
+Binary analysis and reverse engineering workflow for NyxStrike. Use this skill when a user has a binary file to analyse, wants to find vulnerabilities, extract strings/firmware, build ROP chains, or debug execution.
 
 ## Workflow
 
@@ -146,7 +146,7 @@ checksec
 - Use radare2 `pdf @main` to quickly orient yourself in the binary without a GUI.
 - ROP gadgets from libc are often more useful than gadgets in the binary itself — run ropgadget on libc too.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

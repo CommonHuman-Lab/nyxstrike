@@ -4,25 +4,34 @@ import {
   api, hasToken,
   type WebDashboardResponse, type Tool, type ToolExecResponse,
   type RunHistoryEntry as ApiRunHistoryEntry,
+  type RunHistorySummaryEntry,
 } from './api'
-import {
-  isDemoMode, exitDemo,
-  DEMO_HEALTH, DEMO_TOOLS, DEMO_RUN_HISTORY, DEMO_LOG_LINES,
-  demoCpuMemHistory,
-} from './app/demo'
+
+// isDemoMode/exitDemo are tiny helpers — import eagerly (no data payload).
+import { isDemoMode, exitDemo } from './app/demoUtils'
 import { TokenGate } from './components/TokenGate'
 import { ToastProvider } from './components/ToastProvider'
-import type { RunHistoryEntry, HistoryPoint } from './shared/types'
+import type { RunHistoryEntry } from './shared/types'
+
+/** Extract the `Date: <ISO>` line written by analyze-session into stdout. */
+function parseDateFromStdout(stdout: string): Date | null {
+  const m = stdout.match(/^Date:\s+(\S+)/m)
+  if (!m) return null
+  const d = new Date(m[1])
+  return isNaN(d.getTime()) ? null : d
+}
 import { routeFromHash, type Page } from './app/routing'
 import { getToolsStatusWithParents } from './app/tools'
 import { TopBar } from './app/TopBar'
 import { THEME_STORAGE_KEY, isThemeId, type ThemeId } from './app/themes'
 import { MainContent } from './app/MainContent'
 import { CommandPalette } from './components/CommandPalette'
+import { ReportGenerationBubble } from './components/ReportGenerationBubble'
+import { ChatWidget } from './components/ChatWidget'
 import './App.css'
 
 const POLL_MS = 10_000
-const PALETTE_HINT_SEEN_KEY = 'hexstrike_palette_hint_seen'
+const PALETTE_HINT_SEEN_KEY = 'nyxstrike_palette_hint_seen'
 
 export default function App() {
   const [demo] = useState(isDemoMode)
@@ -34,7 +43,7 @@ export default function App() {
 
   function setPage(p: Page) {
     if (p === 'session-detail') return
-    window.location.hash = p === 'dashboard' ? '' : `/${p}`
+    window.location.hash = `/${p === 'dashboard' ? '' : p}`
     setPageState(p)
     setActiveSessionId(null)
   }
@@ -56,21 +65,35 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const [health, setHealth] = useState<WebDashboardResponse | null>(demo ? DEMO_HEALTH : null)
-  const [tools, setTools] = useState<Tool[]>(demo ? DEMO_TOOLS : [])
-  const [history, setHistory] = useState<HistoryPoint[]>(demo ? demoCpuMemHistory() : [])
+  const [health, setHealth] = useState<WebDashboardResponse | null>(null)
+  const [tools, setTools] = useState<Tool[]>([])
+  // Lazy-load large demo data only when in demo mode; otherwise fetch from server.
   useEffect(() => {
-    if (demo) return
-    api.tools().then(r => setTools(r.tools)).catch(() => {})
+    if (demo) {
+      import('./app/demo').then(m => {
+        setHealth(m.DEMO_HEALTH)
+        setTools(m.DEMO_TOOLS)
+        setRunHistory(m.DEMO_RUN_HISTORY)
+        setLogLines(m.DEMO_LOG_LINES)
+        setDemoProcesses(m.DEMO_PROCESSES)
+        setDemoSessions(m.DEMO_SESSIONS)
+        setDemoCpuHistory(m.demoCpuMemHistory())
+        setLastRefresh(new Date())
+        setLoading(false)
+      })
+    } else {
+      api.tools().then(r => setTools(r.tools)).catch(() => {})
+    }
   }, [demo])
-  const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>(() => {
-    if (demo) return DEMO_RUN_HISTORY
-    return []
-  })
-  const [lastRefresh, setLastRefresh] = useState<Date | null>(demo ? new Date() : null)
-  const [loading, setLoading] = useState(!demo)
+  const [runHistory, setRunHistory] = useState<RunHistoryEntry[]>([])
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [logLines, setLogLines] = useState<string[]>(demo ? DEMO_LOG_LINES : [])
+  const [logLines, setLogLines] = useState<string[]>([])
+  // Demo-mode data (null until the lazy demo chunk loads)
+  const [demoProcesses, setDemoProcesses] = useState<unknown>(null)
+  const [demoSessions, setDemoSessions] = useState<unknown>(null)
+  const [demoCpuHistory, setDemoCpuHistory] = useState<unknown>(null)
   const [logAutoScroll, setLogAutoScroll] = useState(true)
   const [logLimit, setLogLimit] = useState(500)
   const logEndRef = useRef<HTMLDivElement>(null)
@@ -100,7 +123,7 @@ export default function App() {
   })
   const [reduceTextureEffects, setReduceTextureEffects] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('hexstrike_reduce_texture_effects') === '1'
+      return localStorage.getItem('nyxstrike_reduce_texture_effects') === '1'
     } catch {
       return false
     }
@@ -115,7 +138,7 @@ export default function App() {
     }
     try {
       localStorage.setItem(THEME_STORAGE_KEY, themeId)
-      localStorage.setItem('hexstrike_reduce_texture_effects', reduceTextureEffects ? '1' : '0')
+      localStorage.setItem('nyxstrike_reduce_texture_effects', reduceTextureEffects ? '1' : '0')
     } catch { /* ignored */ }
   }, [themeId, reduceTextureEffects])
 
@@ -168,13 +191,6 @@ export default function App() {
     try {
       const h = await api.dashboard()
       setHealth(h)
-      setHistory(prev => {
-        const next = [
-          ...prev.slice(-29),
-          { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent, network_bytes_sent: h.resources.network_bytes_sent, network_bytes_recv: h.resources.network_bytes_recv },
-        ]
-        return next
-      })
       setLastRefresh(new Date())
       setError(null)
     } catch (e: unknown) {
@@ -202,19 +218,57 @@ export default function App() {
   }, [demo, authed]);
 
 
+  /** Lightweight: fetches only id/tool/timestamp/success — used on mount and periodic refresh.
+   * Keeps the dashboard KPI count accurate without pulling stdout/stderr/params.
+   */
+  const fetchRunHistorySummary = useCallback(async () => {
+    if (demo) return
+    try {
+      const r = await api.runHistorySummary()
+      if (!r.success) return
+      setRunHistory(prev => {
+        const existingServerIds = new Set(prev.filter(e => e.source === 'server').map(e => e.serverId))
+        const newEntries: RunHistoryEntry[] = (r.runs as RunHistorySummaryEntry[])
+          .filter(e => !existingServerIds.has(e.id))
+          .map(e => ({
+            id: -(e.id),
+            serverId: e.id,
+            source: 'server' as const,
+            tool: e.tool,
+            params: {},
+            ts: e.timestamp ? new Date(e.timestamp) : new Date(),
+            result: {
+              stdout: '',
+              stderr: '',
+              return_code: 0,
+              success: e.success,
+              timed_out: false,
+              partial_results: false,
+              execution_time: e.execution_time,
+              timestamp: e.timestamp,
+            },
+          }))
+        if (newEntries.length === 0) return prev
+        const merged = [...prev, ...newEntries].sort((a, b) => b.ts.getTime() - a.ts.getTime())
+        return merged
+      })
+    } catch { /* non-critical */ }
+  }, [demo])
+
+  /** Full fetch: includes stdout/stderr/params — called explicitly from the RunPage refresh button. */
   const fetchServerRunHistory = useCallback(async () => {
     if (demo) return
     try {
       const r = await api.runHistory()
       if (!r.success) return
       setRunHistory(prev => {
-        const existingServerIds = new Set(prev.filter(e => e.source === 'server').map(e => e.serverId))
-        const newEntries: RunHistoryEntry[] = r.runs
+        // Replace all server entries with the full payload.
+        const browserEntries = prev.filter(e => e.source !== 'server')
+        const fullEntries: RunHistoryEntry[] = r.runs
           .filter((e: ApiRunHistoryEntry) => {
-            if (existingServerIds.has(e.id)) return false
             // Skip server entries that match a local browser run (same tool, within 10s)
             const serverTs = e.timestamp ? new Date(e.timestamp).getTime() : 0
-            return !prev.some(local =>
+            return !browserEntries.some(local =>
               local.source === 'browser' &&
               local.tool === e.tool &&
               serverTs > 0 &&
@@ -227,7 +281,7 @@ export default function App() {
             source: 'server' as const,
             tool: e.tool,
             params: e.params,
-            ts: e.timestamp ? new Date(e.timestamp) : new Date(),
+            ts: e.timestamp ? new Date(e.timestamp) : (parseDateFromStdout(e.stdout ?? '') ?? new Date()),
             result: {
               stdout: e.stdout,
               stderr: e.stderr,
@@ -239,12 +293,11 @@ export default function App() {
               timestamp: e.timestamp,
             },
           }))
-        if (newEntries.length === 0) return prev
-        const merged = [...prev, ...newEntries].sort((a, b) => b.ts.getTime() - a.ts.getTime())
+        const merged = [...browserEntries, ...fullEntries].sort((a, b) => b.ts.getTime() - a.ts.getTime())
         return merged
       })
     } catch { /* non-critical */ }
-  }, [])
+  }, [demo])
 
   const clearServerRunHistory = useCallback(async () => {
     if (demo) {
@@ -257,9 +310,10 @@ export default function App() {
 
   useEffect(() => {
     if (demo || !authed) return
-    fetchServerRunHistory().catch(() => {})
-  }, [demo, authed, fetchServerRunHistory])
-
+    // Use the lightweight summary endpoint on mount — no stdout/stderr/params payload.
+    // The full fetch is triggered explicitly from the RunPage refresh button.
+    fetchRunHistorySummary().catch(() => {})
+  }, [demo, authed, fetchRunHistorySummary])
   // Try without token first (skipped in demo)
   useEffect(() => {
     if (demo || hasToken()) return
@@ -303,13 +357,6 @@ export default function App() {
       try {
         const h = JSON.parse(e.data)
         setHealth(h)
-        setHistory(prev => {
-          const next = [
-            ...prev.slice(-29),
-            { t: Date.now(), cpu: h.resources.cpu_percent, mem: h.resources.memory_percent, network_bytes_sent: h.resources.network_bytes_sent, network_bytes_recv: h.resources.network_bytes_recv },
-          ]
-          return next
-        })
         setLastRefresh(new Date())
         setLoading(false)
         setError(null)
@@ -338,15 +385,40 @@ export default function App() {
   // SSE log stream — only active in logs tab
   useEffect(() => {
     if (demo || page !== 'logs') return
-    const es = api.logStream(150)
-    sseRef.current = es
-    es.onmessage = (e) => {
-      setLogLines(prev => {
-        const next = [...prev, e.data]
-        return next.length > 500 ? next.slice(-500) : next
-      })
+
+    let es: EventSource | null = null
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+    let unmounted = false
+
+    function connect() {
+      if (unmounted) return
+      es = api.logStream(150)
+      sseRef.current = es
+
+      es.onmessage = (e) => {
+        setLogLines(prev => {
+          const next = [...prev, e.data]
+          return next.length > 500 ? next.slice(-500) : next
+        })
+      }
+
+      es.onerror = () => {
+        es?.close()
+        es = null
+        if (!unmounted) {
+          // simple fixed 3 s reconnect — log stream is low-stakes and lazy
+          reconnectTimer = setTimeout(connect, 3_000)
+        }
+      }
     }
-    return () => { es.close() }
+
+    connect()
+
+    return () => {
+      unmounted = true
+      if (reconnectTimer) clearTimeout(reconnectTimer)
+      es?.close()
+    }
   }, [demo, page])
 
   // Auto-scroll log to bottom
@@ -369,6 +441,12 @@ export default function App() {
           setPage={setPage}
           tools={tools}
           onSelectTool={handleCommandSelectTool}
+        />
+        <ReportGenerationBubble />
+        <ChatWidget
+          llmAvailable={health?.llm_status?.available ?? false}
+          currentPage={page}
+          currentSessionId={activeSessionId}
         />
         {demo && (
           <div className="demo-banner">
@@ -431,12 +509,14 @@ export default function App() {
           logEndRef={logEndRef}
           loading={loading}
           error={error}
-          history={history}
           toolCategories={toolCategories}
           themeId={themeId}
           setThemeId={setThemeId}
           reduceTextureEffects={reduceTextureEffects}
           setReduceTextureEffects={setReduceTextureEffects}
+          demoProcesses={demoProcesses}
+          demoSessions={demoSessions}
+          demoCpuHistory={demoCpuHistory}
         />
       </div>
     </ToastProvider>

@@ -1,11 +1,11 @@
 ---
 name: nmap-recon
-description: Network reconnaissance workflow using nmap, masscan, and rustscan via HexStrike tools
+description: Network reconnaissance workflow using nmap, masscan, and rustscan via NyxStrike tools
 ---
 
 # nmap-recon
 
-Step-by-step network reconnaissance skill for HexStrike AI. Use this skill when a user asks to scan a host, discover open ports, enumerate services, or perform OS detection.
+Step-by-step network reconnaissance skill for NyxStrike. Use this skill when a user asks to scan a host, discover open ports, enumerate services, or perform OS detection.
 
 ## Workflow
 
@@ -70,7 +70,7 @@ run_tool(tool="arp_scan", target="<subnet_cidr>")
 - Save output with `-oN`, `-oX`, or `-oG` flags for later analysis; pass via the `output_file` parameter where supported.
 - Chain results: feed open ports from rustscan/masscan directly into nmap to avoid redundant full-port scans.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

@@ -60,15 +60,6 @@
   padding: 8px 12px;
 }
 
-.reports-thead {
-  background: var(--bg-card2);
-  color: var(--text-dim);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-}
-
 .reports-group {
   border-bottom: 1px solid var(--border);
 }
@@ -193,4 +184,149 @@
 .reports-run-param em {
   font-style: normal;
   color: var(--text);
+}
+
+/* ── AI Analysis Section ─────────────────────────────────────────────────────── */
+
+.ai-report-thead {
+  display: grid;
+  grid-template-columns: 20px 1fr 72px 120px 140px 100px;
+  gap: 0;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-report-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 72px 120px 140px 100px;
+  gap: 0;
+  align-items: center;
+  padding: 8px 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  transition: background 0.12s;
+}
+.ai-report-row:hover { background: var(--bg-card2); }
+
+.ai-report-target {
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 8px;
+}
+
+.ai-report-session {
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
+.ai-report-date {
+  color: var(--text-dim);
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.ai-report-model {
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
+.ai-report-detail {
+  padding: 10px 12px 12px 32px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-report-summary {
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.ai-report-loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.ai-report-no-vulns {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin: 0;
+}
+
+.ai-report-vulns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ai-report-vuln {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+}
+
+.ai-report-vuln-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.ai-report-vuln-name {
+  color: var(--text-h);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.ai-report-vuln-port {
+  color: var(--text-dim);
+  font-size: 11px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.ai-report-vuln-desc,
+.ai-report-vuln-fix {
+  width: 100%;
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.ai-report-vuln-fix {
+  color: var(--green);
 }

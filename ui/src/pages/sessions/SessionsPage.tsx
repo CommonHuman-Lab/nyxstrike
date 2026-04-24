@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSessionsStream } from './useSessionsStream'
 import {
   RefreshCw, XCircle, Activity, CheckCircle, Pencil, Trash2, Play, Clock,
   Layers, Target, Info,
@@ -11,6 +12,7 @@ import {
   type SessionTemplate,
   type Tool,
 } from '../../api'
+import { CollapsibleSection } from '../../components/CollapsibleSection'
 import { StatCard } from '../../components/StatCard'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
 import { InformationModal } from '../../components/InformationModal'
@@ -18,8 +20,11 @@ import { useToast } from '../../components/ToastProvider'
 import { useEscapeClose } from '../../hooks/useEscapeClose'
 import { fmtTs } from '../../shared/utils'
 import { START_MODES, type StartMode } from './constants'
-import { SessionListSection, StartSessionModal, StartSessionSection } from './SessionsSections'
+import { StartSessionModal, StartSessionSection } from './SessionsSections'
+import { SessionCard } from './SessionCard'
 import './SessionsPage.css'
+import './SessionNotes.css'
+import './SessionFindings.css'
 
 interface SessionsPageProps {
   demoData?: { sessions: SessionsResponse }
@@ -71,13 +76,20 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   const [showActiveSessions, setShowActiveSessions] = useState(sessionsCacheSections?.showActive ?? true)
   const [showCompletedSessions, setShowCompletedSessions] = useState(sessionsCacheSections?.showCompleted ?? false)
   const [showCustomTemplates, setShowCustomTemplates] = useState(sessionsCacheSections?.showTemplates ?? true)
-  const [streamStatus, setStreamStatus] = useState<'streaming' | 'polling' | 'error'>(demoData ? 'polling' : 'streaming')
-  const streamRef = useRef<EventSource | null>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const reconnectAttemptsRef = useRef(0)
   const sectionDefaultsSetRef = useRef(false)
   const templateSectionTouchedRef = useRef(false)
+
+  const { streamStatus } = useSessionsStream({
+    enabled: !demoData,
+    initialStatus: demoData ? 'polling' : 'streaming',
+    onData: sessionsData => {
+      setData(sessionsData)
+      sessionsCacheData = sessionsData
+      setError(null)
+    },
+    onError: msg => setError(msg),
+    onLoadingDone: () => setLoading(false),
+  })
 
   useEscapeClose(Boolean(editingTemplateId), closeTemplateEditor)
 
@@ -148,94 +160,6 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
     if (demoData) return
     fetchSessions(silent)
   }
-
-  useEffect(() => {
-    if (demoData) return
-
-    let source: EventSource | null = null
-    let unmounted = false
-
-    function cleanupStream() {
-      if (source) source.close()
-      source = null
-      streamRef.current = null
-    }
-    function cleanupPoll() {
-      if (pollRef.current) {
-        clearInterval(pollRef.current)
-        pollRef.current = null
-      }
-    }
-    function cleanupReconnect() {
-      if (reconnectRef.current) {
-        clearTimeout(reconnectRef.current)
-        reconnectRef.current = null
-      }
-    }
-    function startPolling() {
-      cleanupPoll()
-      setStreamStatus('polling')
-      refresh(true)
-      pollRef.current = setInterval(() => refresh(true), 5000)
-    }
-    function scheduleReconnect(connectFn: () => void) {
-      cleanupReconnect()
-      const attempt = reconnectAttemptsRef.current + 1
-      reconnectAttemptsRef.current = attempt
-      const delayMs = Math.min(30000, 1000 * (2 ** Math.max(0, attempt - 1)))
-      reconnectRef.current = setTimeout(() => {
-        if (unmounted) return
-        connectFn()
-      }, delayMs)
-    }
-
-    function connectStream() {
-      cleanupStream()
-      try {
-        source = api.sessionsStream()
-        streamRef.current = source
-        source.onopen = () => {
-          reconnectAttemptsRef.current = 0
-          cleanupReconnect()
-          cleanupPoll()
-          setStreamStatus('streaming')
-        }
-        source.onmessage = e => {
-          try {
-            const sessionsData = JSON.parse(e.data) as SessionsResponse
-            if (sessionsData?.success) {
-              setData(sessionsData)
-              setError(null)
-              setLoading(false)
-            }
-          } catch {
-            setError('Session stream parse error')
-          }
-        }
-        source.onerror = () => {
-          if (unmounted) return
-          setStreamStatus('error')
-          cleanupStream()
-          startPolling()
-          scheduleReconnect(connectStream)
-        }
-      } catch {
-        if (unmounted) return
-        setStreamStatus('error')
-        startPolling()
-        scheduleReconnect(connectStream)
-      }
-    }
-
-    connectStream()
-
-    return () => {
-      unmounted = true
-      cleanupStream()
-      cleanupPoll()
-      cleanupReconnect()
-    }
-  }, [demoData])
 
   function openStartModal(mode: StartMode, templateId = '') {
     setStartMode(mode)
@@ -381,6 +305,67 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
             session_name: `Template: ${tpl.name}`,
           },
         })
+      } else if (mode.key === 'ai_recon') {
+        const recon = await api.aiReconSession(target)
+        if (!recon.success) throw new Error(recon.error ?? 'AI Recon session creation failed')
+        sessionRes = await api.createSession({
+          target,
+          workflow_steps: recon.steps,
+          source: 'web',
+          objective: 'ai_recon',
+          metadata: {
+            origin: 'ui/sessions/create',
+            mode: 'ai_recon',
+            note: noteValue,
+            session_name: recon.session_name,
+          },
+        })
+      } else if (mode.key === 'ai_profiling') {
+        const profiling = await api.aiProfilingSession(target)
+        if (!profiling.success) throw new Error(profiling.error ?? 'AI Profiling session creation failed')
+        sessionRes = await api.createSession({
+          target,
+          workflow_steps: profiling.steps,
+          source: 'web',
+          objective: 'ai_profiling',
+          metadata: {
+            origin: 'ui/sessions/create',
+            mode: 'ai_profiling',
+            note: noteValue,
+            session_name: profiling.session_name,
+            target_type: profiling.target_type,
+          },
+        })
+      } else if (mode.key === 'ai_vuln') {
+        const vuln = await api.aiVulnSession(target)
+        if (!vuln.success) throw new Error(vuln.error ?? 'AI Vuln Scan session creation failed')
+        sessionRes = await api.createSession({
+          target,
+          workflow_steps: vuln.steps,
+          source: 'web',
+          objective: 'ai_vuln',
+          metadata: {
+            origin: 'ui/sessions/create',
+            mode: 'ai_vuln',
+            note: noteValue,
+            session_name: vuln.session_name,
+          },
+        })
+      } else if (mode.key === 'ai_osint') {
+        const osint = await api.aiOsintSession(target)
+        if (!osint.success) throw new Error(osint.error ?? 'AI OSINT session creation failed')
+        sessionRes = await api.createSession({
+          target,
+          workflow_steps: osint.steps,
+          source: 'web',
+          objective: 'ai_osint',
+          metadata: {
+            origin: 'ui/sessions/create',
+            mode: 'ai_osint',
+            note: noteValue,
+            session_name: osint.session_name,
+          },
+        })
       } else {
         if (mode.key === 'intelligence') {
           const preview = await api.previewAttackChain(target, intelligencePrecision)
@@ -461,11 +446,15 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
   )
 
   const rawActive = data?.active ?? []
-  const active = rawActive.filter(s => (s.status ?? 'active') !== 'completed')
+  const active = rawActive
+    .filter(s => (s.status ?? 'active') !== 'completed')
+    .sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0))
   const completed = [
     ...(data?.completed ?? []),
     ...rawActive.filter(s => (s.status ?? 'active') === 'completed'),
-  ].filter((s, idx, arr) => arr.findIndex(x => x.session_id === s.session_id) === idx)
+  ]
+    .filter((s, idx, arr) => arr.findIndex(x => x.session_id === s.session_id) === idx)
+    .sort((a, b) => (b.created_at ?? 0) - (a.created_at ?? 0))
   const allFindings = [...active, ...completed].reduce((sum, s) => sum + s.total_findings, 0)
   const uniqueTargets = new Set([...active, ...completed].map(s => s.target)).size
   const editingTemplate = editingTemplateId ? templates.find(t => t.template_id === editingTemplateId) ?? null : null
@@ -629,184 +618,119 @@ export default function SessionsPage({ demoData, onOpenSession }: SessionsPagePr
 
       </InformationModal>
 
-      {showActiveSessions ? (
-        <SessionListSection
-          title="Active Sessions"
-          sessions={active}
-          emptyText="No active sessions. Start a session from target to run tools manually."
-          onOpenSession={onOpenSession}
-          onHeaderClick={() => setShowActiveSessions(false)}
-          footer={(
-            <>
-              <Info size={12} />
-              Call MCP tool <span className="mono">handover_session("&lt;session_id&gt;", "optional note")</span> to continue the session with AI.
-            </>
-          )}
-          headerRight={(
-            <div className="sessions-header-actions">
-              <span className={`sessions-stream-status sessions-stream-status--${streamStatus}`}>
-                {streamStatus === 'streaming' ? 'Live' : streamStatus === 'polling' ? 'Polling' : 'Offline'}
-              </span>
-              <span className="session-help-btn">Hide active</span>
-            </div>
-          )}
-        />
-      ) : (
-        <section className="section">
-          <div
-            className="section-header sessions-collapsed-toggle"
-            role="button"
-            tabIndex={0}
-            onClick={() => setShowActiveSessions(true)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                setShowActiveSessions(true)
-              }
-            }}
-          >
-            <h3>Active Sessions <span className="badge">{active.length}</span></h3>
-            <span className="session-help-btn">Show active</span>
-          </div>
-        </section>
-      )}
-
-      {showCompletedSessions ? (
-        <SessionListSection
-          title="Completed Sessions"
-          sessions={completed}
-          emptyText="No completed sessions yet."
-          onOpenSession={onOpenSession}
-          onHeaderClick={() => setShowCompletedSessions(false)}
-          headerRight={(
-            <span className="session-help-btn">
-              Hide completed
+      <CollapsibleSection
+        title={<>Active Sessions</>}
+        badge={<span className="badge">{active.length}</span>}
+        open={showActiveSessions}
+        onToggle={setShowActiveSessions}
+        headerRight={(
+          <div className="sessions-header-actions">
+            <span className={`sessions-stream-status sessions-stream-status--${streamStatus}`}>
+              {streamStatus === 'streaming' ? 'Live' : streamStatus === 'polling' ? 'Polling' : 'Offline'}
             </span>
-          )}
-        />
-      ) : (
-        <section className="section">
-          <div
-            className="section-header sessions-collapsed-toggle"
-            role="button"
-            tabIndex={0}
-            onClick={() => setShowCompletedSessions(true)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                setShowCompletedSessions(true)
-              }
-            }}
-          >
-            <h3>Completed Sessions <span className="badge">{completed.length}</span></h3>
-            <span className="session-help-btn">Show completed</span>
           </div>
-        </section>
-      )}
-
-      {showCustomTemplates ? (
-        <section className="section">
-          <div
-            className="section-header sessions-collapsed-toggle"
-            role="button"
-            tabIndex={0}
-            onClick={() => {
-              templateSectionTouchedRef.current = true
-              setShowCustomTemplates(false)
-            }}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                templateSectionTouchedRef.current = true
-                setShowCustomTemplates(false)
-              }
-            }}
-          >
-            <h3>Custom Templates <span className="badge">{templates.length}</span></h3>
-            <span className="section-meta">Reusable user templates for starting sessions quickly.</span>
-            <span className="session-help-btn">Hide templates</span>
+        )}
+      >
+        {active.length === 0 ? (
+          <div className="tasks-empty">
+            <Layers size={28} color="var(--text-dim)" />
+            <p>No active sessions. Start a session from target to run tools manually.</p>
           </div>
+        ) : (
+          <div className="sessions-grid">
+            {active.map(session => <SessionCard key={session.session_id} session={session} onOpen={onOpenSession} />)}
+          </div>
+        )}
+        <div className="section-meta session-list-footer-tip">
+          <Info size={12} />
+          Call MCP tool <span className="mono">handover_session("&lt;session_id&gt;", "optional note")</span> to continue the session with AI.
+        </div>
+      </CollapsibleSection>
 
-          {templateActionError && <div className="run-error">{templateActionError}</div>}
+      <CollapsibleSection
+        title={<>Completed Sessions</>}
+        badge={<span className="badge">{completed.length}</span>}
+        open={showCompletedSessions}
+        onToggle={setShowCompletedSessions}
+      >
+        {completed.length === 0 ? (
+          <div className="tasks-empty">
+            <Layers size={28} color="var(--text-dim)" />
+            <p>No completed sessions yet.</p>
+          </div>
+        ) : (
+          <div className="sessions-grid">
+            {completed.map(session => <SessionCard key={session.session_id} session={session} onOpen={onOpenSession} />)}
+          </div>
+        )}
+      </CollapsibleSection>
 
-          {templates.length === 0 ? (
-            <div className="tasks-empty">
-              <Layers size={28} color="var(--text-dim)" />
-              <p>No custom templates yet. Open a session and click Create Template.</p>
-            </div>
-          ) : (
-            <div className="sessions-grid">
-              {templates.map(template => (
-                <div key={template.template_id} className="session-card session-card--compact template-session-card">
-                  <div className="session-card-header">
-                    <div className="session-target">
-                      <Layers size={13} color="var(--blue)" />
-                      <span className="mono">{template.name}</span>
-                    </div>
-                    <span className="session-tool-chip mono">Custom Template</span>
+      <CollapsibleSection
+        title={<>Custom Templates</>}
+        badge={<span className="badge">{templates.length}</span>}
+        open={showCustomTemplates}
+        onToggle={v => {
+          templateSectionTouchedRef.current = true
+          setShowCustomTemplates(v)
+        }}
+      >
+        {templateActionError && <div className="run-error">{templateActionError}</div>}
+
+        {templates.length === 0 ? (
+          <div className="tasks-empty">
+            <Layers size={28} color="var(--text-dim)" />
+            <p>No custom templates yet. Open a session and click Create Template.</p>
+          </div>
+        ) : (
+          <div className="sessions-grid">
+            {templates.map(template => (
+              <div key={template.template_id} className="session-card session-card--compact template-session-card">
+                <div className="session-card-header">
+                  <div className="session-target">
+                    <Layers size={13} color="var(--blue)" />
+                    <span className="mono">{template.name}</span>
                   </div>
+                  <span className="session-tool-chip mono">Custom Template</span>
+                </div>
 
-                  <div className="session-card-meta">
-                    <span><Activity size={11} /> {template.workflow_steps.length} tools</span>
-                    <span><Clock size={11} /> {fmtTs(template.updated_at)}</span>
-                  </div>
+                <div className="session-card-meta">
+                  <span><Activity size={11} /> {template.workflow_steps.length} tools</span>
+                  <span><Clock size={11} /> {fmtTs(template.updated_at)}</span>
+                </div>
 
-                  <div className="session-tools">
-                    {template.workflow_steps.slice(0, 7).map((step, idx) => (
-                      <span key={`${template.template_id}:${idx}:${step.tool}`} className="session-tool-chip">
-                        {step.tool}
-                      </span>
-                    ))}
-                    {template.workflow_steps.length > 7 && (
-                      <span className="session-tool-chip">+{template.workflow_steps.length - 7}</span>
-                    )}
-                  </div>
+                <div className="session-tools">
+                  {template.workflow_steps.slice(0, 7).map((step, idx) => (
+                    <span key={`${template.template_id}:${idx}:${step.tool}`} className="session-tool-chip">
+                      {step.tool}
+                    </span>
+                  ))}
+                  {template.workflow_steps.length > 7 && (
+                    <span className="session-tool-chip">+{template.workflow_steps.length - 7}</span>
+                  )}
+                </div>
 
-                  <div className="session-card-footer">
-                    <div className="template-card-actions">
-                      <button className="session-action-btn" onClick={() => useTemplate(template.template_id)}>
-                        <Play size={12} /> Use
-                      </button>
-                      <button className="session-action-btn" onClick={() => openTemplateEditor(template)}>
-                        <Pencil size={12} /> Edit
-                      </button>
-                      <button
-                        className="session-delete-btn"
-                        onClick={() => setPendingDeleteTemplate(template)}
-                        disabled={templateActionBusyId === template.template_id}
-                      >
-                        <Trash2 size={12} /> {templateActionBusyId === template.template_id ? 'Deleting…' : 'Delete'}
-                      </button>
-                    </div>
+                <div className="session-card-footer">
+                  <div className="template-card-actions">
+                    <button className="session-action-btn" onClick={() => useTemplate(template.template_id)}>
+                      <Play size={12} /> Use
+                    </button>
+                    <button className="session-action-btn" onClick={() => openTemplateEditor(template)}>
+                      <Pencil size={12} /> Edit
+                    </button>
+                    <button
+                      className="session-delete-btn"
+                      onClick={() => setPendingDeleteTemplate(template)}
+                      disabled={templateActionBusyId === template.template_id}
+                    >
+                      <Trash2 size={12} /> {templateActionBusyId === template.template_id ? 'Deleting…' : 'Delete'}
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-      ) : (
-        <section className="section">
-          <div
-            className="section-header sessions-collapsed-toggle"
-            role="button"
-            tabIndex={0}
-            onClick={() => {
-              templateSectionTouchedRef.current = true
-              setShowCustomTemplates(true)
-            }}
-            onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                templateSectionTouchedRef.current = true
-                setShowCustomTemplates(true)
-              }
-            }}
-          >
-            <h3>Custom Templates <span className="badge">{templates.length}</span></h3>
-            <span className="session-help-btn">Show templates</span>
+              </div>
+            ))}
           </div>
-        </section>
-      )}
+        )}
+      </CollapsibleSection>
 
       {editingTemplate && (
         <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) closeTemplateEditor() }}>

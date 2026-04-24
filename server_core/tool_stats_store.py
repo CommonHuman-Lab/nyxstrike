@@ -5,7 +5,7 @@ Persistent per-tool effectiveness tracker.
 
 Stores the number of times each tool has been invoked and how many of those
 runs produced a successful result (non-error, non-empty output).  Data is
-written to a JSON file inside the standard HexStrike data directory so it
+written to a JSON file inside the standard application data directory so it
 survives server restarts.
 
 A "successful" run is defined as:

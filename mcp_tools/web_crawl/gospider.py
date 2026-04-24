@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 import asyncio
 
 
-def register_gospider_tool(mcp, hexstrike_client, logger):
+def register_gospider_tool(mcp, api_client, logger):
     @mcp.tool()
     async def gospider_crawl(
         site: str = "",
@@ -94,7 +94,7 @@ def register_gospider_tool(mcp, hexstrike_client, logger):
         logger.info("🕷️ Starting GoSpider crawling")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/gospider", data)
+            None, lambda: api_client.safe_post("api/tools/gospider", data)
         )
         if result.get("success"):
             logger.info("✅ GoSpider crawling completed")

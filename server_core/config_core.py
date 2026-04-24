@@ -1,7 +1,7 @@
 """
 core/config_core.py
 
-Configuration access utilities for HexStrike core.
+Configuration access utilities for core services.
 
 This module provides functions to retrieve and manage wordlist metadata,
 paths, and general configuration values from the global config object.
@@ -25,19 +25,19 @@ logger = logging.getLogger(__name__)
 _config = config._config
 _config_lock = threading.Lock()
 
-DATA_DIR_NAME = _config.get("DATA_DIR_NAME", ".hexstrike_data")
+DATA_DIR_NAME = _config.get("DATA_DIR_NAME", ".nyxstrike_data")
 CONFIG_DIR_NAME = "config"
 LOCAL_FILE_NAME = "config_local.json"
 
 
 def default_data_dir() -> str:
-    """Resolve the data directory path. Uses HEXSTRIKE_DATA_DIR env var or cwd."""
-    return os.environ.get("HEXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
+    """Resolve the data directory path. Uses NYXSTRIKE_DATA_DIR env var or cwd."""
+    return os.environ.get("NYXSTRIKE_DATA_DIR", os.path.join(os.getcwd(), DATA_DIR_NAME))
 
 
 def _resolve_config_local_path() -> str:
     """Resolve config_local path and migrate legacy root file if needed."""
-    explicit_file = os.environ.get("HEXSTRIKE_CONFIG_FILE", "").strip()
+    explicit_file = os.environ.get("NYXSTRIKE_CONFIG_FILE", "").strip()
     if explicit_file:
         os.makedirs(os.path.dirname(explicit_file), exist_ok=True)
         return explicit_file

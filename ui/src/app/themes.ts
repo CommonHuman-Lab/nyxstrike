@@ -17,7 +17,7 @@ export interface ThemeOption {
   hint: string
 }
 
-export const THEME_STORAGE_KEY = 'hexstrike_theme'
+export const THEME_STORAGE_KEY = 'nyxstrike_theme'
 
 export const THEME_OPTIONS: ThemeOption[] = [
   { id: 'dark', label: 'Dark Ops', hint: 'Default tactical dark' },

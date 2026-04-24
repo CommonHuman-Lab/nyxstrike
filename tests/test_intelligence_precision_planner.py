@@ -46,19 +46,27 @@ def test_cloud_domain_classification_and_selection():
 
 def test_create_attack_chain_respects_runtime_overrides():
     profile = decision_engine.analyze_target("https://example.com/api")
+    # Pick whatever tool the planner actually selects first for this objective,
+    # then assert the override is applied to it.
+    tools = decision_engine.select_optimal_tools(profile, "api_security")
+    assert tools, "Expected at least one tool for api_security objective"
+    first_tool = tools[0]
+
     chain = decision_engine.create_attack_chain(
         profile,
         objective="api_security",
         runtime_context={
             "tool_overrides": {
-                "nuclei": {"severity": "critical"},
+                first_tool: {"_test_override_marker": "sentinel_value"},
             }
         },
     )
 
-    nuclei_steps = [step for step in chain.steps if step.tool == "nuclei"]
-    if nuclei_steps:
-        assert nuclei_steps[0].parameters.get("severity") == "critical"
+    matching_steps = [step for step in chain.steps if step.tool == first_tool]
+    assert matching_steps, f"{first_tool} should appear in api_security attack chain"
+    assert matching_steps[0].parameters.get("_test_override_marker") == "sentinel_value", (
+        f"runtime override was not applied to {first_tool} step"
+    )
 
 
 def test_planner_mode_switch_per_call_supports_legacy_and_advanced():
@@ -70,6 +78,12 @@ def test_planner_mode_switch_per_call_supports_legacy_and_advanced():
     assert legacy_tools
     assert len(advanced_tools) <= 8
     assert len(legacy_tools) <= 8
+    # The two planners must produce different selections — if they're identical
+    # the mode-switch has no effect and the test is vacuous.
+    assert set(advanced_tools) != set(legacy_tools), (
+        "advanced and legacy planners returned identical tool sets — "
+        "mode switching appears to have no effect"
+    )
 
 
 def test_planner_mode_switch_global_toggle():

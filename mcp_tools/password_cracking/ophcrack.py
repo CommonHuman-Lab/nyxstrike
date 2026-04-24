@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_ophcrack_tool(mcp, hexstrike_client, logger):
+def register_ophcrack_tool(mcp, api_client, logger):
     @mcp.tool()
     async def ophcrack_crack(
         hash_file: str,
@@ -44,7 +44,7 @@ def register_ophcrack_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔑 Starting Ophcrack crack with hash file: {hash_file}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/password-cracking/ophcrack", data)
+            None, lambda: api_client.safe_post("api/tools/password-cracking/ophcrack", data)
         )
         if result.get("success"):
             logger.info("✅ Ophcrack crack completed successfully")

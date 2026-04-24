@@ -1,5 +1,7 @@
 export interface ProcessEntry {
-  pid: number;
+  pid: number | null;
+  task_id?: string | null;
+  ai_task?: boolean;
   command: string;
   status: string;
   runtime: string;
@@ -30,13 +32,17 @@ export interface PoolStatsResponse {
 }
 
 export interface ProcessListEntry {
-  pid: number;
+  pid: number | null;
+  task_id?: string | null;
+  ai_task?: boolean;
   command: string;
   status: string;
   start_time: number;
   progress: number;
   last_output: string;
   bytes_processed: number;
+  /** Present on AI tasks — identifies which NyxStrike session spawned the task. */
+  session_id?: string;
 }
 
 export interface ProcessListResponse {
@@ -44,3 +50,13 @@ export interface ProcessListResponse {
   active_processes: Record<string, ProcessListEntry>;
   total_count: number;
  }
+
+/** Payload emitted by the unified /api/processes/stream SSE endpoint. */
+export interface ProcessesStreamResponse {
+  success: boolean;
+  timestamp: string;
+  processes: Record<string, ProcessListEntry>;
+  total_count: number;
+  system_load: ProcessSystemLoad;
+  pool_stats: Record<string, unknown>;
+}

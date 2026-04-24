@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { CheckCircle, XCircle, Play, Download, GitCompare } from 'lucide-react'
 import { type RunHistoryEntry } from '../shared/types'
-import { exportEntry } from '../shared/utils'
+import { exportEntry, safeFixed } from '../shared/utils'
 import { useEscapeClose } from '../hooks/useEscapeClose'
 
 export function RunResultModal({ entry, onClose, onRerun, compareText }: {
@@ -30,7 +30,7 @@ export function RunResultModal({ entry, onClose, onRerun, compareText }: {
 
         <div className="run-result-modal-meta">
           <span className="run-output-meta mono">exit {r.return_code}</span>
-          <span className="run-output-meta mono">{r.execution_time.toFixed(2)}s</span>
+          <span className="run-output-meta mono">{safeFixed(r.execution_time, 2)}s</span>
           <span className="run-output-meta mono">
             {entry.ts.toLocaleDateString('en-GB')} {entry.ts.toLocaleTimeString('en-GB')}
           </span>

@@ -1,5 +1,5 @@
-export const RUN_FAVORITES_KEY = 'hexstrike_run_favorites'
-export const RUN_RECENT_TARGETS_KEY = 'hexstrike_run_recent_targets'
+export const RUN_FAVORITES_KEY = 'nyxstrike_run_favorites'
+export const RUN_RECENT_TARGETS_KEY = 'nyxstrike_run_recent_targets'
 
 export function deriveTargetFromParams(params: Record<string, unknown>): string | null {
   const candidateKeys = ['target', 'url', 'domain', 'host', 'ip', 'rhost', 'hostname']

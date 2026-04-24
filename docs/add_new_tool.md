@@ -1,4 +1,4 @@
-# Add a New Tool to HexStrike
+# Add a New Tool to NyxStrike
 
 This guide covers the full path for adding a new tool:
 
@@ -17,7 +17,7 @@ Related docs:
 ## Architecture at a glance
 
 1. **Server API route** executes the underlying binary or logic.
-2. **MCP wrapper** calls that API route through `hexstrike_client.safe_post(...)`.
+2. **MCP wrapper** calls that API route through `api_client.safe_post(...)`.
 3. **Tool registry** exposes the tool to gateway flows (`classify_task` + `run_tool`).
 4. **Tool profile** includes MCP wrapper in default/full profile groups.
 
@@ -97,7 +97,7 @@ import asyncio
 from typing import Dict, Any
 
 
-def register_mytool(mcp, hexstrike_client, logger):
+def register_mytool(mcp, api_client, logger):
     @mcp.tool()
     async def mytool(target: str, additional_args: str = "") -> Dict[str, Any]:
         """Run MyTool against a target."""
@@ -107,7 +107,7 @@ def register_mytool(mcp, hexstrike_client, logger):
         }
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/web_scan/mytool", payload)
+            None, lambda: api_client.safe_post("api/tools/web_scan/mytool", payload)
         )
 ```
 

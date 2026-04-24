@@ -21,11 +21,37 @@ export interface AttackChainStep {
   };
 }
 
+export interface SessionFinding {
+  finding_id: string;
+  title: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  description?: string;
+  tool?: string;
+  step_key?: string;
+  evidence?: string;
+  recommendation?: string;
+  cve?: string;
+  tags?: string[];
+  status?: 'open' | 'confirmed' | 'false_positive' | 'resolved';
+  created_at: number;
+  updated_at: number;
+}
+
+export interface SessionEvent {
+  type: string;
+  message: string;
+  timestamp: number;
+  data?: Record<string, unknown>;
+}
+
 export interface SessionSummary {
   session_id: string;
+  name?: string;
+  description?: string;
   target: string;
   status?: string;
   total_findings: number;
+  risk_level?: string;
   iterations: number;
   tools_executed: string[];
   workflow_steps?: AttackChainStep[];
@@ -39,6 +65,8 @@ export interface SessionSummary {
     confidence: number;
     note?: string;
   }>;
+  findings?: SessionFinding[];
+  event_log?: SessionEvent[];
   created_at: number;
   updated_at: number;
 }
@@ -149,6 +177,8 @@ export interface SessionTemplateDeleteResponse {
 
 export interface CreateSessionPayload {
   target: string;
+  name?: string;
+  description?: string;
   workflow_steps?: AttackChainStep[];
   source?: string;
   objective?: string;
@@ -166,6 +196,8 @@ export interface CreateSessionFromTemplatePayload {
 }
 
 export type UpdateSessionPayload = Partial<{
+  name: string;
+  description: string;
   target: string;
   status: string;
   total_findings: number;
@@ -186,3 +218,134 @@ export type UpdateSessionTemplatePayload = Partial<{
   name: string;
   workflow_steps: AttackChainStep[];
 }>;
+
+// ── Session Notes ──────────────────────────────────────────────────────────
+
+export interface SessionNote {
+  /** Note title without .md extension */
+  filename: string;
+  /** Sub-folder name (empty string = root) */
+  folder: string;
+  /** File size in bytes */
+  size: number;
+  /** Unix timestamp (seconds) of last modification */
+  updated_at: number;
+}
+
+export interface SessionNotesResponse {
+  success: boolean;
+  notes: SessionNote[];
+}
+
+export interface SessionNoteContentResponse {
+  success: boolean;
+  filename: string;
+  folder: string;
+  content: string;
+}
+
+export interface SessionNoteMutationResponse {
+  success: boolean;
+  filename?: string;
+  folder?: string;
+  error?: string;
+}
+
+export interface SessionNoteConflictResponse {
+  success: false;
+  conflict: true;
+  filename: string;
+  folder: string;
+}
+
+export interface SessionNoteFoldersResponse {
+  success: boolean;
+  folders: string[];
+}
+
+export interface SessionNoteFolderMutationResponse {
+  success: boolean;
+  folder?: string;
+  error?: string;
+}
+
+export interface SessionNoteSearchResult extends SessionNote {
+  /** Context snippet around the first match (empty if match was on filename only) */
+  snippet: string;
+  /** True when the query matched the note filename */
+  name_match: boolean;
+}
+
+export interface SessionNoteSearchResponse {
+  success: boolean;
+  query: string;
+  results: SessionNoteSearchResult[];
+}
+
+// ── Session Findings ───────────────────────────────────────────────────────────
+
+export interface SessionFindingsResponse {
+  success: boolean;
+  findings: SessionFinding[];
+  total: number;
+  error?: string;
+}
+
+export interface SessionFindingMutationResponse {
+  success: boolean;
+  finding?: SessionFinding;
+  total_findings?: number;
+  risk_level?: string;
+  timestamp?: string;
+  error?: string;
+}
+
+export interface SessionFindingDeleteResponse {
+  success: boolean;
+  finding_id?: string;
+  total_findings?: number;
+  risk_level?: string;
+  timestamp?: string;
+  error?: string;
+}
+
+export type CreateFindingPayload = {
+  title: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+  description?: string;
+  tool?: string;
+  step_key?: string;
+  evidence?: string;
+  recommendation?: string;
+  cve?: string;
+  tags?: string[];
+};
+
+export type UpdateFindingPayload = Partial<CreateFindingPayload & { status: string }>;
+
+// ── Session Reports ────────────────────────────────────────────────────────────
+
+export interface SessionReportResponse {
+  success: boolean;
+  report?: string;
+  session_id?: string;
+  timestamp?: string;
+  saved_path?: string;
+  error?: string;
+}
+
+export interface SessionAiReportResponse extends SessionReportResponse {
+  executive_summary?: string;
+  ai_generated?: boolean;
+}
+
+export interface GenerateReportPayload {
+  include_notes?: boolean;
+  include_event_log?: boolean;
+  download?: boolean;
+  save_to_notes?: boolean;
+}
+
+export interface GenerateAiReportPayload extends GenerateReportPayload {
+  focus?: string;
+}

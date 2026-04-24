@@ -1,0 +1,20 @@
+.plugins-page__card--disabled {
+  opacity: 0.5;
+}
+
+.plugins-page__status {
+  color: var(--text-dim);
+  border-color: var(--border);
+}
+
+.plugins-page__status--enabled {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: color-mix(in srgb, var(--green) 30%, var(--border));
+}
+
+.plugins-page__endpoint {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}

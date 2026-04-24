@@ -3,7 +3,7 @@
 import asyncio
 from typing import Dict, Any
 
-def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_nmap(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def nmap_scan(target: str, scan_type: str = "-sV", ports: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -25,7 +25,7 @@ def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
             "ports": ports,
             "additional_args": additional_args
         }
-        logger.info(f"{HexStrikeColors.FIRE_RED}🔍 Initiating Nmap scan: {target}{HexStrikeColors.RESET}")
+        logger.info(f"{CliColors.FIRE_RED}🔍 Initiating Nmap scan: {target}{CliColors.RESET}")
 
         # Use enhanced error handling by default
         data["use_recovery"] = True
@@ -34,23 +34,23 @@ def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
         # asyncio event loop remains responsive
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/nmap", data)
+            None, lambda: api_client.safe_post("api/tools/nmap", data)
         )
 
         if result.get("success"):
-            logger.info(f"{HexStrikeColors.SUCCESS}✅ Nmap scan completed successfully for {target}{HexStrikeColors.RESET}")
+            logger.info(f"{CliColors.SUCCESS}✅ Nmap scan completed successfully for {target}{CliColors.RESET}")
 
             # Check for recovery information
             if result.get("recovery_info", {}).get("recovery_applied"):
                 recovery_info = result["recovery_info"]
                 attempts = recovery_info.get("attempts_made", 1)
-                logger.info(f"{HexStrikeColors.HIGHLIGHT_YELLOW} Recovery applied: {attempts} attempts made {HexStrikeColors.RESET}")
+                logger.info(f"{CliColors.HIGHLIGHT_YELLOW} Recovery applied: {attempts} attempts made {CliColors.RESET}")
         else:
-            logger.error(f"{HexStrikeColors.ERROR}❌ Nmap scan failed for {target}{HexStrikeColors.RESET}")
+            logger.error(f"{CliColors.ERROR}❌ Nmap scan failed for {target}{CliColors.RESET}")
 
             # Check for human escalation
             if result.get("human_escalation"):
-                logger.error(f"{HexStrikeColors.CRITICAL} HUMAN ESCALATION REQUIRED {HexStrikeColors.RESET}")
+                logger.error(f"{CliColors.CRITICAL} HUMAN ESCALATION REQUIRED {CliColors.RESET}")
 
         return result
 
@@ -95,7 +95,7 @@ def register_nmap(mcp, hexstrike_client, logger, HexStrikeColors):
         # asyncio event loop remains responsive
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/nmap-advanced", data)
+            None, lambda: api_client.safe_post("api/tools/nmap-advanced", data)
         )
 
         if result.get("success"):

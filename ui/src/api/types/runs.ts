@@ -29,3 +29,18 @@ export interface RunHistoryResponse {
   total: number;
   runs: RunHistoryEntry[];
 }
+
+/** Lightweight run record returned by /api/runs/history/summary — no stdout/stderr/params. */
+export interface RunHistorySummaryEntry {
+  id: number;
+  tool: string;
+  timestamp: string;
+  success: boolean;
+  execution_time: number;
+}
+
+export interface RunHistorySummaryResponse {
+  success: boolean;
+  total: number;
+  runs: RunHistorySummaryEntry[];
+}

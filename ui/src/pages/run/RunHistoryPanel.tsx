@@ -1,8 +1,9 @@
 import React from 'react'
-import { ChevronDown, ChevronRight, RefreshCw, XCircle, Server } from 'lucide-react'
+import { RefreshCw, XCircle, Server } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { RunHistoryEntry } from '../../shared/types'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
+import { CollapseChevron } from '../../components/CollapseChevron'
 import { filterHistory, groupHistoryByDate } from './utils'
 import { useToast } from '../../components/ToastProvider'
 
@@ -132,7 +133,7 @@ export function RunHistoryPanel({
                   className="run-history-date run-history-date-toggle"
                   onClick={() => setCollapsedDates(prev => ({ ...prev, [group.dateLabel]: !prev[group.dateLabel] }))}
                 >
-                  {collapsedDates[group.dateLabel] ? <ChevronRight size={11} /> : <ChevronDown size={11} />}
+                  <CollapseChevron open={!collapsedDates[group.dateLabel]} size={11} />
                   <span>{group.dateLabel}</span>
                   <span className="run-history-date-count mono">{group.entries.length}</span>
                 </button>

@@ -2,7 +2,7 @@
 import asyncio
 from typing import Dict, Any, Optional
 
-def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_impacket(mcp, api_client, logger, CliColors):
     """
     Register MCP tools for generic Impacket script execution.
 
@@ -14,13 +14,13 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
     async def _run_post(endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(endpoint, data)
+            None, lambda: api_client.safe_post(endpoint, data)
         )
 
     async def _run_get(endpoint: str) -> Dict[str, Any]:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get(endpoint)
+            None, lambda: api_client.safe_get(endpoint)
         )
 
     @mcp.tool()
@@ -49,7 +49,7 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
             use_recovery: Whether backend should use enhanced recovery logic
 
         Returns:
-            Execution result from the HexStrike backend
+            Execution result from the API backend
         """
         data: Dict[str, Any] = {
             "script": script,
@@ -62,32 +62,32 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
         }
 
         logger.info(
-            f"{HexStrikeColors.FIRE_RED}🧨 Starting Impacket script: {script}"
-            f"{f' against {target}' if target else ''}{HexStrikeColors.RESET}"
+            f"{CliColors.FIRE_RED}🧨 Starting Impacket script: {script}"
+            f"{f' against {target}' if target else ''}{CliColors.RESET}"
         )
 
         result = await _run_post("api/tools/impacket", data)
 
         if result.get("success"):
             logger.info(
-                f"{HexStrikeColors.SUCCESS}✅ Impacket script completed: {script}{HexStrikeColors.RESET}"
+                f"{CliColors.SUCCESS}✅ Impacket script completed: {script}{CliColors.RESET}"
             )
 
             if result.get("recovery_info", {}).get("recovery_applied"):
                 recovery_info = result["recovery_info"]
                 attempts = recovery_info.get("attempts_made", 1)
                 logger.info(
-                    f"{HexStrikeColors.HIGHLIGHT_YELLOW}Recovery applied for {script}: "
-                    f"{attempts} attempts made{HexStrikeColors.RESET}"
+                    f"{CliColors.HIGHLIGHT_YELLOW}Recovery applied for {script}: "
+                    f"{attempts} attempts made{CliColors.RESET}"
                 )
         else:
             logger.error(
-                f"{HexStrikeColors.ERROR}❌ Impacket script failed: {script}{HexStrikeColors.RESET}"
+                f"{CliColors.ERROR}❌ Impacket script failed: {script}{CliColors.RESET}"
             )
 
             if result.get("human_escalation"):
                 logger.error(
-                    f"{HexStrikeColors.CRITICAL}HUMAN ESCALATION REQUIRED{HexStrikeColors.RESET}"
+                    f"{CliColors.CRITICAL}HUMAN ESCALATION REQUIRED{CliColors.RESET}"
                 )
 
         return result
@@ -109,18 +109,18 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
             Script specification from the backend
         """
         logger.info(
-            f"{HexStrikeColors.FIRE_RED}📚 Fetching Impacket spec for: {script}{HexStrikeColors.RESET}"
+            f"{CliColors.FIRE_RED}📚 Fetching Impacket spec for: {script}{CliColors.RESET}"
         )
 
         result = await _run_get(f"api/tools/impacket/spec/{script}")
 
         if result.get("error"):
             logger.error(
-                f"{HexStrikeColors.ERROR}❌ Failed to fetch Impacket spec for {script}{HexStrikeColors.RESET}"
+                f"{CliColors.ERROR}❌ Failed to fetch Impacket spec for {script}{CliColors.RESET}"
             )
         else:
             logger.info(
-                f"{HexStrikeColors.SUCCESS}✅ Loaded Impacket spec for {script}{HexStrikeColors.RESET}"
+                f"{CliColors.SUCCESS}✅ Loaded Impacket spec for {script}{CliColors.RESET}"
             )
 
         return result
@@ -198,19 +198,19 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
         }
 
         logger.info(
-            f"{HexStrikeColors.FIRE_RED}🕵️ Starting AD Impacket enumeration with {script} "
-            f"against {target}{HexStrikeColors.RESET}"
+            f"{CliColors.FIRE_RED}🕵️ Starting AD Impacket enumeration with {script} "
+            f"against {target}{CliColors.RESET}"
         )
 
         result = await _run_post("api/tools/impacket", data)
 
         if result.get("success"):
             logger.info(
-                f"{HexStrikeColors.SUCCESS}✅ AD Impacket enumeration completed: {script}{HexStrikeColors.RESET}"
+                f"{CliColors.SUCCESS}✅ AD Impacket enumeration completed: {script}{CliColors.RESET}"
             )
         else:
             logger.error(
-                f"{HexStrikeColors.ERROR}❌ AD Impacket enumeration failed: {script}{HexStrikeColors.RESET}"
+                f"{CliColors.ERROR}❌ AD Impacket enumeration failed: {script}{CliColors.RESET}"
             )
 
         return result
@@ -285,19 +285,19 @@ def register_impacket(mcp, hexstrike_client, logger, HexStrikeColors):
         }
 
         logger.info(
-            f"{HexStrikeColors.FIRE_RED}⚔️ Starting remote Impacket action with {script} "
-            f"against {target}{HexStrikeColors.RESET}"
+            f"{CliColors.FIRE_RED}⚔️ Starting remote Impacket action with {script} "
+            f"against {target}{CliColors.RESET}"
         )
 
         result = await _run_post("api/tools/impacket", data)
 
         if result.get("success"):
             logger.info(
-                f"{HexStrikeColors.SUCCESS}✅ Remote Impacket action completed: {script}{HexStrikeColors.RESET}"
+                f"{CliColors.SUCCESS}✅ Remote Impacket action completed: {script}{CliColors.RESET}"
             )
         else:
             logger.error(
-                f"{HexStrikeColors.ERROR}❌ Remote Impacket action failed: {script}{HexStrikeColors.RESET}"
+                f"{CliColors.ERROR}❌ Remote Impacket action failed: {script}{CliColors.RESET}"
             )
 
         return result

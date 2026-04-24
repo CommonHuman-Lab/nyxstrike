@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_whois(mcp, hexstrike_client, logger):
+def register_whois(mcp, api_client, logger):
     @mcp.tool()
     async def whois_lookup(target: str) -> Dict[str, Any]:
         """
@@ -18,7 +18,7 @@ def register_whois(mcp, hexstrike_client, logger):
         try:
             loop = asyncio.get_running_loop()
             response = await loop.run_in_executor(
-                None, lambda: hexstrike_client.safe_post("api/tools/whois", {"target": target})
+                None, lambda: api_client.safe_post("api/tools/whois", {"target": target})
             )
             return response
         except Exception as e:

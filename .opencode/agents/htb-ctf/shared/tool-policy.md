@@ -6,9 +6,9 @@ hidden: true
 
 # HTB CTF — Tool Policy
 
-Maps attack phases to HexStrike MCP tools. Each specialist agent uses this as its canonical reference for which tools to reach for and in what order.
+Maps attack phases to NyxStrike MCP tools. Each specialist agent uses this as its canonical reference for which tools to reach for and in what order.
 
-All tools are invoked via the HexStrike MCP `run_tool` gateway:
+All tools are invoked via the NyxStrike MCP `run_tool` gateway:
 ```
 run_tool(tool_name="<name>", params={...})
 ```

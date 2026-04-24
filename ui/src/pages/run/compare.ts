@@ -1,11 +1,12 @@
 import type { RunHistoryEntry } from '../../shared/types'
+import { safeFixed } from '../../shared/utils'
 
 export function buildRunDiff(current: RunHistoryEntry, previous: RunHistoryEntry): string {
   const lines: string[] = []
   lines.push(`Comparing ${current.tool}`)
   lines.push('')
-  lines.push(`Current:  exit=${current.result.return_code}, success=${current.result.success}, time=${current.result.execution_time.toFixed(2)}s`)
-  lines.push(`Previous: exit=${previous.result.return_code}, success=${previous.result.success}, time=${previous.result.execution_time.toFixed(2)}s`)
+  lines.push(`Current:  exit=${current.result.return_code}, success=${current.result.success}, time=${safeFixed(current.result.execution_time, 2)}s`)
+  lines.push(`Previous: exit=${previous.result.return_code}, success=${previous.result.success}, time=${safeFixed(previous.result.execution_time, 2)}s`)
   lines.push('')
 
   const currentOutput = (current.result.stdout || current.result.stderr || '').trim()

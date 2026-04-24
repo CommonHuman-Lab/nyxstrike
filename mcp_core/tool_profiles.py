@@ -1,4 +1,4 @@
-from mcp_core.hexstrikecolors import HexStrikeColors
+from mcp_core.cli_colors import CliColors
 from mcp_tools import *
 
 def resolve_profile_dependencies(profiles):
@@ -25,7 +25,7 @@ TOOL_PROFILES = {
     ],
 
     "active_directory": [
-        lambda mcp, client, logger: register_impacket(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_impacket(mcp, client, logger, CliColors),
         lambda mcp, client, logger: register_ldapdomaindump_tool(mcp, client, logger),
     ],
 
@@ -65,6 +65,7 @@ TOOL_PROFILES = {
     #Tools for API fuzzing and endpoint discovery (e.g., API Fuzzer with intelligent parameter discovery).
     "api_fuzz": [
         lambda mcp, client, logger: register_api_fuzzer_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_api_fuzz_schemathesis_tool(mcp, client, logger),
     ],
 
     #Tools for API scanning (e.g., GraphQL Scanner with enhanced security testing).
@@ -160,7 +161,7 @@ TOOL_PROFILES = {
 
     #Tools for network scanning and enumeration (e.g., Nmap, ARP-Scan, Masscan, Rustscan).
     "net_scan": [
-        lambda mcp, client, logger: register_nmap(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_nmap(mcp, client, logger, CliColors),
         lambda mcp, client, logger: register_arp_scan_tool(mcp, client, logger),
         lambda mcp, client, logger: register_masscan_tool(mcp, client, logger),
         lambda mcp, client, logger: register_rustscan_tool(mcp, client, logger),
@@ -169,6 +170,8 @@ TOOL_PROFILES = {
     #Tools for network information gathering and lookups (e.g., WHOIS).
     "net_lookup": [
         lambda mcp, client, logger: register_whois(mcp, client, logger),
+        lambda mcp, client, logger: register_http_headers(mcp, client, logger),
+        lambda mcp, client, logger: register_dig(mcp, client, logger),
     ],
 
     #Tools for reconnaissance and enumeration (e.g., BBot).
@@ -181,7 +184,7 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_dirb_tool(mcp, client, logger),
         lambda mcp, client, logger: register_ffuf_tool(mcp, client, logger),
         lambda mcp, client, logger: register_dirsearch_tools(mcp, client, logger),
-        lambda mcp, client, logger: register_gobuster(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_gobuster(mcp, client, logger, CliColors),
         lambda mcp, client, logger: register_feroxbuster_tool(mcp, client, logger),
         lambda mcp, client, logger: register_dotdotpwn_tool(mcp, client, logger),
         lambda mcp, client, logger: register_wfuzz_tool(mcp, client, logger),
@@ -201,9 +204,10 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_wpscan_tool(mcp, client, logger),
         lambda mcp, client, logger: register_jaeles_tool(mcp, client, logger),
         lambda mcp, client, logger: register_dalfox_tool(mcp, client, logger),
-        lambda mcp, client, logger: register_burpsuite_tool(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_burpsuite_tool(mcp, client, logger, CliColors),
         lambda mcp, client, logger: register_zap_tool(mcp, client, logger),
         lambda mcp, client, logger: register_xsser_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_web_scan_interactsh_tool(mcp, client, logger),
     ],
 
     "fingerprint": [
@@ -218,7 +222,7 @@ TOOL_PROFILES = {
 
     #Tools for vulnerability scanning and assessment (e.g., Nuclei).
     "vuln_scan": [
-        lambda mcp, client, logger: register_nuclei(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_nuclei(mcp, client, logger, CliColors),
     ],
 
     #Tools for automated exploitation and attack frameworks (e.g., Metasploit, MSFVenom, Pwninit, Pwntools, exploit-db).
@@ -262,8 +266,8 @@ TOOL_PROFILES = {
 
     #Tools for web application security testing frameworks (e.g., HTTP Framework, Browser Agent).
     "web_framework": [
-        lambda mcp, client, logger: register_http_framework_tool(mcp, client, logger, HexStrikeColors),
-        lambda mcp, client, logger: register_browser_agent_tool(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_http_framework_tool(mcp, client, logger, CliColors),
+        lambda mcp, client, logger: register_browser_agent_tool(mcp, client, logger, CliColors),
     ],
 
     #Tools for WAF detection and fingerprinting (e.g., wafw00f).
@@ -279,8 +283,8 @@ TOOL_PROFILES = {
     
     #Tools for error handling and statistics collection to improve reliability and debugging.
     "error_handling": [
-        lambda mcp, client, logger: register_error_handling_statistics_tool(mcp, client, logger, HexStrikeColors),
-        lambda mcp, client, logger: register_test_error_recovery_tool(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_error_handling_statistics_tool(mcp, client, logger, CliColors),
+        lambda mcp, client, logger: register_test_error_recovery_tool(mcp, client, logger, CliColors),
     ],
 
     #Tools for cloud assessment and auditing (e.g., Prowler, Scout Suite).
@@ -357,7 +361,8 @@ TOOL_PROFILES = {
 
     #Tools for intelligent decision making and tool selection based on task context and goals
     "ai_assist": [
-        lambda mcp, client, logger: register_intelligent_decision_engine_tools(mcp, client, logger, HexStrikeColors),
+        lambda mcp, client, logger: register_intelligent_decision_engine_tools(mcp, client, logger, CliColors),
+        lambda mcp, client, logger: register_llm_agent_tools(mcp, client, logger, CliColors),
     ],
 
     #Tools for vulnerability intelligence gathering and analysis
@@ -380,11 +385,6 @@ TOOL_PROFILES = {
     #Tools for process management
     "process_management": [
         lambda mcp, client, logger: register_process_management_tools(mcp, client, logger),
-    ],
-
-    #Tools for auto-installation of missing tools on the HexStrike server
-    "auto_install": [
-        lambda mcp, client, logger: register_auto_install_tools(mcp, client, logger),
     ],
 }
 
@@ -414,6 +414,7 @@ DEFAULT_PROFILE = [
     "data_processing",
     "error_handling",
     "wifi_pentest",
+    "api_audit",
 
     # System tools"
     "monitoring",

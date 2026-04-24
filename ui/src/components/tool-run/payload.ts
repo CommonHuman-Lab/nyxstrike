@@ -1,7 +1,8 @@
 import type { Tool, AttackChainStep } from '../../api'
 
-export function inferTargetValue(paramName: string, target: string): string | undefined {
+export function inferTargetValue(paramName: string, target: string, sessionId?: string): string | undefined {
   const k = paramName.toLowerCase()
+  if (k === 'session_id' && sessionId) return sessionId
   if (k === 'target' || k === 'host' || k === 'query') return target
   if (k === 'url' || k === 'endpoint') {
     if (target.startsWith('http://') || target.startsWith('https://')) return target
@@ -13,7 +14,7 @@ export function inferTargetValue(paramName: string, target: string): string | un
   return undefined
 }
 
-export function buildInitialFieldValues(tool: Tool, step: AttackChainStep, target: string): Record<string, string> {
+export function buildInitialFieldValues(tool: Tool, step: AttackChainStep, target: string, sessionId?: string): Record<string, string> {
   const out: Record<string, string> = {}
   const stepParams = (step.parameters ?? {}) as Record<string, unknown>
   for (const k of Object.keys(tool.params)) {
@@ -22,7 +23,7 @@ export function buildInitialFieldValues(tool: Tool, step: AttackChainStep, targe
       out[k] = String(existing)
       continue
     }
-    out[k] = inferTargetValue(k, target) ?? ''
+    out[k] = inferTargetValue(k, target, sessionId) ?? ''
   }
   for (const [k, v] of Object.entries(tool.optional)) {
     const existing = stepParams[k]

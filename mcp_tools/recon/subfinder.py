@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_subfinder_tool(mcp, hexstrike_client, logger):
+def register_subfinder_tool(mcp, api_client, logger):
     @mcp.tool()
     async def subfinder_scan(domain: str, silent: bool = True, all_sources: bool = False, additional_args: str = "") -> Dict[str, Any]:
         """
@@ -27,7 +27,7 @@ def register_subfinder_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting Subfinder: {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/subfinder", data)
+            None, lambda: api_client.safe_post("api/tools/subfinder", data)
         )
         if result.get("success"):
             logger.info(f"✅ Subfinder completed for {domain}")

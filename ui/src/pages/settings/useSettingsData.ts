@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type Settings, type WordlistEntry } from '../../api'
+import { api, type Settings, type WordlistEntry, type PersonalityPreset } from '../../api'
 import { useToast } from '../../components/ToastProvider'
 
 const WORDLIST_TYPE_OPTIONS = ['password', 'directory', 'params', 'subdomain', 'username', 'general']
@@ -16,6 +16,11 @@ type SettingsCache = {
   cacheTtl: string
   toolTtl: string
   wordlistsDraft: WordlistEntry[]
+  chatPersonality: string
+  customPrompt: string
+  personalityPresets: PersonalityPreset[]
+  summarizationThreshold: string
+  contextInjectionChars: string
 }
 
 let settingsCache: SettingsCache | null = null
@@ -44,6 +49,11 @@ export function useSettingsData() {
   const [cacheTtl, setCacheTtl] = useState(settingsCache?.cacheTtl ?? '')
   const [toolTtl, setToolTtl] = useState(settingsCache?.toolTtl ?? '')
   const [wordlistsDraft, setWordlistsDraft] = useState<WordlistEntry[]>(settingsCache?.wordlistsDraft ?? [])
+  const [chatPersonality, setChatPersonality] = useState(settingsCache?.chatPersonality ?? 'nyxstrike')
+  const [customPrompt, setCustomPrompt] = useState(settingsCache?.customPrompt ?? '')
+  const [personalityPresets, setPersonalityPresets] = useState<PersonalityPreset[]>(settingsCache?.personalityPresets ?? [])
+  const [summarizationThreshold, setSummarizationThreshold] = useState(settingsCache?.summarizationThreshold ?? '')
+  const [contextInjectionChars, setContextInjectionChars] = useState(settingsCache?.contextInjectionChars ?? '')
 
   function applySettings(response: Settings) {
     const nextCache: SettingsCache = {
@@ -56,6 +66,11 @@ export function useSettingsData() {
       cacheTtl: String(response.runtime.cache_ttl),
       toolTtl: String(response.runtime.tool_availability_ttl),
       wordlistsDraft: response.wordlists.map(w => ({ ...w })),
+      chatPersonality: response.chat?.personality ?? 'nyxstrike',
+      customPrompt: response.chat?.custom_prompt ?? '',
+      personalityPresets: response.chat?.personality_presets ?? [],
+      summarizationThreshold: String(response.chat?.summarization_threshold ?? 20),
+      contextInjectionChars: String(response.chat?.context_injection_chars ?? 4000),
     }
     settingsCache = nextCache
     setSettings(nextCache.settings)
@@ -67,6 +82,11 @@ export function useSettingsData() {
     setCacheTtl(nextCache.cacheTtl)
     setToolTtl(nextCache.toolTtl)
     setWordlistsDraft(nextCache.wordlistsDraft)
+    setChatPersonality(nextCache.chatPersonality)
+    setCustomPrompt(nextCache.customPrompt)
+    setPersonalityPresets(nextCache.personalityPresets)
+    setSummarizationThreshold(nextCache.summarizationThreshold)
+    setContextInjectionChars(nextCache.contextInjectionChars)
   }
 
   useEffect(() => {
@@ -138,8 +158,36 @@ export function useSettingsData() {
     }
   }
 
-  async function clearCache() {
-    setClearingCache(true)
+  async function saveChatSettings() {
+    setSaving(true)
+    try {
+      // Resolve the active system_prompt from the selected personality
+      const resolvedPrompt =
+        chatPersonality === 'custom'
+          ? customPrompt
+          : personalityPresets.find(p => p.id === chatPersonality)?.prompt ?? customPrompt
+
+      const res = await api.patchSettings({}, {
+        personality: chatPersonality,
+        system_prompt: resolvedPrompt,
+        custom_prompt: customPrompt,
+        summarization_threshold: Number(summarizationThreshold),
+        context_injection_chars: Number(contextInjectionChars),
+      })
+      if (!res.success) {
+        pushToast('error', 'Failed to save chat settings')
+        return
+      }
+      if (res.settings) applySettings(res.settings)
+      pushToast('success', 'Chat settings saved')
+    } catch {
+      pushToast('error', 'Failed to save chat settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function clearCache() {    setClearingCache(true)
     try {
       const res = await api.clearCache()
       if (res.success) {
@@ -169,6 +217,11 @@ export function useSettingsData() {
     cacheTtl,
     toolTtl,
     wordlistsDraft,
+    chatPersonality,
+    customPrompt,
+    personalityPresets,
+    summarizationThreshold,
+    contextInjectionChars,
     setTimeout_,
     setRequestTimeout,
     setInactivityTimeout,
@@ -176,14 +229,20 @@ export function useSettingsData() {
     setCacheSize,
     setCacheTtl,
     setToolTtl,
+    setChatPersonality,
+    setCustomPrompt,
+    setSummarizationThreshold,
+    setContextInjectionChars,
     addWordlist,
     removeWordlist,
     updateWordlist,
     saveRuntime,
     saveWordlists,
+    saveChatSettings,
     clearCache,
     withCurrentTypeOption: (current: string) => withCurrentOption(WORDLIST_TYPE_OPTIONS, current),
     withCurrentSpeedOption: (current: string) => withCurrentOption(SPEED_OPTIONS, current),
     withCurrentCoverageOption: (current: string) => withCurrentOption(COVERAGE_OPTIONS, current),
   }
 }
+

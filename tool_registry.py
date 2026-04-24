@@ -1,5 +1,5 @@
 """
-Tool Registry with Compact Schemas for HexStrike AI Agent
+Tool Registry with compact schemas for the AI agent.
 
 Categorized tool definitions with minimal schemas.
 Only 5-8 tools are loaded per task category to fit small model context windows.
@@ -8,8 +8,50 @@ Can be increased or decreased as needed, but focus on the most effective tools f
 
 from typing import Dict, List, Optional
 import logging
+from typing import TypedDict, Any
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Schema definition for tool registry entries.
+# Every entry in TOOLS must conform to this shape.
+# ---------------------------------------------------------------------------
+
+class ToolDefinition(TypedDict, total=False):
+    desc: str          # required
+    endpoint: str      # required — must start with "/"
+    method: str        # required — e.g. "POST"
+    category: str      # required
+    params: dict       # required — required parameters
+    optional: dict     # required — optional parameters with defaults
+    effectiveness: float  # required — 0.0–1.0
+
+
+_REQUIRED_TOOL_KEYS: tuple = ("desc", "endpoint", "method", "category", "params", "optional", "effectiveness")
+
+
+def _validate_registry(tools: Dict[str, dict]) -> None:
+    """Validate all entries in the TOOLS registry at import time.
+
+    Raises ValueError listing all malformed entries so the server fails fast
+    rather than silently serving broken tool definitions at runtime.
+    """
+    errors: List[str] = []
+    for name, defn in tools.items():
+        missing = [k for k in _REQUIRED_TOOL_KEYS if k not in defn]
+        if missing:
+            errors.append(f"  '{name}': missing keys {missing}")
+        endpoint = defn.get("endpoint", "")
+        if endpoint and not endpoint.startswith("/"):
+            errors.append(f"  '{name}': endpoint {endpoint!r} must start with '/'")
+        eff = defn.get("effectiveness")
+        if eff is not None and not (0.0 <= eff <= 1.0):
+            errors.append(f"  '{name}': effectiveness {eff!r} must be between 0.0 and 1.0")
+    if errors:
+        raise ValueError(
+            "tool_registry: the following TOOLS entries are malformed:\n" + "\n".join(errors)
+        )
 
 # ---------------------------------------------------------------------------
 # Tool definitions - each entry is intentionally compact so the full category
@@ -17,6 +59,17 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 TOOLS: Dict[str, dict] = {
+    # ---- AI ----
+    "ai_analyze_session": {
+        "desc": "Analyse an existing workflow session with the LLM.",
+        "endpoint": "/api/intelligence/analyze-session",
+        "method": "POST",
+        "category": "ai_assist",
+        "params": {"session_id": {"required": True}},
+        "optional": {},
+        "effectiveness": 0.90,
+    },
+    
     # ---- Vulnerability Intelligence ----
     "vulnx": {
         "desc": "CVE vulnerability intelligence and analysis",
@@ -293,7 +346,7 @@ TOOLS: Dict[str, dict] = {
         "method": "POST",
         "category": "web_recon",
         "params": {"url": {"required": True}},
-        "optional": {"additional_args": ""},
+        "optional": {"additional_args": "--disable-tls-checks --enumerate u,vp,vt"},
         "effectiveness": 0.95,
     },
     "joomscan": {
@@ -304,6 +357,23 @@ TOOLS: Dict[str, dict] = {
         "params": {"url": {"required": True}},
         "optional": {"additional_args": ""},
         "effectiveness": 0.90,
+    },
+
+    "interactsh": {
+        "desc": "Out-of-band interaction client for detecting blind vulnerabilities (SSRF, XSS, DNS exfiltration)",
+        "endpoint": "/api/tools/web_scan/interactsh",
+        "method": "POST",
+        "category": "web_scan",
+        "params": {},
+        "optional": {
+            "server": "",
+            "token": "",
+            "n": 1,
+            "poll_interval": 5,
+            "timeout": 60,
+            "additional_args": "",
+        },
+        "effectiveness": 0.88,
     },
 
     # ---- Web Vuln ----
@@ -560,6 +630,25 @@ TOOLS: Dict[str, dict] = {
         "params": {"target": {"required": True}},
         "optional": {},
         "effectiveness": 0.80,
+    },
+    "http-headers": {
+        "desc": "Fetch HTTP response headers via curl -sI (security headers, server info, redirects)",
+        "endpoint": "/api/tools/http-headers",
+        "method": "POST",
+        "category": "web_recon",
+        "params": {"target": {"required": True}},
+        "optional": {"https": False, "follow_redirects": True, "timeout": 10},
+        "effectiveness": 0.82,
+    },
+    "dig": {
+        "desc": "DNS record lookup — A, MX, NS, TXT records via dig +short",
+        "endpoint": "/api/tools/dig",
+        "method": "POST",
+        "category": "osint",
+        "params": {"target": {"required": True}},
+        "optional": {"record_types": ["A", "MX", "NS", "TXT"], "timeout": 15},
+        "effectiveness": 0.83,
+        "parent_tool": "bind9-dnsutils"
     },
     "amass": {
         "desc": "Subdomain enumeration and OSINT",
@@ -902,7 +991,7 @@ TOOLS: Dict[str, dict] = {
         "method": "POST",
         "category": "binary",
         "params": {"binary": {"required": True}},
-        "optional": {"project_name": "hexstrike_analysis", "script_file": "", "analysis_timeout": 300, "output_format": "xml", "additional_args": ""},
+        "optional": {"project_name": "analysis_project", "script_file": "", "analysis_timeout": 300, "output_format": "xml", "additional_args": ""},
         "effectiveness": 0.90,
     },
     "objdump": {
@@ -956,22 +1045,9 @@ TOOLS: Dict[str, dict] = {
         "method": "POST",
         "category": "forensics",
         "params": {"image_path": {"required": True}},
-        "optional": {"case_name": "hexstrike_case", "additional_args": ""},
+        "optional": {"case_name": "analysis_case", "additional_args": ""},
         "effectiveness": 0.82,
     },
-
-    # ---- OPS ----
-    "auto_install_missing_apt_tools": {
-        "desc": "REQUIRES root! - Automatically install missing tools",
-        "endpoint": "api/tools/auto-install-missing-apt",
-        "method": "POST",
-        "category": "ops",
-        "params": {},
-        "optional": {},
-        "effectiveness": 0.90,
-    },
-
-
 
     # ---- Binary Debug ----
     "gdb": {
@@ -1393,6 +1469,33 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.80,
         "parent_tool": "ffuf",
     },
+    "schemathesis": {
+        "desc": "Property-based API testing driven by OpenAPI/GraphQL schemas (schemathesis)",
+        "endpoint": "/api/tools/api_fuzz/schemathesis",
+        "method": "POST",
+        "category": "api",
+        "params": {"schema": {"required": True}},
+        "optional": {
+            "base_url": "",
+            "checks": "all",
+            "workers": 1,
+            "max_examples": 100,
+            "headers": "",
+            "auth": "",
+            "request_timeout": 10,
+            "timeout": 600,
+            "phases": "",
+            "mode": "",
+            "rate_limit": "",
+            "report_formats": "",
+            "report_dir": "",
+            "include_operation_id": "",
+            "exclude_operation_id": "",
+            "max_failures": 0,
+            "additional_args": "",
+        },
+        "effectiveness": 0.88,
+    },
 
     # ---- OSINT ----
     "sherlock": {
@@ -1701,6 +1804,9 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.90,
     },
 }
+
+# Validate registry at import time
+_validate_registry(TOOLS)
 
 # Meta-tool for ending the agent loop
 # can be skipped if not using agentic mode in your LLM connection when ran locally.

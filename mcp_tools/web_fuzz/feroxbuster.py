@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_feroxbuster_tool(mcp, hexstrike_client, logger):
+def register_feroxbuster_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def feroxbuster_scan(url: str, wordlist: str = "/usr/share/wordlists/dirb/common.txt", threads: int = 10, additional_args: str = "") -> Dict[str, Any]:
@@ -28,7 +28,7 @@ def register_feroxbuster_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting Feroxbuster scan: {url}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/feroxbuster", data)
+            None, lambda: api_client.safe_post("api/tools/feroxbuster", data)
         )
         if result.get("success"):
             logger.info(f"✅ Feroxbuster scan completed for {url}")

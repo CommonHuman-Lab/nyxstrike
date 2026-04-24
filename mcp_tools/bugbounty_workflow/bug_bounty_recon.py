@@ -4,7 +4,7 @@ from typing import Dict, Any
 from datetime import datetime
 import asyncio
 
-def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
+def register_bug_bounty_recon_tools(mcp, api_client, logger):
 
     @mcp.tool()
     async def bugbounty_reconnaissance_workflow(domain: str, scope: str = "", out_of_scope: str = "",
@@ -31,7 +31,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Creating reconnaissance workflow for {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/bugbounty/reconnaissance-workflow", data)
+            None, lambda: api_client.safe_post("api/bugbounty/reconnaissance-workflow", data)
         )
 
         if result.get("success"):
@@ -65,7 +65,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Creating vulnerability hunting workflow for {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/bugbounty/vulnerability-hunting-workflow", data)
+            None, lambda: api_client.safe_post("api/bugbounty/vulnerability-hunting-workflow", data)
         )
 
         if result.get("success"):
@@ -96,7 +96,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Creating business logic testing workflow for {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/bugbounty/business-logic-workflow", data)
+            None, lambda: api_client.safe_post("api/bugbounty/business-logic-workflow", data)
         )
 
         if result.get("success"):
@@ -124,7 +124,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Creating OSINT gathering workflow for {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/bugbounty/osint-workflow", data)
+            None, lambda: api_client.safe_post("api/bugbounty/osint-workflow", data)
         )
 
         if result.get("success"):
@@ -152,7 +152,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Creating file upload testing workflow for {target_url}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/bugbounty/file-upload-testing", data)
+            None, lambda: api_client.safe_post("api/bugbounty/file-upload-testing", data)
         )
 
         if result.get("success"):
@@ -193,7 +193,7 @@ def register_bug_bounty_recon_tools(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Creating comprehensive bug bounty assessment for {domain}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/bugbounty/comprehensive-assessment", data)
+            None, lambda: api_client.safe_post("api/bugbounty/comprehensive-assessment", data)
         )
 
         if result.get("success"):

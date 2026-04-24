@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_dalfox_tool(mcp, hexstrike_client, logger):
+def register_dalfox_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def dalfox_xss_scan(url: str, pipe_mode: bool = False, blind: bool = False,
@@ -36,7 +36,7 @@ def register_dalfox_tool(mcp, hexstrike_client, logger):
         logger.info(f"🎯 Starting Dalfox XSS scan: {url if url else 'pipe mode'}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/dalfox", data)
+            None, lambda: api_client.safe_post("api/tools/dalfox", data)
         )
         if result.get("success"):
             logger.info(f"✅ Dalfox XSS scan completed")

@@ -7,7 +7,7 @@ hidden: true
 # Bug Bounty — Tool Policy
 
 Canonical tool selection reference. Every agent uses this table to pick tools for each phase.
-All tools are invoked via `run_tool("<tool_name>", { ... })` through the HexStrike MCP gateway.
+All tools are invoked via `run_tool("<tool_name>", { ... })` through the NyxStrike MCP gateway.
 
 ---
 

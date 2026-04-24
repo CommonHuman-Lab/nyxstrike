@@ -1,6 +1,6 @@
 # Installation and Install Script Flags
 
-Quick guide for setting up HexStrike AI Community Edition and using all installer flags.
+Quick guide for setting up NyxStrike and using all installer flags.
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ bash scripts/install.sh
 
 This will:
 
-1. Create `hexstrike-env` if missing
+1. Create `nyxstrike-env` if missing
 2. Install Python dependencies from `requirements.txt`
 3. Skip external tool installation by default
 4. Skip git tool repository sync by default
@@ -34,7 +34,7 @@ Python requirement installs are stamp-based for speed:
 
 Stamp files are stored in the venv, e.g.:
 
-- `hexstrike-env/.hexstrike_python_deps_requirements.txt.stamp`
+- `nyxstrike-env/.nyxstrike_python_deps_requirements.txt.stamp`
 
 ## Flags (All Options)
 
@@ -49,6 +49,8 @@ Stamp files are stored in the venv, e.g.:
 | `-s` | `--update-self` | Run `git pull --ff-only` on this repo (skips when local changes exist) |
 | `-r` | `--run` | Start server after install (`./scripts/run.sh --server`) |
 | `-h` | `--help` | Show install script help |
+| `-ai` | *(none)* | Install Ollama (if missing), pull `huihui_ai/qwen3.5-abliterated:9b`, and create the `nyxstrike-ai` custom model. Requires ~8 GB RAM. |
+| `-ai-small` | *(none)* | Install Ollama (if missing), pull `huihui_ai/qwen3.5-abliterated:4b`, and create the `nyxstrike-ai` custom model. Requires ~4 GB RAM. |
 
 ## Common Command Examples
 
@@ -86,6 +88,31 @@ bash scripts/install.sh -u -r
 
 ```bash
 bash scripts/install.sh --all
+```
+
+### Install with local AI model (9b, ~8 GB RAM)
+
+Sets up Ollama, pulls the base model, and builds the `nyxstrike-ai` custom model
+from the `Modelfile` in the repo root. The `-ai` flag is **not** included in `-a/--all`
+and must be passed explicitly.
+
+```bash
+bash scripts/install.sh -ai
+```
+
+### Install with local AI model, smaller variant (4b, ~4 GB RAM)
+
+Same as above but uses the 4b base model and creates `nyxstrike-ai` instead.
+Choose this if you have less than ~8 GB of free RAM.
+
+```bash
+bash scripts/install.sh -ai-small
+```
+
+### Full install + local AI model
+
+```bash
+bash scripts/install.sh --all -ai
 ```
 
 ## After Install

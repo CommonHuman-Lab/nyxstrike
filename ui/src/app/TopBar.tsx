@@ -4,7 +4,7 @@ import {
   RefreshCw, Lock, Github, Copy, Check,
   LayoutDashboard, Terminal, Play,
   Settings as SettingsIcon, HelpCircle,
-  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X,
+  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X, Puzzle,
 } from 'lucide-react'
 import { clearToken, hasToken, type WebDashboardResponse } from '../api'
 import type { Page } from './routing'
@@ -38,6 +38,7 @@ const MOBILE_PAGE_OPTIONS: Array<{ value: Exclude<Page, 'session-detail'>; label
   { value: 'help', label: 'Help' },
   { value: 'tasks', label: 'Tasks' },
   { value: 'tools', label: 'Tools' },
+  { value: 'plugins', label: 'Plugins' },
   { value: 'reports', label: 'Reports' },
   { value: 'sessions', label: 'Sessions' },
 ]
@@ -211,7 +212,7 @@ export function TopBar({
         primaryLabel="Open GitHub"
         secondaryLabel="Close"
         onPrimary={() => {
-          window.open('https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition', '_blank', 'noopener,noreferrer')
+          window.open('https://github.com/CommonHuman-Lab/nyxstrike', '_blank', 'noopener,noreferrer')
         }}
         onSecondary={() => setUpdateModalOpen(false)}
         onClose={() => setUpdateModalOpen(false)}
@@ -230,7 +231,7 @@ export function TopBar({
             </button>
           </div>
         </div>
-        <p className="modal-desc">Run <span className="mono">git pull</span> in your project folder, then restart HexStrike.</p>
+        <p className="modal-desc">Run <span className="mono">git pull</span> in your project folder, then restart NyxStrike.</p>
       </InformationModal>
 
       <InformationModal
@@ -277,9 +278,9 @@ export function TopBar({
           <span
             className="brand-text"
             title={`Version: ${health?.version ?? 'unknown'}`}
-            aria-label={`HexStrike CE version ${health?.version ?? 'unknown'}`}
+            aria-label={`NyxStrike version ${health?.version ?? 'unknown'}`}
           >
-            HexStrike CE
+            NyxStrike
           </span>
           {health?.update?.update_available && (
             <button
@@ -315,6 +316,9 @@ export function TopBar({
         <button className={`nav-tab ${page === 'tools' ? 'active' : ''}`} onClick={() => setPage('tools')}>
           <Wrench size={13} /> Tools
         </button>
+        <button className={`nav-tab ${page === 'plugins' ? 'active' : ''}`} onClick={() => setPage('plugins')}>
+          <Puzzle size={13} /> Plugins
+        </button>
         <button className={`nav-tab ${page === 'reports' ? 'active' : ''}`} onClick={() => setPage('reports')}>
           <FileText size={13} /> Reports
         </button>
@@ -348,7 +352,7 @@ export function TopBar({
         )}
         <a
           className="icon-btn topbar-link-btn topbar-action-desktop"
-          href="https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition"
+          href="https://github.com/CommonHuman-Lab/nyxstrike"
           target="_blank"
           rel="noreferrer"
           title="View on GitHub"
@@ -415,7 +419,7 @@ export function TopBar({
           <button
             className="quick-actions-item"
             onClick={() => {
-              window.open('https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition', '_blank', 'noopener,noreferrer')
+              window.open('https://github.com/CommonHuman-Lab/nyxstrike', '_blank', 'noopener,noreferrer')
               setQuickActionsOpen(false)
             }}
             title="Open GitHub"

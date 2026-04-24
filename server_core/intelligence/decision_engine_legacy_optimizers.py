@@ -222,7 +222,7 @@ class LegacyParameterOptimizers:
             params["analysis_timeout"] = 300
 
         binary_name = os.path.basename(profile.target).replace('.', '_')
-        params["project_name"] = f"hexstrike_{binary_name}"
+        params["project_name"] = f"analysis_{binary_name}"
         return params
 
     def _optimize_pwntools_params(self, profile: TargetProfile, context: Dict[str, Any]) -> Dict[str, Any]:

@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional
 import asyncio
 
-def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_http_framework_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def http_framework_test(url: str, method: str = "GET", data: dict = {},
@@ -31,21 +31,21 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
             "action": action
         }
 
-        logger.info(f"{HexStrikeColors.FIRE_RED}🔥 Starting HTTP Framework {action}: {url}{HexStrikeColors.RESET}")
+        logger.info(f"{CliColors.FIRE_RED}🔥 Starting HTTP Framework {action}: {url}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", data_payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", data_payload)
         )
 
         if result.get("success"):
-            logger.info(f"{HexStrikeColors.SUCCESS}✅ HTTP Framework {action} completed for {url}{HexStrikeColors.RESET}")
+            logger.info(f"{CliColors.SUCCESS}✅ HTTP Framework {action} completed for {url}{CliColors.RESET}")
 
             # Enhanced logging for vulnerabilities found
             if result.get("result", {}).get("vulnerabilities"):
                 vuln_count = len(result["result"]["vulnerabilities"])
-                logger.info(f"{HexStrikeColors.HIGHLIGHT_RED} Found {vuln_count} potential vulnerabilities {HexStrikeColors.RESET}")
+                logger.info(f"{CliColors.HIGHLIGHT_RED} Found {vuln_count} potential vulnerabilities {CliColors.RESET}")
         else:
-            logger.error(f"{HexStrikeColors.ERROR}❌ HTTP Framework {action} failed for {url}{HexStrikeColors.RESET}")
+            logger.error(f"{CliColors.ERROR}❌ HTTP Framework {action} failed for {url}{CliColors.RESET}")
 
         return result
 
@@ -56,7 +56,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
         payload = {"action": "set_rules", "rules": rules}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result
 
@@ -66,7 +66,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
         payload = {"action": "set_scope", "host": host, "include_subdomains": include_subdomains}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result
 
@@ -76,7 +76,7 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
         payload = {"action": "repeater", "request": request_spec}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result
 
@@ -97,6 +97,6 @@ def register_http_framework_tool(mcp, hexstrike_client, logger, HexStrikeColors)
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/http-framework", payload)
+            None, lambda: api_client.safe_post("api/tools/http-framework", payload)
         )
         return result

@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 api_logs_bp = Blueprint("api_logs", __name__)
 
-LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "hexstrike.log")
+LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "nyxstrike.log")
 DEFAULT_LINES = 150
 MAX_LINES = 500
 

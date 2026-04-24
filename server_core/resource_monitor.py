@@ -17,7 +17,7 @@ class ResourceMonitor:
     def get_current_usage(self) -> Dict[str, float]:
         """Get current system resource usage"""
         try:
-            cpu_percent = psutil.cpu_percent(interval=1)
+            cpu_percent = psutil.cpu_percent(interval=None)
             memory = psutil.virtual_memory()
             disk = psutil.disk_usage('/')
             network = psutil.net_io_counters()

@@ -31,7 +31,7 @@ export function TokenGate({ onUnlocked }: { onUnlocked: () => void }) {
       <div className="token-card">
         <Lock size={32} color="var(--green)" />
         <h2>Authentication Required</h2>
-        <p>Enter your <code>HEXSTRIKE_API_TOKEN</code> to continue</p>
+        <p>Enter your <code>NYXSTRIKE_API_TOKEN</code> to continue</p>
         <div className="token-input-row">
           <input
             type={show ? 'text' : 'password'}

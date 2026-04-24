@@ -3,10 +3,10 @@
 from typing import Dict, Any
 import asyncio
 
-def register_ghidra_tools(mcp, hexstrike_client, logger):
+def register_ghidra_tools(mcp, api_client, logger):
 
     @mcp.tool()
-    async def ghidra_analysis(binary: str, project_name: str = "hexstrike_analysis",
+    async def ghidra_analysis(binary: str, project_name: str = "analysis_project",
                        script_file: str = "", analysis_timeout: int = 300,
                        output_format: str = "xml", additional_args: str = "") -> Dict[str, Any]:
         """
@@ -34,7 +34,7 @@ def register_ghidra_tools(mcp, hexstrike_client, logger):
         logger.info(f"🔧 Starting Ghidra analysis: {binary}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/ghidra", data)
+            None, lambda: api_client.safe_post("api/tools/ghidra", data)
         )
         if result.get("success"):
             logger.info(f"✅ Ghidra analysis completed for {binary}")

@@ -60,3 +60,17 @@
   color: #fff;
   box-shadow: 0 4px 10px color-mix(in srgb, var(--red) 16%, transparent);
 }
+
+.action-button--running {
+  border-color: color-mix(in srgb, var(--blue, #61afef) 45%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--blue, #61afef) 14%, transparent), color-mix(in srgb, var(--blue, #61afef) 8%, transparent)),
+    var(--bg-card2);
+  color: var(--blue, #61afef);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--blue, #61afef) 16%, transparent);
+  opacity: 1;
+  cursor: default;
+}
+.action-button--running:hover {
+  transform: none;
+}

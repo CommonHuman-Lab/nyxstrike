@@ -1,6 +1,7 @@
 import { Save, Plus, Trash2 } from 'lucide-react'
-import type { Settings, WordlistEntry } from '../../api'
+import type { Settings, WordlistEntry, PersonalityPreset } from '../../api'
 import { ActionButton } from '../../components/ActionButton'
+import { CollapsibleSection } from '../../components/CollapsibleSection'
 
 function SettingsRow({ label, value, mono, accent }: {
   label: string
@@ -43,18 +44,39 @@ function SettingsField({ label, unit, hint, value, onChange }: {
   )
 }
 
+export function SettingsTextarea({ label, hint, value, onChange, rows = 4 }: {
+  label: string
+  hint: string
+  value: string
+  onChange: (v: string) => void
+  rows?: number
+}) {
+  return (
+    <div className="settings-field">
+      <label className="settings-label">{label}</label>
+      <textarea
+        className="settings-input settings-textarea mono"
+        rows={rows}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+      />
+      <span className="settings-hint-inline">{hint}</span>
+    </div>
+  )
+}
+
 export function ServerEnvironmentSection({ settings }: { settings: Settings }) {
   return (
-    <section className="section">
-      <div className="section-header">
-        <h3>Server Environment <span className="badge">read-only</span></h3>
-      </div>
+    <CollapsibleSection
+      title="Server Environment"
+      badge={<span className="badge">read-only</span>}
+    >
       <div className="settings-grid">
         <SettingsRow label="Host" value={settings.server.host} mono />
         <SettingsRow label="Port" value={String(settings.server.port)} mono />
         <SettingsRow
           label="Auth Enabled"
-          value={settings.server.auth_enabled ? 'Yes (HEXSTRIKE_API_TOKEN set)' : 'No'}
+          value={settings.server.auth_enabled ? 'Yes (NYXSTRIKE_API_TOKEN set)' : 'No'}
           accent={settings.server.auth_enabled ? 'var(--green)' : 'var(--amber)'}
         />
         <SettingsRow
@@ -66,10 +88,10 @@ export function ServerEnvironmentSection({ settings }: { settings: Settings }) {
       </div>
       <p className="settings-hint">
         Change these by setting environment variables before starting the server:
-        <code> HEXSTRIKE_HOST</code>, <code>HEXSTRIKE_PORT</code>, <code>HEXSTRIKE_API_TOKEN</code>,
-        <code> DEBUG_MODE</code>, <code>HEXSTRIKE_DATA_DIR</code>.
+        <code> NYXSTRIKE_HOST</code>, <code>NYXSTRIKE_PORT</code>, <code>NYXSTRIKE_API_TOKEN</code>,
+        <code> DEBUG_MODE</code>, <code>NYXSTRIKE_DATA_DIR</code>.
       </p>
-    </section>
+    </CollapsibleSection>
   )
 }
 
@@ -109,11 +131,11 @@ export function RuntimeConfigSection({
   onSave: () => Promise<void>
 }) {
   return (
-    <section className="section">
-      <div className="section-header">
-        <h3>Runtime Config</h3>
-        <span className="section-meta">changes apply immediately</span>
-      </div>
+    <CollapsibleSection
+      title="Runtime Config"
+      badge={<span className="section-meta">changes apply immediately</span>}
+      defaultOpen
+    >
       <div className="settings-grid">
         <SettingsField
           label="Command Timeout" unit="seconds"
@@ -156,7 +178,7 @@ export function RuntimeConfigSection({
           <Save size={14} /> {saving ? 'Saving…' : 'Save Runtime'}
         </ActionButton>
       </div>
-    </section>
+    </CollapsibleSection>
   )
 }
 
@@ -168,10 +190,7 @@ export function ServerControlsSection({
   onClearCache: () => Promise<void>
 }) {
   return (
-    <section className="section">
-      <div className="section-header">
-        <h3>Server Controls</h3>
-      </div>
+    <CollapsibleSection title="Server Controls">
       <div className="settings-grid">
         <div className="settings-row" style={{ alignItems: 'flex-start' }}>
           <ActionButton variant="danger" onClick={onClearCache} disabled={clearingCache}>
@@ -182,7 +201,7 @@ export function ServerControlsSection({
           </p>
         </div>
       </div>
-    </section>
+    </CollapsibleSection>
   )
 }
 
@@ -208,11 +227,11 @@ export function WordlistsSection({
   withCurrentCoverageOption: (current: string) => string[]
 }) {
   return (
-    <section className="section">
-      <div className="section-header">
-        <h3>Wordlists <span className="badge">{wordlistsDraft.length}</span></h3>
+    <CollapsibleSection
+      title="Wordlists"
+      badge={<span className="badge">{wordlistsDraft.length}</span>}
+      headerRight={(
         <div className="settings-actions-inline">
-
           <ActionButton variant="default" onClick={onAddWordlist} disabled={wordlistsSaving}>
             <Plus size={14} /> Add Wordlist
           </ActionButton>
@@ -220,7 +239,8 @@ export function WordlistsSection({
             <Save size={14} /> {wordlistsSaving ? 'Saving…' : 'Save Wordlists'}
           </ActionButton>
         </div>
-      </div>
+      )}
+    >
       <div className="wordlist-table">
         <div className="wordlist-head">
           <span>Name</span><span>Type</span><span>Speed</span><span>Coverage</span><span>Path</span><span>Actions</span>
@@ -281,6 +301,85 @@ export function WordlistsSection({
       <p className="settings-hint">
         Changes are stored in <code>wordlists.json</code>. Entries here override defaults from <code>config.py</code>.
       </p>
-    </section>
+    </CollapsibleSection>
+  )
+}
+
+export function ChatSettingsSection({
+  chatPersonality,
+  setChatPersonality,
+  customPrompt,
+  setCustomPrompt,
+  personalityPresets,
+  summarizationThreshold,
+  setSummarizationThreshold,
+  contextInjectionChars,
+  setContextInjectionChars,
+  saving,
+  onSave,
+}: {
+  chatPersonality: string
+  setChatPersonality: (v: string) => void
+  customPrompt: string
+  setCustomPrompt: (v: string) => void
+  personalityPresets: PersonalityPreset[]
+  summarizationThreshold: string
+  setSummarizationThreshold: (v: string) => void
+  contextInjectionChars: string
+  setContextInjectionChars: (v: string) => void
+  saving: boolean
+  onSave: () => Promise<void>
+}) {
+  const options = [...personalityPresets.map(p => ({ id: p.id, label: p.label })), { id: 'custom', label: 'Custom' }]
+
+  return (
+    <CollapsibleSection
+      title="Chat Widget"
+      badge={<span className="section-meta">changes apply immediately</span>}
+    >
+      <div className="settings-grid">
+        <div className="settings-field">
+          <label className="settings-label">Personality</label>
+          <select
+            className="settings-input settings-select-full"
+            value={chatPersonality}
+            onChange={e => setChatPersonality(e.target.value)}
+          >
+            {options.map(p => (
+              <option key={p.id} value={p.id}>{p.label}</option>
+            ))}
+          </select>
+          <span className="settings-hint-inline">The system persona sent to the LLM at the start of every chat.</span>
+        </div>
+        {chatPersonality === 'custom' && (
+          <SettingsTextarea
+            label="Custom Prompt"
+            hint="Your custom system prompt. Saved independently and preserved when switching presets."
+            value={customPrompt}
+            onChange={setCustomPrompt}
+            rows={5}
+          />
+        )}
+        <SettingsField
+          label="Summarization Threshold"
+          unit="messages"
+          hint="When non-summarized message count exceeds this, the oldest half are summarized."
+          value={summarizationThreshold}
+          onChange={setSummarizationThreshold}
+        />
+        <SettingsField
+          label="Context Injection Chars"
+          unit="chars"
+          hint="Max characters of session context injected into the chat prompt."
+          value={contextInjectionChars}
+          onChange={setContextInjectionChars}
+        />
+      </div>
+      <div className="settings-actions">
+        <ActionButton variant="success" onClick={onSave} disabled={saving}>
+          <Save size={14} /> {saving ? 'Saving…' : 'Save Chat Settings'}
+        </ActionButton>
+      </div>
+    </CollapsibleSection>
   )
 }

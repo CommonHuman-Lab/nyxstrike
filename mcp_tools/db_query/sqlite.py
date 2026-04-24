@@ -3,11 +3,11 @@
 from typing import Any, Dict
 import asyncio
 
-def register_sqlite_tools(mcp, hexstrike_client, logger):
+def register_sqlite_tools(mcp, api_client, logger):
     @mcp.tool()
     async def sqlite_query(db_path: str, query: str) -> Dict[str, Any]:
         """
-        Query a SQLite database using the HexStrike server endpoint.
+        Query a SQLite database using the API server endpoint.
 
         Args:
             db_path: Path to the SQLite database file
@@ -33,7 +33,7 @@ def register_sqlite_tools(mcp, hexstrike_client, logger):
         try:
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
-                None, lambda: hexstrike_client.safe_post("api/tools/sqlite", data)
+                None, lambda: api_client.safe_post("api/tools/sqlite", data)
             )
             return result
         except Exception as e:

@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_volatility3(mcp, hexstrike_client, logger):
+def register_volatility3(mcp, api_client, logger):
     
     @mcp.tool()
     async def volatility3_analyze(memory_file: str, plugin: str, output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -28,7 +28,7 @@ def register_volatility3(mcp, hexstrike_client, logger):
         logger.info(f"🧠 Starting Volatility3 analysis: {plugin}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/volatility3", data)
+            None, lambda: api_client.safe_post("api/tools/volatility3", data)
         )
         if result.get("success"):
             logger.info(f"✅ Volatility3 analysis completed")

@@ -4,7 +4,7 @@ from typing import Dict, Any
 import asyncio
 
 
-def register_hurl_tool(mcp, hexstrike_client, logger):
+def register_hurl_tool(mcp, api_client, logger):
     @mcp.tool()
     async def hurl_request(
         input: str,
@@ -33,7 +33,7 @@ def register_hurl_tool(mcp, hexstrike_client, logger):
         logger.info(f"🧪 Starting hURL request (mode={mode}): {input}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/data_processing/hurl", data)
+            None, lambda: api_client.safe_post("api/tools/data_processing/hurl", data)
         )
         if result.get("success"):
             logger.info(f"✅ hURL request completed (mode={mode})")

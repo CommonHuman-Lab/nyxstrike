@@ -4,7 +4,7 @@ from typing import Dict, Any
 import time
 import asyncio
 
-def register_comprehensive_api_audit_tool(mcp, hexstrike_client, logger):
+def register_comprehensive_api_audit_tool(mcp, api_client, logger):
     
     @mcp.tool()
     async def comprehensive_api_audit(base_url: str, schema_url: str = "", jwt_token: str = "", graphql_endpoint: str = "") -> Dict[str, Any]:

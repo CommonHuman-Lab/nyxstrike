@@ -142,15 +142,6 @@
   padding: 8px 12px;
 }
 
-.tasks-thead {
-  background: var(--bg-card2);
-  color: var(--text-dim);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
-}
-
 .tasks-row {
   border-bottom: 1px solid var(--border);
   color: var(--text);

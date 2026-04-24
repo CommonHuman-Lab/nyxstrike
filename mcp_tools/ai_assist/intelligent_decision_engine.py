@@ -3,8 +3,9 @@
 from typing import Dict, Any
 from datetime import datetime
 import asyncio
+import json
 
-def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_intelligent_decision_engine_tools(mcp, api_client, logger, CliColors):
     @mcp.tool()
     async def analyze_target_intelligence(target: str) -> Dict[str, Any]:
         """
@@ -21,7 +22,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         data = {"target": target}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", data)
+            None, lambda: api_client.safe_post("api/intelligence/analyze-target", data)
         )
 
         if result.get("success"):
@@ -52,7 +53,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/select-tools", data)
+            None, lambda: api_client.safe_post("api/intelligence/select-tools", data)
         )
 
         if result.get("success"):
@@ -82,7 +83,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
 
         try:
             context_dict = json.loads(context) if context != "{}" else {}
-        except:
+        except (json.JSONDecodeError, ValueError):
             context_dict = {}
 
         data = {
@@ -92,7 +93,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/optimize-parameters", data)
+            None, lambda: api_client.safe_post("api/intelligence/optimize-parameters", data)
         )
 
         if result.get("success"):
@@ -123,7 +124,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/preview-attack-chain", data)
+            None, lambda: api_client.safe_post("api/intelligence/preview-attack-chain", data)
         )
 
         if result.get("success"):
@@ -155,7 +156,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/create-attack-chain", data)
+            None, lambda: api_client.safe_post("api/intelligence/create-attack-chain", data)
         )
 
         if result.get("success"):
@@ -186,7 +187,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         Returns:
             Results from AI-optimized scanning with tool execution summary
         """
-        logger.info(f"{HexStrikeColors.FIRE_RED}🚀 Starting intelligent smart scan for {target}{HexStrikeColors.RESET}")
+        logger.info(f"{CliColors.FIRE_RED}🚀 Starting intelligent smart scan for {target}{CliColors.RESET}")
 
         data = {
             "target": target,
@@ -195,7 +196,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         }
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", data)
+            None, lambda: api_client.safe_post("api/intelligence/smart-scan", data)
         )
 
         if result.get("success"):
@@ -204,8 +205,8 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             execution_summary = scan_results.get("execution_summary", {})
 
             # Enhanced logging with detailed results
-            logger.info(f"{HexStrikeColors.SUCCESS}✅ Intelligent scan completed for {target}{HexStrikeColors.RESET}")
-            logger.info(f"{HexStrikeColors.CYBER_ORANGE}📊 Execution Summary:{HexStrikeColors.RESET}")
+            logger.info(f"{CliColors.SUCCESS}✅ Intelligent scan completed for {target}{CliColors.RESET}")
+            logger.info(f"{CliColors.CYBER_ORANGE}📊 Execution Summary:{CliColors.RESET}")
             logger.info(f"   • Tools executed: {execution_summary.get('successful_tools', 0)}/{execution_summary.get('total_tools', 0)}")
             logger.info(f"   • Success rate: {execution_summary.get('success_rate', 0):.1f}%")
             logger.info(f"   • Total vulnerabilities: {scan_results.get('total_vulnerabilities', 0)}")
@@ -214,18 +215,18 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
             # Log successful tools
             successful_tools = [t['tool'] for t in tools_executed if t.get('success')]
             if successful_tools:
-                logger.info(f"{HexStrikeColors.HIGHLIGHT_GREEN} Successful tools: {', '.join(successful_tools)} {HexStrikeColors.RESET}")
+                logger.info(f"{CliColors.HIGHLIGHT_GREEN} Successful tools: {', '.join(successful_tools)} {CliColors.RESET}")
 
             # Log failed tools
             failed_tools = [t['tool'] for t in tools_executed if not t.get('success')]
             if failed_tools:
-                logger.warning(f"{HexStrikeColors.HIGHLIGHT_RED} Failed tools: {', '.join(failed_tools)} {HexStrikeColors.RESET}")
+                logger.warning(f"{CliColors.HIGHLIGHT_RED} Failed tools: {', '.join(failed_tools)} {CliColors.RESET}")
 
             # Log vulnerabilities found
             if scan_results.get('total_vulnerabilities', 0) > 0:
-                logger.warning(f"{HexStrikeColors.VULN_HIGH}🚨 {scan_results['total_vulnerabilities']} vulnerabilities detected!{HexStrikeColors.RESET}")
+                logger.warning(f"{CliColors.VULN_HIGH}🚨 {scan_results['total_vulnerabilities']} vulnerabilities detected!{CliColors.RESET}")
         else:
-            logger.error(f"{HexStrikeColors.ERROR}❌ Intelligent scan failed for {target}: {result.get('error', 'Unknown error')}{HexStrikeColors.RESET}")
+            logger.error(f"{CliColors.ERROR}❌ Intelligent scan failed for {target}: {result.get('error', 'Unknown error')}{CliColors.RESET}")
 
         return result
 
@@ -245,7 +246,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         data = {"target": target}
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/technology-detection", data)
+            None, lambda: api_client.safe_post("api/intelligence/technology-detection", data)
         )
 
         if result.get("success"):
@@ -281,7 +282,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         # First analyze the target
         loop = asyncio.get_running_loop()
         analysis_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+            None, lambda: api_client.safe_post("api/intelligence/analyze-target", {"target": target})
         )
 
         if not analysis_result.get("success"):
@@ -291,7 +292,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         objective = "comprehensive" if depth == "deep" else "quick" if depth == "surface" else "comprehensive"
         loop = asyncio.get_running_loop()
         chain_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/create-attack-chain", {
+            None, lambda: api_client.safe_post("api/intelligence/create-attack-chain", {
             "target": target,
             "objective": objective
         })
@@ -303,7 +304,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         # Execute the reconnaissance
         loop = asyncio.get_running_loop()
         scan_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", {
+            None, lambda: api_client.safe_post("api/intelligence/smart-scan", {
             "target": target,
             "objective": objective,
             "max_tools": 8 if depth == "deep" else 3 if depth == "surface" else 5
@@ -339,7 +340,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         # Analyze target first
         loop = asyncio.get_running_loop()
         analysis_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/analyze-target", {"target": target})
+            None, lambda: api_client.safe_post("api/intelligence/analyze-target", {"target": target})
         )
 
         if not analysis_result.get("success"):
@@ -361,7 +362,7 @@ def register_intelligent_decision_engine_tools(mcp, hexstrike_client, logger, He
         # Execute vulnerability assessment
         loop = asyncio.get_running_loop()
         scan_result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/intelligence/smart-scan", {
+            None, lambda: api_client.safe_post("api/intelligence/smart-scan", {
             "target": target,
             "objective": objective,
             "max_tools": 6

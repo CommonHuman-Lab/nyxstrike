@@ -94,7 +94,7 @@ Where `<target>` is the sanitized IP or hostname (e.g. `10.10.11.42` → `/tmp/h
 
 1. **Read** the full state file at the start of every task.
 2. **Write** updates atomically — read the file, merge your changes, write it back.
-3. **Append** to `tool_runs` for every HexStrike tool you invoke, including params.
+3. **Append** to `tool_runs` for every NyxStrike tool you invoke, including params.
 4. **Never** overwrite another agent's findings — merge arrays, don't replace them.
 5. Use `file_operations` tool with `operation: read` / `operation: write` to access the state file.
 6. If the state file does not exist yet, create it with the base schema — the Leader normally creates it first.

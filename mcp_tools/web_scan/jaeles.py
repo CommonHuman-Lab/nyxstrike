@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_jaeles_tool(mcp, hexstrike_client, logger):
+def register_jaeles_tool(mcp, api_client, logger):
     @mcp.tool()
     async def jaeles_vulnerability_scan(url: str, signatures: str = "", config: str = "",
                                  threads: int = 20, timeout: int = 20,
@@ -33,7 +33,7 @@ def register_jaeles_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔬 Starting Jaeles vulnerability scan: {url}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/jaeles", data)
+            None, lambda: api_client.safe_post("api/tools/jaeles", data)
         )
         if result.get("success"):
             logger.info(f"✅ Jaeles vulnerability scan completed for {url}")

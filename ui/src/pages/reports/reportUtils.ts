@@ -15,20 +15,22 @@ export function extractTarget(entry: RunHistoryEntry): string {
 }
 
 export function groupByDate(entries: RunHistoryEntry[]): Array<{ label: string; entries: RunHistoryEntry[] }> {
-  const map = new Map<string, RunHistoryEntry[]>()
+  const map = new Map<string, { label: string; date: Date; entries: RunHistoryEntry[] }>()
 
   for (const entry of entries) {
     const label = entry.ts.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    if (!map.has(label)) map.set(label, [])
-    map.get(label)?.push(entry)
+    if (!map.has(label)) map.set(label, { label, date: entry.ts, entries: [] })
+    map.get(label)!.entries.push(entry)
   }
 
-  return Array.from(map.entries()).map(([label, dayEntries]) => ({ label, entries: dayEntries }))
+  return Array.from(map.values())
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ label, entries: dayEntries }) => ({ label, entries: dayEntries }))
 }
 
 export function getGroupStats(entries: RunHistoryEntry[]) {
   const ok = entries.filter(e => e.result.success).length
-  const avgTime = entries.reduce((sum, e) => sum + e.result.execution_time, 0) / entries.length
+  const avgTime = entries.reduce((sum, e) => sum + (e.result.execution_time ?? 0), 0) / entries.length
   const last = entries.reduce((a, b) => (a.ts > b.ts ? a : b))
   return { total: entries.length, ok, failed: entries.length - ok, avgTime, last }
 }

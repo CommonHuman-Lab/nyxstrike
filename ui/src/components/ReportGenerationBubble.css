@@ -1,0 +1,140 @@
+/* ── Report Generation Bubble ──────────────────────────────────────────────── */
+
+.report-bubble {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 320;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 240px;
+  max-width: 340px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card, #1a1a2e);
+  color: var(--text, #e2e8f0);
+  font-size: 12px;
+  font-family: var(--mono);
+  line-height: 1.45;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+  animation: bubble-in 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Accent bar on left */
+.report-bubble::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent, #6c63ff);
+}
+
+.report-bubble--generating::before { background: var(--accent, #6c63ff); }
+.report-bubble--done::before        { background: var(--success, #4ade80); }
+.report-bubble--error::before       { background: var(--danger, #f87171); }
+
+.report-bubble--generating {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+.report-bubble--done {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+}
+.report-bubble--error {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+}
+
+.report-bubble-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-dim, #94a3b8);
+}
+.report-bubble--done  .report-bubble-icon { color: var(--success, #4ade80); }
+.report-bubble--error .report-bubble-icon { color: var(--danger, #f87171); }
+
+.report-bubble-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.report-bubble-body--clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: background 0.15s;
+}
+.report-bubble-body--clickable:hover {
+  background: color-mix(in srgb, var(--success, #4ade80) 10%, transparent);
+}
+
+.report-bubble-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-h, #f1f5f9);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.report-bubble-label {
+  font-size: 12px;
+  color: var(--text, #e2e8f0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-bubble-path {
+  font-size: 11px;
+  color: var(--success, #4ade80);
+  word-break: break-all;
+}
+
+.report-bubble-error {
+  font-size: 11px;
+  color: var(--danger, #f87171);
+  word-break: break-all;
+}
+
+.report-bubble-dismiss {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim, #94a3b8);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.report-bubble-dismiss:hover {
+  background: color-mix(in srgb, var(--text-dim) 15%, transparent);
+  color: var(--text, #e2e8f0);
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

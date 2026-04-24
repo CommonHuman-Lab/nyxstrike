@@ -12,7 +12,7 @@ These rules apply to **every agent** in the htb-ctf system. Violating them cause
 
 ## Rule 1 — No duplicate tool runs
 
-Before invoking any HexStrike tool, check `state.json` → `tool_runs`.
+Before invoking any NyxStrike tool, check `state.json` → `tool_runs`.
 
 If an entry already exists with the **same tool name AND same key parameters**, do not run it again.
 
@@ -107,7 +107,7 @@ Leader will decide whether to try a different path or report to the user.
 
 ## Rule 7 — Timeout awareness
 
-All HexStrike tools have a default `COMMAND_TIMEOUT`. If a tool call times out:
+All NyxStrike tools have a default `COMMAND_TIMEOUT`. If a tool call times out:
 1. Log it in `tool_runs` as `status: timeout`
 2. Try a faster/lighter alternative (e.g. rustscan instead of nmap full scan)
 3. Do NOT retry the same timed-out invocation identically

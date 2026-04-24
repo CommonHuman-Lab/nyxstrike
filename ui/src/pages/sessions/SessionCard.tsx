@@ -25,9 +25,19 @@ export function SessionCard({
           <Target size={13} color="var(--blue)" />
           <span className="mono">{session.target}</span>
         </div>
-        {session.status && (
-          <span className={`session-status session-status--${session.status}`}>{session.status}</span>
-        )}
+        <div className="session-card-header-badges">
+          {session.risk_level && session.risk_level !== 'unknown' && (
+            <span
+              className={`session-risk session-risk--${session.risk_level.toLowerCase()}`}
+              title={`Risk level: ${session.risk_level.toLowerCase()}`}
+            >
+              {session.risk_level.toLowerCase()}
+            </span>
+          )}
+          {session.status && (
+            <span className={`session-status session-status--${session.status}`}>{session.status}</span>
+          )}
+        </div>
       </div>
 
       <div className="session-card-meta">

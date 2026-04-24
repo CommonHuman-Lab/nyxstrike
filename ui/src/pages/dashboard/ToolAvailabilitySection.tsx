@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import {
-  Activity, AlertCircle, Box, Brain, Bug, CheckCircle, ChevronDown, ChevronRight,
-  ChevronUp,
+  Activity, AlertCircle, Box, Brain, Bug, CheckCircle,
+  ChevronRight, ChevronUp,
   Cpu, Database, Earth, Eye, Fingerprint, Lock, Server, Shield, Wand, Wifi, XCircle, Zap,
 } from 'lucide-react'
 import type { Tool, WebDashboardResponse } from '../../api'
 import { ToolModal } from '../../components/ToolModal'
+import { CollapseChevron } from '../../components/CollapseChevron'
 import { getCatTools, getToolAvailabilityAgeLabel } from './utils'
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -28,6 +29,7 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   ops: <Earth size={14} />,
   intelligence: <Brain size={14} />,
   data_processing: <Server size={14} />,
+  ai_assist: <Brain size={14} />,
 }
 
 function ToolCategoryRow({
@@ -66,7 +68,7 @@ function ToolCategoryRow({
           <div className="cat-bar-bg">
             <div className="cat-bar-fill" style={{ width: `${pct}%`, background: color }} />
           </div>
-          <span className="cat-chevron">{open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
+          <span className="cat-chevron"><CollapseChevron open={open} size={14} /></span>
         </button>
 
         {open && (
@@ -124,7 +126,7 @@ export function ToolAvailabilitySection({
         </h3>
         <div className="section-header-side">
           <span className="section-meta">{getToolAvailabilityAgeLabel(health.tool_availability_age_seconds)}</span>
-          <span className="section-chevron">{showAll ? <ChevronDown size={14} /> : <ChevronRight size={14} />}</span>
+          <span className="section-chevron"><CollapseChevron open={showAll} size={14} /></span>
         </div>
       </button>
       <div className="cat-list">

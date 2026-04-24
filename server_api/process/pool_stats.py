@@ -33,7 +33,8 @@ def stream_process_pool_stats():
     SSE endpoint — streams process pool stats every 2 seconds.
     """
     def generate():
-        last_json = None
+        last_stable = None
+        _VOLATILE_STATS_KEYS = {"resource_usage"}
         while True:
             try:
                 stats = enhanced_process_manager.get_comprehensive_stats()
@@ -42,10 +43,18 @@ def stream_process_pool_stats():
                     "stats": stats,
                     "timestamp": datetime.now().isoformat()
                 }
-                js = json.dumps(data, separators=(",", ":"))
-                if js != last_json:
-                    yield f"data: {js}\n\n"
-                    last_json = js
+                # Exclude timestamp and volatile resource_usage (network counters,
+                # cpu%, memory% change every tick) so keepalives are sent when
+                # pool/queue state is unchanged.
+                stable_stats = {k: v for k, v in stats.items() if k not in _VOLATILE_STATS_KEYS}
+                stable = json.dumps(
+                    {"success": data["success"], "stats": stable_stats},
+                    separators=(",", ":"),
+                    sort_keys=True,
+                )
+                if stable != last_stable:
+                    yield f"data: {json.dumps(data, separators=(',', ':'))}\n\n"
+                    last_stable = stable
                 else:
                     yield ": keepalive\n\n"
             except Exception as e:

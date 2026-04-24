@@ -4,7 +4,7 @@ from typing import Dict, Any
 import asyncio
 
 
-def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_burpsuite_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def burpsuite_scan(project_file: str = "", config_file: str = "", target: str = "", headless: bool = False, scan_type: str = "", scan_config: str = "", output_file: str = "", additional_args: str = "") -> Dict[str, Any]:
@@ -37,7 +37,7 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
         logger.info(f"🔍 Starting Burp Suite scan")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/burpsuite", data)
+            None, lambda: api_client.safe_post("api/tools/burpsuite", data)
         )
         if result.get("success"):
             logger.info(f"✅ Burp Suite scan completed")
@@ -70,14 +70,14 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
             "max_pages": max_pages
         }
 
-        logger.info(f"{HexStrikeColors.BLOOD_RED}🔥 Starting Burp Suite Alternative {scan_type} scan: {target}{HexStrikeColors.RESET}")
+        logger.info(f"{CliColors.BLOOD_RED}🔥 Starting Burp Suite Alternative {scan_type} scan: {target}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/burpsuite-alternative", data_payload)
+            None, lambda: api_client.safe_post("api/tools/burpsuite-alternative", data_payload)
         )
 
         if result.get("success"):
-            logger.info(f"{HexStrikeColors.SUCCESS}✅ Burp Suite Alternative scan completed for {target}{HexStrikeColors.RESET}")
+            logger.info(f"{CliColors.SUCCESS}✅ Burp Suite Alternative scan completed for {target}{CliColors.RESET}")
 
             # Enhanced logging for comprehensive results
             if result.get("result", {}).get("summary"):
@@ -86,7 +86,7 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
                 pages_analyzed = summary.get("pages_analyzed", 0)
                 security_score = summary.get("security_score", 0)
 
-                logger.info(f"{HexStrikeColors.HIGHLIGHT_BLUE} SCAN SUMMARY {HexStrikeColors.RESET}")
+                logger.info(f"{CliColors.HIGHLIGHT_BLUE} SCAN SUMMARY {CliColors.RESET}")
                 logger.info(f"  📊 Pages Analyzed: {pages_analyzed}")
                 logger.info(f"  🚨 Vulnerabilities: {total_vulns}")
                 logger.info(f"  🛡️  Security Score: {security_score}/100")
@@ -96,15 +96,15 @@ def register_burpsuite_tool(mcp, hexstrike_client, logger, HexStrikeColors):
                 for severity, count in vuln_breakdown.items():
                     if count > 0:
                         color = {
-                                    'critical': HexStrikeColors.CRITICAL,
-        'high': HexStrikeColors.FIRE_RED,
-        'medium': HexStrikeColors.CYBER_ORANGE,
-        'low': HexStrikeColors.YELLOW,
-        'info': HexStrikeColors.INFO
-    }.get(severity.lower(), HexStrikeColors.WHITE)
+                                    'critical': CliColors.CRITICAL,
+        'high': CliColors.FIRE_RED,
+        'medium': CliColors.CYBER_ORANGE,
+        'low': CliColors.YELLOW,
+        'info': CliColors.INFO
+    }.get(severity.lower(), CliColors.WHITE)
 
-                        logger.info(f"  {color}{severity.upper()}: {count}{HexStrikeColors.RESET}")
+                        logger.info(f"  {color}{severity.upper()}: {count}{CliColors.RESET}")
         else:
-            logger.error(f"{HexStrikeColors.ERROR}❌ Burp Suite Alternative scan failed for {target}{HexStrikeColors.RESET}")
+            logger.error(f"{CliColors.ERROR}❌ Burp Suite Alternative scan failed for {target}{CliColors.RESET}")
 
         return result

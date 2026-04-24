@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_terrascan_tool(mcp, hexstrike_client, logger):
+def register_terrascan_tool(mcp, api_client, logger):
     @mcp.tool()
     async def terrascan_iac_scan(scan_type: str = "all", iac_dir: str = ".",
                           policy_type: str = "", output_format: str = "json",
@@ -33,7 +33,7 @@ def register_terrascan_tool(mcp, hexstrike_client, logger):
         logger.info(f"🔍 Starting Terrascan IaC scan: {iac_dir}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/terrascan", data)
+            None, lambda: api_client.safe_post("api/tools/terrascan", data)
         )
         if result.get("success"):
             logger.info(f"✅ Terrascan scan completed")

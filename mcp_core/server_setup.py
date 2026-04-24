@@ -8,6 +8,7 @@ from mcp_core.tool_profiles import (
     FULL_PROFILE,
     resolve_profile_dependencies,
 )
+from mcp_core.plugin_mcp_loader import load_plugin_tools
 
 try:
     from fastmcp.server.providers.skills import SkillsDirectoryProvider
@@ -26,12 +27,12 @@ def _register_skills(mcp: FastMCP, logger) -> None:
     mcp.add_provider(SkillsDirectoryProvider(roots=skills_dir))
     logger.info(f"🤖 Skills initialized")
 
-def setup_mcp_server(hexstrike_client, logger, compact: bool = False, profiles: Optional[list] = None) -> FastMCP:
+def setup_mcp_server(api_client, logger, compact: bool = False, profiles: Optional[list] = None) -> FastMCP:
     """
     Set up the MCP server with all enhanced tool functions
 
     Args:
-        hexstrike_client: Initialized HexStrikeClient
+        api_client: Initialized API client
         logger: Logger instance for logging
         compact: If True, register only classify_task and run_tool gateway tools
         profiles: Optional list of tool profiles to load (e.g., ["core_network", "web_app"])
@@ -39,13 +40,13 @@ def setup_mcp_server(hexstrike_client, logger, compact: bool = False, profiles: 
     Returns:
         Configured FastMCP instance
     """
-    mcp = FastMCP("hexstrike-ai-mcp")
+    mcp = FastMCP("mcp-server")
 
     _register_skills(mcp, logger)
 
     if compact:
         # Register gateway tools for task classification and tool execution
-        register_gateway_tools(mcp, hexstrike_client)
+        register_gateway_tools(mcp, api_client)
 
         logger.info("Compact mode: only gateway tools registered (classify_task, run_tool)")
         return mcp
@@ -68,7 +69,10 @@ def setup_mcp_server(hexstrike_client, logger, compact: bool = False, profiles: 
     for profile in selected_profiles:
         for reg_func in TOOL_PROFILES.get(profile, []):
             if reg_func not in registered:
-                reg_func(mcp, hexstrike_client, logger)
+                reg_func(mcp, api_client, logger)
                 registered.add(reg_func)  
+
+    # Load plugin MCP tools (plugins/tools/<name>/mcp_tool.py)
+    load_plugin_tools(mcp, api_client, logger)
 
     return mcp

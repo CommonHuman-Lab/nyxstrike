@@ -5,7 +5,7 @@ description: Password hash identification, cracking, and credential brute-forcin
 
 # password-cracking
 
-Password cracking and credential brute-force workflow for HexStrike AI. Use this skill when a user has captured hashes to crack, wants to brute-force a login service, or needs to identify an unknown hash format.
+Password cracking and credential brute-force workflow for NyxStrike. Use this skill when a user has captured hashes to crack, wants to brute-force a login service, or needs to identify an unknown hash format.
 
 ## Workflow
 
@@ -139,7 +139,7 @@ run_tool(tool="medusa", target="<target>", module="ssh",
 - GPU hashcat is orders of magnitude faster than CPU john for MD5/NTLM — use it when available.
 - Never skip `hashid` — cracking the wrong format wastes significant time.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

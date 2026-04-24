@@ -3,7 +3,7 @@
 from typing import Dict, Any, Optional
 import asyncio
 
-def register_browser_agent_tool(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_browser_agent_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def browser_agent_inspect(url: str, headless: bool = True, wait_time: int = 5,
@@ -31,14 +31,14 @@ def register_browser_agent_tool(mcp, hexstrike_client, logger, HexStrikeColors):
             "active_tests": active_tests
         }
 
-        logger.info(f"{HexStrikeColors.CRIMSON}🌐 Starting Browser Agent {action}: {url}{HexStrikeColors.RESET}")
+        logger.info(f"{CliColors.CRIMSON}🌐 Starting Browser Agent {action}: {url}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/tools/browser-agent", data_payload)
+            None, lambda: api_client.safe_post("api/tools/browser-agent", data_payload)
         )
 
         if result.get("success"):
-            logger.info(f"{HexStrikeColors.SUCCESS}✅ Browser Agent {action} completed for {url}{HexStrikeColors.RESET}")
+            logger.info(f"{CliColors.SUCCESS}✅ Browser Agent {action} completed for {url}{CliColors.RESET}")
 
             # Enhanced logging for security analysis
             if action == "navigate" and result.get("result", {}).get("security_analysis"):
@@ -47,10 +47,10 @@ def register_browser_agent_tool(mcp, hexstrike_client, logger, HexStrikeColors):
                 security_score = security_analysis.get("security_score", 0)
 
                 if issues_count > 0:
-                    logger.warning(f"{HexStrikeColors.HIGHLIGHT_YELLOW} Security Issues: {issues_count} | Score: {security_score}/100 {HexStrikeColors.RESET}")
+                    logger.warning(f"{CliColors.HIGHLIGHT_YELLOW} Security Issues: {issues_count} | Score: {security_score}/100 {CliColors.RESET}")
                 else:
-                    logger.info(f"{HexStrikeColors.HIGHLIGHT_GREEN} No security issues found | Score: {security_score}/100 {HexStrikeColors.RESET}")
+                    logger.info(f"{CliColors.HIGHLIGHT_GREEN} No security issues found | Score: {security_score}/100 {CliColors.RESET}")
         else:
-            logger.error(f"{HexStrikeColors.ERROR}❌ Browser Agent {action} failed for {url}{HexStrikeColors.RESET}")
+            logger.error(f"{CliColors.ERROR}❌ Browser Agent {action} failed for {url}{CliColors.RESET}")
 
         return result

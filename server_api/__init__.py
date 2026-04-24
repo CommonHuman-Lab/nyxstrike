@@ -52,6 +52,7 @@ from .web_scan import *
 from .wifi_pentest import *
 from .active_directory import *
 from .osint import *
+from .burp_agent import *
 
 def register_blueprints(app):
   """Register all API blueprints with the Flask app."""
@@ -63,6 +64,9 @@ def register_blueprints(app):
   app.register_blueprint(api_web_dashboard_bp)
   app.register_blueprint(api_runs_bp)
   app.register_blueprint(api_sessions_bp)
+  app.register_blueprint(api_session_notes_bp)
+  app.register_blueprint(api_session_findings_bp)
+  app.register_blueprint(api_session_reports_bp)
 
   #OSINT
   app.register_blueprint(api_osint_sherlock_bp)
@@ -79,7 +83,6 @@ def register_blueprints(app):
 
   # OPS — General
   app.register_blueprint(api_visual_bp)
-  app.register_blueprint(api_auto_tool_bp)
   app.register_blueprint(api_process_management_bp)
   app.register_blueprint(api_process_execute_async_bp)
   app.register_blueprint(api_process_get_task_result_bp)
@@ -178,6 +181,7 @@ def register_blueprints(app):
   app.register_blueprint(api_web_scan_wpscan_bp)
   app.register_blueprint(api_web_scan_joomscan_bp)
   app.register_blueprint(api_web_scan_whatweb_bp)
+  app.register_blueprint(api_web_scan_interactsh_bp)
 
   # Web Crawl
   app.register_blueprint(api_web_crawl_katana_bp)
@@ -221,6 +225,7 @@ def register_blueprints(app):
 
   # API Fuzzing
   app.register_blueprint(api_api_fuzz_api_fuzzer_bp)
+  app.register_blueprint(api_api_fuzz_schemathesis_bp)
 
   # API Scanning
   app.register_blueprint(api_api_scan_graphql_scanner_bp)
@@ -244,6 +249,8 @@ def register_blueprints(app):
 
   # Network Lookup
   app.register_blueprint(api_net_lookup_whois_bp)
+  app.register_blueprint(api_net_lookup_http_headers_bp)
+  app.register_blueprint(api_net_lookup_dig_bp)
 
   # Credential Harvesting
   app.register_blueprint(api_credential_harvest_responder_bp)
@@ -308,7 +315,14 @@ def register_blueprints(app):
   app.register_blueprint(api_bugbounty_workflow_bug_bounty_recon_bp)
 
   # AI Assist
+  app.register_blueprint(api_chat_bp)
   app.register_blueprint(api_ai_assist_advanced_payload_generation_bp)
+  app.register_blueprint(api_ai_assist_llm_agent_bp)
+  app.register_blueprint(api_ai_assist_ai_recon_session_bp)
+  app.register_blueprint(api_ai_assist_ai_profiling_session_bp)
+  app.register_blueprint(api_ai_assist_ai_vuln_session_bp)
+  app.register_blueprint(api_ai_assist_ai_osint_session_bp)
+  app.register_blueprint(api_ai_assist_ai_followup_session_bp)
 
   # Tools Catalog
   app.register_blueprint(api_tools_catalog_bp)
@@ -319,6 +333,9 @@ def register_blueprints(app):
   # Web UI
   app.register_blueprint(api_ui_bp)
 
+  # Plugins
+  app.register_blueprint(api_plugins_bp)
+
   # CTF
   app.register_blueprint(api_ctf_create_challenge_workflow_bp)
   app.register_blueprint(api_ctf_auto_solve_challenge_bp)
@@ -327,6 +344,9 @@ def register_blueprints(app):
   app.register_blueprint(api_ctf_cryptography_solver_bp)
   app.register_blueprint(api_ctf_forensics_analyzer_bp)
   app.register_blueprint(api_ctf_binary_analyzer_bp)
+
+  # Burp Agent Loop
+  app.register_blueprint(api_burp_agent_bp)
 
   # Intelligent Error Handling
   app.register_blueprint(api_error_handling_statistics_bp)

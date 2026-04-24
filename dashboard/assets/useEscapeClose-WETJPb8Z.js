@@ -1,0 +1,1 @@
+import{i as e}from"./rolldown-runtime-B1FJdls4.js";import{n as t}from"./vendor-easymde-CvvD76uv.js";var n=e(t(),1);function r(e,t){(0,n.useEffect)(()=>{if(!e)return;function n(e){e.key===`Escape`&&(e.preventDefault(),t())}return window.addEventListener(`keydown`,n),()=>window.removeEventListener(`keydown`,n)},[e,t])}export{r as t};

@@ -37,7 +37,7 @@ class BrowserAgent:
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--window-size=1920,1080')
-            chrome_options.add_argument('--user-agent=HexStrike-BrowserAgent/1.0 (Security Testing)')
+            chrome_options.add_argument('--user-agent=Security-BrowserAgent/1.0 (Security Testing)')
 
             # Enable logging
             chrome_options.add_argument('--enable-logging')
@@ -84,7 +84,7 @@ class BrowserAgent:
             time.sleep(wait_time)
 
             # Take screenshot
-            screenshot_path = f"/tmp/hexstrike_screenshot_{int(time.time())}.png"
+            screenshot_path = f"/tmp/security_screenshot_{int(time.time())}.png"
             driver.save_screenshot(screenshot_path)
             self.screenshots.append(screenshot_path)
 
@@ -223,7 +223,7 @@ class BrowserAgent:
             modules.append('console_log_capture')
         return {'issues': issues, 'modules': modules}
 
-    def run_active_tests(self, page_info: dict, payload: str = '<hexstrikeXSSTest123>') -> dict:
+    def run_active_tests(self, page_info: dict, payload: str = '<xssTest123>') -> dict:
         """Very lightweight active tests (reflection check) - safe mode.
         Only GET forms with text inputs to avoid state-changing operations."""
         findings = []
@@ -529,7 +529,7 @@ def browser_agent_endpoint():
                     400,
                 )
 
-            screenshot_path = f"/tmp/hexstrike_screenshot_{int(time.time())}.png"
+            screenshot_path = f"/tmp/security_screenshot_{int(time.time())}.png"
             browser_agent.driver.save_screenshot(screenshot_path)
 
             return jsonify(

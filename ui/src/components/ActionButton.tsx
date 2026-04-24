@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import './ActionButton.css'
 
-type ActionButtonVariant = 'default' | 'success' | 'warning' | 'danger'
+type ActionButtonVariant = 'default' | 'success' | 'warning' | 'danger' | 'running'
 
 interface ActionButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ActionButtonVariant

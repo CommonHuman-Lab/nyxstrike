@@ -5,7 +5,7 @@ description: SMB and Windows network enumeration workflow using nmap, smbmap, en
 
 # smb-enum
 
-SMB and Windows network enumeration workflow for HexStrike AI. Use this skill when a user wants to enumerate SMB shares, discover Windows users and groups, test for null sessions, spray credentials, or assess Active Directory exposure.
+SMB and Windows network enumeration workflow for NyxStrike. Use this skill when a user wants to enumerate SMB shares, discover Windows users and groups, test for null sessions, spray credentials, or assess Active Directory exposure.
 
 ## Workflow
 
@@ -138,7 +138,7 @@ exploitation skill (if EternalBlue confirmed)
 - Password spraying: use a single password per round with a long delay to avoid account lockout — check lockout policy with `enum4linux -P` first.
 - SMBv1 present → high likelihood of EternalBlue (MS17-010) — escalate to exploitation skill.
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

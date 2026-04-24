@@ -38,7 +38,7 @@ export function ConfirmActionModal({
       <div className="modal confirm-action-modal" role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-header">
           <div className="modal-title-row">
-            <span className="confirm-action-icon" aria-hidden="true">
+            <span className="modal-icon modal-icon--danger" aria-hidden="true">
               <AlertTriangle size={14} />
             </span>
             <span className="modal-name">{title}</span>

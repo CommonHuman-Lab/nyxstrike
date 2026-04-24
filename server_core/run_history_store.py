@@ -40,6 +40,7 @@ class RunHistoryStore:
     endpoint: Optional[str],
     params: Optional[Dict[str, Any]],
     result: Dict[str, Any],
+    session_id: Optional[str] = None,
   ) -> None:
     with self._lock:
       self._id_counter += 1
@@ -48,6 +49,7 @@ class RunHistoryStore:
         "tool": tool or "unknown",
         "endpoint": endpoint or "",
         "params": params or {},
+        "session_id": session_id or "",
         "stdout": result.get("stdout", ""),
         "stderr": result.get("stderr", ""),
         "return_code": result.get("return_code", -1),
@@ -102,6 +104,7 @@ class RunHistoryStore:
           "tool": entry.get("tool", "unknown"),
           "endpoint": entry.get("endpoint", ""),
           "params": entry.get("params", {}),
+          "session_id": entry.get("session_id", ""),
           "stdout": entry.get("stdout", ""),
           "stderr": entry.get("stderr", ""),
           "return_code": entry.get("return_code", -1),

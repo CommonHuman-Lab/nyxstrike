@@ -41,14 +41,14 @@ _TELEMETRY_PATCH = patch(
 _TELEMETRY_PATCH.start()
 
 # Now it is safe to import the Flask app.
-from hexstrike_server import app  # noqa: E402
+from nyxstrike_server import app  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def client():
     app.config["TESTING"] = True
     # Disable bearer-auth so we never need a token in tests.
-    app.config["HEXSTRIKE_API_TOKEN"] = None
+    app.config["NYXSTRIKE_API_TOKEN"] = None
     with app.test_client() as c:
         yield c
 

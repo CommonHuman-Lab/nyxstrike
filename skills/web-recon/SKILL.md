@@ -5,7 +5,7 @@ description: Web content discovery and technology fingerprinting using gobuster,
 
 # web-recon
 
-Web reconnaissance workflow for HexStrike AI. Use this skill when a user wants to find hidden directories, endpoints, virtual hosts, crawl a web application, or detect the tech stack and WAF.
+Web reconnaissance workflow for NyxStrike. Use this skill when a user wants to find hidden directories, endpoints, virtual hosts, crawl a web application, or detect the tech stack and WAF.
 
 ## Workflow
 
@@ -99,7 +99,7 @@ run_tool(tool="wpscan", url="https://<target>",
 | Backup files | `/usr/share/seclists/Discovery/Web-Content/raft-medium-words.txt` |
 | Vhosts | `/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt` |
 
-## HexStrike Tool Reference
+## NyxStrike Tool Reference
 
 | Tool | Use case |
 |---|---|

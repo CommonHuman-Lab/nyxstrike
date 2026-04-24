@@ -15,7 +15,7 @@ def ghidra():
     try:
         params = request.json
         binary = params.get("binary", "")
-        project_name = params.get("project_name", "hexstrike_analysis")
+        project_name = params.get("project_name", "analysis_project")
         script_file = params.get("script_file", "")
         analysis_timeout = params.get("analysis_timeout", 300)
         output_format = params.get("output_format", "xml")

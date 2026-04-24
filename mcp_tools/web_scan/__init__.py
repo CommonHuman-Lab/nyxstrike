@@ -7,3 +7,4 @@ from .burpsuite import *
 from .zap import *
 from .xsser import *
 from .joomscan import *
+from .interactsh import *

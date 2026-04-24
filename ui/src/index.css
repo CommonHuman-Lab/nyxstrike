@@ -48,6 +48,9 @@
   --indigo: #5c6bc0;
   --indigo-dim: rgba(92, 107, 192, 0.12);
 
+  --yellow: #f1c40f;
+  --yellow-dim: rgba(241, 196, 15, 0.12);
+
   /* Neutral variations */
   --gray: #94a3b8;
   --gray-dim: rgba(148, 163, 184, 0.12);
@@ -72,6 +75,12 @@
   --glow-cyan: 0 0 12px rgba(0, 229, 255, 0.6);
 
   --radius: 8px;
+  --radius-sm: 6px;
+  --radius-xs: 4px;
+
+  /* Semantic backgrounds */
+  --bg-main: var(--bg-card);
+  --bg-soft: var(--bg-card2);
 
   --mono: 'Cascadia Code', 'Fira Code', ui-monospace, 'Courier New', monospace;
   --sans: 'Inter', system-ui, sans-serif;

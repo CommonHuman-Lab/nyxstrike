@@ -1,3 +1,9 @@
+export interface PersonalityPreset {
+  id: string;
+  label: string;
+  prompt: string;
+}
+
 export interface WordlistEntry {
   name: string;
   path: string;
@@ -24,6 +30,14 @@ export interface Settings {
     cache_size: number;
     cache_ttl: number;
     tool_availability_ttl: number;
+  };
+  chat: {
+    personality: string;
+    system_prompt: string;
+    custom_prompt: string;
+    summarization_threshold: number;
+    context_injection_chars: number;
+    personality_presets: PersonalityPreset[];
   };
   wordlists: WordlistEntry[];
 }

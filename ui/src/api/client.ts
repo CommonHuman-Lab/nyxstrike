@@ -1,4 +1,4 @@
-let token: string | null = sessionStorage.getItem('hexstrike_token');
+let token: string | null = sessionStorage.getItem('nyxstrike_token');
 
 function withAuthHeaders(headers: HeadersInit = {}): Headers {
   const merged = new Headers(headers);
@@ -53,12 +53,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export function setToken(value: string) {
   token = value;
-  sessionStorage.setItem('hexstrike_token', value);
+  sessionStorage.setItem('nyxstrike_token', value);
 }
 
 export function clearToken() {
   token = null;
-  sessionStorage.removeItem('hexstrike_token');
+  sessionStorage.removeItem('nyxstrike_token');
 }
 
 export function hasToken(): boolean {
@@ -95,6 +95,32 @@ export function patch<T>(path: string, body: unknown): Promise<T> {
 
 export function del<T>(path: string): Promise<T> {
   return request<T>(path, { method: 'DELETE' });
+}
+
+export function put<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+}
+
+export function postFormData<T>(path: string, body: FormData): Promise<T> {
+  // Do NOT set Content-Type — browser sets multipart/form-data + boundary automatically
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 3_600_000);
+  const headers = new Headers();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  return fetch(path, { method: 'POST', headers, body, signal: controller.signal })
+    .then(res => {
+      window.clearTimeout(timer);
+      if (res.status === 401) { clearToken(); throw new Error('UNAUTHORIZED'); }
+      // Treat 409 conflict as a resolved value so callers can inspect { conflict: true }
+      if (res.status === 409) return res.json() as Promise<T>;
+      if (!res.ok) return res.text().then(t => { throw new Error(`HTTP ${res.status}: ${t}`); });
+      return res.json() as Promise<T>;
+    })
+    .catch(err => { window.clearTimeout(timer); throw err; });
 }
 
 export function stream(path: string, query?: Record<string, string | number | boolean>): EventSource {

@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle } from 'lucide-react'
+import { CheckCircle, RefreshCw, XCircle } from 'lucide-react'
 import type { Tool } from '../../api'
 
 interface ToolsRegistrySectionProps {
@@ -40,12 +40,13 @@ export function ToolsRegistrySection({
         <h3>Tool Registry <span className="badge">{filtered.length} / {tools.length}</span></h3>
         {onRefreshAvailability && (
           <button
-            className="btn-secondary"
+            className="registry-missing-toggle"
             onClick={() => void onRefreshAvailability()}
             disabled={refreshingAvailability}
             title="Force immediate tool availability re-check"
           >
-            {refreshingAvailability ? 'Refreshing…' : 'Refresh Availability'}
+            <RefreshCw size={12} className={refreshingAvailability ? 'spin' : undefined} />
+            Refresh
           </button>
         )}
       </div>

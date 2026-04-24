@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Dict
+from typing import Any, Dict, Optional
 import logging
 import subprocess
 import sys
@@ -30,89 +30,128 @@ api_system_monitoring_bp = Blueprint("api_system_monitoring", __name__)
 _tool_availability_cache: Dict[str, bool] = {}
 _tool_availability_lock = threading.Lock()
 _tool_availability_last_refresh: float = 0.0
+_tool_availability_refresh_in_progress = False
 
-# Precompute the flat list of all tools at module load
+# Plugin tools registered at runtime.
+# Maps mcp_tool_name -> { type, binary, install } from plugin.yaml check block.
+# _get_tool_availability() probes each entry and overlays the result.
+_plugin_tools: Dict[str, Dict[str, Any]] = {}
+
+
+def register_plugin_tool(tool_name: str, check: Optional[Dict[str, Any]] = None, category: str = "plugins") -> None:
+    """Register a plugin tool with its check metadata.
+
+    check keys (all optional):
+      type    — one of: builtin, which, dpkg, pip, gem, cargo  (default: builtin)
+      binary  — executable/package name to probe (default: tool_name)
+      install — human-readable install hint shown when the tool is missing
+
+    category — maps to a HEALTH_TOOL_CATEGORIES key so the tool appears in the
+               dashboard category row.  Defaults to 'plugins' (auto-created).
+    """
+    _plugin_tools[tool_name] = check or {}
+
+    # Inject into HEALTH_TOOL_CATEGORIES so the dashboard category row includes
+    # this tool in its count and availability bar.
+    if tool_name not in HEALTH_TOOL_CATEGORIES.get(category, []):
+        HEALTH_TOOL_CATEGORIES.setdefault(category, []).append(tool_name)
+
+
+# Precompute the flat list of all static tools at module load
 ALL_TOOLS_FLAT = list({
     tool
     for tools in HEALTH_TOOL_CATEGORIES.values()
     for tool in tools
 })
 
+
+def _probe_binary(check_type: str, binary: str) -> bool:
+    """Low-level probe — returns True if the tool/package is present.
+
+    check_type — one of: builtin, which, dpkg, pip, gem, cargo
+    binary     — executable or package name to probe
+    """
+    if check_type == "builtin":
+        return True
+    try:
+        if check_type == "dpkg":
+            r = subprocess.run(
+                ["dpkg", "-s", binary],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            return r.returncode == 0
+        elif check_type == "pip":
+            r = subprocess.run(
+                [sys.executable, "-m", "pip", "list"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            )
+            return binary in r.stdout
+        elif check_type == "gem":
+            r = subprocess.run(
+                ["gem", "list"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            )
+            return binary in r.stdout
+        elif check_type == "cargo":
+            r = subprocess.run(
+                ["cargo", "install", "--list"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            )
+            return binary in r.stdout
+        else:  # which (default)
+            r = subprocess.run(
+                ["which", binary],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            return r.returncode == 0
+    except Exception:
+        return False
+
+
 def _refresh_tool_availability() -> None:
-    """Probe all tools with `which` in parallel and update the module-level cache."""
-    global _tool_availability_last_refresh
-
-    def probe(tool: str) -> tuple:
-        if tool in BINARY_NAME_OVERRIDES:
-            tool_to_check = BINARY_NAME_OVERRIDES[tool]
-        else:
-            tool_to_check = tool
-        if tool_to_check in BUILT_IN_TOOLS:
-            # Always report built-ins as available without probing
-            return tool, True
-        try:
-            if tool_to_check in REQUIRE_DPKG_CHECK:
-                # For tools that require dpkg, check if the package is installed
-                result = subprocess.run(
-                    ["dpkg", "-s", tool_to_check],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                return tool, result.returncode == 0
-            elif tool_to_check in REQUIRE_PIP_CHECK:
-                # For tools that require pip, check if the package is installed
-                result = subprocess.run(
-                    [sys.executable, "-m", "pip", "list"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return tool, tool_to_check in result.stdout
-            elif tool_to_check in REQUIRE_GEM_CHECK:
-                # For tools that require gem, check if the package is installed
-                result = subprocess.run(
-                    ["gem", "list"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return tool, tool_to_check in result.stdout
-            elif tool_to_check in REQUIRE_CARGO_CHECK:
-                # For tools that require cargo, check if the package is installed
-                result = subprocess.run(
-                    ["cargo", "install", "--list"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                )
-                return tool, tool_to_check in result.stdout
-            else:
-                result = subprocess.run(
-                    ["which", tool_to_check],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                return tool, result.returncode == 0
-        except Exception:
-            return tool, False
-
-    with ThreadPoolExecutor(max_workers=20) as pool:
-        results = dict(pool.map(probe, ALL_TOOLS_FLAT))
+    """Probe all static tools in parallel and update the module-level cache."""
+    global _tool_availability_last_refresh, _tool_availability_refresh_in_progress
 
     with _tool_availability_lock:
-        _tool_availability_cache.update(results)
-        _tool_availability_last_refresh = time.time()
+        if _tool_availability_refresh_in_progress:
+            return
+        _tool_availability_refresh_in_progress = True
 
-    installed = sorted(t for t, ok in results.items() if ok)
-    missing = sorted(t for t, ok in results.items() if not ok)
-    RED = ModernVisualEngine.COLORS['HACKER_RED']
-    RESET = ModernVisualEngine.COLORS['RESET']
-    lines = ["Tool availability refreshed: %d/%d available" % (len(installed), len(results))]
-#    for tool in installed:
-#        lines.append("%s  %-30s installed%s" % (GREEN, tool, RESET))
-    for tool in missing:
-        lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
-    logger.info("\n".join(lines))
+    try:
+        def probe(tool: str) -> tuple:
+            binary = BINARY_NAME_OVERRIDES.get(tool, tool)
+            if binary in BUILT_IN_TOOLS:
+                return tool, True
+            if binary in REQUIRE_DPKG_CHECK:
+                check_type = "dpkg"
+            elif binary in REQUIRE_PIP_CHECK:
+                check_type = "pip"
+            elif binary in REQUIRE_GEM_CHECK:
+                check_type = "gem"
+            elif binary in REQUIRE_CARGO_CHECK:
+                check_type = "cargo"
+            else:
+                check_type = "which"
+            return tool, _probe_binary(check_type, binary)
+
+        with ThreadPoolExecutor(max_workers=20) as pool:
+            results = dict(pool.map(probe, ALL_TOOLS_FLAT))
+
+        with _tool_availability_lock:
+            _tool_availability_cache.update(results)
+            _tool_availability_last_refresh = time.time()
+
+        missing = sorted(t for t, ok in results.items() if not ok)
+        RED = ModernVisualEngine.COLORS['HACKER_RED']
+        RESET = ModernVisualEngine.COLORS['RESET']
+        lines = ["Tool availability refreshed: %d/%d available" % (
+            sum(ok for ok in results.values()), len(results))]
+        for tool in missing:
+            lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
+        logger.info("\n".join(lines))
+    finally:
+        with _tool_availability_lock:
+            _tool_availability_refresh_in_progress = False
 
 
 def _get_tool_availability() -> Dict[str, bool]:
@@ -127,12 +166,29 @@ def _get_tool_availability() -> Dict[str, bool]:
     elif stale:
         threading.Thread(target=_refresh_tool_availability, daemon=True).start()
 
-    # Only lock while copying the cache
     with _tool_availability_lock:
         output_status = dict(_tool_availability_cache)
+
     for tool in BUILT_IN_TOOLS:
         output_status[tool] = True
+
+    # Plugin tools: resolve check_type + binary from plugin.yaml check block,
+    # then reuse _probe_binary — same code path as static tools.
+    for tool_name, check in _plugin_tools.items():
+        check_type = str(check.get("type", "builtin")).lower()
+        binary = str(check.get("binary", tool_name))
+        output_status[tool_name] = _probe_binary(check_type, binary)
+
     return output_status
+
+
+def _get_plugin_install_hints() -> Dict[str, str]:
+    """Return a dict of tool_name -> install hint for plugins that declare one."""
+    return {
+        name: check["install"]
+        for name, check in _plugin_tools.items()
+        if check.get("install")
+    }
 
 @api_system_monitoring_bp.route("/health", methods=["GET"])
 def health_check():
@@ -154,13 +210,14 @@ def health_check():
 
     return jsonify({
         "status": "healthy",
-        "message": "HexStrike AI Tools API Server is operational",
+        "message": "NyxStrike Tools API Server is operational",
         "version": config_core.get("VERSION", "unknown"),
         "tools_status": tools_status,
         "all_essential_tools_available": all_essential_tools_available,
         "total_tools_available": sum(1 for available in tools_status.values() if available),
         "total_tools_count": all_tools_count,
         "category_stats": category_stats,
+        "plugin_install_hints": _get_plugin_install_hints(),
         "cache_stats": cache.get_stats(),
         "telemetry": telemetry.get_stats(),
         "uptime": time.time() - telemetry.stats["start_time"],
@@ -172,7 +229,7 @@ def health_check():
 def ping():
     return jsonify({
         "success": True,
-        "message": "Pong! HexStrike AI Tools API Server is responsive",
+        "message": "Pong! NyxStrike Tools API Server is responsive",
         "timestamp": datetime.now().isoformat()
     })
 

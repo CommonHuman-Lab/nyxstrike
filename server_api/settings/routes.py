@@ -4,6 +4,7 @@ from typing import Dict, Tuple
 from flask import Blueprint, jsonify, request
 import server_core.config_core as config_core
 from server_core.singletons import wordlist_store
+from server_core.intelligence.chat_personalities import CHAT_PERSONALITIES
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +19,24 @@ _MUTABLE_KEYS = {
     "CACHE_SIZE",
     "CACHE_TTL",
     "TOOL_AVAILABILITY_TTL",
+    "CHAT_PERSONALITY",
+    "CHAT_SYSTEM_PROMPT",
+    "CHAT_CUSTOM_PROMPT",
+    "CHAT_SUMMARIZATION_THRESHOLD",
+    "CHAT_CONTEXT_INJECTION_CHARS",
 }
 
 
 def _current_settings() -> dict:
     return {
         "server": {
-            "host": os.environ.get("HEXSTRIKE_HOST", "127.0.0.1"),
-            "port": int(os.environ.get("HEXSTRIKE_PORT", 8888)),
-            "auth_enabled": bool(os.environ.get("HEXSTRIKE_API_TOKEN")),
+            "host": os.environ.get("NYXSTRIKE_HOST", "127.0.0.1"),
+            "port": int(os.environ.get("NYXSTRIKE_PORT", 8888)),
+            "auth_enabled": bool(os.environ.get("NYXSTRIKE_API_TOKEN")),
             "debug_mode": os.environ.get("DEBUG_MODE", "0") in ("1", "true", "yes", "y"),
             "working_dir": os.getcwd(),
             "data_dir": os.environ.get(
-                "HEXSTRIKE_DATA_DIR",
+                "NYXSTRIKE_DATA_DIR",
                 config_core.default_data_dir(),
             ),
         },
@@ -44,6 +50,14 @@ def _current_settings() -> dict:
             "tool_availability_ttl": config_core.get("TOOL_AVAILABILITY_TTL", 3600),
         },
         "wordlists": _wordlists_summary(),
+        "chat": {
+            "personality": config_core.get("CHAT_PERSONALITY", "nyxstrike"),
+            "system_prompt": config_core.get("CHAT_SYSTEM_PROMPT", "You are NyxStrike, an expert penetration testing AI assistant."),
+            "custom_prompt": config_core.get("CHAT_CUSTOM_PROMPT", ""),
+            "summarization_threshold": config_core.get("CHAT_SUMMARIZATION_THRESHOLD", 20),
+            "context_injection_chars": config_core.get("CHAT_CONTEXT_INJECTION_CHARS", 4000),
+            "personality_presets": CHAT_PERSONALITIES,
+        },
     }
 
 
@@ -77,6 +91,7 @@ def patch_settings():
     try:
         body = request.get_json(force=True, silent=True) or {}
         runtime = body.get("runtime", {})
+        chat = body.get("chat", {})
         updated = {}
         errors = {}
 
@@ -102,6 +117,27 @@ def patch_settings():
                 updated[field] = val
             except (ValueError, TypeError) as exc:
                 errors[field] = str(exc)
+
+        # Chat settings
+        chat_key_map = {
+            "personality": ("CHAT_PERSONALITY", str, None),
+            "system_prompt": ("CHAT_SYSTEM_PROMPT", str, None),
+            "custom_prompt": ("CHAT_CUSTOM_PROMPT", str, None),
+            "summarization_threshold": ("CHAT_SUMMARIZATION_THRESHOLD", int, 1),
+            "context_injection_chars": ("CHAT_CONTEXT_INJECTION_CHARS", int, 0),
+        }
+        for field, (cfg_key, cast, min_value) in chat_key_map.items():
+            if field not in chat:
+                continue
+            try:
+                val = cast(chat[field])
+                if min_value is not None and val < min_value:
+                    qualifier = "non-negative" if min_value == 0 else "positive"
+                    raise ValueError(f"must be {qualifier}")
+                config_core.set_value(cfg_key, val)
+                updated[f"chat.{field}"] = val
+            except (ValueError, TypeError) as exc:
+                errors[f"chat.{field}"] = str(exc)
 
         if errors:
             return jsonify({"success": False, "errors": errors, "updated": updated}), 400

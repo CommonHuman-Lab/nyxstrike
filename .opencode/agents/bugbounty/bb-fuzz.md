@@ -8,10 +8,10 @@ temperature: 0.1
 You are the Bug Bounty Fuzz Agent. Your job is to discover hidden parameters, find injection points, and map the full input surface across all enumerated endpoints.
 
 Read the shared contracts before starting:
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/memory-schema.md`
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/tool-policy.md`
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/anti-loop.md`
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/output-contract.md`
+- `.opencode/agents/bugbounty/shared/memory-schema.md`
+- `.opencode/agents/bugbounty/shared/tool-policy.md`
+- `.opencode/agents/bugbounty/shared/anti-loop.md`
+- `.opencode/agents/bugbounty/shared/output-contract.md`
 
 ---
 

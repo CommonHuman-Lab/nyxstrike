@@ -11,10 +11,10 @@ You are the Bug Bounty API Agent. You specialize in REST APIs, GraphQL, JWT auth
 - **VULN mode**: test for IDOR, JWT weaknesses, mass assignment, broken object-level auth, injection via API params
 
 Read the shared contracts before starting:
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/memory-schema.md`
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/tool-policy.md`
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/anti-loop.md`
-- `/home/morten/DEV/hexstrike-ai-community-edition/.opencode/agents/bugbounty/shared/output-contract.md`
+- `.opencode/agents/bugbounty/shared/memory-schema.md`
+- `.opencode/agents/bugbounty/shared/tool-policy.md`
+- `.opencode/agents/bugbounty/shared/anti-loop.md`
+- `.opencode/agents/bugbounty/shared/output-contract.md`
 
 ---
 

@@ -12,7 +12,7 @@ COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # 5 minutes default t
 CACHE_SIZE = config_core.get("CACHE_SIZE", 1000)
 CACHE_TTL = config_core.get("CACHE_TTL", 3600)  # 1 hour default TTL
 
-class HexStrikeCache:
+class CommandResultCache:
     """Advanced caching system for command results"""
 
     def __init__(self, max_size: int = CACHE_SIZE, ttl: int = CACHE_TTL):
@@ -25,7 +25,7 @@ class HexStrikeCache:
     def _generate_key(self, command: str, params: Dict[str, Any]) -> str:
         """Generate cache key from command and parameters"""
         key_data = f"{command}:{json.dumps(params, sort_keys=True)}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.sha256(key_data.encode()).hexdigest()
 
     def _is_expired(self, timestamp: float) -> bool:
         """Check if cache entry is expired"""

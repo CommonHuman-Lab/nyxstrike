@@ -6,11 +6,16 @@ from shared.colored_formatter import ColoredFormatter
 _ANSI_ESCAPE = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
 _CLF_ACCESS = re.compile(r' - \[\d{2}/\w+/\d{4} \d{2}:\d{2}:\d{2}\]| -\s*$')
 
+_STATUS_304 = re.compile(r'"[A-Z]+ [^ ]+ HTTP/1.1[^"]+" 304\b')
+
 class _StripCLFNoise(logging.Filter):
-    """Remove redundant CLF timestamp and trailing dash from Werkzeug access log lines."""
+    """Remove redundant CLF timestamp and trailing dash from Werkzeug access log lines.
+    Also suppresses noisy 304 Not Modified responses."""
 
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage()
+        if _STATUS_304.search(msg):
+            return False
         clean = _CLF_ACCESS.sub('', msg)
         record.msg = clean
         record.args = None
@@ -23,7 +28,7 @@ class _PlainFormatter(logging.Formatter):
         formatted = super().format(record)
         return _ANSI_ESCAPE.sub('', formatted)
 
-def setup_logging(log_file: str = 'hexstrike.log') -> logging.Logger:
+def setup_logging(log_file: str = 'nyxstrike.log') -> logging.Logger:
     """Setup enhanced logging: colored console output + ANSI-stripped file output."""
     root = logging.getLogger()
     root.setLevel(logging.INFO)

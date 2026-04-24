@@ -3,7 +3,7 @@
 from typing import Dict, Any
 import asyncio
 
-def register_test_error_recovery_tool(mcp, hexstrike_client, logger, HexStrikeColors):
+def register_test_error_recovery_tool(mcp, api_client, logger, CliColors):
 
     @mcp.tool()
     async def test_error_recovery(tool_name: str, error_type: str = "timeout",
@@ -25,10 +25,10 @@ def register_test_error_recovery_tool(mcp, hexstrike_client, logger, HexStrikeCo
             "target": target
         }
 
-        logger.info(f"{HexStrikeColors.RUBY}🧪 Testing error recovery for {tool_name} with {error_type}{HexStrikeColors.RESET}")
+        logger.info(f"{CliColors.RUBY}🧪 Testing error recovery for {tool_name} with {error_type}{CliColors.RESET}")
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/error-handling/test-recovery", data_payload)
+            None, lambda: api_client.safe_post("api/error-handling/test-recovery", data_payload)
         )
 
         if result.get("success"):
@@ -36,7 +36,7 @@ def register_test_error_recovery_tool(mcp, hexstrike_client, logger, HexStrikeCo
             action = recovery_strategy.get("action", "unknown")
             success_prob = recovery_strategy.get("success_probability", 0)
 
-            logger.info(f"{HexStrikeColors.SUCCESS}✅ Error recovery test completed{HexStrikeColors.RESET}")
+            logger.info(f"{CliColors.SUCCESS}✅ Error recovery test completed{CliColors.RESET}")
             logger.info(f"  🔧 Recovery Action: {action}")
             logger.info(f"  📊 Success Probability: {success_prob:.2%}")
 
@@ -45,6 +45,6 @@ def register_test_error_recovery_tool(mcp, hexstrike_client, logger, HexStrikeCo
             if alternatives:
                 logger.info(f"  🔄 Alternative Tools: {', '.join(alternatives)}")
         else:
-            logger.error(f"{HexStrikeColors.ERROR}❌ Error recovery test failed{HexStrikeColors.RESET}")
+            logger.error(f"{CliColors.ERROR}❌ Error recovery test failed{CliColors.RESET}")
 
         return result

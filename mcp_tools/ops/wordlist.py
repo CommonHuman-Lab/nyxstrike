@@ -1,7 +1,7 @@
 import asyncio
 # mcp_tools/wordlist.py
 
-def register_wordlist_tools(mcp, hexstrike_client):
+def register_wordlist_tools(mcp, api_client):
     @mcp.tool()
     async def wordlist_get(wordlist_id: str) -> dict:
         """
@@ -15,7 +15,7 @@ def register_wordlist_tools(mcp, hexstrike_client):
         """
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get(f"api/wordlists/{wordlist_id}")
+            None, lambda: api_client.safe_get(f"api/wordlists/{wordlist_id}")
         )
         return result
 
@@ -29,7 +29,7 @@ def register_wordlist_tools(mcp, hexstrike_client):
         """
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get("api/wordlists")
+            None, lambda: api_client.safe_get("api/wordlists")
         )
         return result
 
@@ -46,7 +46,7 @@ def register_wordlist_tools(mcp, hexstrike_client):
         """
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_get(f"api/wordlists/{wordlist_id}/path")
+            None, lambda: api_client.safe_get(f"api/wordlists/{wordlist_id}/path")
         )
         return result
 
@@ -92,7 +92,7 @@ def register_wordlist_tools(mcp, hexstrike_client):
         """
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post("api/wordlists/bestmatch", criteria)
+            None, lambda: api_client.safe_post("api/wordlists/bestmatch", criteria)
         )
         return result
 
@@ -139,7 +139,7 @@ def register_wordlist_tools(mcp, hexstrike_client):
         """
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
-            None, lambda: hexstrike_client.safe_post(f"api/wordlists/{wordlist_id}", wordlist_info)
+            None, lambda: api_client.safe_post(f"api/wordlists/{wordlist_id}", wordlist_info)
         )
         return result
 
@@ -155,9 +155,9 @@ def register_wordlist_tools(mcp, hexstrike_client):
             dict: Status message indicating success or failure.
         """
         import requests
-        url = f"{hexstrike_client.server_url}/api/wordlists/{wordlist_id}"
+        url = f"{api_client.server_url}/api/wordlists/{wordlist_id}"
         try:
-            response = hexstrike_client.session.delete(url, timeout=hexstrike_client.timeout)
+            response = api_client.session.delete(url, timeout=api_client.timeout)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:

@@ -33,7 +33,7 @@ File: `mcp_tools/net_lookup/whois.py`
 
 - Register function: `register_whois(...)`
 - MCP tool function: `whois_lookup(target: str)`
-- Calls: `hexstrike_client.safe_post("api/tools/whois", {"target": target})`
+- Calls: `api_client.safe_post("api/tools/whois", {"target": target})`
 
 ### 4) Profile loading
 

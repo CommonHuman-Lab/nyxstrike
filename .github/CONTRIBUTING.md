@@ -13,7 +13,7 @@ We appreciate all contributions from the community. To keep the project stable a
 
 ## Pull Request Guidelines
 
-[Pull Request Template](https://github.com/CommonHuman-Lab/hexstrike-ai-community-edition/wiki/Pull-Request-Template)
+[Pull Request Template](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Pull-Request-Template)
 
 ### Scope
 
