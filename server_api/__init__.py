@@ -306,6 +306,7 @@ def register_blueprints(app):
   app.register_blueprint(api_vulnerability_intelligence_bp)
   app.register_blueprint(api_vuln_intel_cve_monitor_bp)
   app.register_blueprint(api_vuln_intel_exploit_generate_bp)
+  app.register_blueprint(api_vuln_intel_exploit_generate_ai_bp)
   app.register_blueprint(api_vuln_intel_attack_chains_bp)
   app.register_blueprint(api_vuln_intel_threat_feeds_bp)
   app.register_blueprint(api_vuln_intel_zero_day_research_bp)
