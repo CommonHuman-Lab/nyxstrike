@@ -1,24 +1,52 @@
 # Changelog
 
-Precise summary based on GitHub release notes and current branch changes.
-
-## 1.4.0 - nullbytecobra (next)
+## 1.4.0 - NyxStrike
 
 ### Built-in AI Chat assistant
-- Added persistent chat widget available on every dashboard page — start a conversation without leaving your workflow. Supports multi-session history, 
-and a resizable floating UI.
+- Added persistent chat widget — start a conversation without leaving your workflow. Supports multi-session history, and a resizable floating UI.
+- Added chat personality settings and presets — tune the assistant's tone and behavior.
+- Added chat session renaming, deletion, stats tracking.
+- Added tool call resolution handling and streaming identifier improvements.
+- Enabled "think" mode and reasoning support in LLM backends (Ollama, OpenAI, Anthropic).
+- And a few smaller features build into the chat.
 
 ### LLM analysis
 - Added `analyze_session` — passive LLM analysis pass that reads existing workflow session run logs, interprets them, and persists structured findings.
+- Added `llm_agent_scan_result` tool — retrieve results of completed LLM agent scan sessions.
 - Added `NyxStrikeDB` (SQLite) for persisting LLM analysis sessions and vulnerability findings.
 - Added `LLMClient` — provider-agnostic LLM adapter supporting Ollama, OpenAI, and Anthropic backends.
+- Added internal API client for tool execution and classification from the chat layer.
+- Improved tool injection logic with confidence threshold and conversational pattern filtering.
+
+### Session management
+- Added follow-up session functionality — chain sessions for iterative engagements.
+- Added session notes management, report generation, findings, and timeline view.
+- Added AI analysis section surfacing vulnerabilities and risk level in session cards.
+
+### Plugin system
+- Introduced a drop-in plugin architecture — extend NyxStrike without touching core code.
+- Drop a folder under `plugins/tools/`, add an entry to `plugins.yaml`, and restart; the server auto-loads the plugin.
+- Each tool plugin provides a Flask Blueprint (API endpoint) and a FastMCP registration (AI-callable tool).
+- Failed plugins are skipped with a warning — server always starts cleanly.
+- Bundled `example_net_ping` plugin as a copy-paste starting point.
 
 ### New tools
+- Added `schemathesis` integration — property-based API fuzzing against OpenAPI/GraphQL schemas.
+- Added `interactsh` wrapper — OOB interaction URL generation for blind SSRF/XSS detection.
 - Added `http_headers` tool — fetches and displays HTTP response headers for a target URL.
 - Added `dig` tool — DNS lookup via `dig` with configurable record type and nameserver.
+- Added Burp Agent Loop API for autonomous pentesting integration.
+
+### Performance and internals
+- Implemented thread-safe lazy singleton pattern for service objects.
+- Optimized SSE endpoints with unified stream for processes and pool stats, reducing duplicate events.
+- Added CPU niceness adjustment and performance dashboard recording to command execution.
+- Configurable session wait time for Metasploit execution.
+- Improved tool registry validation and cache key hashing.
+- Added session-wide subprocess mocking safety net for tests.
 
 ### Others
-- Updated `scripts/run.sh` for dual-venv detection and correct MCP default mode.
+- Added `nyxstrike.sh` main entrypoint script with external tool install list.
 
 ## 1.3.0 - shellshark
 - Added new tools/wrappers: `hurl`, `waymore`, `assetfinder`, `shuffledns`, `massdns`, and `gospider`; also improved `testssl.sh` compatibility/fallback.
