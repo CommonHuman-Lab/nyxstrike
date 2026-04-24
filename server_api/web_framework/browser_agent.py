@@ -150,7 +150,8 @@ class BrowserAgent:
                 if lvl in ('SEVERE', 'WARNING'):
                     out.append({'level': lvl, 'message': entry.get('message', '')[:500]})
             return out
-        except Exception:
+        except Exception as e:
+            logger.debug(f"BrowserAgent: console log unavailable: {e}")
             return []
 
     def _analyze_cookies(self, cookies: list) -> list:
@@ -183,8 +184,8 @@ class BrowserAgent:
             csp = headers.get('content-security-policy', '')
             if csp and "unsafe-inline" in csp:
                 issues.append({'type': 'weak_csp', 'severity': 'low', 'description': 'CSP allows unsafe-inline scripts'})
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"BrowserAgent: security header fetch failed for {page_info.get('url', '?')}: {e}")
         return issues
 
     def _detect_mixed_content(self, page_info: dict) -> list:
@@ -196,8 +197,8 @@ class BrowserAgent:
                     u = req.get('url', '')
                     if u.startswith('http://'):
                         issues.append({'type': 'mixed_content', 'severity': 'medium', 'description': f'HTTP resource loaded over HTTPS page: {u[:100]}'})
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"BrowserAgent: mixed content detection failed: {e}")
         return issues
 
     def _extended_passive_analysis(self, page_info: dict, page_source: str) -> dict:
@@ -272,7 +273,8 @@ class BrowserAgent:
                 }
                 return storage;
             """)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"BrowserAgent: localStorage read failed: {e}")
             return {}
 
     def _get_session_storage(self) -> dict:
@@ -290,7 +292,8 @@ class BrowserAgent:
                 }
                 return storage;
             """)
-        except Exception:
+        except Exception as e:
+            logger.debug(f"BrowserAgent: sessionStorage read failed: {e}")
             return {}
 
     def _extract_forms(self) -> list:
@@ -319,8 +322,8 @@ class BrowserAgent:
                     })
 
                 forms.append(form_data)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"BrowserAgent: form extraction failed: {e}")
 
         return forms
 
@@ -341,8 +344,8 @@ class BrowserAgent:
                         'href': href,
                         'text': link.text[:100]  # Limit text length
                     })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"BrowserAgent: link extraction failed: {e}")
 
         return links
 
@@ -363,8 +366,8 @@ class BrowserAgent:
                     'id': input_elem.get_attribute('id') or '',
                     'placeholder': input_elem.get_attribute('placeholder') or ''
                 })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"BrowserAgent: input extraction failed: {e}")
 
         return inputs
 
@@ -389,8 +392,8 @@ class BrowserAgent:
                             'type': 'inline',
                             'content': content[:1000]  # Limit content
                         })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"BrowserAgent: script extraction failed: {e}")
 
         return scripts
 
@@ -416,7 +419,8 @@ class BrowserAgent:
                     })
 
             return network_requests
-        except Exception:
+        except Exception as e:
+            logger.debug(f"BrowserAgent: network log parsing failed: {e}")
             return []
 
     def _analyze_page_security(self, page_source: str, page_info: dict) -> dict:
