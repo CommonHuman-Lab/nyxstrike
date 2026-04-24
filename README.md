@@ -3,66 +3,56 @@
 <img src="assets/nyxstrike-logo.png" alt="NyxStrike" width="220"/>
 
 # NyxStrike
-*Previously: Hexstrike AI Community Edition**
+*Previously: Hexstrike AI Community Edition*
 
-### AI-Powered Penetration Testing and Bug Bounty Automation Platform
+### AI-powered offensive security orchestration engine
+
+Turn fragmented penetration testing into structured AI-driven attack chains — from recon to exploitation — using AI agents that control real security tools.
+
+### ⚡ From target → recon → exploit chain in minutes
+
+⭐ If NyxStrike improves your workflow, consider starring the repo — it helps others discover it.
 
 [![Python](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-AGPLv3-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-Penetration%20Testing-red.svg)](https://github.com/CommonHuman-Lab/nyxstrike)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg)](https://github.com/CommonHuman-Lab/nyxstrike)
 
-**AI-driven penetration testing and bug bounty automation platform that connects MCP-compatible LLM agents to 185+ real-world offensive security tools through a single REST API and web dashboard.**
-
-[📡 Wiki](https://github.com/CommonHuman-Lab/nyxstrike/wiki)
-
-<p align="center">
-  <a href="https://discord.gg/aC8Q2xJFgp">
-    <img src="https://img.shields.io/badge/Discord-Join-7289DA?logo=discord&logoColor=white&style=for-the-badge" alt="Join Discord Community" />
-  </a>
-</p>
-
 </div>
 
----
 
 ## What is NyxStrike?
 
-NyxStrike is an open-source AI penetration testing platform that lets LLM agents — or human operators — orchestrate full security assessments, recon pipelines, exploit chains, and bug bounty workflows from a single interface. It bridges the gap between large language models and the real offensive security tooling professionals use: nmap, nuclei, sqlmap, Metasploit, Hydra, Burp alternatives, and more.
+NyxStrike is an AI-driven offensive security orchestration engine that transforms fragmented penetration testing into structured, automated attack workflows.
 
-Whether you're running a CTF, a bug bounty campaign, or a professional penetration test, NyxStrike handles the orchestration through an intelligent attack-chain engine — so you can focus on results, not tool management.
+It connects LLM agents with real-world security tools and executes full end-to-end attack chains — from reconnaissance to exploitation.
 
 ---
 
-## Quick Start (Installation)
+## 🚀 Quick Start (Installation)
 
-### Scripted Setup (recommended)
+> Get a full offensive security environment running in minutes.
 
 ```bash
 git clone https://github.com/CommonHuman-Lab/nyxstrike.git
 cd nyxstrike
 
-./nyxstrike.sh -a                  # Setup + start server
-./nyxstrike.sh -a -t               # + install external tools
-./nyxstrike.sh -a -t -ai           # + local AI model (~8.4 GB RAM)
-./nyxstrike.sh -a -t -ai-small     # + smaller AI model (~2.5 GB RAM)
+./nyxstrike.sh -a               # Setup + start server
+./nyxstrike.sh -a -ai           # + local AI model (~8.4 GB RAM)
+./nyxstrike.sh -a -ai-small     # + smaller AI model (~2.5 GB RAM)
 ```
 
 > Full flag reference: [Wiki — Installation & Flags](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Installation-and-Flags)
 
 ### Verify Setup
 
-```bash
-curl http://localhost:8888/health
-```
-
-Then open [http://localhost:8888](http://localhost:8888) to access the dashboard.
+Open [http://localhost:8888](http://localhost:8888) to access the dashboard.
 
 > Some tools (e.g. `nmap`, `masscan`) require elevated privileges for specific scan modes. Use a dedicated test VM and least-privilege setup where possible.
 
 ---
 
-## MCP Integrations
+## 🔌 AI Agent Integrations (MCP)
 
 Connect NyxStrike to any MCP-compatible AI client — OpenCode, Cursor, Claude Desktop, VS Code Copilot, Roo Code, and more.
 
@@ -101,74 +91,47 @@ Connect NyxStrike to any MCP-compatible AI client — OpenCode, Cursor, Claude D
 
 ---
 
-## What Makes NyxStrike Stand Out?
+## 🔧 Features
 
-| Feature | Description |
-|---|---|
-| **Built-in AI Assistant** | Chat widget available on every page — start a conversation without leaving your workflow. Powered by Ollama, OpenAI, or Anthropic |
-| **185+ Tools, One Interface** | Network recon, web exploitation, WiFi pentesting, binary analysis, cloud auditing, OSINT, password cracking, forensics, and more — all orchestrated through a single MCP connection |
-| **Intelligent Attack-Chain Engine** | Catalog-driven planner with contextual learning, attack-chain preview with tool selection reasons, and user-selectable precision (`quick`, `comprehensive`, `stealth`) before a session starts |
-| **Sessions & Operator Workbench** | Every engagement lives in a structured session with 4-tab workbench (Workflow, Findings, Notes, Timeline), artifact chaining, AI analysis, and report generation |
-| **Purpose-Built AI Agents** | Standalone agents for bug bounty, CTF, CVE intelligence, exploit generation, OSINT, and more — with intelligent failure recovery |
+NyxStrike does not just run tools — it orchestrates full attack chains using AI decision-making.
+
+- AI-driven multi-agent orchestration
+- Integration with 100+ offensive security tools
+- Modular architecture for extensibility
+- Workflow automation from recon → exploitation
+- Centralized control interface
 
 > [Full feature breakdown](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Features)
-
----
-
-## Tool Arsenal
-
-185+ tools across 12 categories — network recon, web exploitation, WiFi pentesting, binary analysis, cloud auditing, SMB/AD, OSINT, password cracking, CTF forensics, API security, exploitation, and more.
-
-> [Full tool list by category](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Tool-Arsenal)
-
----
-
-## Sessions & Operator Workbench
-
-Every engagement lives in a structured session with a 4-tab workbench (Workflow, Findings, Notes, Timeline), artifact chaining, AI analysis, and report generation. Choose from 7 session creation modes — including intelligence-planned, manual, and 4 AI-driven variants. After each step, the chain engine maps tool output to the next logical action for operator review and approval.
 
 > [Full session & workbench docs](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Dashboard-and-Sessions)
 
 ---
 
-## Workflow Skills & Playbooks
+## 🧰 Tool Arsenal
 
-9 pre-built playbooks (web recon, web vuln, nmap recon, subdomain enum, SMB enum, binary analysis, exploitation, password cracking, cloud audit) mounted as MCP resources — the agent follows these automatically.
+185+ offensive security tools across 12 categories — all dynamically orchestrated by AI agents in real time.
 
-> [Full playbook details](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Skills)
+- Network reconnaissance
+- Web exploitation
+- Wireless security
+- OSINT & intelligence gathering
+- Password attacks
+- Cloud & API security
 
----
+All orchestrated automatically by AI agents.
 
-## Usage Examples
-
-Always state authorization, ownership, and scope explicitly when prompting. See the wiki for full prompt examples across recon, exploitation, bug bounty, and CTF workflows.
-
-> [Usage examples](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Usage-Examples)
-
----
-
-## Architecture
-
-```
-LLM Agent (OpenCode / Claude / Cursor / VS Code)
-      │  stdio
-      ▼
-nyxstrike_mcp.py  ──HTTP──►  nyxstrike_server.py  ──►  Security Tools
-  (MCP client)                  (REST API :8888)         (nmap, nuclei,
-                                 + React Dashboard         sqlmap, ...)
-                                 + Intelligence Engine
-```
+> [Full tool list by category](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Tool-Arsenal)
 
 ---
 
-## Security Considerations
+## ⚠️ Security Considerations
 
-> **This platform gives AI agents access to powerful offensive security tooling.**
+> NyxStrike gives AI agents direct access to offensive security tooling.
 
-- Run in an isolated environment or dedicated security testing VM.
-- AI agents can execute arbitrary commands — maintain operator oversight at all times.
-- Monitor activity through the real-time dashboard and log stream.
-- Enable `NYXSTRIKE_API_TOKEN` for any non-localhost deployment.
+- Run only in isolated environments or dedicated security testing VMs  
+- AI agents may execute real commands — maintain operator oversight  
+- Monitor activity via dashboard and logs in real time  
+- Use `NYXSTRIKE_API_TOKEN` for any non-local deployment
 
 ### Legal & Ethical Use
 
@@ -182,9 +145,24 @@ nyxstrike_mcp.py  ──HTTP──►  nyxstrike_server.py  ──►  Security 
 
 ---
 
-## License
+## 📜 License
 
-Licensed under the [AGPLv3](LICENSE). You are free to use, modify, and distribute this software. If you run it as a service or distribute it, the source must remain open. For commercial licensing that does not require open-sourcing your changes, contact the author.
+Licensed under the [AGPLv3](LICENSE).
+You are free to use, modify, and distribute this software. If you run it as a service or distribute it, the source must remain open.
+
+For commercial licensing, contact the author.
+
+---
+
+## ⭐ Support the project
+
+If NyxStrike is useful to your workflow:
+
+- Star the repository
+- Share it with others
+- Contribute improvements
+
+It makes a real difference.
 
 ---
 
