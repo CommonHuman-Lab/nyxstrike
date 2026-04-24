@@ -77,6 +77,7 @@ export default function App() {
         setLogLines(m.DEMO_LOG_LINES)
         setDemoProcesses(m.DEMO_PROCESSES)
         setDemoSessions(m.DEMO_SESSIONS)
+        setDemoCpuHistory(m.demoCpuMemHistory())
         setLastRefresh(new Date())
         setLoading(false)
       })
@@ -92,6 +93,7 @@ export default function App() {
   // Demo-mode data (null until the lazy demo chunk loads)
   const [demoProcesses, setDemoProcesses] = useState<unknown>(null)
   const [demoSessions, setDemoSessions] = useState<unknown>(null)
+  const [demoCpuHistory, setDemoCpuHistory] = useState<unknown>(null)
   const [logAutoScroll, setLogAutoScroll] = useState(true)
   const [logLimit, setLogLimit] = useState(500)
   const logEndRef = useRef<HTMLDivElement>(null)
@@ -514,6 +516,7 @@ export default function App() {
           setReduceTextureEffects={setReduceTextureEffects}
           demoProcesses={demoProcesses}
           demoSessions={demoSessions}
+          demoCpuHistory={demoCpuHistory}
         />
       </div>
     </ToastProvider>

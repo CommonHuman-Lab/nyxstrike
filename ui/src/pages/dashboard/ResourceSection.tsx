@@ -38,11 +38,17 @@ function ResourceChart({ data }: { data: HistoryPoint[] }) {
 
 export function ResourceSection({
   demoResources,
+  demoHistory,
 }: {
   /** Pass demo resource data when running in demo mode; omit for live stream. */
   demoResources?: WebDashboardResponse['resources']
+  /** Pre-seeded history points for demo mode chart. */
+  demoHistory?: HistoryPoint[]
 }) {
-  const { resources, resources_timestamp, history } = useSystemResources(demoResources)
+  const { resources, resources_timestamp, history } = useSystemResources(
+    demoResources,
+    demoHistory
+  )
 
   const localResourcesTime = (() => {
     const raw = resources_timestamp

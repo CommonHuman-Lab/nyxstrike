@@ -19,13 +19,14 @@ export interface SystemResourcesState {
  * Falls back to polling the /web-dashboard endpoint on persistent failure.
  */
 export function useSystemResources(
-  demoResources?: ResourceUsage
+  demoResources?: ResourceUsage,
+  demoHistory?: HistoryPoint[]
 ): SystemResourcesState {
   const [resources, setResources] = useState<ResourceUsage | null>(
     demoResources ?? null
   )
   const [timestamp, setTimestamp] = useState('')
-  const [history, setHistory] = useState<HistoryPoint[]>([])
+  const [history, setHistory] = useState<HistoryPoint[]>(demoHistory ?? [])
   const [connected, setConnected] = useState(false)
 
   const streamRef = useRef<EventSource | null>(null)

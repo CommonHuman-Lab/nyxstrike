@@ -66,6 +66,7 @@ interface MainContentProps {
   /** Demo data injected from App (avoids importing demo.ts here) */
   demoProcesses?: unknown
   demoSessions?: unknown
+  demoCpuHistory?: unknown
 }
 
 export function MainContent({
@@ -99,6 +100,7 @@ export function MainContent({
   setReduceTextureEffects,
   demoProcesses,
   demoSessions,
+  demoCpuHistory,
 }: MainContentProps) {
   return (
     <main className={`main${page === 'run' ? ' main--flush' : ''}`}>
@@ -177,6 +179,8 @@ export function MainContent({
                 loading={loading}
                 error={error}
                 toolCategories={toolCategories}
+                demo={demo}
+                demoCpuHistory={demoCpuHistory}
               />
             )}
           </>
