@@ -502,13 +502,13 @@ def set_plugin_enabled(plugin_name: str, enabled: bool) -> bool:
       existing = fh.read()
     header_lines: List[str] = []
     for line in existing.splitlines():
-      if line.startswith("#") or line.strip() == "":
+      if line.startswith("#"):
         header_lines.append(line)
       else:
         break
     header = "\n".join(header_lines)
     body = _yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
-    final = (header + "\n\n" + body) if header.strip() else body
+    final = (header + "\n\n" + body) if header else body
     with _MANIFEST_FILE.open("w", encoding="utf-8") as fh:
       fh.write(final)
     logger.info(
