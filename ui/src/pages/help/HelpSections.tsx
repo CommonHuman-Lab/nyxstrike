@@ -1,4 +1,4 @@
-import { Terminal, FlaskConical } from 'lucide-react'
+import { Terminal, FlaskConical, Keyboard, Layout } from 'lucide-react'
 import { CodeBlock } from '../../components/CodeBlock'
 import { CollapsibleSection } from '../../components/CollapsibleSection'
 import type { IdeConfig } from './ideConfigs'
@@ -92,6 +92,77 @@ export function AuthenticationSection() {
         The dashboard will prompt for it automatically when the server returns 401.
       </p>
       <CodeBlock language="bash" code={`# Server side\nexport NYXSTRIKE_API_TOKEN=your-secret-token\npython3 nyxstrike_server.py\n\n# MCP client side\nnyxstrike-env/bin/python3 nyxstrike_mcp.py \\\n+  --server http://localhost:8888 \\\n+  --auth-token your-secret-token \\\n+  --profile full`} />
+    </CollapsibleSection>
+  )
+}
+
+const UI_FEATURES: Array<{ shortcut: string; title: string; description: string }> = [
+  {
+    shortcut: 'Ctrl+K',
+    title: 'Command Palette',
+    description: 'Open the command palette to navigate pages or launch any of the security tools directly.',
+  },
+  {
+    shortcut: 'Ctrl+Shift+C',
+    title: 'Chat Panel',
+    description: 'Toggle the floating AI chat panel. Supports multi-session history, streaming responses, and tool-call confirmation.',
+  },
+]
+
+export function CommandPaletteSection() {
+  return (
+    <CollapsibleSection title="Command Palette">
+      <div className="help-feature-row">
+        <Keyboard size={14} color="var(--green)" />
+        <p className="help-body" style={{ padding: 0, margin: 0 }}>
+          Press <code>Ctrl+K</code> (or <code>Cmd+K</code> on macOS) anywhere in the app to open the Command Palette.
+        </p>
+      </div>
+      <p className="help-body">
+        The palette lets you jump to any page or instantly launch one of the registered security tools — just start typing to filter. Selecting a tool navigates to the Run page with that tool pre-selected.
+      </p>
+      <div className="flags-table" style={{ marginTop: 4 }}>
+        {[
+          ['ArrowUp / ArrowDown', 'Move through results'],
+          ['Enter', 'Execute the selected action'],
+          ['Escape', 'Close the palette'],
+        ].map(([key, desc]) => (
+          <div key={key} className="flag-row" style={{ gridTemplateColumns: '200px 1fr' }}>
+            <code className="flag-name mono">{key}</code>
+            <span className="flag-desc">{desc}</span>
+          </div>
+        ))}
+      </div>
+    </CollapsibleSection>
+  )
+}
+
+export function UIFeaturesSection() {
+  return (
+    <CollapsibleSection title="UI Features">
+      <p className="help-body">
+        A few quality-of-life features worth knowing about:
+      </p>
+      <div className="flags-table">
+        {UI_FEATURES.map(({ shortcut, title, description }) => (
+          <div key={shortcut} className="flag-row" style={{ gridTemplateColumns: '200px 1fr' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <code className="flag-name mono">{shortcut}</code>
+              <span style={{ fontSize: 11, color: 'var(--text-dim)', paddingLeft: 2 }}>{title}</span>
+            </div>
+            <span className="flag-desc">{description}</span>
+          </div>
+        ))}
+        <div className="flag-row" style={{ gridTemplateColumns: '200px 1fr' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <span className="flag-name mono" style={{ color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Layout size={11} color="var(--green)" /> Navigation
+            </span>
+            <span style={{ fontSize: 11, color: 'var(--text-dim)', paddingLeft: 2 }}>Page Visibility</span>
+          </div>
+          <span className="flag-desc">Show or hide individual nav pages from <strong>Settings → Pages</strong>. Dashboard and Settings are always visible.</span>
+        </div>
+      </div>
     </CollapsibleSection>
   )
 }

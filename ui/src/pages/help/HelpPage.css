@@ -141,6 +141,17 @@
   .flag-row { grid-template-columns: 1fr; }
 }
 
+/* ── Feature highlight row ───────────────────────────────────────────────── */
+.help-feature-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 18px 0;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
 /* ── About section ───────────────────────────────────────────────────────── */
 .help-about {
   padding: 14px 18px 18px;
