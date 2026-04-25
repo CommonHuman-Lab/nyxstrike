@@ -118,7 +118,7 @@ export interface LootDeleteResponse {
 export type CreateLootPayload = {
   loot_type: LootType;
   title: string;
-  content?: string;
+  content?: string | null;
   path?: string;
   host?: string;
   source_tool?: string;

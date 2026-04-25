@@ -524,3 +524,148 @@ a.session-action-btn {
   justify-content: flex-end;
   padding-top: 0.25rem;
 }
+
+/* ── Screenshot upload (form) ─────────────────────────────────────────────── */
+
+.loot-screenshot-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.loot-screenshot-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 7rem;
+  border: 1.5px dashed var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.loot-screenshot-label:hover {
+  border-color: var(--accent);
+}
+
+.loot-screenshot-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.loot-screenshot-placeholder {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.loot-screenshot-preview {
+  max-width: 100%;
+  max-height: 14rem;
+  object-fit: contain;
+  pointer-events: none;
+  display: block;
+}
+
+.loot-screenshot-clear {
+  align-self: flex-end;
+  font-size: 0.75rem;
+}
+
+/* ── Screenshot card (list view) ─────────────────────────────────────────── */
+
+.loot-screenshot-card {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  cursor: zoom-in;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  max-width: fit-content;
+}
+
+.loot-screenshot-thumb {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 8rem;
+  object-fit: contain;
+  transition: opacity 0.15s;
+}
+
+.loot-screenshot-card:hover .loot-screenshot-thumb {
+  opacity: 0.85;
+}
+
+.loot-screenshot-hint {
+  position: absolute;
+  bottom: 0.4rem;
+  right: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  background: rgba(0,0,0,0.55);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.loot-screenshot-card:hover .loot-screenshot-hint {
+  opacity: 1;
+}
+
+/* ── Lightbox ─────────────────────────────────────────────────────────────── */
+
+.loot-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: fade-in 0.15s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.loot-lightbox-img {
+  max-width: 92vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  pointer-events: none;
+}
+
+.loot-lightbox-close {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.1s;
+}
+
+.loot-lightbox-close:hover {
+  color: var(--text);
+}

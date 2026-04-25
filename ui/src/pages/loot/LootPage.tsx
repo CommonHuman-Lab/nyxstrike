@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
+import { useToast } from '../../components/ToastProvider'
 import {
   Plus, Trash2, Edit2, Search, X, KeyRound, Package, RefreshCw,
   Download, CheckCircle2, Circle, Copy, Check,
@@ -241,6 +242,19 @@ interface LootFormProps {
 }
 
 function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }: LootFormProps) {
+  const isScreenshot = form.loot_type === 'screenshot'
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      onChange('content', reader.result as string)
+      if (!form.title) onChange('title', file.name)
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div className="loot-modal-body">
       <div className="loot-form-row">
@@ -259,13 +273,39 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
           autoFocus
         />
       </div>
-      <textarea
-        className="loot-form-textarea"
-        placeholder="Content"
-        rows={4}
-        value={form.content}
-        onChange={e => onChange('content', e.target.value)}
-      />
+      {isScreenshot ? (
+        <div className="loot-screenshot-upload">
+          <label className="loot-screenshot-label">
+            <input
+              type="file"
+              accept="image/*"
+              className="loot-screenshot-file-input"
+              onChange={handleFileChange}
+            />
+            {form.content
+              ? <img src={form.content} alt="preview" className="loot-screenshot-preview" />
+              : <span className="loot-screenshot-placeholder">Click to upload screenshot (PNG, JPG, GIF…)</span>
+            }
+          </label>
+          {form.content && (
+            <button
+              type="button"
+              className="session-action-btn loot-screenshot-clear"
+              onClick={() => onChange('content', '')}
+            >
+              Remove image
+            </button>
+          )}
+        </div>
+      ) : (
+        <textarea
+          className="loot-form-textarea"
+          placeholder="Content"
+          rows={4}
+          value={form.content}
+          onChange={e => onChange('content', e.target.value)}
+        />
+      )}
       <div className="loot-form-row">
         <input
           className="loot-form-input"
@@ -415,9 +455,9 @@ function LootModal({ item, saving, error, onSave, onClose }: LootModalProps) {
 // ── Credentials Tab ────────────────────────────────────────────────────────────
 
 function CredentialsTab() {
+  const { pushToast } = useToast()
   const [items, setItems] = useState<Credential[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<CredentialType | 'all'>('all')
   const [modalOpen, setModalOpen] = useState(false)
@@ -429,16 +469,15 @@ function CredentialsTab() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    setError(null)
     try {
       const res = await api.credentials()
       setItems(res.credentials)
     } catch (e) {
-      setError(String(e))
+      pushToast('error', `Failed to load credentials: ${e}`)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [pushToast])
 
   useEffect(() => { load() }, [load])
 
@@ -488,9 +527,11 @@ function CredentialsTab() {
       if (editing) {
         await api.updateCredential(editing.cred_id, payload)
         setEditing(null)
+        pushToast('success', 'Credential updated')
       } else {
         await api.createCredential(payload)
         setModalOpen(false)
+        pushToast('success', 'Credential added')
       }
       await load()
     } catch (e) {
@@ -504,9 +545,10 @@ function CredentialsTab() {
     setDeletingId(credId)
     try {
       await api.deleteCredential(credId)
+      pushToast('success', 'Credential deleted')
       await load()
     } catch (e) {
-      setError(String(e))
+      pushToast('error', `Delete failed: ${e}`)
     } finally {
       setDeletingId(null)
     }
@@ -555,8 +597,7 @@ function CredentialsTab() {
       />
 
       {/* Header */}
-      <div className="loot-tab-header">
-        <div className="loot-filter-row">
+      <div className="loot-tab-header">        <div className="loot-filter-row">
           <button
             className={`loot-filter-btn${filterType === 'all' ? ' loot-filter-btn--active' : ''}`}
             onClick={() => setFilterType('all')}
@@ -609,8 +650,6 @@ function CredentialsTab() {
           </button>
         )}
       </div>
-
-      {error && <div className="loot-error-banner">{error}</div>}
 
       {loading && items.length === 0 && (
         <div className="loot-loading">
@@ -686,9 +725,9 @@ function CredentialsTab() {
 // ── Loot Tab ───────────────────────────────────────────────────────────────────
 
 function LootTab() {
+  const { pushToast } = useToast()
   const [items, setItems] = useState<LootItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<LootType | 'all'>('all')
   const [modalOpen, setModalOpen] = useState(false)
@@ -697,19 +736,19 @@ function LootTab() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<LootItem | null>(null)
+  const [lightbox, setLightbox] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    setError(null)
     try {
       const res = await api.loot()
       setItems(res.loot)
     } catch (e) {
-      setError(String(e))
+      pushToast('error', `Failed to load loot: ${e}`)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [pushToast])
 
   useEffect(() => { load() }, [load])
 
@@ -745,7 +784,7 @@ function LootTab() {
       const payload: CreateLootPayload = {
         loot_type: form.loot_type,
         title: form.title,
-        content: form.content || undefined,
+        content: form.content || null,
         path: form.path || undefined,
         host: form.host || undefined,
         source_tool: form.source_tool || undefined,
@@ -755,9 +794,11 @@ function LootTab() {
       if (editing) {
         await api.updateLoot(editing.loot_id, payload)
         setEditing(null)
+        pushToast('success', 'Loot updated')
       } else {
         await api.createLoot(payload)
         setModalOpen(false)
+        pushToast('success', 'Loot added')
       }
       await load()
     } catch (e) {
@@ -771,9 +812,10 @@ function LootTab() {
     setDeletingId(lootId)
     try {
       await api.deleteLoot(lootId)
+      pushToast('success', 'Loot deleted')
       await load()
     } catch (e) {
-      setError(String(e))
+      pushToast('error', `Delete failed: ${e}`)
     } finally {
       setDeletingId(null)
     }
@@ -863,8 +905,7 @@ function LootTab() {
         <input
           className="loot-search-input"
           type="text"
-          placeholder="Search loot…"
-          value={search}
+          placeholder="Search loot…"          value={search}
           onChange={e => setSearch(e.target.value)}
         />
         {search && (
@@ -873,8 +914,6 @@ function LootTab() {
           </button>
         )}
       </div>
-
-      {error && <div className="loot-error-banner">{error}</div>}
 
       {loading && items.length === 0 && (
         <div className="loot-loading">
@@ -921,12 +960,17 @@ function LootTab() {
                   </button>
                 </div>
               </div>
-              {item.content && (
+              {item.content && item.loot_type === 'screenshot' && item.content.startsWith('data:image') ? (
+                <div className="loot-screenshot-card" onClick={() => setLightbox(item.content!)}>
+                  <img src={item.content} alt={item.title} className="loot-screenshot-thumb" />
+                  <span className="loot-screenshot-hint">Click to expand</span>
+                </div>
+              ) : item.content ? (
                 <div className="loot-card-secret-wrap">
                   <pre className="loot-card-secret mono">{item.content}</pre>
                   <CopyButton text={item.content} />
                 </div>
-              )}
+              ) : null}
               <div className="loot-card-meta">
                 {item.path && <span className="loot-meta-item mono">path: {item.path}</span>}
                 {item.source_tool && <span className="loot-meta-item mono">tool: {item.source_tool}</span>}
@@ -936,6 +980,14 @@ function LootTab() {
           ))}
         </div>
       ))}
+
+      {lightbox && createPortal(
+        <div className="loot-lightbox-backdrop" onClick={() => setLightbox(null)}>
+          <img src={lightbox} alt="screenshot" className="loot-lightbox-img" />
+          <button className="loot-lightbox-close" onClick={() => setLightbox(null)} title="Close">×</button>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
