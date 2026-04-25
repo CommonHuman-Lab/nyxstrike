@@ -1,7 +1,9 @@
-import { Save, Plus, Trash2 } from 'lucide-react'
+import { Save, Plus, Trash2, Eye, EyeOff } from 'lucide-react'
 import type { Settings, WordlistEntry, PersonalityPreset } from '../../api'
 import { ActionButton } from '../../components/ActionButton'
 import { CollapsibleSection } from '../../components/CollapsibleSection'
+import { PAGE_CONFIGS, ALWAYS_VISIBLE_PAGES } from '../../hooks/usePageVisibility'
+import type { Page } from '../../app/routing'
 
 function SettingsRow({ label, value, mono, accent }: {
   label: string
@@ -134,7 +136,6 @@ export function RuntimeConfigSection({
     <CollapsibleSection
       title="Runtime Config"
       badge={<span className="section-meta">changes apply immediately</span>}
-      defaultOpen
     >
       <div className="settings-grid">
         <SettingsField
@@ -230,17 +231,15 @@ export function WordlistsSection({
     <CollapsibleSection
       title="Wordlists"
       badge={<span className="badge">{wordlistsDraft.length}</span>}
-      headerRight={(
-        <div className="settings-actions-inline">
-          <ActionButton variant="default" onClick={onAddWordlist} disabled={wordlistsSaving}>
-            <Plus size={14} /> Add Wordlist
-          </ActionButton>
-          <ActionButton variant="default" onClick={onSaveWordlists} disabled={wordlistsSaving}>
-            <Save size={14} /> {wordlistsSaving ? 'Saving…' : 'Save Wordlists'}
-          </ActionButton>
-        </div>
-      )}
     >
+      <div className="settings-actions" style={{ justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <ActionButton variant="default" onClick={onAddWordlist} disabled={wordlistsSaving}>
+          <Plus size={14} /> Add Wordlist
+        </ActionButton>
+        <ActionButton variant="default" onClick={onSaveWordlists} disabled={wordlistsSaving}>
+          <Save size={14} /> {wordlistsSaving ? 'Saving…' : 'Save Wordlists'}
+        </ActionButton>
+      </div>
       <div className="wordlist-table">
         <div className="wordlist-head">
           <span>Name</span><span>Type</span><span>Speed</span><span>Coverage</span><span>Path</span><span>Actions</span>
@@ -379,6 +378,46 @@ export function ChatSettingsSection({
         <ActionButton variant="success" onClick={onSave} disabled={saving}>
           <Save size={14} /> {saving ? 'Saving…' : 'Save Chat Settings'}
         </ActionButton>
+      </div>
+    </CollapsibleSection>
+  )
+}
+
+export function PageVisibilitySection({
+  isPageEnabled,
+  togglePage,
+}: {
+  isPageEnabled: (page: Page) => boolean
+  togglePage: (page: Page) => void
+}) {
+  return (
+    <CollapsibleSection title="Navigation Pages">
+      <p className="settings-hint-inline" style={{ marginBottom: '1rem', textAlign: 'center' }}>
+        Hide pages you don't use from the navigation bar.
+        Your preferences are saved in this browser only.
+      </p>
+      <div className="settings-page-visibility-grid">
+        {PAGE_CONFIGS.filter(({ page }) => !ALWAYS_VISIBLE_PAGES.has(page)).map(({ page, label, description }) => {
+          const enabled = isPageEnabled(page)
+          return (
+            <button
+              key={page}
+              type="button"
+              className={`settings-page-tile${enabled ? ' settings-page-tile--on' : ' settings-page-tile--off'}`}
+              onClick={() => togglePage(page)}
+              title={enabled ? `Hide ${label}` : `Show ${label}`}
+            >
+              <span className="settings-page-tile-icon">
+                {enabled ? <Eye size={14} /> : <EyeOff size={14} />}
+              </span>
+              <span className="settings-page-tile-label">{label}</span>
+              <span className="settings-page-tile-desc">{description}</span>
+              <span className={`settings-page-tile-badge${enabled ? ' on' : ' off'}`}>
+                {enabled ? 'Visible' : 'Hidden'}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </CollapsibleSection>
   )

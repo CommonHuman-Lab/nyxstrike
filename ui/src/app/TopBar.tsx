@@ -28,6 +28,7 @@ interface TopBarProps {
   setReduceTextureEffects: (value: boolean) => void
   onOpenCommandPalette: () => void
   onSignOut: () => void
+  isPageEnabled: (page: Page) => boolean
 }
 
 const MOBILE_PAGE_OPTIONS: Array<{ value: Exclude<Page, 'session-detail'>; label: string }> = [
@@ -71,6 +72,7 @@ export function TopBar({
   setReduceTextureEffects,
   onOpenCommandPalette,
   onSignOut,
+  isPageEnabled,
 }: TopBarProps) {
   const REFRESH_BUTTON_DELAY_MS = 3500
   const [themeModalOpen, setThemeModalOpen] = useState(false)
@@ -296,39 +298,61 @@ export function TopBar({
         </div>
 
       <nav className="topbar-nav">
-        <button className={`nav-tab ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-          <LayoutDashboard size={13} /> Home
-        </button>
-        <button className={`nav-tab ${page === 'run' ? 'active' : ''}`} onClick={() => setPage('run')}>
-          <Play size={13} /> Run
-        </button>
-        <button className={`nav-tab ${page === 'logs' ? 'active' : ''}`} onClick={() => setPage('logs')}>
-          <Terminal size={13} /> Logs
-        </button>
-        <button className={`nav-tab ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
-          <SettingsIcon size={13} /> Settings
-        </button>
-        <button className={`nav-tab ${page === 'help' ? 'active' : ''}`} onClick={() => setPage('help')}>
-          <HelpCircle size={13} /> Help
-        </button>
-        <button className={`nav-tab ${page === 'tasks' ? 'active' : ''}`} onClick={() => setPage('tasks')}>
-          <ListTodo size={13} /> Tasks
-        </button>
-        <button className={`nav-tab ${page === 'tools' ? 'active' : ''}`} onClick={() => setPage('tools')}>
-          <Wrench size={13} /> Tools
-        </button>
-        <button className={`nav-tab ${page === 'plugins' ? 'active' : ''}`} onClick={() => setPage('plugins')}>
-          <Puzzle size={13} /> Plugins
-        </button>
-        <button className={`nav-tab ${page === 'reports' ? 'active' : ''}`} onClick={() => setPage('reports')}>
-          <FileText size={13} /> Reports
-        </button>
-        <button className={`nav-tab ${page === 'sessions' || page === 'session-detail' ? 'active' : ''}`} onClick={() => setPage('sessions')}>
-          <Layers size={13} /> Sessions
-        </button>
-        <button className={`nav-tab ${page === 'loot' ? 'active' : ''}`} onClick={() => setPage('loot')}>
-          <KeyRound size={13} /> Loot
-        </button>
+        {isPageEnabled('dashboard') && (
+          <button className={`nav-tab ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
+            <LayoutDashboard size={13} /> Home
+          </button>
+        )}
+        {isPageEnabled('run') && (
+          <button className={`nav-tab ${page === 'run' ? 'active' : ''}`} onClick={() => setPage('run')}>
+            <Play size={13} /> Run
+          </button>
+        )}
+        {isPageEnabled('logs') && (
+          <button className={`nav-tab ${page === 'logs' ? 'active' : ''}`} onClick={() => setPage('logs')}>
+            <Terminal size={13} /> Logs
+          </button>
+        )}
+        {isPageEnabled('settings') && (
+          <button className={`nav-tab ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
+            <SettingsIcon size={13} /> Settings
+          </button>
+        )}
+        {isPageEnabled('help') && (
+          <button className={`nav-tab ${page === 'help' ? 'active' : ''}`} onClick={() => setPage('help')}>
+            <HelpCircle size={13} /> Help
+          </button>
+        )}
+        {isPageEnabled('tasks') && (
+          <button className={`nav-tab ${page === 'tasks' ? 'active' : ''}`} onClick={() => setPage('tasks')}>
+            <ListTodo size={13} /> Tasks
+          </button>
+        )}
+        {isPageEnabled('tools') && (
+          <button className={`nav-tab ${page === 'tools' ? 'active' : ''}`} onClick={() => setPage('tools')}>
+            <Wrench size={13} /> Tools
+          </button>
+        )}
+        {isPageEnabled('plugins') && (
+          <button className={`nav-tab ${page === 'plugins' ? 'active' : ''}`} onClick={() => setPage('plugins')}>
+            <Puzzle size={13} /> Plugins
+          </button>
+        )}
+        {isPageEnabled('reports') && (
+          <button className={`nav-tab ${page === 'reports' ? 'active' : ''}`} onClick={() => setPage('reports')}>
+            <FileText size={13} /> Reports
+          </button>
+        )}
+        {isPageEnabled('sessions') && (
+          <button className={`nav-tab ${page === 'sessions' || page === 'session-detail' ? 'active' : ''}`} onClick={() => setPage('sessions')}>
+            <Layers size={13} /> Sessions
+          </button>
+        )}
+        {isPageEnabled('loot') && (
+          <button className={`nav-tab ${page === 'loot' ? 'active' : ''}`} onClick={() => setPage('loot')}>
+            <KeyRound size={13} /> Loot
+          </button>
+        )}
       </nav>
 
         <div className="topbar-right">
@@ -339,7 +363,7 @@ export function TopBar({
             value={mobilePage}
             onChange={e => setPage(e.target.value as Exclude<Page, 'session-detail'>)}
           >
-            {MOBILE_PAGE_OPTIONS.map(option => (
+            {MOBILE_PAGE_OPTIONS.filter(o => isPageEnabled(o.value)).map(option => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>

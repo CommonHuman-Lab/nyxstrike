@@ -297,3 +297,88 @@ select.settings-input {
     grid-template-columns: 160px 100px 90px 100px 1fr 84px;
   }
 }
+
+/* ── Page Visibility ─────────────────────────────────────────────────────── */
+.settings-page-visibility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.settings-page-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+  color: var(--text-h);
+}
+
+.settings-page-tile--on {
+  border-color: var(--green);
+  background: color-mix(in srgb, var(--green) 8%, var(--bg-card2));
+}
+
+.settings-page-tile--off {
+  border-color: var(--border);
+  background: var(--bg-card2);
+  opacity: 0.65;
+}
+
+.settings-page-tile--locked {
+  cursor: default;
+  opacity: 1 !important;
+}
+
+.settings-page-tile:hover:not(:disabled) {
+  border-color: var(--green);
+  opacity: 1;
+}
+
+.settings-page-tile-icon {
+  color: var(--green);
+  line-height: 1;
+}
+
+.settings-page-tile--off .settings-page-tile-icon {
+  color: var(--text-dim);
+}
+
+.settings-page-tile-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  line-height: 1.2;
+}
+
+.settings-page-tile-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.settings-page-tile-badge {
+  font-size: 10px;
+  font-family: var(--mono);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-top: 2px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.settings-page-tile-badge.on {
+  background: color-mix(in srgb, var(--green) 18%, transparent);
+  color: var(--green);
+}
+
+.settings-page-tile-badge.off {
+  background: color-mix(in srgb, var(--text-dim) 12%, transparent);
+  color: var(--text-dim);
+}

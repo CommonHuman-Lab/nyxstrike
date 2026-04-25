@@ -64,6 +64,42 @@ interface MainContentProps {
   setThemeId: (theme: ThemeId) => void
   reduceTextureEffects: boolean
   setReduceTextureEffects: (value: boolean) => void
+  demoProcesses?: unknown
+  demoSessions?: unknown
+  demoCpuHistory?: unknown
+  isPageEnabled: (page: Page) => boolean
+  togglePage: (page: Page) => void
+}
+
+interface MainContentProps {
+  page: Page
+  demo: boolean
+  tools: Tool[]
+  health: WebDashboardResponse | null
+  toolsStatusWithParents: Record<string, boolean>
+  runHistory: RunHistoryEntry[]
+  setRunHistory: Dispatch<SetStateAction<RunHistoryEntry[]>>
+  fetchServerRunHistory: () => Promise<void>
+  clearServerRunHistory: () => Promise<void>
+  commandToolRequest?: { toolName: string; requestId: number } | null
+  onCommandToolHandled?: () => void
+  openSessionDetail: (sessionId: string) => void
+  activeSessionId: string | null
+  setPage: (page: Page) => void
+  addBrowserRunEntry: (tool: string, params: Record<string, unknown>, result: ToolExecResponse) => void
+  logLines: string[]
+  logAutoScroll: boolean
+  setLogAutoScroll: Dispatch<SetStateAction<boolean>>
+  logLimit: number
+  setLogLimit: Dispatch<SetStateAction<number>>
+  logEndRef: RefObject<HTMLDivElement | null>
+  loading: boolean
+  error: string | null
+  toolCategories: Record<string, string[]>
+  themeId: ThemeId
+  setThemeId: (theme: ThemeId) => void
+  reduceTextureEffects: boolean
+  setReduceTextureEffects: (value: boolean) => void
   /** Demo data injected from App (avoids importing demo.ts here) */
   demoProcesses?: unknown
   demoSessions?: unknown
@@ -102,6 +138,8 @@ export function MainContent({
   demoProcesses,
   demoSessions,
   demoCpuHistory,
+  isPageEnabled,
+  togglePage,
 }: MainContentProps) {
   return (
     <main className={`main${page === 'run' ? ' main--flush' : ''}`}>
@@ -112,6 +150,8 @@ export function MainContent({
             setThemeId={setThemeId}
             reduceTextureEffects={reduceTextureEffects}
             setReduceTextureEffects={setReduceTextureEffects}
+            isPageEnabled={isPageEnabled}
+            togglePage={togglePage}
           />
         )}
         {page === 'help' && <HelpPage />}
