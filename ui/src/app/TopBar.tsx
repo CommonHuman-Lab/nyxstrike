@@ -360,6 +360,7 @@ export function TopBar({
             <span className="topbar-mobile-nav-label">Page</span>
           <select
             className="topbar-mobile-nav-select"
+            name="mobile-nav"
             value={mobilePage}
             onChange={e => setPage(e.target.value as Exclude<Page, 'session-detail'>)}
           >

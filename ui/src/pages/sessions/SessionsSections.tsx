@@ -181,6 +181,7 @@ export function StartSessionModal({
               <label className="mono">Template *</label>
               <select
                 ref={templateSelectRef}
+                name="session-template"
                 className="session-objective-select"
                 value={selectedTemplateId}
                 onChange={e => setSelectedTemplateId(e.target.value)}
@@ -196,6 +197,7 @@ export function StartSessionModal({
             <div className="session-start-form">
               <label className="mono">Precision</label>
               <select
+                name="session-intelligence-precision"
                 className="session-objective-select"
                 value={intelligencePrecision}
                 onChange={e => setIntelligencePrecision(e.target.value as 'quick' | 'comprehensive' | 'stealth')}

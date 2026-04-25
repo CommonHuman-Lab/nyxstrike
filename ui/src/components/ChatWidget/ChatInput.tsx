@@ -99,6 +99,7 @@ export function ChatInput({ onSend, streaming, onStop, disabled, prefill }: Chat
       <textarea
         ref={textareaRef}
         className="chat-textarea mono"
+        name="chat-message"
         value={text}
         onChange={handleInput}
         onKeyDown={handleKeyDown}

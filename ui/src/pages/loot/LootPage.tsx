@@ -105,6 +105,7 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
     <div className="loot-modal-body">
       <div className="loot-form-row">
         <select
+          name="cred-type"
           className="loot-form-select"
           value={form.type}
           onChange={e => onChange('type', e.target.value)}
@@ -112,6 +113,7 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
           {CRED_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <input
+          name="cred-username"
           className="loot-form-input"
           placeholder="Username"
           value={form.username}
@@ -120,6 +122,7 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
         />
       </div>
       <input
+        name="cred-secret"
         className="loot-form-input"
         placeholder="Secret / password"
         value={form.secret}
@@ -127,18 +130,21 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
       />
       <div className="loot-form-row">
         <input
+          name="cred-hash-type"
           className="loot-form-input"
           placeholder="Hash type (e.g. NTLM)"
           value={form.hash_type}
           onChange={e => onChange('hash_type', e.target.value)}
         />
         <input
+          name="cred-service"
           className="loot-form-input"
           placeholder="Service (e.g. ssh)"
           value={form.service}
           onChange={e => onChange('service', e.target.value)}
         />
         <input
+          name="cred-host"
           className="loot-form-input"
           placeholder="Host"
           value={form.host}
@@ -147,12 +153,14 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
       </div>
       <div className="loot-form-row">
         <input
+          name="cred-source-tool"
           className="loot-form-input"
           placeholder="Source tool"
           value={form.source_tool}
           onChange={e => onChange('source_tool', e.target.value)}
         />
         <input
+          name="cred-tags"
           className="loot-form-input"
           placeholder="Tags (comma separated)"
           value={form.tagsInput}
@@ -160,6 +168,7 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
         />
       </div>
       <textarea
+        name="cred-evidence"
         className="loot-form-textarea"
         placeholder="Evidence"
         rows={3}
@@ -167,6 +176,7 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
         onChange={e => onChange('evidence', e.target.value)}
       />
       <textarea
+        name="cred-notes"
         className="loot-form-textarea"
         placeholder="Notes"
         rows={2}
@@ -175,6 +185,7 @@ function CredForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
       />
       <label className="loot-form-checkbox-row">
         <input
+          name="cred-verified"
           type="checkbox"
           checked={form.verified}
           onChange={e => onChange('verified', e.target.checked)}
@@ -259,6 +270,7 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
     <div className="loot-modal-body">
       <div className="loot-form-row">
         <select
+          name="loot-type"
           className="loot-form-select"
           value={form.loot_type}
           onChange={e => onChange('loot_type', e.target.value)}
@@ -266,6 +278,7 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
           {LOOT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <input
+          name="loot-title"
           className="loot-form-input"
           placeholder="Title *"
           value={form.title}
@@ -277,6 +290,7 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
         <div className="loot-screenshot-upload">
           <label className="loot-screenshot-label">
             <input
+              name="loot-screenshot"
               type="file"
               accept="image/*"
               className="loot-screenshot-file-input"
@@ -299,6 +313,7 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
         </div>
       ) : (
         <textarea
+          name="loot-content"
           className="loot-form-textarea"
           placeholder="Content"
           rows={4}
@@ -308,18 +323,21 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
       )}
       <div className="loot-form-row">
         <input
+          name="loot-path"
           className="loot-form-input"
           placeholder="Path"
           value={form.path}
           onChange={e => onChange('path', e.target.value)}
         />
         <input
+          name="loot-host"
           className="loot-form-input"
           placeholder="Host"
           value={form.host}
           onChange={e => onChange('host', e.target.value)}
         />
         <input
+          name="loot-source-tool"
           className="loot-form-input"
           placeholder="Source tool"
           value={form.source_tool}
@@ -328,6 +346,7 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
       </div>
       <div className="loot-form-row">
         <input
+          name="loot-tags"
           className="loot-form-input"
           placeholder="Tags (comma separated)"
           value={form.tagsInput}
@@ -335,6 +354,7 @@ function LootForm({ form, saving, error, saveLabel, onChange, onSave, onCancel }
         />
       </div>
       <textarea
+        name="loot-notes"
         className="loot-form-textarea"
         placeholder="Notes"
         rows={2}

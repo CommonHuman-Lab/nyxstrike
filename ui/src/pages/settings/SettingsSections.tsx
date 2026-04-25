@@ -34,6 +34,7 @@ function SettingsField({ label, unit, hint, value, onChange }: {
       <div className="settings-input-row">
         <input
           className="settings-input mono"
+          name="settings-number"
           type="number"
           min={0}
           value={value}
@@ -58,6 +59,7 @@ export function SettingsTextarea({ label, hint, value, onChange, rows = 4 }: {
       <label className="settings-label">{label}</label>
       <textarea
         className="settings-input settings-textarea mono"
+        name="settings-textarea"
         rows={rows}
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -248,6 +250,7 @@ export function WordlistsSection({
           <div key={`wordlist-row-${index}`} className="wordlist-row editable">
             <input
               className="settings-input mono wordlist-input"
+              name="wordlist-name"
               value={wordlist.name}
               onChange={e => onUpdateWordlist(index, 'name', e.target.value)}
               placeholder="rockyou"
@@ -255,6 +258,7 @@ export function WordlistsSection({
             />
             <select
               className="settings-input wordlist-input"
+              name="wordlist-type"
               value={wordlist.type}
               onChange={e => onUpdateWordlist(index, 'type', e.target.value)}
             >
@@ -264,6 +268,7 @@ export function WordlistsSection({
             </select>
             <select
               className="settings-input wordlist-input"
+              name="wordlist-speed"
               value={wordlist.speed}
               onChange={e => onUpdateWordlist(index, 'speed', e.target.value)}
             >
@@ -273,6 +278,7 @@ export function WordlistsSection({
             </select>
             <select
               className="settings-input wordlist-input"
+              name="wordlist-coverage"
               value={wordlist.coverage}
               onChange={e => onUpdateWordlist(index, 'coverage', e.target.value)}
             >
@@ -282,6 +288,7 @@ export function WordlistsSection({
             </select>
             <input
               className="settings-input mono wordlist-input"
+              name="wordlist-path"
               value={wordlist.path}
               onChange={e => onUpdateWordlist(index, 'path', e.target.value)}
               placeholder="/usr/share/wordlists/rockyou.txt"
@@ -341,6 +348,7 @@ export function ChatSettingsSection({
           <label className="settings-label">Personality</label>
           <select
             className="settings-input settings-select-full"
+            name="chat-personality"
             value={chatPersonality}
             onChange={e => setChatPersonality(e.target.value)}
           >

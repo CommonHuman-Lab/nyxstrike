@@ -44,6 +44,7 @@ export function LogsToolbar({
         Show
         <select
           className="log-limit-select"
+          name="log-limit"
           value={logLimit}
           onChange={e => setLogLimit(Number(e.target.value))}
         >

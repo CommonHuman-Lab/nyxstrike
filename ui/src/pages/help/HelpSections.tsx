@@ -36,6 +36,7 @@ export function IdeConfigSection({
         <label className="help-path-label">Installation path</label>
         <input
           className="search-input mono help-path-input"
+          name="install-path"
           value={installPath}
           onChange={e => setInstallPath(e.target.value)}
           placeholder="/path/to/nyxstrike"

@@ -121,6 +121,7 @@ export function NoteModal({
             {/* Folder select — only in edit mode and when there are folders */}
             {mode === 'edit' && allFolders.length > 0 && (
               <select
+                name="note-folder"
                 className="note-modal-folder-select"
                 value={selectedFolder}
                 onChange={e => setSelectedFolder(e.target.value)}

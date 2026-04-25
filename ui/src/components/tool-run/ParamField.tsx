@@ -25,6 +25,7 @@ export function ParamField({
       </label>
       <input
         className="run-field-input mono"
+        name={name}
         value={value}
         onChange={handleChange}
         placeholder={required ? 'required' : 'optional'}

@@ -58,6 +58,7 @@ function FindingForm({
     <div className="finding-modal-body">
       <div className="findings-form-row">
         <input
+          name="finding-title"
           className="findings-form-input"
           placeholder="Title *"
           value={title}
@@ -65,6 +66,7 @@ function FindingForm({
           autoFocus
         />
         <select
+          name="finding-severity"
           className="findings-form-select"
           value={severity}
           onChange={e => onChange('severity', e.target.value)}
@@ -73,6 +75,7 @@ function FindingForm({
         </select>
         {showStatus && (
           <select
+            name="finding-status"
             className="findings-form-select"
             value={status ?? 'open'}
             onChange={e => onChange('status', e.target.value)}
@@ -82,6 +85,7 @@ function FindingForm({
         )}
       </div>
       <textarea
+        name="finding-description"
         className="findings-form-textarea"
         placeholder="Description"
         rows={3}
@@ -90,12 +94,14 @@ function FindingForm({
       />
       <div className="findings-form-row">
         <input
+          name="finding-tool"
           className="findings-form-input"
           placeholder="Tool (e.g. nmap)"
           value={tool}
           onChange={e => onChange('tool', e.target.value)}
         />
         <input
+          name="finding-cve"
           className="findings-form-input"
           placeholder="CVE (e.g. CVE-2021-44228)"
           value={cve}
@@ -103,6 +109,7 @@ function FindingForm({
         />
       </div>
       <textarea
+        name="finding-evidence"
         className="findings-form-textarea"
         placeholder="Evidence / PoC"
         rows={3}
@@ -110,6 +117,7 @@ function FindingForm({
         onChange={e => onChange('evidence', e.target.value)}
       />
       <textarea
+        name="finding-recommendation"
         className="findings-form-textarea"
         placeholder="Recommendation"
         rows={2}
@@ -117,6 +125,7 @@ function FindingForm({
         onChange={e => onChange('recommendation', e.target.value)}
       />
       <input
+        name="finding-tags"
         className="findings-form-input"
         placeholder="Tags (comma separated)"
         value={tagsInput}

@@ -234,6 +234,7 @@ export function SessionDetailWorkbench({
               <div className="session-target-override">
                 <label className="mono">Target</label>
                 <input
+                  name="session-target"
                   className="search-input mono"
                   value={targetValue}
                   onChange={e => setTargetValue(e.target.value)}
