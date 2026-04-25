@@ -24,6 +24,7 @@ const PluginsPage       = lazy(() => import('../pages/plugins/PluginsPage'))
 const ReportsPage       = lazy(() => import('../pages/reports/ReportsPage'))
 const SessionsPage      = lazy(() => import('../pages/sessions/SessionsPage'))
 const SessionDetailPage = lazy(() => import('../pages/sessions/SessionDetailPage'))
+const LootPage          = lazy(() => import('../pages/loot/LootPage'))
 
 /** Minimal spinner shown while a lazy chunk is loading */
 function PageLoader() {
@@ -148,6 +149,7 @@ export function MainContent({
             llmAvailable={health?.llm_status?.available ?? false}
           />
         )}
+        {page === 'loot' && <LootPage />}
         {page === 'logs' && (
           <LogsPage
             logLines={logLines}

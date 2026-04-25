@@ -1,0 +1,506 @@
+a.session-action-btn {
+  text-decoration: none;
+}
+
+/* ── Button styles (self-contained, mirrors SessionsPage/SessionNotes) ──────── */
+
+.loot-page-card .session-action-btn,
+.loot-modal .session-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.loot-page-card .session-action-btn:hover,
+.loot-modal .session-action-btn:hover {
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+.loot-page-card .session-action-btn:disabled,
+.loot-modal .session-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.loot-page-card .session-action-btn--primary,
+.loot-modal .session-action-btn--primary {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.loot-page-card .session-action-btn--primary:hover,
+.loot-modal .session-action-btn--primary:hover {
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+.loot-page-card .finding-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 5px;
+  cursor: pointer;
+  color: var(--text-dim);
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+
+.loot-page-card .finding-icon-btn:hover {
+  opacity: 1;
+  border-color: var(--border);
+}
+
+.loot-page-card .finding-icon-btn--danger:hover {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
+}
+
+/* ── Loot Page ─────────────────────────────────────────────────────────────── */
+
+.loot-page-card {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.loot-page-header {
+  margin-bottom: 1.25rem;
+}
+
+.loot-page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.25rem;
+}
+
+.loot-page-subtitle {
+  margin: 0;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────────────────────── */
+
+.loot-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.loot-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.loot-tab-btn:hover {
+  color: var(--text);
+}
+
+.loot-tab-btn--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Tab Content ────────────────────────────────────────────────────────────── */
+
+.loot-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Tab Header ─────────────────────────────────────────────────────────────── */
+
+.loot-tab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.loot-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.loot-filter-btn {
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.loot-filter-btn:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.loot-filter-btn--active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.loot-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ── Search Row ─────────────────────────────────────────────────────────────── */
+
+.loot-search-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.loot-search-icon {
+  position: absolute;
+  left: 0.6rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.loot-search-input {
+  width: 100%;
+  padding: 0.35rem 2rem 0.35rem 2rem;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.loot-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.loot-search-clear {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+/* ── State messages ─────────────────────────────────────────────────────────── */
+
+.loot-loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-dim);
+}
+
+.loot-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+.loot-error-banner {
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--red);
+  font-size: 0.8rem;
+}
+
+/* ── Groups ─────────────────────────────────────────────────────────────────── */
+
+.loot-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.loot-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+
+.loot-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.loot-type-badge--plaintext,
+.loot-type-badge--secret { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); border-color: var(--red); }
+.loot-type-badge--hash   { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); border-color: var(--amber); }
+.loot-type-badge--token,
+.loot-type-badge--cookie { background: color-mix(in srgb, var(--blue) 15%, transparent); color: var(--blue); border-color: var(--blue); }
+.loot-type-badge--key,
+.loot-type-badge--certificate { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); border-color: var(--green); }
+.loot-type-badge--flag   { background: color-mix(in srgb, var(--yellow) 15%, transparent); color: var(--yellow); border-color: var(--yellow); }
+
+/* ── Cards ──────────────────────────────────────────────────────────────────── */
+
+.loot-card {
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.loot-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.loot-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.loot-card-icon {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.loot-card-name {
+  font-size: 0.82rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.loot-card-service,
+.loot-card-host {
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+
+.loot-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.loot-verified-icon {
+  color: var(--green);
+}
+
+.loot-unverified-icon {
+  color: var(--text-dim);
+}
+
+.loot-card-secret {
+  font-size: 0.78rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.35rem 0.55rem;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--green);
+  max-height: 8rem;
+}
+
+.loot-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.loot-meta-item {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.loot-card-notes {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.loot-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.loot-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* ── Modal ──────────────────────────────────────────────────────────────────── */
+
+.loot-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.loot-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.loot-modal-header {
+  padding: 0.75rem 1rem;
+}
+
+.loot-modal-body {
+  padding: 0.85rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Form Elements ──────────────────────────────────────────────────────────── */
+
+.loot-form-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.loot-form-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.35rem 0.6rem;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.loot-form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.loot-form-select {
+  padding: 0.35rem 0.6rem;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.loot-form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.loot-form-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.loot-form-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.loot-form-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.loot-form-error {
+  color: var(--red);
+  font-size: 0.78rem;
+}
+
+.loot-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}

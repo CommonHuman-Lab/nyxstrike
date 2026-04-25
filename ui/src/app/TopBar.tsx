@@ -4,7 +4,7 @@ import {
   RefreshCw, Lock, Github, Copy, Check,
   LayoutDashboard, Terminal, Play,
   Settings as SettingsIcon, HelpCircle,
-  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X, Puzzle,
+  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X, Puzzle, KeyRound,
 } from 'lucide-react'
 import { clearToken, hasToken, type WebDashboardResponse } from '../api'
 import type { Page } from './routing'
@@ -41,6 +41,7 @@ const MOBILE_PAGE_OPTIONS: Array<{ value: Exclude<Page, 'session-detail'>; label
   { value: 'plugins', label: 'Plugins' },
   { value: 'reports', label: 'Reports' },
   { value: 'sessions', label: 'Sessions' },
+  { value: 'loot', label: 'Loot' },
 ]
 
 function DiscordIcon({ size = 14 }: { size?: number }) {
@@ -324,6 +325,9 @@ export function TopBar({
         </button>
         <button className={`nav-tab ${page === 'sessions' || page === 'session-detail' ? 'active' : ''}`} onClick={() => setPage('sessions')}>
           <Layers size={13} /> Sessions
+        </button>
+        <button className={`nav-tab ${page === 'loot' ? 'active' : ''}`} onClick={() => setPage('loot')}>
+          <KeyRound size={13} /> Loot
         </button>
       </nav>
 

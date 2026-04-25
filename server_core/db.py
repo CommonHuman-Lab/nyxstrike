@@ -18,6 +18,8 @@ Current tables:
   llm_vulnerabilities — parsed vulnerabilities linked to a session
   chat_sessions       — named chat conversation threads
   chat_messages       — individual messages within a chat thread
+  credentials         — discovered credentials/hashes/keys/tokens (loot)
+  loot                — non-credential artifacts (flags, files, configs)
 """
 
 import json
@@ -115,6 +117,7 @@ class NyxStrikeDB:
 
     # ── Auto-migrations ───────────────────────────────────────────────────────
     self._migrate_chat_messages_stats()
+    self._migrate_credentials_loot()
 
     logger.debug("db: tables verified")
 
@@ -128,6 +131,58 @@ class NyxStrikeDB:
       self._conn.execute("ALTER TABLE chat_messages ADD COLUMN stats TEXT DEFAULT NULL")
       self._conn.commit()
       logger.info("db: migrated chat_messages — added stats column")
+
+  def _migrate_credentials_loot(self) -> None:
+    """Create credentials and loot tables if missing (existing DBs)."""
+    with self._lock:
+      self._conn.executescript("""
+        CREATE TABLE IF NOT EXISTS credentials (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id  TEXT,
+          cred_id     TEXT UNIQUE NOT NULL,
+          type        TEXT NOT NULL DEFAULT 'plaintext',
+          username    TEXT DEFAULT '',
+          secret      TEXT DEFAULT '',
+          hash_type   TEXT DEFAULT '',
+          service     TEXT DEFAULT '',
+          host        TEXT DEFAULT '',
+          port        TEXT DEFAULT '',
+          source_tool TEXT DEFAULT '',
+          evidence    TEXT DEFAULT '',
+          tags        TEXT DEFAULT '[]',
+          verified    INTEGER DEFAULT 0,
+          notes       TEXT DEFAULT '',
+          created_at  TEXT DEFAULT (datetime('now')),
+          updated_at  TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_credentials_session ON credentials(session_id);
+        CREATE INDEX IF NOT EXISTS idx_credentials_host    ON credentials(host);
+        CREATE INDEX IF NOT EXISTS idx_credentials_service ON credentials(service);
+        CREATE INDEX IF NOT EXISTS idx_credentials_type    ON credentials(type);
+
+        CREATE TABLE IF NOT EXISTS loot (
+          id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_id  TEXT,
+          loot_id     TEXT UNIQUE NOT NULL,
+          loot_type   TEXT NOT NULL DEFAULT 'other',
+          title       TEXT NOT NULL,
+          content     TEXT DEFAULT '',
+          path        TEXT DEFAULT '',
+          host        TEXT DEFAULT '',
+          source_tool TEXT DEFAULT '',
+          tags        TEXT DEFAULT '[]',
+          notes       TEXT DEFAULT '',
+          created_at  TEXT DEFAULT (datetime('now')),
+          updated_at  TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_loot_session ON loot(session_id);
+        CREATE INDEX IF NOT EXISTS idx_loot_type    ON loot(loot_type);
+        CREATE INDEX IF NOT EXISTS idx_loot_host    ON loot(host);
+      """)
+      self._conn.commit()
+      logger.debug("db: credentials/loot tables verified")
 
   # ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -347,6 +402,232 @@ class NyxStrikeDB:
       )
       row = cur.fetchone()
       return row[0] if row else 0
+
+  # ── Credentials ───────────────────────────────────────────────────────────────
+
+  def add_credential(self, cred: Dict[str, Any], session_id: Optional[str] = None) -> str:
+    """Insert a credential record and return its cred_id."""
+    import uuid
+    cred_id = cred.get("cred_id") or f"cred_{uuid.uuid4().hex[:8]}"
+    tags = json.dumps(cred.get("tags", []) if isinstance(cred.get("tags"), list) else [])
+    with self._lock:
+      self._conn.execute(
+        """
+        INSERT OR IGNORE INTO credentials
+          (session_id, cred_id, type, username, secret, hash_type, service, host,
+           port, source_tool, evidence, tags, verified, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+          session_id or cred.get("session_id", ""),
+          cred_id,
+          cred.get("type", "plaintext"),
+          cred.get("username", ""),
+          cred.get("secret", ""),
+          cred.get("hash_type", ""),
+          cred.get("service", ""),
+          cred.get("host", ""),
+          cred.get("port", ""),
+          cred.get("source_tool", ""),
+          cred.get("evidence", ""),
+          tags,
+          1 if cred.get("verified") else 0,
+          cred.get("notes", ""),
+        ),
+      )
+      self._conn.commit()
+    return cred_id
+
+  def get_credential(self, cred_id: str) -> Optional[Dict[str, Any]]:
+    """Return a single credential dict or None."""
+    with self._lock:
+      cur = self._conn.execute("SELECT * FROM credentials WHERE cred_id = ?", (cred_id,))
+      row = self._row_to_dict(cur.fetchone())
+    if row and isinstance(row.get("tags"), str):
+      try:
+        row["tags"] = json.loads(row["tags"])
+      except Exception:
+        row["tags"] = []
+    return row
+
+  def list_credentials(
+    self,
+    session_id: Optional[str] = None,
+    host: Optional[str] = None,
+    service: Optional[str] = None,
+    cred_type: Optional[str] = None,
+    tag: Optional[str] = None,
+    query: Optional[str] = None,
+  ) -> List[Dict[str, Any]]:
+    """Return credentials matching all provided filters."""
+    clauses: List[str] = []
+    params: List[Any] = []
+    if session_id:
+      clauses.append("session_id = ?")
+      params.append(session_id)
+    if host:
+      clauses.append("host LIKE ?")
+      params.append(f"%{host}%")
+    if service:
+      clauses.append("service LIKE ?")
+      params.append(f"%{service}%")
+    if cred_type:
+      clauses.append("type = ?")
+      params.append(cred_type)
+    if tag:
+      clauses.append("tags LIKE ?")
+      params.append(f'%"{tag}"%')
+    if query:
+      clauses.append("(username LIKE ? OR host LIKE ? OR service LIKE ? OR notes LIKE ?)")
+      params.extend([f"%{query}%"] * 4)
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    with self._lock:
+      cur = self._conn.execute(
+        f"SELECT * FROM credentials {where} ORDER BY created_at DESC",
+        params,
+      )
+      rows = self._rows_to_list(cur.fetchall())
+    for row in rows:
+      if isinstance(row.get("tags"), str):
+        try:
+          row["tags"] = json.loads(row["tags"])
+        except Exception:
+          row["tags"] = []
+    return rows
+
+  def update_credential(self, cred_id: str, **fields: Any) -> None:
+    """Update allowed fields on a credential row."""
+    allowed = {
+      "type", "username", "secret", "hash_type", "service", "host", "port",
+      "source_tool", "evidence", "tags", "verified", "notes", "session_id",
+    }
+    updates = {k: v for k, v in fields.items() if k in allowed}
+    if not updates:
+      return
+    if "tags" in updates and isinstance(updates["tags"], list):
+      updates["tags"] = json.dumps(updates["tags"])
+    updates["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    values = list(updates.values()) + [cred_id]
+    with self._lock:
+      self._conn.execute(
+        f"UPDATE credentials SET {set_clause} WHERE cred_id = ?",
+        values,
+      )
+      self._conn.commit()
+
+  def delete_credential(self, cred_id: str) -> None:
+    """Delete a credential record."""
+    with self._lock:
+      self._conn.execute("DELETE FROM credentials WHERE cred_id = ?", (cred_id,))
+      self._conn.commit()
+
+  # ── Loot ──────────────────────────────────────────────────────────────────────
+
+  def add_loot(self, loot: Dict[str, Any], session_id: Optional[str] = None) -> str:
+    """Insert a loot record and return its loot_id."""
+    import uuid
+    loot_id = loot.get("loot_id") or f"loot_{uuid.uuid4().hex[:8]}"
+    tags = json.dumps(loot.get("tags", []) if isinstance(loot.get("tags"), list) else [])
+    with self._lock:
+      self._conn.execute(
+        """
+        INSERT OR IGNORE INTO loot
+          (session_id, loot_id, loot_type, title, content, path, host, source_tool, tags, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+          session_id or loot.get("session_id", ""),
+          loot_id,
+          loot.get("loot_type", "other"),
+          loot.get("title", ""),
+          loot.get("content", ""),
+          loot.get("path", ""),
+          loot.get("host", ""),
+          loot.get("source_tool", ""),
+          tags,
+          loot.get("notes", ""),
+        ),
+      )
+      self._conn.commit()
+    return loot_id
+
+  def get_loot(self, loot_id: str) -> Optional[Dict[str, Any]]:
+    """Return a single loot record or None."""
+    with self._lock:
+      cur = self._conn.execute("SELECT * FROM loot WHERE loot_id = ?", (loot_id,))
+      row = self._row_to_dict(cur.fetchone())
+    if row and isinstance(row.get("tags"), str):
+      try:
+        row["tags"] = json.loads(row["tags"])
+      except Exception:
+        row["tags"] = []
+    return row
+
+  def list_loot(
+    self,
+    session_id: Optional[str] = None,
+    loot_type: Optional[str] = None,
+    host: Optional[str] = None,
+    tag: Optional[str] = None,
+    query: Optional[str] = None,
+  ) -> List[Dict[str, Any]]:
+    """Return loot records matching all provided filters."""
+    clauses: List[str] = []
+    params: List[Any] = []
+    if session_id:
+      clauses.append("session_id = ?")
+      params.append(session_id)
+    if loot_type:
+      clauses.append("loot_type = ?")
+      params.append(loot_type)
+    if host:
+      clauses.append("host LIKE ?")
+      params.append(f"%{host}%")
+    if tag:
+      clauses.append("tags LIKE ?")
+      params.append(f'%"{tag}"%')
+    if query:
+      clauses.append("(title LIKE ? OR content LIKE ? OR host LIKE ? OR notes LIKE ?)")
+      params.extend([f"%{query}%"] * 4)
+    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+    with self._lock:
+      cur = self._conn.execute(
+        f"SELECT * FROM loot {where} ORDER BY created_at DESC",
+        params,
+      )
+      rows = self._rows_to_list(cur.fetchall())
+    for row in rows:
+      if isinstance(row.get("tags"), str):
+        try:
+          row["tags"] = json.loads(row["tags"])
+        except Exception:
+          row["tags"] = []
+    return rows
+
+  def update_loot(self, loot_id: str, **fields: Any) -> None:
+    """Update allowed fields on a loot row."""
+    allowed = {"loot_type", "title", "content", "path", "host", "source_tool", "tags", "notes", "session_id"}
+    updates = {k: v for k, v in fields.items() if k in allowed}
+    if not updates:
+      return
+    if "tags" in updates and isinstance(updates["tags"], list):
+      updates["tags"] = json.dumps(updates["tags"])
+    updates["updated_at"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    values = list(updates.values()) + [loot_id]
+    with self._lock:
+      self._conn.execute(
+        f"UPDATE loot SET {set_clause} WHERE loot_id = ?",
+        values,
+      )
+      self._conn.commit()
+
+  def delete_loot(self, loot_id: str) -> None:
+    """Delete a loot record."""
+    with self._lock:
+      self._conn.execute("DELETE FROM loot WHERE loot_id = ?", (loot_id,))
+      self._conn.commit()
 
   # ── Lifecycle ─────────────────────────────────────────────────────────────────
 

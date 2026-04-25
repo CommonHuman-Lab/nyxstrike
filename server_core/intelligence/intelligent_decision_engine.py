@@ -562,3 +562,134 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             bug_bounty_objectives.get(objective_key, "web_reconnaissance"),
             self.attack_patterns.get("web_reconnaissance", []),
         )
+
+    # ── CVE-to-Exploit Chaining ───────────────────────────────────────────────
+
+    def build_cve_exploit_chain(
+        self,
+        profile: TargetProfile,
+        cve_id: Optional[str] = None,
+        exploit_candidates: Optional[List[Dict[str, Any]]] = None,
+    ) -> AttackChain:
+        """Build an exploit-focused attack chain from CVE / exploit candidates.
+
+        If ``exploit_candidates`` is not provided the method falls back to the
+        candidates already embedded in ``profile.exploit_candidates``.  Each
+        candidate is expected to follow the schema returned by
+        ``CVEIntelligenceManager.search_existing_exploits()``:
+
+            {
+              "source": "metasploit" | "exploit-db" | "github" | ...,
+              "exploit_id": str,   # MSF module path or EDB numeric ID
+              "title": str,
+              "type": "metasploit-module" | "proof-of-concept" | ...,
+              "reliability": "EXCELLENT" | "GOOD" | "FAIR" | "UNVERIFIED",
+              "verified": bool,
+            }
+
+        The resulting chain leads with a ``searchsploit`` lookup step (if no
+        candidates are known yet), followed by one ``metasploit`` execution
+        step per viable Metasploit module found, then falls back to a generic
+        ``searchsploit`` step for any remaining PoC references.
+        """
+        chain = AttackChain(profile)
+        candidates = exploit_candidates or profile.exploit_candidates or []
+        cve_filter = cve_id or (profile.cve_ids[0] if profile.cve_ids else None)
+
+        # ── Step 1: searchsploit lookup ─────────────────────────────────────
+        search_query = cve_filter or str(profile.target)
+        chain.add_step(
+            AttackStep(
+                tool="searchsploit",
+                parameters={"query": search_query, "additional_args": "-j"},
+                expected_outcome=f"Enumerate known exploits for {search_query}",
+                success_probability=0.90,
+                execution_time_estimate=15,
+                cve_id=cve_filter,
+                exploit_source="exploit-db",
+                selection_reason={
+                    "reason": "Initial exploit database lookup for CVE/service",
+                    "cve": cve_filter,
+                },
+            )
+        )
+
+        # ── Step 2: Metasploit execution for each MSF candidate ─────────────
+        msf_candidates = [
+            c for c in candidates
+            if c.get("source") == "metasploit" or c.get("type") == "metasploit-module"
+        ]
+
+        reliability_score = {"EXCELLENT": 0.95, "GOOD": 0.82, "FAIR": 0.65, "UNVERIFIED": 0.45}
+
+        for candidate in msf_candidates:
+            module_path = candidate.get("exploit_id", "")
+            if not module_path:
+                continue
+            reliability = candidate.get("reliability", "UNVERIFIED")
+            prob = reliability_score.get(reliability, 0.45)
+            msf_options: Dict[str, Any] = {"module": module_path}
+            if profile.ip_addresses:
+                msf_options["options"] = {"RHOSTS": profile.ip_addresses[0]}
+            chain.add_step(
+                AttackStep(
+                    tool="metasploit",
+                    parameters=msf_options,
+                    expected_outcome=f"Exploit target via {module_path}",
+                    success_probability=prob,
+                    execution_time_estimate=120,
+                    dependencies=["searchsploit"],
+                    cve_id=cve_filter,
+                    exploit_source="metasploit",
+                    exploit_id=module_path,
+                    exploit_type=candidate.get("type", "remote"),
+                    selection_reason={
+                        "reason": f"Metasploit module matched for {cve_filter or search_query}",
+                        "reliability": reliability,
+                        "module": module_path,
+                    },
+                )
+            )
+
+        chain.calculate_success_probability()
+        chain.risk_level = profile.risk_level or "high"
+        return chain
+
+    def enrich_profile_with_cves(
+        self,
+        profile: TargetProfile,
+        service_version_map: Optional[Dict[str, str]] = None,
+    ) -> TargetProfile:
+        """Populate ``profile.service_versions`` and trigger CVE lookups.
+
+        ``service_version_map`` should be a dict of ``{service_name: version}``
+        derived from nmap/banner output, e.g. ``{"apache": "2.4.49"}``.
+
+        The method tries to import ``CVEIntelligenceManager`` and call
+        ``search_existing_exploits`` for each service/version pair.  If the
+        import fails (the CVE manager has external dependencies not always
+        available) the profile is returned unchanged beyond updating
+        ``service_versions``.
+        """
+        if service_version_map:
+            profile.service_versions.update(service_version_map)
+
+        try:
+            from server_core.intelligence.cve_intelligence_manager import CVEIntelligenceManager
+            mgr = CVEIntelligenceManager()
+            for service, version in (service_version_map or {}).items():
+                query = f"{service} {version}".strip()
+                try:
+                    exploits = mgr.search_existing_exploits(query)
+                    if exploits:
+                        profile.exploit_candidates.extend(exploits)
+                        for ex in exploits:
+                            cve = ex.get("cve_id", "")
+                            if cve and cve not in profile.cve_ids:
+                                profile.cve_ids.append(cve)
+                except Exception:
+                    pass
+        except ImportError:
+            pass
+
+        return profile
