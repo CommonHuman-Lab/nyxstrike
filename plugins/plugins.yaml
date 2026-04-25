@@ -25,6 +25,14 @@
 #
 # ─────────────────────────────────────────────────────────────────────────
 
+
+
+
+
+
+
+
+
 tools:
-  - name: example_net_ping
-    enabled: false
+- name: example_net_ping
+  enabled: false

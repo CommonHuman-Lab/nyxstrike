@@ -68,6 +68,9 @@ import type {
   WordlistEntry,
   PluginsByCategoryResponse,
   PluginsListResponse,
+  PluginsManifestResponse,
+  PluginToggleResponse,
+  ServerRestartResponse,
 } from './types';
 
 type ProcessActionResponse = { success: boolean; message?: string; error?: string };
@@ -84,6 +87,10 @@ export const api = {
 
   pluginList: () => get<PluginsListResponse>('/api/plugins/list'),
   pluginsByCategory: () => get<PluginsByCategoryResponse>('/api/plugins/by-category'),
+  pluginsManifest: () => get<PluginsManifestResponse>('/api/plugins/manifest'),
+  pluginToggle: (name: string, enabled: boolean) =>
+    patch<PluginToggleResponse>(`/api/plugins/${name}`, { enabled }),
+  serverRestart: () => post<ServerRestartResponse>('/api/server/restart', {}),
 
   getSettings: () => get<SettingsResponse>('/api/settings'),
   patchSettings: (runtime: Partial<Settings['runtime']>, chat?: Partial<Settings['chat']>) =>

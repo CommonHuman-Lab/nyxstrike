@@ -60,9 +60,13 @@ export type {
 } from './loot';
 
 export type {
+  ManifestPlugin,
   Plugin,
   PluginsByCategoryResponse,
   PluginsListResponse,
+  PluginsManifestResponse,
+  PluginToggleResponse,
+  ServerRestartResponse,
 } from './plugins';
 
 export type {

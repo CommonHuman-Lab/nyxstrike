@@ -18,3 +18,88 @@
   color: var(--text-dim);
   margin-top: 2px;
 }
+
+/* ── Toggle switch ───────────────────────────────────────────────────────── */
+.plugin-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.plugin-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.plugin-toggle-track {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--border);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.plugin-toggle input:checked + .plugin-toggle-track {
+  background: var(--green);
+}
+
+.plugin-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-surface, #fff);
+  transition: transform 0.2s;
+}
+
+.plugin-toggle input:checked ~ .plugin-toggle-track .plugin-toggle-thumb,
+.plugin-toggle input:checked + .plugin-toggle-track .plugin-toggle-thumb {
+  transform: translateX(16px);
+}
+
+.plugin-toggle-label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ── Pending restart banner ─────────────────────────────────────────────── */
+.plugins-restart-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--warning, #f59e0b) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--warning, #f59e0b) 40%, transparent);
+  color: var(--warning, #f59e0b);
+  font-size: 12px;
+}
+
+.plugins-restart-banner button {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+
+.plugins-restart-banner button:hover {
+  opacity: 0.75;
+}
+
+.plugins-restart-banner button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
