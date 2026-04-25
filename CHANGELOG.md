@@ -20,7 +20,7 @@
 - Added Command Palette section explaining shortcuts and tool launch workflow.
 - Added UI Features section covering chat panel shortcut and page visibility.
 
-## 1.4.0 - NyxStrike
+## 1.4.0 - NyxStrike (2026-04-24)
 
 ### Built-in AI Chat assistant
 - Added persistent chat widget — start a conversation without leaving your workflow. Supports multi-session history, and a resizable floating UI.
@@ -68,7 +68,7 @@
 ### Others
 - Added `nyxstrike.sh` main entrypoint script with external tool install list.
 
-## 1.3.0 - shellshark
+## 1.3.0 - shellshark (2026-04-09)
 - Added new tools/wrappers: `hurl`, `waymore`, `assetfinder`, `shuffledns`, `massdns`, and `gospider`; also improved `testssl.sh` compatibility/fallback.
 - Upgraded intelligence workflows with precision planning, preview mode, and tool selection reasons.
 - Improved sessions and UI flows (template/workbench polish, log export, ESC-to-close modals, update modal with copyable `git pull`).
