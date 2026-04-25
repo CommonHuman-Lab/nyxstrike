@@ -90,10 +90,12 @@ export default function SettingsPage({
     personalityPresets,
     summarizationThreshold,
     contextInjectionChars,
+    llmThink,
     setChatPersonality,
     setCustomPrompt,
     setSummarizationThreshold,
     setContextInjectionChars,
+    setLlmThink,
   } = useSettingsData()
 
   if (loading) {
@@ -237,6 +239,8 @@ export default function SettingsPage({
         setSummarizationThreshold={setSummarizationThreshold}
         contextInjectionChars={contextInjectionChars}
         setContextInjectionChars={setContextInjectionChars}
+        llmThink={llmThink}
+        setLlmThink={setLlmThink}
         saving={saving}
         onSave={saveChatSettings}
       />

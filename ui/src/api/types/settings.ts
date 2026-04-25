@@ -38,6 +38,7 @@ export interface Settings {
     summarization_threshold: number;
     context_injection_chars: number;
     personality_presets: PersonalityPreset[];
+    llm_think: boolean;
   };
   wordlists: WordlistEntry[];
 }

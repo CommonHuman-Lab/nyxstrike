@@ -321,6 +321,8 @@ export function ChatSettingsSection({
   setSummarizationThreshold,
   contextInjectionChars,
   setContextInjectionChars,
+  llmThink,
+  setLlmThink,
   saving,
   onSave,
 }: {
@@ -333,6 +335,8 @@ export function ChatSettingsSection({
   setSummarizationThreshold: (v: string) => void
   contextInjectionChars: string
   setContextInjectionChars: (v: string) => void
+  llmThink: boolean
+  setLlmThink: (v: boolean) => void
   saving: boolean
   onSave: () => Promise<void>
 }) {
@@ -381,6 +385,18 @@ export function ChatSettingsSection({
           value={contextInjectionChars}
           onChange={setContextInjectionChars}
         />
+        <div className="settings-field">
+          <label className="settings-label">LLM Think Mode</label>
+          <label className="theme-picker-toggle-row">
+            <input
+              type="checkbox"
+              checked={llmThink}
+              onChange={e => setLlmThink(e.target.checked)}
+            />
+            <span className="theme-picker-toggle-text">Enable thinking / reasoning</span>
+          </label>
+          <span className="settings-hint-inline">Activates chain-of-thought reasoning for models that support it (Ollama only).</span>
+        </div>
       </div>
       <div className="settings-actions">
         <ActionButton variant="success" onClick={onSave} disabled={saving}>

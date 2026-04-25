@@ -24,6 +24,7 @@ _MUTABLE_KEYS = {
     "CHAT_CUSTOM_PROMPT",
     "CHAT_SUMMARIZATION_THRESHOLD",
     "CHAT_CONTEXT_INJECTION_CHARS",
+    "NYXSTRIKE_LLM_THINK",
 }
 
 
@@ -56,6 +57,7 @@ def _current_settings() -> dict:
             "custom_prompt": config_core.get("CHAT_CUSTOM_PROMPT", ""),
             "summarization_threshold": config_core.get("CHAT_SUMMARIZATION_THRESHOLD", 20),
             "context_injection_chars": config_core.get("CHAT_CONTEXT_INJECTION_CHARS", 4000),
+            "llm_think": bool(config_core.get("NYXSTRIKE_LLM_THINK", False)),
             "personality_presets": CHAT_PERSONALITIES,
         },
     }
@@ -125,6 +127,7 @@ def patch_settings():
             "custom_prompt": ("CHAT_CUSTOM_PROMPT", str, None),
             "summarization_threshold": ("CHAT_SUMMARIZATION_THRESHOLD", int, 1),
             "context_injection_chars": ("CHAT_CONTEXT_INJECTION_CHARS", int, 0),
+            "llm_think": ("NYXSTRIKE_LLM_THINK", bool, None),
         }
         for field, (cfg_key, cast, min_value) in chat_key_map.items():
             if field not in chat:
