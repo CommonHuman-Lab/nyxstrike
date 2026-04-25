@@ -1,0 +1,26 @@
+services:
+  nyxstrike:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nyxstrike:latest
+    container_name: nyxstrike
+    ports:
+      - "127.0.0.1:8888:8888"
+    environment:
+      # Override these via a .env file or shell environment
+      - NYXSTRIKE_HOST=0.0.0.0
+      - NYXSTRIKE_PORT=8888
+      # Uncomment to enable bearer token auth:
+      # - NYXSTRIKE_API_TOKEN=changeme
+    # Persist output/logs across restarts
+    volumes:
+      - nyxstrike-output:/opt/nyxstrike/output
+    restart: unless-stopped
+    # Needed for raw-socket tools (nmap SYN scan, masscan, etc.)
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+volumes:
+  nyxstrike-output:

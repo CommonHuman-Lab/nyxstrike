@@ -1,0 +1,30 @@
+# Python runtime artifacts
+nyxstrike-env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Sensitive / local config
+.env
+config.local.*
+
+# Git internals not needed in image
+.git/
+.github/
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+
+# Output / results that should not be baked into the image
+output/
+git_tools/
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+.dockerignore
