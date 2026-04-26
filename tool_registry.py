@@ -520,7 +520,7 @@ TOOLS: Dict[str, dict] = {
         "endpoint": "/api/tools/password_cracking/hashid",
         "method": "POST",
         "category": "brute_force",
-        "params": {"hash": {"required": True}},
+        "params": {"hash_value": {"required": True}},
         "optional": {"additional_args": ""},
         "effectiveness": 0.80,
     },
