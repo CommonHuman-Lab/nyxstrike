@@ -8,14 +8,18 @@ description: |
   - Reuses session for faster execution
   - Supports disconnecting sessions
 author: "system"
-category: remote_access
+category: example
 tags:
   - ssh
   - remote_execution
-endpoint: /api/plugins/ssh
+endpoint: /api/plugins/ssh, /api/plugins/ssh/connect, /api/plugins/ssh/send, /api/plugins/ssh/disconnect
 mcp_tool_name: ssh
 effectiveness: 0.7
-parameters:
+check:
+  type: which
+  binary: ssh
+  install: "pre-installed on most systems; on Debian: apt install openssh-client"
+params:
   type: object
   properties:
     host:
