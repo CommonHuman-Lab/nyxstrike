@@ -1,4 +1,5 @@
 name: ssh
+version: "1.0.0"
 description: |
   Execute commands on a remote machine via SSH.
   Automatically manages persistent sessions per host.
@@ -6,7 +7,14 @@ description: |
   - Connects automatically if no session exists
   - Reuses session for faster execution
   - Supports disconnecting sessions
-
+author: "system"
+category: remote_access
+tags:
+  - ssh
+  - remote_execution
+endpoint: /api/plugins/ssh
+mcp_tool_name: ssh
+effectiveness: 0.7
 parameters:
   type: object
   properties:
