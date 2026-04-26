@@ -27,7 +27,6 @@
 
 tools:
 - name: example_net_ping
-  enabled: false
-tools:
+  enabled: true
 - name: ssh
-  enabled: false
+  enabled: true

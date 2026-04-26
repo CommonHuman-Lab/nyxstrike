@@ -44,37 +44,3 @@ optional:
     default: 10
     description: "Timeout in seconds per ping packet"
 
-# SSH plugins can optionally specify a list of SSH parameters to be passed to the underlying tool.
-name: ssh_client
-version: "1.0.0"
-description: "SSH client metadata tool — defines parameters for host, port, and username."
-author: "system"
-category: network
-tags:
-  - ssh
-  - network
-  - remote
-  - login
-
-endpoint: /api/plugins/ssh
-mcp_tool_name: ssh
-effectiveness: 0.55
-
-check:
-  type: which
-  binary: ssh
-  install: "Install OpenSSH client: apt install openssh-client"
-
-params:
-  host:
-    required: true
-    description: "Target host to connect to"
-
-optional:
-  port:
-    default: 22
-    description: "SSH port"
-
-  username:
-    default: ""
-    description: "SSH username"
