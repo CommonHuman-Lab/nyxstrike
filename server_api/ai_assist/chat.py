@@ -178,12 +178,7 @@ _CHAT_TOOL_BLOCKLIST = frozenset({
 
 
 # Minimum confidence required before we inject tool schemas into the LLM call.
-# classify_intent returns 0.5 when there is zero keyword signal (pure fallback),
-# 0.75 for a narrow keyword win or LLM-assisted classification, and 1.0 for a
-# clear keyword winner.  We skip tool injection at 0.5 to avoid offering scan
-# tools for casual / conversational messages that happened to contain no
-# security keywords.
-_TOOL_INJECT_MIN_CONFIDENCE: float = 0.6
+_TOOL_INJECT_MIN_CONFIDENCE: float = 0.75
 
 # Short conversational phrases that should never trigger tool injection.
 # These are checked before calling classify-task to avoid a pointless round-trip.
@@ -194,6 +189,14 @@ _CONVERSATIONAL_PATTERNS = (
   "what is ", "what's ", "what are ", "explain ", "tell me ",
   "how does ", "how do ", "can you ", "could you ", "would you ",
   "help me understand", "what does ", "describe ",
+  # Personal anecdotes / casual statements
+  "just ", "i just ", "i've ", "i have ", "i placed ", "i put ",
+  "i got ", "i found ", "i made ", "i added ", "i built ",
+  "we just ", "we have ", "we've ",
+  # Reactions / exclamations
+  "lol", "haha", "hehe", "omg", "wow", "nice one", "love it",
+  "that's ", "that is ", "this is ", "it's ", "it is ",
+  "so ", "such a ", "what a ",
 )
 
 
@@ -201,7 +204,10 @@ def _is_conversational(message: str) -> bool:
   """Return True if the message looks like casual chat rather than a task request."""
   lower = message.lower().strip()
   # Very short messages are almost always conversational
-  if len(lower) < 20:
+  if len(lower) < 35:
+    return True
+  # Messages ending with common casual punctuation/emoji signals
+  if lower[-1] in ("😀", "😄", "😊", "🙂", "😎", "👍", "🎉") or lower.endswith(":d") or lower.endswith(":)") or lower.endswith(":-)"):
     return True
   for pat in _CONVERSATIONAL_PATTERNS:
     if lower.startswith(pat) or f" {pat}" in lower:
@@ -266,8 +272,6 @@ def _stream_llm_with_tools(
   response_stats = None
 
   # --- Non-streaming call when tool schemas are present ---
-  # We must use non-streaming chat() so we can inspect tool_calls in the response
-  # before deciding whether to stream tokens or emit a pending event.
   if tool_schemas:
     try:
       yield "data: [THINKING]\n\n"
