@@ -17,6 +17,24 @@ executor = ThreadPoolExecutor(max_workers=10)
 ssh_sessions = {}
 
 
+def tool_response(success, stdout="", stderr="", return_code=0, **extra):
+    response = {
+        "success": success,
+        "stdout": stdout,
+        "stderr": stderr,
+        "return_code": return_code,
+        # Backward-compatible aliases for existing MCP/plugin callers.
+        "output": stdout,
+        "error": stderr,
+        **extra
+    }
+    return response
+
+
+def combine_stdout(*parts):
+    return "\n".join(str(part).rstrip() for part in parts if str(part or "").strip())
+
+
 def get_session_key(host, username, port):
     return f"{username}@{host}:{port}"
 
@@ -88,9 +106,14 @@ def ssh_entry():
 
     if not host or not username:
         logger.error("[SSH ENTRY] missing host or username")
-        return jsonify({"success": False, "error": "Missing host or username"}), 400
+        return jsonify(tool_response(
+            False,
+            stderr="Missing host or username",
+            return_code=1
+        )), 400
 
     key = get_session_key(host, username, port)
+    status_lines = []
 
     try:
         # -------------------------
@@ -107,7 +130,8 @@ def ssh_entry():
 
                 ssh_sessions.pop(key, None)
 
-            return jsonify({"success": True, "message": "Disconnected"})
+            message = f"Disconnected SSH session {key}"
+            return jsonify(tool_response(True, stdout=message, message=message))
 
         # -------------------------
         # CONNECT (if needed)
@@ -115,15 +139,21 @@ def ssh_entry():
         if key not in ssh_sessions:
             if not password:
                 logger.error("[SSH CONNECT] missing password")
-                return jsonify({"success": False, "error": "Password required"}), 400
+                return jsonify(tool_response(
+                    False,
+                    stderr="Password required",
+                    return_code=1
+                )), 400
 
             logger.warning(f"[SSH SESSION] creating new session for {key}")
 
             client = ssh_connect(host, port, username, password)
             ssh_sessions[key] = client
+            status_lines.append(f"Connected to {host}:{port} as {username}")
 
         else:
             logger.warning(f"[SSH SESSION] reusing session for {key}")
+            status_lines.append(f"Reusing SSH session {key}")
 
         client = ssh_sessions[key]
 
@@ -132,6 +162,7 @@ def ssh_entry():
         # -------------------------
         if command:
             logger.warning(f"[SSH EXECUTE REQUEST] {command}")
+            status_lines.append(f"Executing command: {command}")
 
             future = executor.submit(ssh_execute, client, command)
             result = future.result()
@@ -139,8 +170,13 @@ def ssh_entry():
             logger.warning(f"[SSH RESPONSE READY] {result}")
 
             return jsonify({
-                "success": True,
-                **result
+                **tool_response(
+                    result.get("exit_code", 1) == 0,
+                    stdout=combine_stdout(*status_lines, result.get("output", "")),
+                    stderr=result.get("error", ""),
+                    return_code=result.get("exit_code", 1)
+                ),
+                "exit_code": result.get("exit_code", 1)
             })
 
         # -------------------------
@@ -149,8 +185,11 @@ def ssh_entry():
         logger.warning("[SSH ENTRY] connected without command")
 
         return jsonify({
-            "success": True,
-            "message": "Connected"
+            **tool_response(
+                True,
+                stdout=combine_stdout(*status_lines),
+                message="Connected"
+            )
         })
 
     except Exception as e:
@@ -164,6 +203,9 @@ def ssh_entry():
             ssh_sessions.pop(key, None)
 
         return jsonify({
-            "success": False,
-            "error": str(e)
+            **tool_response(
+                False,
+                stderr=str(e),
+                return_code=1
+            )
         }), 500
