@@ -1,10 +1,10 @@
-import { ChevronDown, ChevronUp, Download, FileText, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Download, FileText, Play, RefreshCw, Send, Square, Terminal, Trash2, Power } from 'lucide-react'
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { ParamField } from '../../components/tool-run/ParamField'
 import type { AttackChainStep, Tool, ToolExecResponse } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
 import { exportEntry, safeFixed } from '../../shared/utils'
-import type { StepState } from './sessionDetailUtils'
+import { resultText, type StepState } from './sessionDetailUtils'
 import type { ChainSuggestion } from './sessionDetailUtils'
 import { ActionButton } from '../../components/ActionButton'
 import { api } from '../../api'
@@ -91,6 +91,101 @@ function buildNoteContent(
   return lines.join('\n')
 }
 
+function SshCommandTerminal({
+  endpoint,
+  baseParams,
+}: {
+  endpoint: string
+  baseParams: Record<string, string>
+}) {
+  const [command, setCommand] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [transcript, setTranscript] = useState<string[]>([])
+  const [prompt, setPrompt] = useState('$')
+  const transcriptRef = useRef<HTMLPreElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })
+    if (!busy) inputRef.current?.focus()
+  }, [transcript])
+
+  useEffect(() => {
+    if (!busy) inputRef.current?.focus()
+  }, [busy])
+
+  async function runTerminalCommand() {
+    const nextCommand = command.trim()
+    if (!nextCommand || busy) return
+    setBusy(true)
+    setCommand('')
+    setTranscript(prev => [...prev, `${prompt} ${nextCommand}`])
+
+    try {
+      const result = await api.runTool(endpoint, {
+        ...baseParams,
+        command: nextCommand,
+        interactive: true,
+        terminal_disconnect: false,
+      })
+      const nextPrompt = (result as unknown as Record<string, unknown>).prompt
+      if (typeof nextPrompt === 'string' && nextPrompt.trim()) setPrompt(`${nextPrompt.trim()}$`)
+      const output = [resultText(result, 'stdout'), resultText(result, 'stderr')].filter(Boolean).join('\n').trim()
+      setTranscript(prev => [...prev, output || '(no output)', `exit ${result.return_code ?? 0}`])
+    } catch (e) {
+      setTranscript(prev => [...prev, `error: ${String(e)}`])
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function disconnectTerminal() {
+    if (busy) return
+    setBusy(true)
+    try {
+      const result = await api.runTool(endpoint, {
+        ...baseParams,
+        command: '',
+        terminal_disconnect: true,
+      })
+      setPrompt('$')
+      setTranscript(prev => [...prev, resultText(result, 'stdout') || resultText(result, 'stderr') || 'Disconnected'])
+    } catch (e) {
+      setTranscript(prev => [...prev, `error: ${String(e)}`])
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="session-ssh-terminal">
+      <div className="session-ssh-terminal-head">
+        <span><Terminal size={12} /> SSH terminal</span>
+        <button onClick={disconnectTerminal} disabled={busy} title="Disconnect SSH session">
+          <Power size={12} />
+        </button>
+      </div>
+      <pre ref={transcriptRef} className="session-ssh-terminal-body">
+        {[...transcript, `${prompt} `].join('\n')}
+      </pre>
+      <div className="session-ssh-terminal-input">
+        <input
+          ref={inputRef}
+          value={command}
+          onChange={e => setCommand(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') void runTerminalCommand() }}
+          disabled={busy}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button onClick={() => void runTerminalCommand()} disabled={busy || !command.trim()} title="Run command">
+          {busy ? <RefreshCw size={12} className="spin" /> : <Send size={12} />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function SessionDetailWorkbench({
   isCompleted,
   sessionId,
@@ -128,6 +223,17 @@ export function SessionDetailWorkbench({
   const { pushToast } = useToast()
   const selectedRunning = selectedStepKey ? runningStepKey === selectedStepKey : false
   const resultData = selectedResult?.result
+  const resultStdout = resultText(resultData, 'stdout')
+  const resultStderr = resultText(resultData, 'stderr')
+  const selectedStepTool = selectedStep?.tool?.toLowerCase() ?? ''
+  const isSshTool = selectedStepTool === 'ssh'
+    || selectedTool?.endpoint === '/api/plugins/ssh'
+    || selectedTool?.name === 'ssh'
+    || selectedTool?.endpoint === '/api/tools/ssh'
+  const sshEndpoint = selectedTool?.endpoint === '/api/plugins/ssh'
+    ? selectedTool.endpoint
+    : '/api/plugins/ssh'
+  const showSshTerminal = !!isSshTool && !!selectedStepKey && !isCompleted
   const selectedChainCount = chainSuggestion
     ? chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false).length
     : 0
@@ -370,11 +476,17 @@ export function SessionDetailWorkbench({
                         </div>
                       )}
                     </div>
-                    <pre className="session-result-pre mono">{resultData.stdout || '(no stdout)'}</pre>
-                    {resultData.stderr && <pre className="session-result-pre mono">{resultData.stderr}</pre>}
+                    <pre className="session-result-pre mono">{resultStdout || '(no stdout)'}</pre>
+                    {resultStderr && <pre className="session-result-pre mono">{resultStderr}</pre>}
                   </>
                 ) : (
                   <p className="section-meta">No result yet for this tool.</p>
+                )}
+                {showSshTerminal && selectedStepKey && (
+                  <SshCommandTerminal
+                    endpoint={sshEndpoint}
+                    baseParams={stepFieldValues[selectedStepKey] ?? {}}
+                  />
                 )}
                 {selectedResult?.priorResults && selectedResult.priorResults.length > 0 && (
                   <div className="session-prior-runs">
@@ -401,8 +513,8 @@ export function SessionDetailWorkbench({
                                 <FileText size={11} /> Notes
                               </ActionButton>
                             </div>
-                            <pre className="session-result-pre mono">{prior.stdout || '(no stdout)'}</pre>
-                            {prior.stderr && <pre className="session-result-pre mono">{prior.stderr}</pre>}
+                            <pre className="session-result-pre mono">{resultText(prior, 'stdout') || '(no stdout)'}</pre>
+                            {resultText(prior, 'stderr') && <pre className="session-result-pre mono">{resultText(prior, 'stderr')}</pre>}
                           </div>
                         )}
                       </div>

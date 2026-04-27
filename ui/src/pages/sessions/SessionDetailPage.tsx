@@ -18,6 +18,7 @@ import {
   type ChainMappingPreference,
   extractStepArtifacts,
   normalizeStepsFromSession,
+  resultText,
   resolveToolForStep,
   normalizePersistedResults,
   type PersistedStepResult,
@@ -147,8 +148,8 @@ export default function SessionDetailPage({
           execution_time: Number(v.execution_time ?? 0),
           timed_out: false,
           partial_results: false,
-          stdout: String(v.stdout ?? ''),
-          stderr: String(v.stderr ?? ''),
+          stdout: resultText(v, 'stdout'),
+          stderr: resultText(v, 'stderr'),
           timestamp: String(v.timestamp ?? new Date().toISOString()),
         })
         hydratedResults[k] = {
@@ -343,8 +344,8 @@ export default function SessionDetailPage({
           return_code: r.return_code,
           execution_time: r.execution_time,
           timestamp: r.timestamp,
-          stdout: r.stdout,
-          stderr: r.stderr,
+          stdout: resultText(r, 'stdout'),
+          stderr: resultText(r, 'stderr'),
           timed_out: r.timed_out,
           partial_results: r.partial_results,
         })
@@ -353,8 +354,8 @@ export default function SessionDetailPage({
           return_code: v.return_code,
           execution_time: v.execution_time,
           timestamp: v.timestamp ?? '',
-          stdout: v.stdout ?? '',
-          stderr: v.stderr ?? '',
+          stdout: resultText(v, 'stdout'),
+          stderr: resultText(v, 'stderr'),
           timed_out: false,
           partial_results: false,
         })
@@ -624,34 +625,39 @@ export default function SessionDetailPage({
     toolRequestInFlight.current = true
     try {
       const result = await api.runTool(tool.endpoint, payload)
-      setStepResults(prev => ({ ...prev, [stepKey]: { result, priorResults: prev[stepKey]?.priorResults ?? [] } }))
-      setStepState(prev => ({ ...prev, [stepKey]: result.success ? 'success' : 'failed' }))
-      if (onToolRun) onToolRun(step.tool, payload, result)
+      const normalizedResult: ToolExecResponse = {
+        ...result,
+        stdout: resultText(result, 'stdout'),
+        stderr: resultText(result, 'stderr'),
+      }
+      setStepResults(prev => ({ ...prev, [stepKey]: { result: normalizedResult, priorResults: prev[stepKey]?.priorResults ?? [] } }))
+      setStepState(prev => ({ ...prev, [stepKey]: normalizedResult.success ? 'success' : 'failed' }))
+      if (onToolRun) onToolRun(step.tool, payload, normalizedResult)
 
       const existingMeta = (sessionRef.metadata ?? {}) as Record<string, unknown>
       const existingToolStatus = (existingMeta.tool_status && typeof existingMeta.tool_status === 'object') ? (existingMeta.tool_status as Record<string, string>) : {}
       const existingStepResults = (existingMeta.step_results && typeof existingMeta.step_results === 'object') ? (existingMeta.step_results as Record<string, unknown>) : {}
       const existingArtifacts = (existingMeta.step_artifacts && typeof existingMeta.step_artifacts === 'object') ? (existingMeta.step_artifacts as Record<string, StepArtifacts>) : {}
-      const extractedArtifacts = result.success
-        ? extractStepArtifacts({ step: { ...step, parameters: payload }, result, target: target || sessionRef.target })
+      const extractedArtifacts = normalizedResult.success
+        ? extractStepArtifacts({ step: { ...step, parameters: payload }, result: normalizedResult, target: target || sessionRef.target })
         : undefined
       // Prepend new result to the existing runs array (newest first)
       const previousRuns = normalizePersistedResults(existingStepResults[stepKey])
       const newRunEntry: PersistedStepResult = {
-        success: result.success,
-        return_code: result.return_code,
-        execution_time: result.execution_time,
-        timestamp: result.timestamp,
-        stdout: result.stdout,
-        stderr: result.stderr,
+        success: normalizedResult.success,
+        return_code: normalizedResult.return_code,
+        execution_time: normalizedResult.execution_time,
+        timestamp: normalizedResult.timestamp,
+        stdout: normalizedResult.stdout,
+        stderr: normalizedResult.stderr,
       }
       await api.updateSession(sessionRef.session_id, {
         metadata: {
           ...existingMeta,
           tool_status: {
             ...existingToolStatus,
-            [step.tool]: result.success ? 'success' : 'failed',
-            [stepKey]: result.success ? 'success' : 'failed',
+            [step.tool]: normalizedResult.success ? 'success' : 'failed',
+            [stepKey]: normalizedResult.success ? 'success' : 'failed',
           },
           step_results: {
             ...existingStepResults,
@@ -666,10 +672,10 @@ export default function SessionDetailPage({
           last_run: {
             step_key: stepKey,
             tool: step.tool,
-            success: result.success,
-            return_code: result.return_code,
-            execution_time: result.execution_time,
-            timestamp: result.timestamp,
+            success: normalizedResult.success,
+            return_code: normalizedResult.return_code,
+            execution_time: normalizedResult.execution_time,
+            timestamp: normalizedResult.timestamp,
           },
           running_step_key: null,
           running_tool: null,

@@ -6,7 +6,7 @@ description: |
   The server establishes an authenticated SSH connection per host/user and reuses it for subsequent command execution.
   Each request executes a command and returns stdout, stderr, and exit code.
 
-author: "system"
+author: "roc1t1z3not"
 category: remote_access
 
 tags:

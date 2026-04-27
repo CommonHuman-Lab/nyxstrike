@@ -123,17 +123,6 @@ TOOLS: Dict[str, dict] = {
         "effectiveness": 0.89,
     },
 
-    #SSH Connection tool (metadata only, no execution)
-    "ssh": {
-        "desc": "SSH client tool (metadata only)",
-        "endpoint": "/api/tools/ssh",
-        "method": "POST",
-        "category": "essential",
-        "params": {"host": {"required": True}},
-        "optional": {"port": 22, "username": ""},
-        "effectiveness": 0.90,
-    },
-
     "smart-scan": {
         "desc": "Execute an intelligent scan using AI-driven tool selection and parameter optimization with parallel execution",
         "endpoint": "/api/intelligence/smart-scan",
