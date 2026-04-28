@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 VulnAD Population Script
-Ports the VulnAD PowerShell logic by @wazehell / @safe_buffer to Python,
+Ports the VulnAD PowerShell logic by @safebuffer to Python,
 using ldap3 to seed a Samba4 AD DC with realistic attack paths.
 
 Attack paths seeded:
