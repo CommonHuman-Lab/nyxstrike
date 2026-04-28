@@ -55,6 +55,22 @@ export type PersistedStepResult = {
   timestamp?: string
   stdout?: string
   stderr?: string
+  output?: string
+  error?: string
+  message?: string
+}
+
+export function resultText(result: unknown, primary: 'stdout' | 'stderr' = 'stdout'): string {
+  if (!result || typeof result !== 'object') return ''
+  const data = result as Record<string, unknown>
+  const keys = primary === 'stdout'
+    ? ['stdout', 'output', 'message']
+    : ['stderr', 'error']
+  for (const key of keys) {
+    const value = data[key]
+    if (typeof value === 'string' && value.trim()) return value
+  }
+  return ''
 }
 
 export function normalizePersistedResults(raw: unknown): PersistedStepResult[] {
