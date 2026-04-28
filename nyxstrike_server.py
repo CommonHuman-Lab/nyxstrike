@@ -198,6 +198,9 @@ def record_tool_run(response):
 
 @app.errorhandler(Exception)
 def handle_unhandled_exception(e):
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return e
     logger.exception("Unhandled exception")
     return jsonify({"error": str(e), "success": False}), 500
 
