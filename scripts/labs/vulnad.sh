@@ -4,7 +4,7 @@
 #
 # Spins up a Samba4 Active Directory Domain Controller inside Docker and
 # then runs a Python script to populate it with the same attack paths as
-# the original VulnAD PowerShell script by @wazehell / @safe_buffer:
+# the original VulnAD PowerShell script by @safebuffer:
 #
 #   Attack paths seeded:
 #     - Kerberoastable service accounts (weak passwords)
