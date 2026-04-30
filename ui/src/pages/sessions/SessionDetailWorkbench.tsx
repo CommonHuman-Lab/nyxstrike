@@ -45,6 +45,20 @@ interface SessionDetailWorkbenchProps {
   onAddTool: (tool: Tool) => Promise<void>
 }
 
+type RemoteTerminalState = {
+  command: string
+  busy: boolean
+  transcript: string[]
+  prompt: string
+}
+
+const EMPTY_REMOTE_TERMINAL_STATE: RemoteTerminalState = {
+  command: '',
+  busy: false,
+  transcript: [],
+  prompt: '$',
+}
+
 function exportResultEntry(
   format: 'txt' | 'json',
   tool: string,
@@ -91,19 +105,35 @@ function buildNoteContent(
   return lines.join('\n')
 }
 
-function SshCommandTerminal({
+function RemoteCommandTerminal({
   endpoint,
   baseParams,
+  label,
+  terminalId,
+  terminalState,
+  updateTerminalState,
 }: {
   endpoint: string
   baseParams: Record<string, string>
+  label: string
+  terminalId: string
+  terminalState: RemoteTerminalState
+  updateTerminalState: (terminalId: string, updater: (prev: RemoteTerminalState) => RemoteTerminalState) => void
 }) {
-  const [command, setCommand] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [transcript, setTranscript] = useState<string[]>([])
-  const [prompt, setPrompt] = useState('$')
+  const { command, busy, transcript, prompt } = terminalState
   const transcriptRef = useRef<HTMLPreElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+
+  function patchTerminal(targetTerminalId: string, patch: Partial<RemoteTerminalState>) {
+    updateTerminalState(targetTerminalId, prev => ({ ...prev, ...patch }))
+  }
+
+  function appendTranscript(targetTerminalId: string, lines: string[]) {
+    updateTerminalState(targetTerminalId, prev => ({
+      ...prev,
+      transcript: [...prev.transcript, ...lines],
+    }))
+  }
 
   useEffect(() => {
     transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })
@@ -117,9 +147,10 @@ function SshCommandTerminal({
   async function runTerminalCommand() {
     const nextCommand = command.trim()
     if (!nextCommand || busy) return
-    setBusy(true)
-    setCommand('')
-    setTranscript(prev => [...prev, `${prompt} ${nextCommand}`])
+    const activeTerminalId = terminalId
+    const activePrompt = prompt
+    patchTerminal(activeTerminalId, { busy: true, command: '' })
+    appendTranscript(activeTerminalId, [`${activePrompt} ${nextCommand}`])
 
     try {
       const result = await api.runTool(endpoint, {
@@ -129,39 +160,46 @@ function SshCommandTerminal({
         terminal_disconnect: false,
       })
       const nextPrompt = (result as unknown as Record<string, unknown>).prompt
-      if (typeof nextPrompt === 'string' && nextPrompt.trim()) setPrompt(`${nextPrompt.trim()}$`)
       const output = [resultText(result, 'stdout'), resultText(result, 'stderr')].filter(Boolean).join('\n').trim()
-      setTranscript(prev => [...prev, output || '(no output)', `exit ${result.return_code ?? 0}`])
+      updateTerminalState(activeTerminalId, prev => ({
+        ...prev,
+        prompt: typeof nextPrompt === 'string' && nextPrompt.trim() ? `${nextPrompt.trim()}$` : prev.prompt,
+        transcript: [...prev.transcript, output || '(no output)', `exit ${result.return_code ?? 0}`],
+      }))
     } catch (e) {
-      setTranscript(prev => [...prev, `error: ${String(e)}`])
+      appendTranscript(activeTerminalId, [`error: ${String(e)}`])
     } finally {
-      setBusy(false)
+      patchTerminal(activeTerminalId, { busy: false })
     }
   }
 
   async function disconnectTerminal() {
     if (busy) return
-    setBusy(true)
+    const activeTerminalId = terminalId
+    patchTerminal(activeTerminalId, { busy: true })
     try {
       const result = await api.runTool(endpoint, {
         ...baseParams,
         command: '',
         terminal_disconnect: true,
       })
-      setPrompt('$')
-      setTranscript(prev => [...prev, resultText(result, 'stdout') || resultText(result, 'stderr') || 'Disconnected'])
+      updateTerminalState(activeTerminalId, prev => ({
+        ...prev,
+        prompt: '$',
+        transcript: [...prev.transcript, resultText(result, 'stdout') || resultText(result, 'stderr') || 'Disconnected'],
+      }))
     } catch (e) {
-      setTranscript(prev => [...prev, `error: ${String(e)}`])
+      appendTranscript(activeTerminalId, [`error: ${String(e)}`])
     } finally {
-      setBusy(false)
+      patchTerminal(activeTerminalId, { busy: false })
     }
   }
 
   return (
     <div className="session-ssh-terminal">
       <div className="session-ssh-terminal-head">
-        <span><Terminal size={12} /> SSH terminal</span>
-        <button onClick={disconnectTerminal} disabled={busy} title="Disconnect SSH session">
+        <span><Terminal size={12} /> {label} terminal</span>
+        <button onClick={disconnectTerminal} disabled={busy} title={`Disconnect ${label} session`}>
           <Power size={12} />
         </button>
       </div>
@@ -172,7 +210,7 @@ function SshCommandTerminal({
         <input
           ref={inputRef}
           value={command}
-          onChange={e => setCommand(e.target.value)}
+          onChange={e => patchTerminal(terminalId, { command: e.target.value })}
           onKeyDown={e => { if (e.key === 'Enter') void runTerminalCommand() }}
           disabled={busy}
           autoComplete="off"
@@ -226,19 +264,39 @@ export function SessionDetailWorkbench({
   const resultStdout = resultText(resultData, 'stdout')
   const resultStderr = resultText(resultData, 'stderr')
   const selectedStepTool = selectedStep?.tool?.toLowerCase() ?? ''
-  const isSshTool = selectedStepTool === 'ssh'
-    || selectedTool?.endpoint === '/api/plugins/ssh'
-    || selectedTool?.name === 'ssh'
-    || selectedTool?.endpoint === '/api/tools/ssh'
-  const sshEndpoint = selectedTool?.endpoint === '/api/plugins/ssh'
-    ? selectedTool.endpoint
-    : '/api/plugins/ssh'
-  const showSshTerminal = !!isSshTool && !!selectedStepKey && !isCompleted
+  const remoteTerminalTool = (() => {
+    if (
+      selectedStepTool === 'ssh'
+      || selectedTool?.endpoint === '/api/plugins/ssh'
+      || selectedTool?.name === 'ssh'
+      || selectedTool?.endpoint === '/api/tools/ssh'
+    ) {
+      return { endpoint: '/api/plugins/ssh', label: 'SSH' }
+    }
+    if (
+      selectedStepTool === 'telnet'
+      || selectedTool?.endpoint === '/api/plugins/telnet'
+      || selectedTool?.name === 'telnet'
+      || selectedTool?.endpoint === '/api/tools/telnet'
+    ) {
+      return { endpoint: '/api/plugins/telnet', label: 'Telnet' }
+    }
+    return null
+  })()
+  const showRemoteTerminal = !!remoteTerminalTool && !!selectedStepKey && !isCompleted
   const selectedChainCount = chainSuggestion
     ? chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false).length
     : 0
   const addToolInputRef = useRef<HTMLInputElement | null>(null)
   const [expandedPriors, setExpandedPriors] = useState<Record<number, boolean>>({})
+  const [remoteTerminalStates, setRemoteTerminalStates] = useState<Record<string, RemoteTerminalState>>({})
+
+  function updateRemoteTerminalState(terminalId: string, updater: (prev: RemoteTerminalState) => RemoteTerminalState) {
+    setRemoteTerminalStates(prev => ({
+      ...prev,
+      [terminalId]: updater(prev[terminalId] ?? EMPTY_REMOTE_TERMINAL_STATE),
+    }))
+  }
 
   // Reset prior-run expansion state when the selected step changes
   useEffect(() => {
@@ -482,10 +540,15 @@ export function SessionDetailWorkbench({
                 ) : (
                   <p className="section-meta">No result yet for this tool.</p>
                 )}
-                {showSshTerminal && selectedStepKey && (
-                  <SshCommandTerminal
-                    endpoint={sshEndpoint}
+                {showRemoteTerminal && remoteTerminalTool && selectedStepKey && (
+                  <RemoteCommandTerminal
+                    key={`${selectedStepKey}:${remoteTerminalTool.endpoint}`}
+                    endpoint={remoteTerminalTool.endpoint}
                     baseParams={stepFieldValues[selectedStepKey] ?? {}}
+                    label={remoteTerminalTool.label}
+                    terminalId={`${selectedStepKey}:${remoteTerminalTool.endpoint}`}
+                    terminalState={remoteTerminalStates[`${selectedStepKey}:${remoteTerminalTool.endpoint}`] ?? EMPTY_REMOTE_TERMINAL_STATE}
+                    updateTerminalState={updateRemoteTerminalState}
                   />
                 )}
                 {selectedResult?.priorResults && selectedResult.priorResults.length > 0 && (
