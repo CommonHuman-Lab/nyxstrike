@@ -204,8 +204,10 @@ run_setup() {
   fi
 
   if [[ "${INSTALL_AI_MODEL}" == true ]]; then
-    echo "[5/5] Setting up AI model..."
+    echo "[4/4] Setting up AI model..."
     install_ollama_model
+  else
+    echo "[4/4] Skipping AI model setup (use -ai or -ai-small to enable)."
   fi
 
   echo "Setup complete."

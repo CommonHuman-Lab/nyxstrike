@@ -43,7 +43,6 @@ Stamp files are stored in the venv, e.g.:
 | `-a` | `--all` | Shortcut for `-s -t -r` |
 | `-t` | `--install-tools` | Install external apt/go/cargo tools and sync `git_tools` repos |
 | `-b` | `--install-big-packages` | Install heavy optional Python deps from `requirements-big.txt` (implies `-t`) |
-| `-u` | `--update-git-tools` | Pull latest changes for already-cloned repos in `git_tools` (implies `-t`) |
 | `-y` | `--update-python-packages` | Force reinstall of Python requirements (ignores dependency stamps) |
 | `-p` | `--python <bin>` | Choose Python binary (default: `python3`) |
 | `-s` | `--update-self` | Run `git pull --ff-only` on this repo (skips when local changes exist) |
@@ -76,12 +75,6 @@ bash scripts/install.sh --install-tools
 
 ```bash
 bash scripts/install.sh -t -b
-```
-
-### Update cloned git tools and run server
-
-```bash
-bash scripts/install.sh -u -r
 ```
 
 ### Full workflow (self update + tools + run)
