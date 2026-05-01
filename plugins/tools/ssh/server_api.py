@@ -5,6 +5,7 @@ import uuid
 import paramiko
 from flask import Blueprint, request, jsonify
 from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
 
 logger = logging.getLogger(__name__)
 blueprint = Blueprint("plugin_ssh_client", __name__)
@@ -19,6 +20,8 @@ executor = ThreadPoolExecutor(max_workers=10)
 # -------------------------
 ssh_sessions = {}
 ssh_shells = {}
+ssh_shell_locks = {}
+ssh_shell_locks_guard = Lock()
 
 ANSI_ESCAPE_RE = re.compile(
     r"(?:\x1B\][^\x07]*(?:\x07|\x1B\\))|(?:\x1B\[[0-?]*[ -/]*[@-~])"
@@ -49,6 +52,11 @@ def parse_bool(value):
     if isinstance(value, (int, float)):
         return value != 0
     return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def looks_like_password_prompt(output):
+    tail = clean_terminal_output(output).lower().rstrip()
+    return bool(re.search(r"(password|passphrase)(?: for [^:]+)?:\s*$", tail))
 
 
 def get_session_key(host, username, port):
@@ -146,12 +154,58 @@ def get_shell(client, key):
         shell = client.invoke_shell(term="xterm", width=160, height=40)
         ssh_shells[key] = shell
         drain_shell(shell, timeout=0.5)
-    shell.send("export TERM=dumb\n")
-    shell.send("unset PROMPT_COMMAND\n")
-    shell.send("PS1=''\n")
-    shell.send("stty -echo\n")
-    drain_shell(shell, timeout=0.5)
+        shell.send("export TERM=dumb\n")
+        shell.send("unset PROMPT_COMMAND\n")
+        shell.send("PS1=''\n")
+        shell.send("stty -echo\n")
+        drain_shell(shell, timeout=0.5)
     return shell
+
+
+def get_shell_lock(key):
+    with ssh_shell_locks_guard:
+        lock = ssh_shell_locks.get(key)
+        if lock is None:
+            lock = Lock()
+            ssh_shell_locks[key] = lock
+        return lock
+
+
+def ssh_send_shell_line(client, key, command, timeout=5, idle_timeout=0.8):
+    logger.warning(f"[SSH SHELL RAW] line received for {key}")
+
+    shell = get_shell(client, key)
+    lock = get_shell_lock(key)
+
+    with lock:
+        shell.send(f"{command}\n")
+
+        output = ""
+        end_time = time.time() + timeout
+        idle_end = time.time() + idle_timeout
+        while time.time() < end_time:
+            if shell.recv_ready():
+                output += shell.recv(65535).decode(errors="ignore")
+                idle_end = time.time() + idle_timeout
+                if looks_like_password_prompt(output):
+                    break
+                continue
+            if time.time() >= idle_end:
+                break
+            time.sleep(0.05)
+
+        output = clean_terminal_output(output)
+        awaiting_input = looks_like_password_prompt(output)
+        prompt = key if awaiting_input else get_shell_prompt(shell, key)
+
+        return {
+            "exit_code": 0,
+            "output": output.strip(),
+            "error": "",
+            "prompt": prompt,
+            "awaiting_sensitive_input": awaiting_input,
+            "terminal_raw": True
+        }
 
 
 def ssh_execute_shell(client, key, command, timeout=30):
@@ -234,6 +288,7 @@ def ssh_entry():
     command = data.get("command")
     disconnect = parse_bool(data.get("terminal_disconnect", False))
     interactive = parse_bool(data.get("interactive", False))
+    terminal_raw = str(data.get("terminal_mode", "")).strip().lower() == "raw"
 
     logger.warning(
         f"[SSH ENTRY] host={host}, port={port}, user={username}, "
@@ -268,6 +323,7 @@ def ssh_entry():
                     logger.error(f"[SSH DISCONNECT ERROR] {e}")
 
                 ssh_sessions.pop(key, None)
+                ssh_shell_locks.pop(key, None)
 
             message = f"Disconnected SSH session {key}"
             return jsonify(tool_response(True, stdout=message, message=message))
@@ -299,12 +355,15 @@ def ssh_entry():
         # -------------------------
         # EXECUTE COMMAND
         # -------------------------
-        if command:
+        if command is not None and (command or terminal_raw):
             logger.warning(f"[SSH EXECUTE REQUEST] {command}")
             status_lines.append(f"Executing command: {command}")
 
-            execute_fn = ssh_execute_shell if interactive else ssh_execute
-            future = executor.submit(execute_fn, client, key, command) if interactive else executor.submit(execute_fn, client, command)
+            if terminal_raw:
+                future = executor.submit(ssh_send_shell_line, client, key, command)
+            else:
+                execute_fn = ssh_execute_shell if interactive else ssh_execute
+                future = executor.submit(execute_fn, client, key, command) if interactive else executor.submit(execute_fn, client, command)
             result = future.result()
 
             logger.warning(f"[SSH RESPONSE READY] {result}")
@@ -315,7 +374,9 @@ def ssh_entry():
                     stdout=result.get("output", "") if interactive else combine_stdout(*status_lines, result.get("output", "")),
                     stderr=result.get("error", ""),
                     return_code=result.get("exit_code", 1),
-                    prompt=result.get("prompt", key)
+                    prompt=result.get("prompt", key),
+                    awaiting_sensitive_input=result.get("awaiting_sensitive_input", False),
+                    terminal_raw=result.get("terminal_raw", False)
                 ),
                 "exit_code": result.get("exit_code", 1)
             })
@@ -345,6 +406,7 @@ def ssh_entry():
             except Exception:
                 pass
             ssh_sessions.pop(key, None)
+            ssh_shell_locks.pop(key, None)
 
         return jsonify({
             **tool_response(

@@ -30,3 +30,5 @@ tools:
   enabled: false
 - name: ssh
   enabled: false
+- name: telnet
+  enabled: false
