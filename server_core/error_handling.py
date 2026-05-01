@@ -890,3 +890,192 @@ class GracefulDegradation:
     def is_critical_operation(self, operation: str) -> bool:
         """Check if operation is critical and requires fallback"""
         return operation in self.critical_operations
+
+
+class RecoveryExecutor:
+    """Executes recovery strategies returned by IntelligentErrorHandler.
+
+    Wraps a callable ``execute_fn`` (typically ``execute_command``) and, when
+    a tool call fails, consults the ``IntelligentErrorHandler`` for a strategy
+    and acts on it automatically.  The final result always includes a
+    ``recovery`` key that is visible in the API response:
+
+      "recovery": {
+          "applied": false           # true when at least one recovery attempt ran
+          "attempts": 0,             # number of recovery attempts made
+          "action": null,            # last RecoveryAction value name, or null
+          "error_type": null,        # ErrorType value name, or null
+          "alternative_tool": null,  # tool name used if SWITCH_TO_ALTERNATIVE_TOOL
+          "succeeded": false,        # whether recovery ultimately produced success
+      }
+    """
+
+    #: Maximum recovery attempts regardless of strategy.max_attempts
+    MAX_RECOVERY_ATTEMPTS = 3
+
+    def __init__(self, error_handler: "IntelligentErrorHandler") -> None:
+        self._handler = error_handler
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def run(
+        self,
+        execute_fn,
+        command: str,
+        context: Optional[Dict[str, Any]] = None,
+        **execute_kwargs,
+    ) -> Dict[str, Any]:
+        """Execute *command* via *execute_fn*, applying recovery on failure.
+
+        Args:
+            execute_fn:      Callable with signature ``(command, **kw) -> dict``.
+            command:         Shell command to run.
+            context:         Optional dict forwarded to ``handle_tool_failure``
+                             (may contain ``target``, ``parameters``, etc.).
+            **execute_kwargs: Extra keyword arguments forwarded to *execute_fn*.
+
+        Returns:
+            The result dict from *execute_fn*, augmented with a ``recovery``
+            sub-dict reflecting any recovery actions taken.
+        """
+        ctx = dict(context or {})
+        recovery_meta: Dict[str, Any] = {
+            "applied": False,
+            "attempts": 0,
+            "action": None,
+            "error_type": None,
+            "alternative_tool": None,
+            "succeeded": False,
+        }
+
+        # --- Initial attempt ---
+        result = execute_fn(command, **execute_kwargs)
+        if result.get("success", False):
+            result["recovery"] = recovery_meta
+            return result
+
+        # --- Failure path — begin recovery loop ---
+        current_command = command
+        attempt = 0
+
+        while attempt < self.MAX_RECOVERY_ATTEMPTS:
+            attempt += 1
+            ctx["attempt_count"] = attempt
+
+            # Build a synthetic exception so handle_tool_failure can classify it
+            combined_error_text = (
+                result.get("stderr", "") or result.get("stdout", "") or "command failed"
+            )
+            error = RuntimeError(combined_error_text)
+
+            strategy = self._handler.handle_tool_failure(
+                tool=ctx.get("tool", current_command.split()[0] if current_command else "unknown"),
+                error=error,
+                context=ctx,
+            )
+
+            action = strategy.action
+            recovery_meta["applied"] = True
+            recovery_meta["attempts"] = attempt
+            recovery_meta["action"] = action.value
+            recovery_meta["error_type"] = self._handler.classify_error(
+                combined_error_text, error
+            ).value
+
+            if action == RecoveryAction.RETRY_WITH_BACKOFF:
+                delay = min(
+                    strategy.parameters.get("initial_delay", 5) * (strategy.backoff_multiplier ** (attempt - 1)),
+                    strategy.parameters.get("max_delay", 60),
+                )
+                logger.info(
+                    "RecoveryExecutor: RETRY_WITH_BACKOFF attempt=%d delay=%.1fs command=%s",
+                    attempt, delay, current_command[:80],
+                )
+                import time as _time
+                _time.sleep(delay)
+                result = execute_fn(current_command, **execute_kwargs)
+
+            elif action == RecoveryAction.RETRY_WITH_REDUCED_SCOPE:
+                reduced_command = self._reduce_scope(current_command, strategy.parameters)
+                logger.info(
+                    "RecoveryExecutor: RETRY_WITH_REDUCED_SCOPE attempt=%d command=%s",
+                    attempt, reduced_command[:80],
+                )
+                result = execute_fn(reduced_command, **execute_kwargs)
+                current_command = reduced_command
+
+            elif action == RecoveryAction.SWITCH_TO_ALTERNATIVE_TOOL:
+                alt_tool = self._handler.get_alternative_tool(
+                    ctx.get("tool", ""), ctx
+                )
+                if alt_tool:
+                    recovery_meta["alternative_tool"] = alt_tool
+                    logger.info(
+                        "RecoveryExecutor: SWITCH_TO_ALTERNATIVE_TOOL attempt=%d alt=%s",
+                        attempt, alt_tool,
+                    )
+                    # Replace the binary name in the command with the alternative
+                    alt_command = self._substitute_tool(current_command, alt_tool)
+                    result = execute_fn(alt_command, **execute_kwargs)
+                    current_command = alt_command
+                else:
+                    logger.info(
+                        "RecoveryExecutor: SWITCH_TO_ALTERNATIVE_TOOL — no alternative for %s, stopping",
+                        ctx.get("tool", "unknown"),
+                    )
+                    break
+
+            elif action in (RecoveryAction.ESCALATE_TO_HUMAN, RecoveryAction.ABORT_OPERATION):
+                logger.info("RecoveryExecutor: action=%s — stopping recovery", action.value)
+                break
+
+            else:
+                # ADJUST_PARAMETERS / GRACEFUL_DEGRADATION / unknown — stop to avoid loops
+                logger.info("RecoveryExecutor: unhandled action=%s — stopping recovery", action.value)
+                break
+
+            if result.get("success", False):
+                recovery_meta["succeeded"] = True
+                logger.info(
+                    "RecoveryExecutor: recovery succeeded on attempt %d action=%s",
+                    attempt, action.value,
+                )
+                break
+
+        result["recovery"] = recovery_meta
+        return result
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _reduce_scope(command: str, params: Dict[str, Any]) -> str:
+        """Apply reduced-scope parameter adjustments to a shell command string."""
+        import re as _re
+        result = command
+        if params.get("reduce_threads"):
+            result = _re.sub(r"(-T\s*)[4-5]", r"\g<1>2", result)
+            result = _re.sub(r"(--threads\s+)\d+", r"\g<1>5", result)
+            result = _re.sub(r"(-t\s+)\d+", r"\g<1>5", result)
+        if params.get("reduce_timeout"):
+            result = _re.sub(r"(--timeout\s+)\d+", r"\g<1>30", result)
+        return result
+
+    @staticmethod
+    def _substitute_tool(command: str, new_tool: str) -> str:
+        """Replace the leading binary name in *command* with *new_tool*."""
+        import shlex as _shlex
+        try:
+            parts = _shlex.split(command)
+        except ValueError:
+            parts = command.split()
+        if not parts:
+            return command
+        parts[0] = new_tool
+        try:
+            return " ".join(_shlex.quote(p) for p in parts)
+        except Exception:
+            return " ".join(parts)

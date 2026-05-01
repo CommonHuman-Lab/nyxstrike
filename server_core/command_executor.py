@@ -123,3 +123,61 @@ def execute_command(
     pass  # dashboard recording must never break a tool call
 
   return result
+
+
+def execute_command_with_recovery(
+  command: str,
+  use_cache: bool = True,
+  cache=None,
+  timeout: Optional[int] = None,
+  tool: Optional[str] = None,
+  endpoint: Optional[str] = None,
+  params: Optional[Dict[str, Any]] = None,
+  target: Optional[str] = None,
+) -> Dict[str, Any]:
+  """Like ``execute_command`` but applies automatic error recovery on failure.
+
+  On a failed execution, consults the ``RecoveryExecutor`` singleton to retry,
+  reduce scope, or switch to an alternative tool.  The returned dict always
+  contains a ``recovery`` key with metadata about any recovery actions taken:
+
+    {
+      "stdout": "...",
+      "stderr": "...",
+      "success": true|false,
+      ...
+      "recovery": {
+        "applied": true,
+        "attempts": 1,
+        "action": "retry_with_backoff",
+        "error_type": "timeout",
+        "alternative_tool": null,
+        "succeeded": true
+      }
+    }
+
+  Args:
+      command:   The command to execute.
+      target:    Optional target string forwarded to the error handler for context.
+      (all other args are identical to ``execute_command``)
+  """
+  from server_core.singletons import recovery_executor as _recovery_executor
+
+  ctx: Dict[str, Any] = {
+    "tool": tool or _detect_tool_key(command, tool),
+    "target": target or "",
+    "parameters": params or {},
+  }
+
+  result = _recovery_executor.run(
+    execute_fn=execute_command,
+    command=command,
+    context=ctx,
+    use_cache=use_cache,
+    cache=cache,
+    timeout=timeout,
+    tool=tool,
+    endpoint=endpoint,
+    params=params,
+  )
+  return result

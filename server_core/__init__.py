@@ -41,6 +41,7 @@ from .error_handling import (
     ErrorContext,
     IntelligentErrorHandler,
     GracefulDegradation,
+    RecoveryExecutor,
 )
 
 # Shared singletons — import instances directly rather than constructing new ones
@@ -52,6 +53,7 @@ from .singletons import (
     enhanced_process_manager,
     error_handler,
     degradation_manager,
+    recovery_executor,
     cve_intelligence,
     exploit_generator,
     vulnerability_correlator,
@@ -96,6 +98,7 @@ __all__ = [
     "ErrorContext",
     "IntelligentErrorHandler",
     "GracefulDegradation",
+    "RecoveryExecutor",
     "_determine_operation_type",
     "file_manager",
     "_rebuild_command_with_params",
@@ -111,6 +114,7 @@ __all__ = [
     "enhanced_process_manager",
     "error_handler",
     "degradation_manager",
+    "recovery_executor",
     "cve_intelligence",
     "exploit_generator",
     "vulnerability_correlator",
