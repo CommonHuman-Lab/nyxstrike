@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/commonhuman-lab-nyxstrike-badge.png)](https://mseep.ai/app/commonhuman-lab-nyxstrike)
+
 <div align="center">
 
 <img src="assets/nyxstrike-logo.png" alt="NyxStrike" width="220"/>
