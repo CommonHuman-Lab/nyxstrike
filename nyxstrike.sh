@@ -24,7 +24,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${ROOT_DIR}/nyxstrike-env"
 PYTHON_BIN="python3"
 GIT_TOOLS_DIR="${ROOT_DIR}/git_tools"
-OCTORIG_DIR="${ROOT_DIR}/scripts/octorig"
 
 # --- install flags ---
 INSTALL_TOOLS=false
@@ -82,12 +81,7 @@ update_self_repo() {
   fi
 }
 
-update_octorig() {
-  if [[ ! -d "${OCTORIG_DIR}/.git" ]]; then
-    git clone --quiet https://github.com/CommonHuman-Lab/OctoRig "${OCTORIG_DIR}" 2>/dev/null
-    return
-  fi
-}
+
 
 
 ensure_pip_ready() {
@@ -206,7 +200,6 @@ run_setup() {
   fi
 
   if [[ "${INSTALL_TOOLS}" == true ]]; then
-    update_octorig
     echo "[3/4] Installing external tools via scripts/install_tools.sh..."
     bash "${ROOT_DIR}/scripts/install_tools.sh"
   else
