@@ -8,9 +8,12 @@ logger = logging.getLogger(__name__)
 class PythonEnvironmentManager:
     """Manage Python virtual environments and dependencies"""
 
-    def __init__(self, base_dir: str = "/tmp/app_envs"):
+    def __init__(self, base_dir: str = None):
+        if base_dir is None:
+            import tempfile
+            base_dir = str(Path(tempfile.gettempdir()) / "app_envs")
         self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(exist_ok=True)
+        self.base_dir.mkdir(parents=True, exist_ok=True)
 
     def create_venv(self, env_name: str) -> Path:
         """Create a new virtual environment"""
