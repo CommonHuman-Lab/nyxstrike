@@ -230,7 +230,7 @@ if __name__ == "__main__":
         # Enhanced startup messages with beautiful formatting.
         # ANSI codes have zero visible width, so we track visible length manually
         C = ModernVisualEngine.COLORS
-        BOX_WIDTH = 66  # visible characters between the two │ borders (including leading space)
+        BOX_WIDTH = 69  # visible characters between the two │ borders (including leading space)
 
         import re as _re
         from wcwidth import wcswidth as _wcswidth
