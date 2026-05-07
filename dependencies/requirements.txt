@@ -9,4 +9,5 @@ beautifulsoup4>=4.12.0,<5.0.0   # HTML parsing (from bs4 import BeautifulSoup)
 selenium>=4.15.0,<5.0.0         # Browser automation (selenium imports)
 webdriver-manager>=4.0.0,<5.0.0 # ChromeDriver management (referenced in code)
 aiohttp>=3.8.0,<4.0.0           # Async HTTP (aiohttp import)
+h2>=4.0.0,<5.0.0                # HTTP/2 library used by h2csmuggler plugin runtime
 PyMySQL>=1.1.2,<2.0.0      # MySQL database connector (conditionally used for database interactions)
