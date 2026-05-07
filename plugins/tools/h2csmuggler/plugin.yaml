@@ -5,7 +5,7 @@ description: |
   Detect and exploit insecure forwarding of h2c upgrades using BishopFox h2csmuggler.
   Supports test mode, scan-list mode, and smuggled request mode through a target proxy.
 
-author: "system"
+author: "garthoid"
 category: web_vuln
 
 tags:
