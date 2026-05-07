@@ -1,3 +1,5 @@
+import os
+
 from flask import Blueprint, request, jsonify
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -15,7 +17,7 @@ from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import cache, telemetry
 
 from server_core.tool_constants import (
-    BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_PIP_CHECK,
+    BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_GO_CHECK, REQUIRE_PIP_CHECK,
     REQUIRE_GEM_CHECK, REQUIRE_CARGO_CHECK, BINARY_NAME_OVERRIDES,
     HEALTH_TOOL_CATEGORIES
 )
@@ -71,6 +73,12 @@ def _probe_binary(check_type: str, binary: str) -> bool:
     check_type — one of: builtin, which, dpkg, pip, gem, cargo
     binary     — executable or package name to probe
     """
+
+    home_path = os.path.expanduser("~")
+    paths_ovrrides = config_core.get("PATHS", {})
+    GO_PATH = paths_ovrrides.get("GO_BINARYS", "{HOME}/go/bin/")
+    GO_BINARYS = GO_PATH.replace("{HOME}", home_path)
+    
     if check_type == "builtin":
         return True
     try:
@@ -95,6 +103,12 @@ def _probe_binary(check_type: str, binary: str) -> bool:
         elif check_type == "cargo":
             r = subprocess.run(
                 ["cargo", "install", "--list"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            )
+            return binary in r.stdout
+        elif check_type == "go":
+            r = subprocess.run(
+                ["go", "version", "-m", GO_BINARYS],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
             )
             return binary in r.stdout
@@ -130,6 +144,8 @@ def _refresh_tool_availability() -> None:
                 check_type = "gem"
             elif binary in REQUIRE_CARGO_CHECK:
                 check_type = "cargo"
+            elif binary in REQUIRE_GO_CHECK:
+                check_type = "go"
             else:
                 check_type = "which"
             return tool, _probe_binary(check_type, binary)

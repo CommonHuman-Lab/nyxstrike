@@ -33,6 +33,9 @@ _config = {
     "DEFAULT_API_SERVER_URL": "http://127.0.0.1:8888",
     "MAX_RETRIES": 3,
     "METASPLOIT_SESSION_WAIT": 10,  # Seconds to wait after exploit -j before listing sessions
+    "PATHS": {
+        "GO_BINARYS": "{HOME}/go/bin/"
+    },
 
     # ── LLM client ────────────────────────────────────────────────────────────
     "NYXSTRIKE_LLM_PROVIDER": "ollama",                         # ollama | openai | anthropic
