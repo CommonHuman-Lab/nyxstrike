@@ -2,7 +2,6 @@
 
 from typing import Dict, Any
 import time
-import asyncio
 
 def register_comprehensive_api_audit_tool(mcp, api_client, logger):
     
@@ -103,7 +102,7 @@ def register_comprehensive_api_audit_tool(mcp, api_client, logger):
             "audit_coverage": "comprehensive" if len(audit_results["tests_performed"]) >= 3 else "partial"
         }
 
-        logger.info(f"✅ Comprehensive API audit completed:")
+        logger.info("✅ Comprehensive API audit completed:")
         logger.info(f"   ├─ Tests performed: {audit_results['summary']['tests_performed']}")
         logger.info(f"   ├─ Total vulnerabilities: {audit_results['summary']['total_vulnerabilities']}")
         logger.info(f"   └─ Coverage: {audit_results['summary']['audit_coverage']}")

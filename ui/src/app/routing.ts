@@ -9,7 +9,8 @@ export type Page =
   | 'plugins'
   | 'reports'
   | 'sessions'
-  | 'session-detail';
+  | 'session-detail'
+  | 'loot';
 
 const VALID_PAGES = new Set<Page>([
   'dashboard',
@@ -23,6 +24,7 @@ const VALID_PAGES = new Set<Page>([
   'reports',
   'sessions',
   'session-detail',
+  'loot',
 ]);
 
 export function routeFromHash(): { page: Page; sessionId: string | null } {

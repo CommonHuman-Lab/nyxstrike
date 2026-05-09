@@ -26,5 +26,11 @@
 # ─────────────────────────────────────────────────────────────────────────
 
 tools:
-  - name: example_net_ping
-    enabled: false
+- name: example_net_ping
+  enabled: false
+- name: ssh
+  enabled: false
+- name: telnet
+  enabled: false
+- name: h2csmuggler
+  enabled: false

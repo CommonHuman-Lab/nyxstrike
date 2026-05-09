@@ -282,7 +282,8 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.online   { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.polling  { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
 .status-dot.error  { background: var(--red); }
 .status-dot.loading { background: var(--amber); animation: pulse 1s infinite; }
 .status-dot--pulse { animation: statusBlink 0.7s ease-out; }
@@ -1608,6 +1609,18 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.modal-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.modal-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .modal-label {

@@ -1,8 +1,20 @@
 import { del, get, patch, post, postFormData, postWithTimeout, put, stream } from './client';
+import { isDemoMode } from '../app/demoUtils';
 import type {
   AttackChainStep,
   AnalyzeSessionResponse,
   CacheStatsResponse,
+  Credential,
+  CredentialsResponse,
+  CredentialMutationResponse,
+  CredentialDeleteResponse,
+  CreateCredentialPayload,
+  UpdateCredentialPayload,
+  LootResponse,
+  LootMutationResponse,
+  LootDeleteResponse,
+  CreateLootPayload,
+  UpdateLootPayload,
   ChatSessionsResponse,
   ChatSessionResponse,
   ChatMessagesResponse,
@@ -57,6 +69,9 @@ import type {
   WordlistEntry,
   PluginsByCategoryResponse,
   PluginsListResponse,
+  PluginsManifestResponse,
+  PluginToggleResponse,
+  ServerRestartResponse,
 } from './types';
 
 type ProcessActionResponse = { success: boolean; message?: string; error?: string };
@@ -73,6 +88,10 @@ export const api = {
 
   pluginList: () => get<PluginsListResponse>('/api/plugins/list'),
   pluginsByCategory: () => get<PluginsByCategoryResponse>('/api/plugins/by-category'),
+  pluginsManifest: () => get<PluginsManifestResponse>('/api/plugins/manifest'),
+  pluginToggle: (name: string, enabled: boolean) =>
+    patch<PluginToggleResponse>(`/api/plugins/${name}`, { enabled }),
+  serverRestart: () => post<ServerRestartResponse>('/api/server/restart', {}),
 
   getSettings: () => get<SettingsResponse>('/api/settings'),
   patchSettings: (runtime: Partial<Settings['runtime']>, chat?: Partial<Settings['chat']>) =>
@@ -231,6 +250,38 @@ export const api = {
     post<SessionAiReportResponse>(`/api/sessions/${sessionId}/report/ai`, options),
   /** Returns the URL to trigger a notes zip download in the browser */
   exportSessionNotesUrl: (sessionId: string) => `/api/sessions/${sessionId}/notes/export`,
+
+  // ── Credentials ──────────────────────────────────────────────────────────
+  credentials: (params?: { session_id?: string; host?: string; service?: string; tag?: string; q?: string }) => {
+    if (isDemoMode()) return import('../app/demo').then(m => m.DEMO_CREDENTIALS);
+    const qs = params ? '?' + new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]))
+    ).toString() : '';
+    return get<CredentialsResponse>(`/api/credentials${qs}`);
+  },
+  credential: (credId: string) => get<{ success: boolean; credential: Credential }>(`/api/credentials/${credId}`),
+  createCredential: (payload: CreateCredentialPayload) =>
+    post<CredentialMutationResponse>('/api/credentials', payload),
+  updateCredential: (credId: string, payload: UpdateCredentialPayload) =>
+    patch<CredentialMutationResponse>(`/api/credentials/${credId}`, payload),
+  deleteCredential: (credId: string) => del<CredentialDeleteResponse>(`/api/credentials/${credId}`),
+  exportCredentialsUrl: () => '/api/credentials/export',
+
+  // ── Loot ─────────────────────────────────────────────────────────────────
+  loot: (params?: { session_id?: string; host?: string; loot_type?: string; tag?: string; q?: string }) => {
+    if (isDemoMode()) return import('../app/demo').then(m => m.DEMO_LOOT);
+    const qs = params ? '?' + new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]))
+    ).toString() : '';
+    return get<LootResponse>(`/api/loot${qs}`);
+  },
+  lootItem: (lootId: string) => get<LootMutationResponse>(`/api/loot/${lootId}`),
+  createLoot: (payload: CreateLootPayload) =>
+    post<LootMutationResponse>('/api/loot', payload),
+  updateLoot: (lootId: string, payload: UpdateLootPayload) =>
+    patch<LootMutationResponse>(`/api/loot/${lootId}`, payload),
+  deleteLoot: (lootId: string) => del<LootDeleteResponse>(`/api/loot/${lootId}`),
+  exportLootUrl: () => '/api/loot/export',
 
   // ── Chat Widget ──────────────────────────────────────────────────────────
   chat: {

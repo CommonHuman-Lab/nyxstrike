@@ -300,18 +300,23 @@
   align-items: center;
   gap: 7px;
   padding: 9px 18px;
-  background: var(--green);
-  color: #0d0f14;
-  border: none;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: color-mix(in srgb, var(--accent) 82%, var(--text-h));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
   border-radius: 7px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   width: fit-content;
-  transition: opacity 0.15s;
+  transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
-.run-submit:hover:not(:disabled) { opacity: 0.85; }
+.run-submit:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg-card2));
+  color: var(--text-h);
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+}
 .run-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Output block */

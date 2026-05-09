@@ -67,6 +67,8 @@ def register_blueprints(app):
   app.register_blueprint(api_session_notes_bp)
   app.register_blueprint(api_session_findings_bp)
   app.register_blueprint(api_session_reports_bp)
+  app.register_blueprint(api_credentials_bp)
+  app.register_blueprint(api_loot_bp)
 
   #OSINT
   app.register_blueprint(api_osint_sherlock_bp)
@@ -310,6 +312,7 @@ def register_blueprints(app):
   app.register_blueprint(api_vuln_intel_threat_feeds_bp)
   app.register_blueprint(api_vuln_intel_zero_day_research_bp)
   app.register_blueprint(api_vuln_intel_vulnx_bp)
+  app.register_blueprint(api_vuln_intel_cve_exploit_chain_bp)
 
   # Bug Bounty Workflow
   app.register_blueprint(api_bugbounty_workflow_bug_bounty_recon_bp)

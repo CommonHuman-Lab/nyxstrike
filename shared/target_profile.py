@@ -20,6 +20,11 @@ class TargetProfile:
     attack_surface_score: float = 0.0
     risk_level: str = "unknown"
     confidence_score: float = 0.0
+    # CVE / exploit intelligence fields
+    cve_ids: List[str] = field(default_factory=list)
+    service_versions: Dict[str, str] = field(default_factory=dict)
+    known_vulnerabilities: List[Dict[str, Any]] = field(default_factory=list)
+    exploit_candidates: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert TargetProfile to dictionary for JSON serialization"""
@@ -38,5 +43,9 @@ class TargetProfile:
             "endpoints": self.endpoints,
             "attack_surface_score": self.attack_surface_score,
             "risk_level": self.risk_level,
-            "confidence_score": self.confidence_score
+            "confidence_score": self.confidence_score,
+            "cve_ids": self.cve_ids,
+            "service_versions": self.service_versions,
+            "known_vulnerabilities": self.known_vulnerabilities,
+            "exploit_candidates": self.exploit_candidates,
         }

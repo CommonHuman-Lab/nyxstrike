@@ -145,6 +145,7 @@ export function UploadNoteModal({
                 <div className="upload-note-name-row">
                   <input
                     className="upload-note-name-input"
+                    name="note-name"
                     type="text"
                     value={noteName}
                     onChange={e => { setNoteName(e.target.value); setConflict(false); setError(null) }}
@@ -164,6 +165,7 @@ export function UploadNoteModal({
                   Folder
                   <select
                     className="note-modal-folder-select upload-note-folder-select"
+                    name="note-folder"
                     value={folder}
                     onChange={e => { setFolder(e.target.value); setConflict(false) }}
                     disabled={uploading}

@@ -1,0 +1,46 @@
+name: ssh
+version: "2.2.0"
+
+description: |
+  Executes remote SSH commands using a server-managed cached SSH connection.
+  The server establishes an authenticated SSH connection per host/user and reuses it for subsequent command execution.
+  Each request executes a command and returns stdout, stderr, and exit code.
+
+author: "roc1t1z3not"
+category: remote_access
+
+tags:
+  - ssh
+  - remote_execution
+  - paramiko
+  - exec_command
+
+endpoint: /api/plugins/ssh
+mcp_tool_name: ssh
+effectiveness: 0.95
+
+check:
+  type: builtin
+
+params:
+  host:
+    required: true
+    description: "Target host (IP or hostname)"
+
+optional:
+  port:
+    default: 22
+    description: "SSH port"
+
+  username:
+    description: "SSH username for authentication"
+
+  password:
+    description: "SSH password (required for initial connection)"
+
+  command:
+    description: "Command to execute on the remote host (returns stdout/stderr)"
+
+  disconnect:
+    default: false
+    description: "Closes the cached SSH connection for this host/user"

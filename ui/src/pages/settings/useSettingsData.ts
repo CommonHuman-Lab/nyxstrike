@@ -21,6 +21,7 @@ type SettingsCache = {
   personalityPresets: PersonalityPreset[]
   summarizationThreshold: string
   contextInjectionChars: string
+  llmThink: boolean
 }
 
 let settingsCache: SettingsCache | null = null
@@ -54,6 +55,7 @@ export function useSettingsData() {
   const [personalityPresets, setPersonalityPresets] = useState<PersonalityPreset[]>(settingsCache?.personalityPresets ?? [])
   const [summarizationThreshold, setSummarizationThreshold] = useState(settingsCache?.summarizationThreshold ?? '')
   const [contextInjectionChars, setContextInjectionChars] = useState(settingsCache?.contextInjectionChars ?? '')
+  const [llmThink, setLlmThink] = useState(settingsCache?.llmThink ?? false)
 
   function applySettings(response: Settings) {
     const nextCache: SettingsCache = {
@@ -71,6 +73,7 @@ export function useSettingsData() {
       personalityPresets: response.chat?.personality_presets ?? [],
       summarizationThreshold: String(response.chat?.summarization_threshold ?? 20),
       contextInjectionChars: String(response.chat?.context_injection_chars ?? 4000),
+      llmThink: Boolean(response.chat?.llm_think ?? false),
     }
     settingsCache = nextCache
     setSettings(nextCache.settings)
@@ -87,6 +90,7 @@ export function useSettingsData() {
     setPersonalityPresets(nextCache.personalityPresets)
     setSummarizationThreshold(nextCache.summarizationThreshold)
     setContextInjectionChars(nextCache.contextInjectionChars)
+    setLlmThink(nextCache.llmThink)
   }
 
   useEffect(() => {
@@ -173,6 +177,7 @@ export function useSettingsData() {
         custom_prompt: customPrompt,
         summarization_threshold: Number(summarizationThreshold),
         context_injection_chars: Number(contextInjectionChars),
+        llm_think: llmThink,
       })
       if (!res.success) {
         pushToast('error', 'Failed to save chat settings')
@@ -222,6 +227,7 @@ export function useSettingsData() {
     personalityPresets,
     summarizationThreshold,
     contextInjectionChars,
+    llmThink,
     setTimeout_,
     setRequestTimeout,
     setInactivityTimeout,
@@ -233,6 +239,7 @@ export function useSettingsData() {
     setCustomPrompt,
     setSummarizationThreshold,
     setContextInjectionChars,
+    setLlmThink,
     addWordlist,
     removeWordlist,
     updateWordlist,

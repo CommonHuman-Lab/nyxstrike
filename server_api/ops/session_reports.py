@@ -4,6 +4,7 @@ Session Report API — generate structured or AI-assisted reports for a session.
 Routes:
   POST /api/sessions/<id>/report           structured markdown report (no LLM)
   POST /api/sessions/<id>/report/ai        AI-assisted report with LLM executive summary
+  GET  /api/sessions/<id>/report/html      standalone HTML report (download)
   GET  /api/sessions/<id>/notes/export     bulk notes zip download
 """
 
@@ -168,6 +169,36 @@ def generate_ai_report(session_id: str):
     return _bad(str(e), 500)
 
 
+# ── HTML report export ────────────────────────────────────────────────────────
+# TODO: Add to frontend UI as "Download HTML Report" button that calls this endpoint with POST.
+@api_session_reports_bp.route("/api/sessions/<session_id>/report/html", methods=["GET", "POST"])
+def generate_html_report(session_id: str):
+  """Generate and download a standalone HTML report for the session."""
+  try:
+    loaded = load_session_any(session_id)
+    if not loaded:
+      return _bad("Session not found", 404)
+
+    session_data, _state = loaded
+    body = request.get_json(force=True, silent=True) or {}
+    include_notes = body.get("include_notes", True)
+    include_event_log = body.get("include_event_log", False)
+
+    html = _build_html_report(session_id, session_data, include_notes, include_event_log)
+
+    append_event(session_id, "html_report_generated", "HTML report generated", {})
+
+    fname = f"{session_id}_report_{int(time.time())}.html"
+    return Response(
+      html,
+      mimetype="text/html",
+      headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+  except Exception as e:
+    logger.error(f"Error generating HTML report for {session_id}: {e}")
+    return _bad(str(e), 500)
+
+
 # ── Bulk notes export (zip) ────────────────────────────────────────────────────
 
 @api_session_reports_bp.route("/api/sessions/<session_id>/notes/export", methods=["GET"])
@@ -305,6 +336,8 @@ def _build_structured_report(
           meta_rows.append(f"| Tool | `{finding['tool']}` |")
         if finding.get("cve"):
           meta_rows.append(f"| CVE | {finding['cve']} |")
+        if finding.get("cvss_score") is not None:
+          meta_rows.append(f"| CVSS Score | **{finding['cvss_score']}** |")
         if finding.get("status"):
           meta_rows.append(f"| Status | {finding['status']} |")
         if meta_rows:
@@ -423,6 +456,177 @@ Write in professional security assessment style. Be specific and actionable. Do 
   except Exception as e:
     logger.error(f"LLM executive summary generation failed: {e}")
     return f"*AI executive summary generation failed: {e}. See findings section for details.*"
+
+
+def _cvss_color(score) -> str:
+  try:
+    s = float(score)
+  except (TypeError, ValueError):
+    return "#6c757d"
+  if s >= 9.0:
+    return "#dc3545"
+  if s >= 7.0:
+    return "#fd7e14"
+  if s >= 4.0:
+    return "#ffc107"
+  return "#198754"
+
+
+def _build_html_report(
+  session_id: str,
+  session_data: dict,
+  include_notes: bool,
+  include_event_log: bool,
+) -> str:
+  name = session_data.get("name") or session_data.get("target", session_id)
+  target = session_data.get("target", "unknown")
+  status = session_data.get("status", "active")
+  risk_level = session_data.get("risk_level", "unknown")
+  objective = session_data.get("objective", "")
+  findings = session_data.get("findings", [])
+  tools_executed = _actual_tools_run(session_id, session_data)
+  event_log = session_data.get("event_log", [])
+  created_at = session_data.get("created_at", 0)
+  generated_at = datetime.now().strftime("%Y-%m-%d %H:%M UTC")
+
+  sev_order = ("critical", "high", "medium", "low", "info")
+  sev_colors = {
+    "critical": "#dc3545",
+    "high": "#fd7e14",
+    "medium": "#ffc107",
+    "low": "#0dcaf0",
+    "info": "#6c757d",
+  }
+
+  by_severity: dict = {}
+  for f in findings:
+    sev = str(f.get("severity", "info")).lower()
+    by_severity.setdefault(sev, []).append(f)
+
+  sev_counts_html = ""
+  for sev in sev_order:
+    count = len(by_severity.get(sev, []))
+    color = sev_colors.get(sev, "#6c757d")
+    sev_counts_html += f'<span style="background:{color};color:#fff;padding:3px 10px;border-radius:12px;margin:2px;font-size:0.85em;">{sev.capitalize()}: {count}</span> '
+
+  findings_html = ""
+  for sev in sev_order:
+    if sev not in by_severity:
+      continue
+    color = sev_colors.get(sev, "#6c757d")
+    findings_html += f'<h3 style="color:{color};border-left:4px solid {color};padding-left:10px;">{sev.capitalize()} ({len(by_severity[sev])})</h3>'
+    for idx, f in enumerate(by_severity[sev], 1):
+      cvss = f.get("cvss_score")
+      cvss_badge = ""
+      if cvss is not None:
+        cc = _cvss_color(cvss)
+        cvss_badge = f' <span style="background:{cc};color:#fff;padding:1px 7px;border-radius:8px;font-size:0.8em;">CVSS {cvss}</span>'
+      cve = f.get("cve", "")
+      cve_badge = f' <code style="background:#e9ecef;padding:1px 6px;border-radius:4px;">{cve}</code>' if cve else ""
+      title = f.get("title", "Untitled Finding")
+      desc = f.get("description", "")
+      evidence = f.get("evidence", "")
+      recommendation = f.get("recommendation", "")
+      tool = f.get("tool", "")
+      tags = f.get("tags", [])
+
+      findings_html += f"""
+<div style="border:1px solid #dee2e6;border-radius:8px;padding:16px;margin-bottom:16px;">
+  <h4 style="margin-top:0;">{idx}. {title}{cvss_badge}{cve_badge}</h4>
+  {f'<p>{desc}</p>' if desc else ''}
+  <table style="border-collapse:collapse;font-size:0.9em;">
+    {'<tr><td style="padding:2px 12px 2px 0;color:#666;">Tool</td><td><code>' + tool + '</code></td></tr>' if tool else ''}
+    {'<tr><td style="padding:2px 12px 2px 0;color:#666;">Status</td><td>' + str(f.get('status','')) + '</td></tr>' if f.get('status') else ''}
+    {'<tr><td style="padding:2px 12px 2px 0;color:#666;">Tags</td><td>' + ', '.join(tags) + '</td></tr>' if tags else ''}
+  </table>
+  {f'<div style="margin-top:8px;"><strong>Evidence:</strong><pre style="background:#f8f9fa;padding:10px;border-radius:4px;overflow-x:auto;font-size:0.85em;">{evidence}</pre></div>' if evidence else ''}
+  {f'<div style="margin-top:8px;background:#d1ecf1;border-radius:4px;padding:10px;"><strong>Recommendation:</strong> {recommendation}</div>' if recommendation else ''}
+</div>"""
+
+  if not findings:
+    findings_html = '<p style="color:#6c757d;"><em>No findings recorded for this session.</em></p>'
+
+  tools_html = ""
+  if tools_executed:
+    unique = list(dict.fromkeys(tools_executed))
+    tools_html = " ".join(f'<code style="background:#e9ecef;padding:2px 8px;border-radius:4px;margin:2px;display:inline-block;">{t}</code>' for t in unique)
+
+  notes_html = ""
+  if include_notes:
+    notes = session_store.list_notes(session_id)
+    for note_meta in notes:
+      note_name = note_meta["filename"]
+      note_folder = note_meta.get("folder", "")
+      heading = f"{note_folder}/{note_name}" if note_folder else note_name
+      content = session_store.load_note(session_id, note_name, note_folder) or ""
+      notes_html += f'<h4>{heading}</h4><pre style="background:#f8f9fa;padding:10px;border-radius:4px;white-space:pre-wrap;">{content}</pre>'
+    if notes_html:
+      notes_html = f"<h2>Session Notes</h2>{notes_html}"
+
+  timeline_html = ""
+  if include_event_log and event_log:
+    rows = ""
+    for evt in event_log:
+      ts_str = _fmt_ts(evt.get("timestamp", 0))
+      evt_type = str(evt.get("type", "")).replace("_", " ").title()
+      msg = str(evt.get("message", ""))
+      rows += f"<tr><td style='padding:4px 12px;color:#666;white-space:nowrap;'>{ts_str}</td><td style='padding:4px 12px;'>{evt_type}</td><td style='padding:4px 12px;'>{msg}</td></tr>"
+    timeline_html = f"""<h2>Activity Timeline</h2>
+<table style="border-collapse:collapse;width:100%;font-size:0.9em;">
+  <thead><tr style="background:#f8f9fa;">
+    <th style="padding:6px 12px;text-align:left;">Time</th>
+    <th style="padding:6px 12px;text-align:left;">Event</th>
+    <th style="padding:6px 12px;text-align:left;">Message</th>
+  </tr></thead>
+  <tbody>{rows}</tbody>
+</table>"""
+
+  risk_color = {"critical": "#dc3545", "high": "#fd7e14", "medium": "#ffc107", "low": "#198754"}.get(risk_level.lower(), "#6c757d")
+
+  return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Report — {name}</title>
+  <style>
+    body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 960px; margin: 40px auto; padding: 0 20px; color: #212529; line-height: 1.6; }}
+    h1 {{ border-bottom: 3px solid #212529; padding-bottom: 10px; }}
+    h2 {{ border-bottom: 1px solid #dee2e6; padding-bottom: 6px; margin-top: 36px; }}
+    table {{ border-collapse: collapse; }}
+    td, th {{ padding: 6px 12px; border-bottom: 1px solid #dee2e6; }}
+    @media print {{ body {{ margin: 20px; }} }}
+  </style>
+</head>
+<body>
+  <h1>Security Assessment Report</h1>
+  <p style="color:#6c757d;">{name} &mdash; Generated {generated_at}</p>
+
+  <h2>Session Metadata</h2>
+  <table>
+    <tr><td style="color:#666;padding-right:20px;">Target</td><td><code>{target}</code></td></tr>
+    <tr><td style="color:#666;">Status</td><td>{status}</td></tr>
+    <tr><td style="color:#666;">Risk Level</td><td><strong style="color:{risk_color};">{risk_level.upper()}</strong></td></tr>
+    <tr><td style="color:#666;">Total Findings</td><td>{len(findings)}</td></tr>
+    {'<tr><td style="color:#666;">Objective</td><td>' + objective + '</td></tr>' if objective else ''}
+    {'<tr><td style="color:#666;">Created</td><td>' + _fmt_ts(created_at) + '</td></tr>' if created_at else ''}
+  </table>
+
+  <h2>Findings Summary</h2>
+  <div>{sev_counts_html}</div>
+
+  <h2>Findings</h2>
+  {findings_html}
+
+  {'<h2>Tools Executed</h2><div style="margin-top:8px;">' + tools_html + '</div>' if tools_html else ''}
+
+  {notes_html}
+  {timeline_html}
+
+  <hr style="margin-top:48px;">
+  <p style="color:#adb5bd;font-size:0.8em;">Generated by NyxStrike &mdash; {generated_at}</p>
+</body>
+</html>"""
 
 
 def _fmt_ts(ts: int) -> str:

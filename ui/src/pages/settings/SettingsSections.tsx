@@ -1,7 +1,9 @@
-import { Save, Plus, Trash2 } from 'lucide-react'
+import { Save, Plus, Trash2, Eye, EyeOff } from 'lucide-react'
 import type { Settings, WordlistEntry, PersonalityPreset } from '../../api'
 import { ActionButton } from '../../components/ActionButton'
 import { CollapsibleSection } from '../../components/CollapsibleSection'
+import { PAGE_CONFIGS, ALWAYS_VISIBLE_PAGES } from '../../hooks/usePageVisibility'
+import type { Page } from '../../app/routing'
 
 function SettingsRow({ label, value, mono, accent }: {
   label: string
@@ -32,6 +34,7 @@ function SettingsField({ label, unit, hint, value, onChange }: {
       <div className="settings-input-row">
         <input
           className="settings-input mono"
+          name="settings-number"
           type="number"
           min={0}
           value={value}
@@ -56,6 +59,7 @@ export function SettingsTextarea({ label, hint, value, onChange, rows = 4 }: {
       <label className="settings-label">{label}</label>
       <textarea
         className="settings-input settings-textarea mono"
+        name="settings-textarea"
         rows={rows}
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -134,7 +138,6 @@ export function RuntimeConfigSection({
     <CollapsibleSection
       title="Runtime Config"
       badge={<span className="section-meta">changes apply immediately</span>}
-      defaultOpen
     >
       <div className="settings-grid">
         <SettingsField
@@ -230,17 +233,15 @@ export function WordlistsSection({
     <CollapsibleSection
       title="Wordlists"
       badge={<span className="badge">{wordlistsDraft.length}</span>}
-      headerRight={(
-        <div className="settings-actions-inline">
-          <ActionButton variant="default" onClick={onAddWordlist} disabled={wordlistsSaving}>
-            <Plus size={14} /> Add Wordlist
-          </ActionButton>
-          <ActionButton variant="default" onClick={onSaveWordlists} disabled={wordlistsSaving}>
-            <Save size={14} /> {wordlistsSaving ? 'Saving…' : 'Save Wordlists'}
-          </ActionButton>
-        </div>
-      )}
     >
+      <div className="settings-actions" style={{ justifyContent: 'flex-end', marginBottom: '10px' }}>
+        <ActionButton variant="default" onClick={onAddWordlist} disabled={wordlistsSaving}>
+          <Plus size={14} /> Add Wordlist
+        </ActionButton>
+        <ActionButton variant="default" onClick={onSaveWordlists} disabled={wordlistsSaving}>
+          <Save size={14} /> {wordlistsSaving ? 'Saving…' : 'Save Wordlists'}
+        </ActionButton>
+      </div>
       <div className="wordlist-table">
         <div className="wordlist-head">
           <span>Name</span><span>Type</span><span>Speed</span><span>Coverage</span><span>Path</span><span>Actions</span>
@@ -249,6 +250,7 @@ export function WordlistsSection({
           <div key={`wordlist-row-${index}`} className="wordlist-row editable">
             <input
               className="settings-input mono wordlist-input"
+              name="wordlist-name"
               value={wordlist.name}
               onChange={e => onUpdateWordlist(index, 'name', e.target.value)}
               placeholder="rockyou"
@@ -256,6 +258,7 @@ export function WordlistsSection({
             />
             <select
               className="settings-input wordlist-input"
+              name="wordlist-type"
               value={wordlist.type}
               onChange={e => onUpdateWordlist(index, 'type', e.target.value)}
             >
@@ -265,6 +268,7 @@ export function WordlistsSection({
             </select>
             <select
               className="settings-input wordlist-input"
+              name="wordlist-speed"
               value={wordlist.speed}
               onChange={e => onUpdateWordlist(index, 'speed', e.target.value)}
             >
@@ -274,6 +278,7 @@ export function WordlistsSection({
             </select>
             <select
               className="settings-input wordlist-input"
+              name="wordlist-coverage"
               value={wordlist.coverage}
               onChange={e => onUpdateWordlist(index, 'coverage', e.target.value)}
             >
@@ -283,6 +288,7 @@ export function WordlistsSection({
             </select>
             <input
               className="settings-input mono wordlist-input"
+              name="wordlist-path"
               value={wordlist.path}
               onChange={e => onUpdateWordlist(index, 'path', e.target.value)}
               placeholder="/usr/share/wordlists/rockyou.txt"
@@ -315,6 +321,8 @@ export function ChatSettingsSection({
   setSummarizationThreshold,
   contextInjectionChars,
   setContextInjectionChars,
+  llmThink,
+  setLlmThink,
   saving,
   onSave,
 }: {
@@ -327,6 +335,8 @@ export function ChatSettingsSection({
   setSummarizationThreshold: (v: string) => void
   contextInjectionChars: string
   setContextInjectionChars: (v: string) => void
+  llmThink: boolean
+  setLlmThink: (v: boolean) => void
   saving: boolean
   onSave: () => Promise<void>
 }) {
@@ -342,6 +352,7 @@ export function ChatSettingsSection({
           <label className="settings-label">Personality</label>
           <select
             className="settings-input settings-select-full"
+            name="chat-personality"
             value={chatPersonality}
             onChange={e => setChatPersonality(e.target.value)}
           >
@@ -374,11 +385,63 @@ export function ChatSettingsSection({
           value={contextInjectionChars}
           onChange={setContextInjectionChars}
         />
+        <div className="settings-field">
+          <label className="settings-label">LLM Think Mode</label>
+          <label className="theme-picker-toggle-row">
+            <input
+              type="checkbox"
+              checked={llmThink}
+              onChange={e => setLlmThink(e.target.checked)}
+            />
+            <span className="theme-picker-toggle-text">Enable thinking / reasoning</span>
+          </label>
+          <span className="settings-hint-inline">Activates chain-of-thought reasoning for models that support it (Ollama only).</span>
+        </div>
       </div>
       <div className="settings-actions">
         <ActionButton variant="success" onClick={onSave} disabled={saving}>
           <Save size={14} /> {saving ? 'Saving…' : 'Save Chat Settings'}
         </ActionButton>
+      </div>
+    </CollapsibleSection>
+  )
+}
+
+export function PageVisibilitySection({
+  isPageEnabled,
+  togglePage,
+}: {
+  isPageEnabled: (page: Page) => boolean
+  togglePage: (page: Page) => void
+}) {
+  return (
+    <CollapsibleSection title="Navigation Pages">
+      <p className="settings-hint-inline" style={{ margin: '1rem 0', textAlign: 'center' }}>
+        Hide pages you don't use from the navigation bar.
+        Your preferences are saved in this browser only.
+      </p>
+      <div className="settings-page-visibility-grid">
+        {PAGE_CONFIGS.filter(({ page }) => !ALWAYS_VISIBLE_PAGES.has(page)).map(({ page, label, description }) => {
+          const enabled = isPageEnabled(page)
+          return (
+            <button
+              key={page}
+              type="button"
+              className={`settings-page-tile${enabled ? ' settings-page-tile--on' : ' settings-page-tile--off'}`}
+              onClick={() => togglePage(page)}
+              title={enabled ? `Hide ${label}` : `Show ${label}`}
+            >
+              <span className="settings-page-tile-icon">
+                {enabled ? <Eye size={14} /> : <EyeOff size={14} />}
+              </span>
+              <span className="settings-page-tile-label">{label}</span>
+              <span className="settings-page-tile-desc">{description}</span>
+              <span className={`settings-page-tile-badge${enabled ? ' on' : ' off'}`}>
+                {enabled ? 'Visible' : 'Hidden'}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </CollapsibleSection>
   )

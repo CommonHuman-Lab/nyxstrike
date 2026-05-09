@@ -76,6 +76,7 @@ export function ChatSidebar({
               <input
                 ref={inputRef}
                 className="chat-session-rename-input"
+                name="session-rename"
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 onBlur={commitEdit}

@@ -199,6 +199,7 @@ export function SessionReportModal({ isOpen, session, onClose, llmAvailable = fa
               <div className="report-option-focus">
                 <label className="section-meta">Focus / context (optional)</label>
                 <input
+                  name="report-focus"
                   className="findings-form-input"
                   placeholder="e.g. focus on RCE and privilege escalation findings"
                   value={focus}

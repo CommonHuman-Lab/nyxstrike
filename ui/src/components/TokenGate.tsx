@@ -35,6 +35,7 @@ export function TokenGate({ onUnlocked }: { onUnlocked: () => void }) {
         <div className="token-input-row">
           <input
             type={show ? 'text' : 'password'}
+            name="api-token"
             placeholder="Bearer token…"
             value={val}
             onChange={e => setVal(e.target.value)}

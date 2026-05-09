@@ -423,6 +423,7 @@ export function SessionNotes({ sessionId, initialOpenPath, onInitialOpenConsumed
           {allFolders.length > 0 && (
             <select
               className="session-notes-folder-select"
+              name="new-note-folder"
               value={newNoteFolder}
               onChange={e => setNewNoteFolder(e.target.value)}
               title="Create note in folder"
@@ -436,6 +437,7 @@ export function SessionNotes({ sessionId, initialOpenPath, onInitialOpenConsumed
           <input
             ref={newNoteInputRef}
             className="session-notes-name-input"
+            name="new-note-name"
             type="text"
             placeholder="Note title (letters, digits, hyphens, underscores)"
             value={newNoteName}
@@ -466,6 +468,7 @@ export function SessionNotes({ sessionId, initialOpenPath, onInitialOpenConsumed
           <input
             ref={newFolderInputRef}
             className="session-notes-name-input"
+            name="new-folder-name"
             type="text"
             placeholder="Folder name (letters, digits, hyphens, underscores)"
             value={newFolderName}
@@ -545,6 +548,7 @@ export function SessionNotes({ sessionId, initialOpenPath, onInitialOpenConsumed
                           <input
                             ref={renameInputRef}
                             className="session-note-folder-rename-input"
+                            name="folder-rename"
                             value={renameDraft}
                             onChange={e => { setRenameDraft(e.target.value); }}
                             onKeyDown={e => {

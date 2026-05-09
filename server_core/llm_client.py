@@ -239,7 +239,7 @@ class OpenAIBackend:
         "openai SDK not installed. Run: pip install openai"
       )
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None, tools: Optional[List[Dict[str, Any]]] = None) -> Any:
     kwargs: Dict[str, Any] = {
       "model": self._model,
       "messages": messages,
@@ -248,14 +248,40 @@ class OpenAIBackend:
     }
     if stop:
       kwargs["stop"] = stop
+    if tools:
+      # Convert from Ollama tool schema format to OpenAI format.
+      # Ollama schema: {"type": "function", "function": {"name": ..., "description": ..., "parameters": {...}}}
+      # OpenAI format is identical, so pass through directly.
+      kwargs["tools"] = tools
+      kwargs["tool_choice"] = "auto"
     try:
       resp = self._client.chat.completions.create(**kwargs)
-      return resp.choices[0].message.content.strip()
+      choice = resp.choices[0]
+      content = (choice.message.content or "").strip()
+      if tools and choice.message.tool_calls:
+        # Normalise to the same dict shape as OllamaBackend
+        normalised_calls = [
+          {
+            "function": {
+              "name": tc.function.name,
+              "arguments": tc.function.arguments,
+            }
+          }
+          for tc in choice.message.tool_calls
+        ]
+        return {"content": content, "tool_calls": normalised_calls}
+      return {"content": content, "tool_calls": None}
     except Exception as exc:
       raise RuntimeError(f"OpenAI API error: {exc}")
 
-  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator[str, None, None]:
-    """Stream tokens from OpenAI one delta at a time."""
+  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator[Any, None, None]:
+    """Stream tokens from OpenAI one delta at a time.
+
+    Yields str token chunks followed by a final stats dict to match the
+    OllamaBackend streaming contract:
+      {"duration_ms": int, "eval_count": int, "tokens_per_sec": float}
+    """
+    import time as _time
     kwargs: Dict[str, Any] = {
       "model": self._model,
       "messages": messages,
@@ -264,11 +290,20 @@ class OpenAIBackend:
       "stream": True,
     }
     try:
+      t_start = _time.monotonic()
+      token_count = 0
       stream = self._client.chat.completions.create(**kwargs)
       for chunk in stream:
         delta = chunk.choices[0].delta.content if chunk.choices else None
         if delta:
+          token_count += 1
           yield delta
+      duration_ms = int((_time.monotonic() - t_start) * 1000)
+      yield {
+        "duration_ms": duration_ms,
+        "eval_count": token_count,
+        "tokens_per_sec": round(token_count / max(duration_ms / 1000, 0.001), 2),
+      }
     except Exception as exc:
       raise RuntimeError(f"OpenAI streaming error: {exc}")
 
@@ -282,10 +317,17 @@ class OpenAIBackend:
       "preserving key facts, targets, commands, and findings. "
       "Be concise and technical.\n\n" + conversation
     )
-    return self.chat([{"role": "user", "content": summary_prompt}])
+    result = self.chat([{"role": "user", "content": summary_prompt}])
+    if isinstance(result, dict):
+      return result.get("content", "")
+    return result
 
   def is_available(self) -> bool:
     return True
+
+  def warm_up(self) -> None:
+    """No-op warm-up for OpenAI backend (models are always ready server-side)."""
+    logger.info("OpenAI backend: warm_up called (no-op for remote API)")
 
   @property
   def provider(self) -> str:
@@ -310,7 +352,7 @@ class AnthropicBackend:
         "anthropic SDK not installed. Run: pip install anthropic"
       )
 
-  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None) -> str:
+  def chat(self, messages: List[Dict[str, Any]], stop: List[str] = [], think: Optional[bool] = None, num_ctx: Optional[int] = None, tools: Optional[List[Dict[str, Any]]] = None) -> Any:
     # Anthropic separates system from human/assistant messages
     system_parts = [m["content"] for m in messages if m["role"] == "system"]
     user_messages = [m for m in messages if m["role"] != "system"]
@@ -324,14 +366,50 @@ class AnthropicBackend:
       kwargs["system"] = system_text
     if stop:
       kwargs["stop_sequences"] = stop
+    if tools:
+      # Convert from Ollama tool schema to Anthropic format.
+      # Anthropic format: {"name": ..., "description": ..., "input_schema": {...}}
+      # Ollama format:    {"type": "function", "function": {"name": ..., "description": ..., "parameters": {...}}}
+      anthropic_tools = []
+      for t in tools:
+        fn = t.get("function", t)
+        anthropic_tools.append({
+          "name": fn.get("name", ""),
+          "description": fn.get("description", ""),
+          "input_schema": fn.get("parameters", {"type": "object", "properties": {}}),
+        })
+      kwargs["tools"] = anthropic_tools
     try:
       resp = self._client.messages.create(**kwargs)
-      return resp.content[0].text.strip()
+      content_text = ""
+      tool_calls = None
+      for block in resp.content:
+        block_type = getattr(block, "type", None)
+        if block_type == "text":
+          content_text += getattr(block, "text", "")
+        elif block_type == "tool_use":
+          if tool_calls is None:
+            tool_calls = []
+          import json as _json
+          raw_input = getattr(block, "input", {})
+          tool_calls.append({
+            "function": {
+              "name": getattr(block, "name", ""),
+              "arguments": _json.dumps(raw_input) if isinstance(raw_input, dict) else str(raw_input),
+            }
+          })
+      return {"content": content_text.strip(), "tool_calls": tool_calls}
     except Exception as exc:
       raise RuntimeError(f"Anthropic API error: {exc}")
 
-  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator[str, None, None]:
-    """Stream tokens from Anthropic one delta at a time."""
+  def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator[Any, None, None]:
+    """Stream tokens from Anthropic one delta at a time.
+
+    Yields str token chunks followed by a final stats dict to match the
+    OllamaBackend streaming contract:
+      {"duration_ms": int, "eval_count": int, "tokens_per_sec": float}
+    """
+    import time as _time
     system_parts = [m["content"] for m in messages if m["role"] == "system"]
     user_messages = [m for m in messages if m["role"] != "system"]
     system_text = "\n\n".join(system_parts)
@@ -343,10 +421,19 @@ class AnthropicBackend:
     if system_text:
       kwargs["system"] = system_text
     try:
+      t_start = _time.monotonic()
+      token_count = 0
       with self._client.messages.stream(**kwargs) as stream:
         for text in stream.text_stream:
           if text:
+            token_count += 1
             yield text
+      duration_ms = int((_time.monotonic() - t_start) * 1000)
+      yield {
+        "duration_ms": duration_ms,
+        "eval_count": token_count,
+        "tokens_per_sec": round(token_count / max(duration_ms / 1000, 0.001), 2),
+      }
     except Exception as exc:
       raise RuntimeError(f"Anthropic streaming error: {exc}")
 
@@ -360,7 +447,10 @@ class AnthropicBackend:
       "preserving key facts, targets, commands, and findings. "
       "Be concise and technical.\n\n" + conversation
     )
-    return self.chat([{"role": "user", "content": summary_prompt}])
+    result = self.chat([{"role": "user", "content": summary_prompt}])
+    if isinstance(result, dict):
+      return result.get("content", "")
+    return result
 
   def is_available(self) -> bool:
     try:
@@ -369,6 +459,10 @@ class AnthropicBackend:
       return True
     except Exception:
       return False
+
+  def warm_up(self) -> None:
+    """No-op warm-up for Anthropic backend (models are always ready server-side)."""
+    logger.info("Anthropic backend: warm_up called (no-op for remote API)")
 
   @property
   def provider(self) -> str:
@@ -484,21 +578,15 @@ class LLMClient:
       raise RuntimeError(
         f"LLM client not initialized: {self._init_error or 'unknown error'}"
       )
-    # Only OllamaBackend accepts tools; other backends fall back to plain text.
-    if tools and hasattr(self._backend, 'chat'):
-      try:
-        result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx, tools=tools)
-      except TypeError:
-        # Backend doesn't accept tools kwarg — strip and call without
-        result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx)
-      # Normalise: if the backend returned a plain string, box it up
-      if isinstance(result, str):
-        return result
-      return result  # dict with content + tool_calls
-    # No tools requested — return plain string for backward compat
-    result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx)
-    if isinstance(result, dict):
-      return result["content"]
+    # All backends now accept tools; pass through unconditionally.
+    result = self._backend.chat(messages, stop, think=think, num_ctx=num_ctx, tools=tools)
+    # Normalise: if the backend returned a plain string (legacy path), box it up
+    # so callers always receive a consistent type when tools were requested.
+    if tools and isinstance(result, str):
+      return {"content": result, "tool_calls": None}
+    # No tools requested — unwrap dict to plain string for backward compat
+    if not tools and isinstance(result, dict):
+      return result.get("content", "")
     return result
 
   def stream_chat(self, messages: List[Dict[str, Any]], num_ctx: Optional[int] = None) -> Generator:

@@ -1,3 +1,5 @@
+import os
+
 from flask import Blueprint, request, jsonify
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -15,7 +17,7 @@ from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import cache, telemetry
 
 from server_core.tool_constants import (
-    BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_PIP_CHECK,
+    BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_GO_CHECK, REQUIRE_PIP_CHECK,
     REQUIRE_GEM_CHECK, REQUIRE_CARGO_CHECK, BINARY_NAME_OVERRIDES,
     HEALTH_TOOL_CATEGORIES
 )
@@ -71,6 +73,12 @@ def _probe_binary(check_type: str, binary: str) -> bool:
     check_type — one of: builtin, which, dpkg, pip, gem, cargo
     binary     — executable or package name to probe
     """
+
+    home_path = os.path.expanduser("~")
+    paths_ovrrides = config_core.get("PATHS", {})
+    GO_PATH = paths_ovrrides.get("GO_BINARYS", "{HOME}/go/bin/")
+    GO_BINARYS = GO_PATH.replace("{HOME}", home_path)
+    
     if check_type == "builtin":
         return True
     try:
@@ -95,6 +103,12 @@ def _probe_binary(check_type: str, binary: str) -> bool:
         elif check_type == "cargo":
             r = subprocess.run(
                 ["cargo", "install", "--list"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+            )
+            return binary in r.stdout
+        elif check_type == "go":
+            r = subprocess.run(
+                ["go", "version", "-m", GO_BINARYS],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
             )
             return binary in r.stdout
@@ -130,6 +144,8 @@ def _refresh_tool_availability() -> None:
                 check_type = "gem"
             elif binary in REQUIRE_CARGO_CHECK:
                 check_type = "cargo"
+            elif binary in REQUIRE_GO_CHECK:
+                check_type = "go"
             else:
                 check_type = "which"
             return tool, _probe_binary(check_type, binary)
@@ -310,3 +326,104 @@ def refresh_tool_availability_now():
     except Exception as e:
         logger.error("Error refreshing tool availability: %s", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@api_system_monitoring_bp.route("/api/server/restart", methods=["POST"])
+def server_restart():
+  """Restart the NyxStrike server process.
+
+  Strategy:
+  1. Duplicate stdout/stderr to new fds with FD_CLOEXEC cleared so they
+     survive execve but are separate from the parent's socket fds.
+  2. Spawn a detached watcher passing only those two fds (close_fds=True
+     closes everything else — including the inherited listening socket).
+  3. Watcher polls until the parent is gone AND the port is free.
+  4. Watcher os.execve → becomes the new server with output on the terminal.
+  5. Parent sends itself SIGTERM to release the port.
+  """
+  import os
+  import signal
+
+  logger.info("server_restart: restart requested via API")
+
+  parent_pid = os.getpid()
+  python     = sys.executable
+  cmd        = [python] + sys.argv[:]
+  env        = dict(os.environ)
+  port       = int(env.get("NYXSTRIKE_PORT", 8888))
+
+  # Duplicate stdout/stderr to fresh fds so we can pass them explicitly
+  # while closing everything else (especially the listening socket).
+  try:
+    raw_stdout = sys.stdout.fileno()
+    new_stdout = os.dup(raw_stdout)
+    os.set_inheritable(new_stdout, True)
+  except Exception:
+    new_stdout = -1
+
+  try:
+    raw_stderr = sys.stderr.fileno()
+    new_stderr = os.dup(raw_stderr)
+    os.set_inheritable(new_stderr, True)
+  except Exception:
+    new_stderr = -1
+
+  pass_fds = tuple(fd for fd in (new_stdout, new_stderr) if fd >= 0)
+
+  wait_and_exec = (
+    "import os, time, socket\n"
+    f"ppid       = {parent_pid}\n"
+    f"cmd        = {cmd!r}\n"
+    f"env        = {env!r}\n"
+    f"port       = {port}\n"
+    f"new_stdout = {new_stdout}\n"
+    f"new_stderr = {new_stderr}\n"
+    # Step 1 — wait for parent process to exit
+    "for _ in range(80):\n"
+    "    try:\n"
+    "        os.kill(ppid, 0)\n"
+    "        time.sleep(0.25)\n"
+    "    except OSError:\n"
+    "        break\n"
+    # Step 2 — wait for the port to be free (up to 15 s)
+    "for _ in range(60):\n"
+    "    try:\n"
+    "        s = socket.socket()\n"
+    "        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\n"
+    "        s.bind(('127.0.0.1', port))\n"
+    "        s.close()\n"
+    "        break\n"
+    "    except OSError:\n"
+    "        time.sleep(0.25)\n"
+    # Step 3 — point fd 1/2 at the terminal then exec
+    "if new_stdout >= 0: os.dup2(new_stdout, 1)\n"
+    "if new_stderr >= 0: os.dup2(new_stderr, 2)\n"
+    "os.execve(cmd[0], cmd, env)\n"
+  )
+
+  def _spawn_watcher():
+    try:
+      subprocess.Popen(
+        [python, "-c", wait_and_exec],
+        close_fds=True,          # closes inherited listening socket — this is the fix
+        pass_fds=pass_fds,       # but keeps our duplicated terminal fds
+        start_new_session=True,
+        stdin=subprocess.DEVNULL,
+      )
+    except Exception as exc:
+      logger.error("server_restart: failed to spawn watcher: %s", exc)
+      # clean up duplicated fds if watcher failed to start
+      for fd in pass_fds:
+        try: os.close(fd)
+        except OSError: pass
+      return
+
+    time.sleep(0.6)  # let HTTP response flush to client
+    os.kill(parent_pid, signal.SIGTERM)
+
+  threading.Thread(target=_spawn_watcher, daemon=True, name="server-restart").start()
+
+  return jsonify({
+    "success": True,
+    "message": "Server restart initiated. Reconnect in a few seconds.",
+  })

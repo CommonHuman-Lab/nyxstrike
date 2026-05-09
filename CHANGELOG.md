@@ -1,6 +1,26 @@
 # Changelog
 
-## 1.4.0 - NyxStrike
+## 1.5.0 - backdoorbear (2026-05-09)
+
+### Loot
+- Added Loot page for managing captured credentials and loot items from engagements.
+- Loot page is accessible from the nav and Command Palette.
+
+### Reports
+- Added HTML report generation endpoint for richer, exportable engagement reports.
+
+### Plugin management
+- Improved plugin management modal with enhanced plugin install/enable/disable UX.
+
+### Settings & navigation
+- Added page visibility controls — show or hide individual nav pages from Settings.
+- Dashboard and Settings pages are always visible and cannot be disabled.
+
+### Help page
+- Added Command Palette section explaining shortcuts and tool launch workflow.
+- Added UI Features section covering chat panel shortcut and page visibility.
+
+## 1.4.0 - NyxStrike (2026-04-24)
 
 ### Built-in AI Chat assistant
 - Added persistent chat widget — start a conversation without leaving your workflow. Supports multi-session history, and a resizable floating UI.
@@ -48,7 +68,7 @@
 ### Others
 - Added `nyxstrike.sh` main entrypoint script with external tool install list.
 
-## 1.3.0 - shellshark
+## 1.3.0 - shellshark (2026-04-09)
 - Added new tools/wrappers: `hurl`, `waymore`, `assetfinder`, `shuffledns`, `massdns`, and `gospider`; also improved `testssl.sh` compatibility/fallback.
 - Upgraded intelligence workflows with precision planning, preview mode, and tool selection reasons.
 - Improved sessions and UI flows (template/workbench polish, log export, ESC-to-close modals, update modal with copyable `git pull`).

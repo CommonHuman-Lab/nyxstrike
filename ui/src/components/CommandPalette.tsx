@@ -28,6 +28,7 @@ const PAGE_ACTIONS: Array<{ page: Page; label: string }> = [
   { page: 'tasks', label: 'Open Tasks' },
   { page: 'tools', label: 'Open Tools' },
   { page: 'sessions', label: 'Open Sessions' },
+  { page: 'loot', label: 'Open Loot' },
   { page: 'settings', label: 'Open Settings' },
   { page: 'logs', label: 'Open Logs' },
   { page: 'help', label: 'Open Help' },

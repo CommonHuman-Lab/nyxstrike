@@ -11,9 +11,12 @@ logger = logging.getLogger(__name__)
 class FileOperationsManager:
     """Handle file operations with security and validation"""
 
-    def __init__(self, base_dir: str = "/tmp/app_files"):
+    def __init__(self, base_dir: str = None):
+        if base_dir is None:
+            import tempfile
+            base_dir = str(Path(tempfile.gettempdir()) / "app_files")
         self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(exist_ok=True)
+        self.base_dir.mkdir(parents=True, exist_ok=True)
         self.max_file_size = 100 * 1024 * 1024  # 100MB
 
     def _safe_path(self, filename: str) -> Path:

@@ -1,0 +1,67 @@
+name: h2csmuggler
+version: "1.0.0"
+
+description: |
+  Detect and exploit insecure forwarding of h2c upgrades using BishopFox h2csmuggler.
+  Supports test mode, scan-list mode, and smuggled request mode through a target proxy.
+
+author: "garthoid"
+category: web_vuln
+
+tags:
+  - h2c
+  - http2
+  - smuggling
+  - proxy_bypass
+
+endpoint: /api/plugins/h2csmuggler
+mcp_tool_name: nyxstrike_h2csmuggler
+effectiveness: 0.78
+
+check:
+  type: pip
+  binary: h2
+  install: "pip install h2"
+
+params:
+  proxy:
+    required: true
+    description: "Proxy URL to attempt h2c smuggling through (e.g. https://edgeserver)"
+
+optional:
+  target_url:
+    default: ""
+    description: "Smuggled target URL for exploit mode"
+  scan_list:
+    default: ""
+    description: "Path to file containing URLs to test in scan mode"
+  threads:
+    default: 5
+    description: "Thread count for scan mode"
+  request:
+    default: "GET"
+    description: "Smuggled HTTP method"
+  data:
+    default: ""
+    description: "Smuggled request body"
+  headers:
+    default: ""
+    description: "Semicolon-delimited headers, e.g. X-A:1; X-B:2"
+  wordlist:
+    default: ""
+    description: "Path list for internal endpoint brute-force"
+  max_time:
+    default: 10
+    description: "Socket timeout in seconds"
+  upgrade_only:
+    default: false
+    description: "Drop HTTP2-Settings from outgoing Connection header"
+  test:
+    default: false
+    description: "Use h2csmuggler test mode"
+  verbose:
+    default: false
+    description: "Enable verbose h2csmuggler output"
+  additional_args:
+    default: ""
+    description: "Additional raw CLI arguments appended to command"

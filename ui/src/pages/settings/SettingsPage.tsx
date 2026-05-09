@@ -5,10 +5,12 @@ import { THEME_OPTIONS, type ThemeId } from '../../app/themes'
 import { useSettingsData } from './useSettingsData'
 import {
   ChatSettingsSection,
+  PageVisibilitySection,
   RuntimeConfigSection,
   ServerEnvironmentSection,
   WordlistsSection,
 } from './SettingsSections'
+import type { Page } from '../../app/routing'
 import './SettingsPage.css'
 
 export default function SettingsPage({
@@ -16,11 +18,15 @@ export default function SettingsPage({
   setThemeId,
   reduceTextureEffects,
   setReduceTextureEffects,
+  isPageEnabled,
+  togglePage,
 }: {
   themeId: ThemeId
   setThemeId: (theme: ThemeId) => void
   reduceTextureEffects: boolean
   setReduceTextureEffects: (value: boolean) => void
+  isPageEnabled: (page: Page) => boolean
+  togglePage: (page: Page) => void
 }) {
   const [themeModalOpen, setThemeModalOpen] = useState(false)
   const [themePreviewId, setThemePreviewId] = useState<ThemeId>(themeId)
@@ -84,10 +90,12 @@ export default function SettingsPage({
     personalityPresets,
     summarizationThreshold,
     contextInjectionChars,
+    llmThink,
     setChatPersonality,
     setCustomPrompt,
     setSummarizationThreshold,
     setContextInjectionChars,
+    setLlmThink,
   } = useSettingsData()
 
   if (loading) {
@@ -185,6 +193,11 @@ export default function SettingsPage({
 
       <ServerEnvironmentSection settings={settings} />
 
+      <PageVisibilitySection
+        isPageEnabled={isPageEnabled}
+        togglePage={togglePage}
+      />
+
       <RuntimeConfigSection
         timeout={timeout}
         requestTimeout={requestTimeout}
@@ -226,6 +239,8 @@ export default function SettingsPage({
         setSummarizationThreshold={setSummarizationThreshold}
         contextInjectionChars={contextInjectionChars}
         setContextInjectionChars={setContextInjectionChars}
+        llmThink={llmThink}
+        setLlmThink={setLlmThink}
         saving={saving}
         onSave={saveChatSettings}
       />

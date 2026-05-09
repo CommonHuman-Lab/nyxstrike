@@ -83,10 +83,11 @@ from .enhanced_process_manager import EnhancedProcessManager
 enhanced_process_manager = _Lazy(EnhancedProcessManager)
 
 # ── Error handling ────────────────────────────────────────────────────────────
-from .error_handling import IntelligentErrorHandler, GracefulDegradation
+from .error_handling import IntelligentErrorHandler, GracefulDegradation, RecoveryExecutor
 
 error_handler = IntelligentErrorHandler()
 degradation_manager = GracefulDegradation()
+recovery_executor = RecoveryExecutor(error_handler)
 
 # ── Vulnerability intelligence ──────
 from .intelligence.cve_intelligence_manager import CVEIntelligenceManager

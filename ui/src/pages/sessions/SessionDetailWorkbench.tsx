@@ -1,10 +1,10 @@
-import { ChevronDown, ChevronUp, Download, FileText, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Download, FileText, Play, RefreshCw, Send, Square, Terminal, Trash2, Power } from 'lucide-react'
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react'
 import { ParamField } from '../../components/tool-run/ParamField'
 import type { AttackChainStep, Tool, ToolExecResponse } from '../../api'
 import type { RunHistoryEntry } from '../../shared/types'
 import { exportEntry, safeFixed } from '../../shared/utils'
-import type { StepState } from './sessionDetailUtils'
+import { resultText, type StepState } from './sessionDetailUtils'
 import type { ChainSuggestion } from './sessionDetailUtils'
 import { ActionButton } from '../../components/ActionButton'
 import { api } from '../../api'
@@ -43,6 +43,22 @@ interface SessionDetailWorkbenchProps {
   setAddToolSearch: Dispatch<SetStateAction<string>>
   addCandidates: Tool[]
   onAddTool: (tool: Tool) => Promise<void>
+}
+
+type RemoteTerminalState = {
+  command: string
+  busy: boolean
+  transcript: string[]
+  prompt: string
+  awaitingSensitiveInput: boolean
+}
+
+const EMPTY_REMOTE_TERMINAL_STATE: RemoteTerminalState = {
+  command: '',
+  busy: false,
+  transcript: [],
+  prompt: '$',
+  awaitingSensitiveInput: false,
 }
 
 function exportResultEntry(
@@ -91,6 +107,133 @@ function buildNoteContent(
   return lines.join('\n')
 }
 
+function RemoteCommandTerminal({
+  endpoint,
+  baseParams,
+  label,
+  terminalId,
+  terminalState,
+  updateTerminalState,
+}: {
+  endpoint: string
+  baseParams: Record<string, string>
+  label: string
+  terminalId: string
+  terminalState: RemoteTerminalState
+  updateTerminalState: (terminalId: string, updater: (prev: RemoteTerminalState) => RemoteTerminalState) => void
+}) {
+  const { command, busy, transcript, prompt, awaitingSensitiveInput } = terminalState
+  const transcriptRef = useRef<HTMLPreElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  function patchTerminal(targetTerminalId: string, patch: Partial<RemoteTerminalState>) {
+    updateTerminalState(targetTerminalId, prev => ({ ...prev, ...patch }))
+  }
+
+  function appendTranscript(targetTerminalId: string, lines: string[]) {
+    updateTerminalState(targetTerminalId, prev => ({
+      ...prev,
+      transcript: [...prev.transcript, ...lines],
+    }))
+  }
+
+  useEffect(() => {
+    transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight })
+    if (!busy) inputRef.current?.focus()
+  }, [transcript])
+
+  useEffect(() => {
+    if (!busy) inputRef.current?.focus()
+  }, [busy])
+
+  async function runTerminalCommand() {
+    const nextCommand = command
+    if (busy) return
+    const activeTerminalId = terminalId
+    const activePrompt = prompt
+    const activeSensitiveInput = awaitingSensitiveInput
+    patchTerminal(activeTerminalId, { busy: true, command: '' })
+    appendTranscript(activeTerminalId, [
+      activeSensitiveInput ? '[input hidden]' : `${activePrompt} ${nextCommand}`,
+    ])
+
+    try {
+      const result = await api.runTool(endpoint, {
+        ...baseParams,
+        command: nextCommand,
+        interactive: true,
+        terminal_disconnect: false,
+        terminal_mode: 'raw',
+      })
+      const nextPrompt = (result as unknown as Record<string, unknown>).prompt
+      const nextSensitiveInput = (result as unknown as Record<string, unknown>).awaiting_sensitive_input
+      const output = [resultText(result, 'stdout'), resultText(result, 'stderr')].filter(Boolean).join('\n').trim()
+      updateTerminalState(activeTerminalId, prev => ({
+        ...prev,
+        prompt: typeof nextPrompt === 'string' && nextPrompt.trim() ? `${nextPrompt.trim()}$` : prev.prompt,
+        awaitingSensitiveInput: nextSensitiveInput === true,
+        transcript: output ? [...prev.transcript, output] : prev.transcript,
+      }))
+    } catch (e) {
+      appendTranscript(activeTerminalId, [`error: ${String(e)}`])
+    } finally {
+      patchTerminal(activeTerminalId, { busy: false })
+    }
+  }
+
+  async function disconnectTerminal() {
+    if (busy) return
+    const activeTerminalId = terminalId
+    patchTerminal(activeTerminalId, { busy: true })
+    try {
+      const result = await api.runTool(endpoint, {
+        ...baseParams,
+        command: '',
+        terminal_disconnect: true,
+      })
+      updateTerminalState(activeTerminalId, prev => ({
+        ...prev,
+        prompt: '$',
+        awaitingSensitiveInput: false,
+        transcript: [...prev.transcript, resultText(result, 'stdout') || resultText(result, 'stderr') || 'Disconnected'],
+      }))
+    } catch (e) {
+      appendTranscript(activeTerminalId, [`error: ${String(e)}`])
+    } finally {
+      patchTerminal(activeTerminalId, { busy: false })
+    }
+  }
+
+  return (
+    <div className="session-ssh-terminal">
+      <div className="session-ssh-terminal-head">
+        <span><Terminal size={12} /> {label} terminal</span>
+        <button onClick={disconnectTerminal} disabled={busy} title={`Disconnect ${label} session`}>
+          <Power size={12} />
+        </button>
+      </div>
+      <pre ref={transcriptRef} className="session-ssh-terminal-body">
+        {[...transcript, `${prompt} `].join('\n')}
+      </pre>
+      <div className="session-ssh-terminal-input">
+        <input
+          ref={inputRef}
+          value={command}
+          onChange={e => patchTerminal(terminalId, { command: e.target.value })}
+          onKeyDown={e => { if (e.key === 'Enter') void runTerminalCommand() }}
+          disabled={busy}
+          autoComplete="off"
+          type={awaitingSensitiveInput ? 'password' : 'text'}
+          spellCheck={false}
+        />
+        <button onClick={() => void runTerminalCommand()} disabled={busy} title="Run command">
+          {busy ? <RefreshCw size={12} className="spin" /> : <Send size={12} />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function SessionDetailWorkbench({
   isCompleted,
   sessionId,
@@ -128,11 +271,42 @@ export function SessionDetailWorkbench({
   const { pushToast } = useToast()
   const selectedRunning = selectedStepKey ? runningStepKey === selectedStepKey : false
   const resultData = selectedResult?.result
+  const resultStdout = resultText(resultData, 'stdout')
+  const resultStderr = resultText(resultData, 'stderr')
+  const selectedStepTool = selectedStep?.tool?.toLowerCase() ?? ''
+  const remoteTerminalTool = (() => {
+    if (
+      selectedStepTool === 'ssh'
+      || selectedTool?.endpoint === '/api/plugins/ssh'
+      || selectedTool?.name === 'ssh'
+      || selectedTool?.endpoint === '/api/tools/ssh'
+    ) {
+      return { endpoint: '/api/plugins/ssh', label: 'SSH' }
+    }
+    if (
+      selectedStepTool === 'telnet'
+      || selectedTool?.endpoint === '/api/plugins/telnet'
+      || selectedTool?.name === 'telnet'
+      || selectedTool?.endpoint === '/api/tools/telnet'
+    ) {
+      return { endpoint: '/api/plugins/telnet', label: 'Telnet' }
+    }
+    return null
+  })()
+  const showRemoteTerminal = !!remoteTerminalTool && !!selectedStepKey && !isCompleted
   const selectedChainCount = chainSuggestion
     ? chainSuggestion.fields.filter(field => selectedChainFields[field.param] !== false).length
     : 0
   const addToolInputRef = useRef<HTMLInputElement | null>(null)
   const [expandedPriors, setExpandedPriors] = useState<Record<number, boolean>>({})
+  const [remoteTerminalStates, setRemoteTerminalStates] = useState<Record<string, RemoteTerminalState>>({})
+
+  function updateRemoteTerminalState(terminalId: string, updater: (prev: RemoteTerminalState) => RemoteTerminalState) {
+    setRemoteTerminalStates(prev => ({
+      ...prev,
+      [terminalId]: updater(prev[terminalId] ?? EMPTY_REMOTE_TERMINAL_STATE),
+    }))
+  }
 
   // Reset prior-run expansion state when the selected step changes
   useEffect(() => {
@@ -234,6 +408,7 @@ export function SessionDetailWorkbench({
               <div className="session-target-override">
                 <label className="mono">Target</label>
                 <input
+                  name="session-target"
                   className="search-input mono"
                   value={targetValue}
                   onChange={e => setTargetValue(e.target.value)}
@@ -369,11 +544,22 @@ export function SessionDetailWorkbench({
                         </div>
                       )}
                     </div>
-                    <pre className="session-result-pre mono">{resultData.stdout || '(no stdout)'}</pre>
-                    {resultData.stderr && <pre className="session-result-pre mono">{resultData.stderr}</pre>}
+                    <pre className="session-result-pre mono">{resultStdout || '(no stdout)'}</pre>
+                    {resultStderr && <pre className="session-result-pre mono">{resultStderr}</pre>}
                   </>
                 ) : (
                   <p className="section-meta">No result yet for this tool.</p>
+                )}
+                {showRemoteTerminal && remoteTerminalTool && selectedStepKey && (
+                  <RemoteCommandTerminal
+                    key={`${selectedStepKey}:${remoteTerminalTool.endpoint}`}
+                    endpoint={remoteTerminalTool.endpoint}
+                    baseParams={stepFieldValues[selectedStepKey] ?? {}}
+                    label={remoteTerminalTool.label}
+                    terminalId={`${selectedStepKey}:${remoteTerminalTool.endpoint}`}
+                    terminalState={remoteTerminalStates[`${selectedStepKey}:${remoteTerminalTool.endpoint}`] ?? EMPTY_REMOTE_TERMINAL_STATE}
+                    updateTerminalState={updateRemoteTerminalState}
+                  />
                 )}
                 {selectedResult?.priorResults && selectedResult.priorResults.length > 0 && (
                   <div className="session-prior-runs">
@@ -400,8 +586,8 @@ export function SessionDetailWorkbench({
                                 <FileText size={11} /> Notes
                               </ActionButton>
                             </div>
-                            <pre className="session-result-pre mono">{prior.stdout || '(no stdout)'}</pre>
-                            {prior.stderr && <pre className="session-result-pre mono">{prior.stderr}</pre>}
+                            <pre className="session-result-pre mono">{resultText(prior, 'stdout') || '(no stdout)'}</pre>
+                            {resultText(prior, 'stderr') && <pre className="session-result-pre mono">{resultText(prior, 'stderr')}</pre>}
                           </div>
                         )}
                       </div>

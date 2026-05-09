@@ -1,36 +1,94 @@
-import { useEffect, useState } from 'react'
-import { Puzzle, RefreshCw, XCircle } from 'lucide-react'
-import { api, type Plugin } from '../../api'
+import { useCallback, useEffect, useState } from 'react'
+import { AlertTriangle, Puzzle, RefreshCw, RotateCcw, XCircle } from 'lucide-react'
+import { api } from '../../api'
+import type { ManifestPlugin } from '../../api'
 import { StatCard } from '../../components/StatCard'
+import { PluginModal } from '../../components/PluginModal'
 import './PluginsPage.css'
 
 export default function PluginsPage() {
-  const [plugins, setPlugins] = useState<Plugin[]>([])
-  const [byCategory, setByCategory] = useState<Record<string, Plugin[]>>({})
+  const [plugins, setPlugins] = useState<ManifestPlugin[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true)
-      setError(null)
-      try {
-        const [listRes, catRes] = await Promise.all([
-          api.pluginList(),
-          api.pluginsByCategory(),
-        ])
-        setPlugins(listRes.plugins ?? [])
-        setByCategory(catRes.categories ?? {})
-      } catch (e) {
-        setError(String(e))
-      } finally {
-        setLoading(false)
-      }
+  /** Names that have been toggled but server not yet restarted. */
+  const [pendingChanges, setPendingChanges] = useState<Set<string>>(new Set())
+  /** Whether a restart is in progress. */
+  const [restarting, setRestarting] = useState(false)
+  const [restartMsg, setRestartMsg] = useState<string | null>(null)
+  const [selectedPlugin, setSelectedPlugin] = useState<ManifestPlugin | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.pluginsManifest()
+      setPlugins(res.plugins ?? [])
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setLoading(false)
     }
-    load()
   }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const handleToggle = async (plugin: ManifestPlugin) => {
+    const newEnabled = !plugin.enabled
+    // Optimistic update
+    setPlugins(prev =>
+      prev.map(p => p.name === plugin.name ? { ...p, enabled: newEnabled } : p)
+    )
+    try {
+      await api.pluginToggle(plugin.name, newEnabled)
+      setPendingChanges(prev => new Set(prev).add(plugin.name))
+    } catch (e) {
+      // Revert on failure
+      setPlugins(prev =>
+        prev.map(p => p.name === plugin.name ? { ...p, enabled: plugin.enabled } : p)
+      )
+      setError(`Failed to update '${plugin.name}': ${e}`)
+    }
+  }
+
+  const handleRestart = async () => {
+    setRestarting(true)
+    setRestartMsg('Restarting server…')
+    try {
+      await api.serverRestart()
+      setRestartMsg('Server restarting — reconnecting in 5 s…')
+      setPendingChanges(new Set())
+      // Poll until the server is back up, then reload
+      let attempts = 0
+      const poll = setInterval(async () => {
+        attempts++
+        try {
+          await api.pluginsManifest()
+          clearInterval(poll)
+          setRestarting(false)
+          setRestartMsg(null)
+          load()
+        } catch {
+          if (attempts >= 30) {
+            clearInterval(poll)
+            setRestarting(false)
+            setRestartMsg('Server did not come back in time — please refresh manually.')
+          }
+        }
+      }, 1000)
+    } catch (e) {
+      setRestarting(false)
+      setRestartMsg(`Restart request failed: ${e}`)
+    }
+  }
+
+  const byCategory: Record<string, ManifestPlugin[]> = {}
+  for (const p of plugins) {
+    const cat = p.category || p.type || 'other'
+    ;(byCategory[cat] ??= []).push(p)
+  }
 
   const allCategories = ['all', ...Object.keys(byCategory).sort()]
 
@@ -49,12 +107,15 @@ export default function PluginsPage() {
 
   return (
     <div className="page-content plugins-page">
+      {selectedPlugin && (
+        <PluginModal plugin={selectedPlugin} onClose={() => setSelectedPlugin(null)} />
+      )}
       <div className="kpi-row">
         <StatCard
           icon={<Puzzle size={20} />}
           label="Total Plugins"
           value={plugins.length}
-          sub="registered"
+          sub="in manifest"
           accent="var(--purple)"
         />
         <StatCard
@@ -72,6 +133,24 @@ export default function PluginsPage() {
           accent="var(--blue)"
         />
       </div>
+
+      {/* Pending restart banner */}
+      {(pendingChanges.size > 0 || restarting || restartMsg) && (
+        <div className="plugins-restart-banner">
+          <AlertTriangle size={14} />
+          {restartMsg
+            ? restartMsg
+            : `${pendingChanges.size} pending change${pendingChanges.size !== 1 ? 's' : ''} — restart the server to apply.`
+          }
+          {!restarting && (
+            <button onClick={handleRestart} disabled={restarting}>
+              <RotateCcw size={12} style={{ marginRight: 4 }} />
+              Restart now
+            </button>
+          )}
+          {restarting && <RefreshCw size={12} className="spin" />}
+        </div>
+      )}
 
       <section className="section">
         <div className="section-header">
@@ -131,24 +210,43 @@ export default function PluginsPage() {
               {filtered.map(plugin => (
                 <div
                   key={plugin.name}
-                  className={`registry-card${plugin.enabled ? '' : ' plugins-page__card--disabled'}`}
+                  className={`registry-card registry-card--clickable${plugin.enabled ? '' : ' plugins-page__card--disabled'}`}
+                  onClick={() => setSelectedPlugin(plugin)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setSelectedPlugin(plugin) }}
                 >
                   <div className="registry-card-top">
                     <span className="registry-name mono">{plugin.name}</span>
-                    <span className={`registry-cat plugins-page__status${plugin.enabled ? ' plugins-page__status--enabled' : ''}`}>
-                      {plugin.enabled ? 'enabled' : 'disabled'}
-                    </span>
+                    <label className="plugin-toggle" title={plugin.enabled ? 'Disable plugin' : 'Enable plugin'} onClick={e => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={plugin.enabled}
+                        onChange={() => handleToggle(plugin)}
+                      />
+                      <span className="plugin-toggle-track">
+                        <span className="plugin-toggle-thumb" />
+                      </span>
+                      <span className="plugin-toggle-label">
+                        {plugin.loaded
+                          ? (plugin.enabled ? 'loaded' : 'disabled')
+                          : (plugin.enabled ? 'will load' : 'disabled')
+                        }
+                      </span>
+                    </label>
                   </div>
-                  <p className="registry-desc">{plugin.description}</p>
+                  <p className="registry-desc">{plugin.description || '—'}</p>
                   <div className="registry-footer">
-                    <span className="registry-cat">{plugin.category.replace(/_/g, ' ')}</span>
+                    <span className="registry-cat">{(plugin.category || plugin.type || 'plugin').replace(/_/g, ' ')}</span>
                     <span className="registry-eff" title="Effectiveness">
                       {'█'.repeat(Math.round(plugin.effectiveness * 5))}{'░'.repeat(5 - Math.round(plugin.effectiveness * 5))}
                     </span>
                   </div>
-                  <div className="registry-endpoint mono plugins-page__endpoint">
-                    {plugin.endpoint}
-                  </div>
+                  {plugin.endpoint && (
+                    <div className="registry-endpoint mono plugins-page__endpoint">
+                      {plugin.endpoint}
+                    </div>
+                  )}
                 </div>
               ))}
               {filtered.length === 0 && (

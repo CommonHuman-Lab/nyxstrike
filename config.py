@@ -2,10 +2,10 @@
 
 _config = {
     "APP_NAME": "NyxStrike",
-    "VERSION": "1.4.0",
+    "VERSION": "1.5.0",
     "DATA_DIR_NAME": ".nyxstrike_data",  # Root data directory name (relative to cwd, override with NYXSTRIKE_DATA_DIR env var)
     "COMMAND_TIMEOUT": 500,
-    "REQUEST_TIMEOUT": 0,
+    "REQUEST_TIMEOUT": 30,
     "COMMAND_INACTIVITY_TIMEOUT": 900,
     "COMMAND_MAX_RUNTIME": 86400,
     "TOOL_TIMEOUT_OVERRIDES": {
@@ -33,6 +33,9 @@ _config = {
     "DEFAULT_API_SERVER_URL": "http://127.0.0.1:8888",
     "MAX_RETRIES": 3,
     "METASPLOIT_SESSION_WAIT": 10,  # Seconds to wait after exploit -j before listing sessions
+    "PATHS": {
+        "GO_BINARYS": "{HOME}/go/bin/"
+    },
 
     # ── LLM client ────────────────────────────────────────────────────────────
     "NYXSTRIKE_LLM_PROVIDER": "ollama",                         # ollama | openai | anthropic

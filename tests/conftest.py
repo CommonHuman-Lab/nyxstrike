@@ -41,7 +41,7 @@ _MOCK_POPEN.stdout = MagicMock()
 _MOCK_POPEN.stdout.__iter__ = lambda s: iter([])
 _MOCK_POPEN.communicate.return_value = (b"mocked", b"")
 _MOCK_POPEN.wait.return_value = 0
-_MOCK_POPEN.poll.return_value = 0
+_MOCK_POPEN.poll.side_effect = lambda: 0
 _MOCK_POPEN.__enter__ = lambda s: s
 _MOCK_POPEN.__exit__ = MagicMock(return_value=False)
 

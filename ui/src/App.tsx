@@ -28,6 +28,7 @@ import { MainContent } from './app/MainContent'
 import { CommandPalette } from './components/CommandPalette'
 import { ReportGenerationBubble } from './components/ReportGenerationBubble'
 import { ChatWidget } from './components/ChatWidget'
+import { usePageVisibility } from './hooks/usePageVisibility'
 import './App.css'
 
 const POLL_MS = 10_000
@@ -64,6 +65,15 @@ export default function App() {
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
+
+  const { isPageEnabled, togglePage } = usePageVisibility()
+
+  // If the active page gets disabled, fall back to dashboard
+  useEffect(() => {
+    if (!isPageEnabled(page)) {
+      setPage('dashboard')
+    }
+  }, [page, isPageEnabled])
 
   const [health, setHealth] = useState<WebDashboardResponse | null>(null)
   const [tools, setTools] = useState<Tool[]>([])
@@ -473,6 +483,7 @@ export default function App() {
           setReduceTextureEffects={setReduceTextureEffects}
           onOpenCommandPalette={openCommandPalette}
           onSignOut={() => { setAuthed(false); setNeedsAuth(true) }}
+          isPageEnabled={isPageEnabled}
         />
 
         {showPaletteHint && (
@@ -516,6 +527,8 @@ export default function App() {
           setReduceTextureEffects={setReduceTextureEffects}
           demoProcesses={demoProcesses}
           demoSessions={demoSessions}
+          isPageEnabled={isPageEnabled}
+          togglePage={togglePage}
           demoCpuHistory={demoCpuHistory}
         />
       </div>

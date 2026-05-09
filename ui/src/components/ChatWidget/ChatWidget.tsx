@@ -219,7 +219,12 @@ export function ChatWidget({ llmAvailable, currentPage, currentSessionId }: Chat
                 >
                   {sidebarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
                 </button>
-                <div className="chat-header-info">
+                <div
+                  className="chat-header-info"
+                  onClick={toggleOpen}
+                  title="Collapse chat"
+                  style={{ cursor: 'pointer' }}
+                >
                   <span className="chat-header-title">NyxStrike AI</span>
                   {currentSessionId && currentPage === 'session-detail' && (
                     <span className="chat-context-badge">context: session</span>

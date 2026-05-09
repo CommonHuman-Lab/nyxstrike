@@ -389,6 +389,137 @@ def get_plugins_by_type() -> Dict[str, List[Dict[str, Any]]]:
   return by_type
 
 
+# ---------------------------------------------------------------------------
+# Manifest read / write helpers  (used by the management API)
+# ---------------------------------------------------------------------------
+
+def get_manifest_entries() -> List[Dict[str, Any]]:
+  """Return every entry from plugins.yaml regardless of enabled state.
+
+  Each item contains at least ``name``, ``type``, and ``enabled``.
+  """
+  if not _MANIFEST_FILE.exists():
+    return []
+  try:
+    manifest = _load_yaml(_MANIFEST_FILE)
+  except Exception as exc:
+    logger.warning("plugin_loader: get_manifest_entries failed to read plugins.yaml: %s", exc)
+    return []
+
+  result: List[Dict[str, Any]] = []
+  for plugin_type, entries in manifest.items():
+    if not isinstance(entries, list):
+      continue
+    for entry in entries:
+      if not isinstance(entry, dict):
+        continue
+      name = entry.get("name", "").strip()
+      if not name:
+        continue
+      enabled = str(entry.get("enabled", "true")).lower() not in ("false", "0", "no")
+      loaded_meta = _loaded.get(plugin_type, {}).get(name)
+      item: Dict[str, Any] = {
+        "name":          name,
+        "type":          plugin_type,
+        "enabled":       enabled,
+        "loaded":        loaded_meta is not None,
+        "version":       loaded_meta.get("version", "") if loaded_meta else "",
+        "description":   loaded_meta.get("description", "") if loaded_meta else "",
+        "category":      loaded_meta.get("category", "") if loaded_meta else "",
+        "endpoint":      loaded_meta.get("endpoint", "") if loaded_meta else "",
+        "mcp_tool_name": loaded_meta.get("mcp_tool_name", "") if loaded_meta else "",
+        "effectiveness": loaded_meta.get("effectiveness", 0.5) if loaded_meta else 0.5,
+        "author":        loaded_meta.get("author", "") if loaded_meta else "",
+        "tags":          loaded_meta.get("tags", []) if loaded_meta else [],
+      }
+      # Try to read metadata from plugin.yaml even when not loaded
+      if not loaded_meta:
+        plugin_dir = _PLUGINS_DIR / plugin_type / name
+        meta_file = plugin_dir / "plugin.yaml"
+        if meta_file.exists():
+          try:
+            meta = _load_yaml(meta_file)
+            if "effectiveness" in meta:
+              try:
+                meta["effectiveness"] = float(meta["effectiveness"])
+              except (TypeError, ValueError):
+                pass
+            item.update({
+              "version":       str(meta.get("version", "")),
+              "description":   str(meta.get("description", "")),
+              "category":      str(meta.get("category", "")),
+              "endpoint":      str(meta.get("endpoint", "")),
+              "mcp_tool_name": str(meta.get("mcp_tool_name", "")),
+              "effectiveness": float(meta.get("effectiveness", 0.5)),
+              "author":        str(meta.get("author", "")),
+            })
+          except Exception:
+            pass
+      result.append(item)
+  return result
+
+
+def set_plugin_enabled(plugin_name: str, enabled: bool) -> bool:
+  """Toggle the *enabled* flag for *plugin_name* in ``plugins.yaml``.
+
+  Reads the raw YAML text, updates the matching entry, and writes it back
+  while preserving comments and formatting as much as possible.
+
+  Returns True on success, False if the plugin was not found in the manifest.
+  """
+  if not _MANIFEST_FILE.exists():
+    logger.warning("plugin_loader.set_plugin_enabled: plugins.yaml not found")
+    return False
+
+  try:
+    import yaml as _yaml  # type: ignore
+    with _MANIFEST_FILE.open("r", encoding="utf-8") as fh:
+      raw = fh.read()
+    data = _yaml.safe_load(raw) or {}
+  except ImportError:
+    logger.warning("plugin_loader.set_plugin_enabled: PyYAML not available, cannot write YAML")
+    return False
+  except Exception as exc:
+    logger.warning("plugin_loader.set_plugin_enabled: failed to parse plugins.yaml: %s", exc)
+    return False
+
+  found = False
+  for plugin_type, entries in data.items():
+    if not isinstance(entries, list):
+      continue
+    for entry in entries:
+      if isinstance(entry, dict) and entry.get("name", "").strip() == plugin_name:
+        entry["enabled"] = enabled
+        found = True
+
+  if not found:
+    return False
+
+  try:
+    import yaml as _yaml  # type: ignore
+    # Read existing content to preserve the header comment block
+    with _MANIFEST_FILE.open("r", encoding="utf-8") as fh:
+      existing = fh.read()
+    header_lines: List[str] = []
+    for line in existing.splitlines():
+      if line.startswith("#"):
+        header_lines.append(line)
+      else:
+        break
+    header = "\n".join(header_lines)
+    body = _yaml.dump(data, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    final = (header + "\n\n" + body) if header else body
+    with _MANIFEST_FILE.open("w", encoding="utf-8") as fh:
+      fh.write(final)
+    logger.info(
+      "plugin_loader.set_plugin_enabled: '%s' set to enabled=%s", plugin_name, enabled
+    )
+    return True
+  except Exception as exc:
+    logger.error("plugin_loader.set_plugin_enabled: failed to write plugins.yaml: %s", exc)
+    return False
+
+
 def _import_file(module_name: str, path: Path):
   spec = importlib.util.spec_from_file_location(module_name, str(path))
   if spec is None or spec.loader is None:

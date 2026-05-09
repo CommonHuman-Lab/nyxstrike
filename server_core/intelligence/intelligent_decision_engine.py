@@ -2,13 +2,16 @@ import ipaddress
 import re
 import socket
 import urllib.parse
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests as _requests
 
 from shared.attack_chain import AttackChain, AttackStep
 from shared.target_profile import TargetProfile
 from shared.target_types import TargetType, TechnologyStack
 from server_core.parameter_optimizer import ParameterOptimizer
 from server_core.tool_stats_store import ToolStatsStore
+import server_core.config_core as _config_core
 
 from .decision_engine_constants import (
     TIME_ESTIMATES,
@@ -86,15 +89,17 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
 
     def analyze_target(self, target: str) -> TargetProfile:
         """Analyze target and create comprehensive profile."""
-        profile = TargetProfile(target=target)
+        profile = TargetProfile(target)
         profile.target_type = self._determine_target_type(target)
 
         if profile.target_type in [TargetType.WEB_APPLICATION, TargetType.API_ENDPOINT]:
             profile.ip_addresses = self._resolve_domain(target)
 
         if profile.target_type == TargetType.WEB_APPLICATION:
-            profile.technologies = self._detect_technologies(target)
-            profile.cms_type = self._detect_cms(target)
+            # Single HTTP probe shared by both technology and CMS detection.
+            headers_lower, body_sample = self._http_probe(target)
+            profile.technologies = self._detect_technologies(target, headers_lower, body_sample)
+            profile.cms_type = self._detect_cms(target, headers_lower, body_sample)
 
         if profile.target_type == TargetType.CLOUD_SERVICE:
             profile.cloud_provider = self._detect_cloud_provider(target)
@@ -168,22 +173,128 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             pass
         return []
 
-    def _detect_technologies(self, target: str) -> List[TechnologyStack]:
-        """Detect technologies using basic heuristics."""
-        technologies = []
-        target_lower = target.lower()
+    def _http_probe(self, target: str) -> Tuple[Dict[str, str], str]:
+        """Make one HEAD/GET request to *target* and return (headers_lower, body_sample).
 
+        Returns empty dicts/strings on any network failure so callers can
+        degrade gracefully without extra error handling.
+        """
+        probe_url = target if target.startswith(("http://", "https://")) else f"http://{target}"
+        timeout = int(_config_core.get("REQUEST_TIMEOUT", 30))
+        try:
+            try:
+                resp = _requests.head(
+                    probe_url,
+                    timeout=timeout,
+                    allow_redirects=True,
+                    headers={"User-Agent": "NyxStrike/1.0"},
+                )
+            except Exception:
+                resp = _requests.get(
+                    probe_url,
+                    timeout=timeout,
+                    allow_redirects=True,
+                    headers={"User-Agent": "NyxStrike/1.0"},
+                    stream=True,
+                )
+            headers_lower = {k.lower(): v.lower() for k, v in resp.headers.items()}
+            body_sample = ""
+            if hasattr(resp, "content"):
+                try:
+                    body_sample = resp.content[:8192].decode("utf-8", errors="ignore").lower()
+                except Exception:
+                    pass
+            return headers_lower, body_sample
+        except Exception:
+            return {}, ""
+
+    def _detect_technologies(
+        self,
+        target: str,
+        headers_lower: Optional[Dict[str, str]] = None,
+        body_sample: Optional[str] = None,
+    ) -> List[TechnologyStack]:
+        """Detect technologies via URL heuristics then an HTTP probe.
+
+        When *headers_lower* and *body_sample* are supplied (pre-fetched by
+        ``analyze_target``) no additional HTTP request is made.
+        Falls back to ``[TechnologyStack.UNKNOWN]`` on any error.
+        """
+        # ── Fast path: URL-string heuristics ──────────────────────────────────
+        target_lower = target.lower()
+        technologies: List[TechnologyStack] = []
         if "wordpress" in target_lower or "wp-" in target_lower:
             technologies.append(TechnologyStack.WORDPRESS)
         if any(ext in target_lower for ext in [".php", "php"]):
             technologies.append(TechnologyStack.PHP)
         if any(ext in target_lower for ext in [".asp", ".aspx"]):
             technologies.append(TechnologyStack.DOTNET)
+        if technologies:
+            return technologies
 
+        # ── Slow path: HTTP fingerprint ────────────────────────────────────────
+        if headers_lower is None or body_sample is None:
+            headers_lower, body_sample = self._http_probe(target)
+        technologies = self._fingerprint_from_http(headers_lower, body_sample)
         return technologies if technologies else [TechnologyStack.UNKNOWN]
 
-    def _detect_cms(self, target: str) -> Optional[str]:
-        """Detect CMS type."""
+    def _fingerprint_from_http(
+        self, headers: Dict[str, str], body: str
+    ) -> List[TechnologyStack]:
+        """Return detected technology stacks from HTTP headers and body sample."""
+        found: List[TechnologyStack] = []
+        server = headers.get("server", "")
+        powered_by = headers.get("x-powered-by", "")
+        generator = headers.get("x-generator", "")
+        set_cookie = headers.get("set-cookie", "")
+
+        # Server header
+        if "apache" in server:
+            found.append(TechnologyStack.PHP)  # most common Apache stack
+        if "iis" in server or "microsoft" in server:
+            found.append(TechnologyStack.DOTNET)
+        if "php" in powered_by or "php" in server:
+            if TechnologyStack.PHP not in found:
+                found.append(TechnologyStack.PHP)
+        if "asp.net" in powered_by or "asp.net" in server:
+            if TechnologyStack.DOTNET not in found:
+                found.append(TechnologyStack.DOTNET)
+
+        # CMS-specific body fingerprints
+        if "wp-content" in body or "wp-json" in body or "wordpress" in body:
+            if TechnologyStack.WORDPRESS not in found:
+                found.append(TechnologyStack.WORDPRESS)
+            if TechnologyStack.PHP not in found:
+                found.append(TechnologyStack.PHP)
+        if "drupal.settings" in body or "drupal" in generator or "/sites/default/files" in body:
+            if TechnologyStack.PHP not in found:
+                found.append(TechnologyStack.PHP)
+        if "joomla" in body or "joomla" in generator:
+            if TechnologyStack.PHP not in found:
+                found.append(TechnologyStack.PHP)
+
+        # Framework / language hints in cookies or headers
+        if "laravel_session" in set_cookie or "phpsessid" in set_cookie:
+            if TechnologyStack.PHP not in found:
+                found.append(TechnologyStack.PHP)
+        if "asp.net_sessionid" in set_cookie or "aspsessionid" in set_cookie:
+            if TechnologyStack.DOTNET not in found:
+                found.append(TechnologyStack.DOTNET)
+
+        return found
+
+    def _detect_cms(
+        self,
+        target: str,
+        headers_lower: Optional[Dict[str, str]] = None,
+        body_sample: Optional[str] = None,
+    ) -> Optional[str]:
+        """Detect CMS type via URL heuristics then HTTP fingerprint data.
+
+        When *headers_lower* and *body_sample* are supplied (pre-fetched by
+        ``analyze_target``) no additional HTTP request is made.
+        """
+        # Fast path: URL-string heuristics
         target_lower = target.lower()
         if "wordpress" in target_lower or "wp-" in target_lower:
             return "WordPress"
@@ -191,6 +302,19 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             return "Drupal"
         if "joomla" in target_lower:
             return "Joomla"
+
+        # Use pre-fetched probe data or fetch now if called standalone
+        if headers_lower is None or body_sample is None:
+            headers_lower, body_sample = self._http_probe(target)
+
+        generator = headers_lower.get("x-generator", "")
+        if "wordpress" in generator or "wp-content" in body_sample or "wp-json" in body_sample:
+            return "WordPress"
+        if "drupal" in generator or "drupal.settings" in body_sample or "/sites/default/files" in body_sample:
+            return "Drupal"
+        if "joomla" in generator or "joomla" in body_sample:
+            return "Joomla"
+
         return None
 
     def _detect_cloud_provider(self, target: str) -> Optional[str]:
@@ -243,7 +367,8 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         if profile.ip_addresses:
             confidence += 0.1
         if profile.technologies and profile.technologies[0] != TechnologyStack.UNKNOWN:
-            confidence += 0.2
+            # +0.3 when we have confirmed tech (HTTP probe likely succeeded)
+            confidence += 0.3
         if profile.cms_type:
             confidence += 0.1
         if profile.target_type != TargetType.UNKNOWN:
@@ -562,3 +687,134 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             bug_bounty_objectives.get(objective_key, "web_reconnaissance"),
             self.attack_patterns.get("web_reconnaissance", []),
         )
+
+    # ── CVE-to-Exploit Chaining ───────────────────────────────────────────────
+
+    def build_cve_exploit_chain(
+        self,
+        profile: TargetProfile,
+        cve_id: Optional[str] = None,
+        exploit_candidates: Optional[List[Dict[str, Any]]] = None,
+    ) -> AttackChain:
+        """Build an exploit-focused attack chain from CVE / exploit candidates.
+
+        If ``exploit_candidates`` is not provided the method falls back to the
+        candidates already embedded in ``profile.exploit_candidates``.  Each
+        candidate is expected to follow the schema returned by
+        ``CVEIntelligenceManager.search_existing_exploits()``:
+
+            {
+              "source": "metasploit" | "exploit-db" | "github" | ...,
+              "exploit_id": str,   # MSF module path or EDB numeric ID
+              "title": str,
+              "type": "metasploit-module" | "proof-of-concept" | ...,
+              "reliability": "EXCELLENT" | "GOOD" | "FAIR" | "UNVERIFIED",
+              "verified": bool,
+            }
+
+        The resulting chain leads with a ``searchsploit`` lookup step (if no
+        candidates are known yet), followed by one ``metasploit`` execution
+        step per viable Metasploit module found, then falls back to a generic
+        ``searchsploit`` step for any remaining PoC references.
+        """
+        chain = AttackChain(profile)
+        candidates = exploit_candidates or profile.exploit_candidates or []
+        cve_filter = cve_id or (profile.cve_ids[0] if profile.cve_ids else None)
+
+        # ── Step 1: searchsploit lookup ─────────────────────────────────────
+        search_query = cve_filter or str(profile.target)
+        chain.add_step(
+            AttackStep(
+                tool="searchsploit",
+                parameters={"query": search_query, "additional_args": "-j"},
+                expected_outcome=f"Enumerate known exploits for {search_query}",
+                success_probability=0.90,
+                execution_time_estimate=15,
+                cve_id=cve_filter,
+                exploit_source="exploit-db",
+                selection_reason={
+                    "reason": "Initial exploit database lookup for CVE/service",
+                    "cve": cve_filter,
+                },
+            )
+        )
+
+        # ── Step 2: Metasploit execution for each MSF candidate ─────────────
+        msf_candidates = [
+            c for c in candidates
+            if c.get("source") == "metasploit" or c.get("type") == "metasploit-module"
+        ]
+
+        reliability_score = {"EXCELLENT": 0.95, "GOOD": 0.82, "FAIR": 0.65, "UNVERIFIED": 0.45}
+
+        for candidate in msf_candidates:
+            module_path = candidate.get("exploit_id", "")
+            if not module_path:
+                continue
+            reliability = candidate.get("reliability", "UNVERIFIED")
+            prob = reliability_score.get(reliability, 0.45)
+            msf_options: Dict[str, Any] = {"module": module_path}
+            if profile.ip_addresses:
+                msf_options["options"] = {"RHOSTS": profile.ip_addresses[0]}
+            chain.add_step(
+                AttackStep(
+                    tool="metasploit",
+                    parameters=msf_options,
+                    expected_outcome=f"Exploit target via {module_path}",
+                    success_probability=prob,
+                    execution_time_estimate=120,
+                    dependencies=["searchsploit"],
+                    cve_id=cve_filter,
+                    exploit_source="metasploit",
+                    exploit_id=module_path,
+                    exploit_type=candidate.get("type", "remote"),
+                    selection_reason={
+                        "reason": f"Metasploit module matched for {cve_filter or search_query}",
+                        "reliability": reliability,
+                        "module": module_path,
+                    },
+                )
+            )
+
+        chain.calculate_success_probability()
+        chain.risk_level = profile.risk_level or "high"
+        return chain
+
+    def enrich_profile_with_cves(
+        self,
+        profile: TargetProfile,
+        service_version_map: Optional[Dict[str, str]] = None,
+    ) -> TargetProfile:
+        """Populate ``profile.service_versions`` and trigger CVE lookups.
+
+        ``service_version_map`` should be a dict of ``{service_name: version}``
+        derived from nmap/banner output, e.g. ``{"apache": "2.4.49"}``.
+
+        The method tries to import ``CVEIntelligenceManager`` and call
+        ``search_existing_exploits`` for each service/version pair.  If the
+        import fails (the CVE manager has external dependencies not always
+        available) the profile is returned unchanged beyond updating
+        ``service_versions``.
+        """
+        if service_version_map:
+            profile.service_versions.update(service_version_map)
+
+        try:
+            from server_core.intelligence.cve_intelligence_manager import CVEIntelligenceManager
+            mgr = CVEIntelligenceManager()
+            for service, version in (service_version_map or {}).items():
+                query = f"{service} {version}".strip()
+                try:
+                    exploits = mgr.search_existing_exploits(query)
+                    if exploits:
+                        profile.exploit_candidates.extend(exploits)
+                        for ex in exploits:
+                            cve = ex.get("cve_id", "")
+                            if cve and cve not in profile.cve_ids:
+                                profile.cve_ids.append(cve)
+                except Exception:
+                    pass
+        except ImportError:
+            pass
+
+        return profile

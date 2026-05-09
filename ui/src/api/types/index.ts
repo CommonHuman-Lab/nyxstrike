@@ -43,9 +43,30 @@ export type {
 export type { CacheStatsResponse } from './cache';
 
 export type {
+  Credential,
+  CredentialDeleteResponse,
+  CredentialMutationResponse,
+  CredentialsResponse,
+  CredentialType,
+  CreateCredentialPayload,
+  UpdateCredentialPayload,
+  LootItem,
+  LootDeleteResponse,
+  LootMutationResponse,
+  LootResponse,
+  LootType,
+  CreateLootPayload,
+  UpdateLootPayload,
+} from './loot';
+
+export type {
+  ManifestPlugin,
   Plugin,
   PluginsByCategoryResponse,
   PluginsListResponse,
+  PluginsManifestResponse,
+  PluginToggleResponse,
+  ServerRestartResponse,
 } from './plugins';
 
 export type {

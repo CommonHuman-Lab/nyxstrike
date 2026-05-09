@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IdeConfigSection, FlagsSection, AuthenticationSection, DemoModeSection } from './HelpSections'
+import { IdeConfigSection, FlagsSection, AuthenticationSection, DemoModeSection, CommandPaletteSection, UIFeaturesSection } from './HelpSections'
 import { IDE_CONFIGS } from './ideConfigs'
 import { api } from '../../api'
 import './HelpPage.css'
@@ -44,6 +44,8 @@ export default function HelpPage() {
       />
       <FlagsSection />
       <AuthenticationSection />
+      <CommandPaletteSection />
+      <UIFeaturesSection />
       <DemoModeSection />
     </div>
   )

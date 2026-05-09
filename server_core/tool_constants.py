@@ -16,6 +16,8 @@ REQUIRE_GEM_CHECK = ["zsteg"]
 # Tools that require cargo check (Rust packages)
 REQUIRE_CARGO_CHECK = ["pwninit", "x8"]
 
+REQUIRE_GO_CHECK = ["httpx"]
+
 # Binary name overrides for tools where the executable name differs from the tool name
 BINARY_NAME_OVERRIDES = {
     "scout-suite": "scout",

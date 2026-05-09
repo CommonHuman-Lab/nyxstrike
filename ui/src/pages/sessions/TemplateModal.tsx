@@ -33,6 +33,7 @@ export function TemplateModal({
             <label className="mono">Template Name *</label>
             <input
               className="search-input mono"
+              name="template-name"
               placeholder="e.g. SMB Enumeration Pack"
               value={templateName}
               onChange={e => setTemplateName(e.target.value)}

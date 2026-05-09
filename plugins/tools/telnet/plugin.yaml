@@ -1,0 +1,49 @@
+name: telnet
+version: "1.0.0"
+
+description: |
+  Executes remote Telnet commands using a server-managed cached Telnet session.
+  The server establishes an authenticated Telnet connection per host/user and reuses it for subsequent command execution.
+  Each request executes a command and returns stdout, stderr, and exit code.
+
+author: "roc1t1z3not"
+category: remote_access
+
+tags:
+  - telnet
+  - remote_execution
+  - shell
+
+endpoint: /api/plugins/telnet
+mcp_tool_name: telnet
+effectiveness: 0.85
+
+check:
+  type: builtin
+
+params:
+  host:
+    required: true
+    description: "Target host (IP or hostname)"
+
+optional:
+  port:
+    default: 23
+    description: "Telnet port"
+
+  username:
+    description: "Telnet username for authentication"
+
+  password:
+    description: "Telnet password for authentication"
+
+  command:
+    description: "Command to execute on the remote Telnet shell"
+
+  terminal_disconnect:
+    default: false
+    description: "Closes the cached Telnet connection for this host/user"
+
+  timeout:
+    default: 30
+    description: "Command timeout in seconds"

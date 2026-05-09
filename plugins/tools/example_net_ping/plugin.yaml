@@ -1,8 +1,8 @@
 name: example_net_ping
 version: "1.0.0"
 description: "ICMP ping a host and return latency, packet loss, and round-trip stats. A minimal reference plugin — fork this folder to build your own."
-author: "community"
-category: net_scan
+author: "system"
+category: example
 tags:
   - network
   - recon
@@ -43,3 +43,4 @@ optional:
   timeout:
     default: 10
     description: "Timeout in seconds per ping packet"
+

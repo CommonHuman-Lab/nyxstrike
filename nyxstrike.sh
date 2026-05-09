@@ -16,7 +16,6 @@ set -euo pipefail
 #   ./nyxstrike.sh -s                     # Update repo only
 #   ./nyxstrike.sh -t                     # Install external tools only
 #   ./nyxstrike.sh -t -b                  # Install tools + heavy Python extras
-#   ./nyxstrike.sh -u                     # Update already-cloned git_tools
 #   ./nyxstrike.sh -y                     # Force reinstall Python requirements
 #   ./nyxstrike.sh -ai                    # Install Ollama + 9b model
 #   ./nyxstrike.sh -ai-small              # Install Ollama + 4b model
@@ -29,7 +28,6 @@ GIT_TOOLS_DIR="${ROOT_DIR}/git_tools"
 # --- install flags ---
 INSTALL_TOOLS=false
 INSTALL_BIG_PACKAGES=false
-UPDATE_GIT_TOOLS=false
 UPDATE_SELF=false
 UPDATE_PYTHON_PACKAGES=false
 PIP_BOOTSTRAPPED=false
@@ -50,93 +48,10 @@ PROFILE="default"
 # --- do any setup at all? ---
 DO_SETUP=false
 
-# External tools to install
-# Format: "apt_package:expected_binary"
-APT_PACKAGES=(
-  "aircrack-ng:aircrack-ng",
-  "amass:amass",
-  "arjun:arjun",
-  "arp-scan:arp-scan",
-  "autopsy:autopsy",
-  "binutils:binutils",
-  "binwalk:binwalk",
-  "bulk-extractor:bulk-extractor",
-  "bettercap:bettercap",
-  "checksec:checksec",
-  "dirb:dirb",
-  "dirsearch:dirsearch",
-  "enum4linux:enum4linux",
-  "enum4linux-ng:enum4linux-ng",
-  "eaphammer:eaphammer",
-  "feroxbuster:feroxbuster",
-  "ffuf:ffuf",
-  "file:file",
-  "foremost:foremost",
-  "gdb:gdb",
-  "gobuster:gobuster",
-  "hashcat:hashcat",
-  "hashcat-utils:hashcat-utils",
-  "hashid:hashid",
-  "hydra:hydra",
-  "john:john",
-  "kismet:kismet",
-  "masscan:masscan",
-  "mdk4:mdk4",
-  "medusa:medusa",
-  "nbtscan:nbtscan",
-  "nikto:nikto",
-  "nmap:nmap",
-  "ophcrack:ophcrack",
-  "paramspider:paramspider",
-  "patator:patator",
-  "radare2:radare2",
-  "responder:responder",
-  "scalpel:scalpel",
-  "sleuthkit:sleuthkit",
-  "smbmap:smbmap",
-  "sqlmap:sqlmap",
-  "steghide:steghide",
-  "subfinder:subfinder",
-  "tcpdump:tcpdump",
-  "testdisk:testdisk",
-  "tshark:tshark",
-  "wireshark:wireshark",
-  "wpscan:wpscan",
-  "xxd:xxd",
-  "python3-ldapdomaindump:python3-ldapdomaindump",
-  "commix:commix",
-  "theharvester:theharvester",
-  "sublist3r:sublist3r",
-  "parsero:parsero",
-  "joomscan:joomscan"
-)
-
-# Format: "go_module@version:expected_binary"
-GO_PACKAGES=(
-)
-
-# Format: "cargo_package:expected_binary"
-CARGO_PACKAGES=(
-  "x8:x8"
-)
-
-# Git repos to clone into git_tools.
-# Format: "repo_url|requirements_file_relpath"
-# Leave requirements file empty when no extra setup is needed.
-GIT_REPOS=(
-#  "https://github.com/nsonaniya2010/SubDomainizer.git|requirements.txt"
-#  "https://github.com/rastating/dnmasscan.git|"
-#  "https://github.com/hannob/tlshelpers.git|"
-)
-
 # ---------------------------------------------------------------------------
 # Setup functions (formerly install.sh)
 # ---------------------------------------------------------------------------
 
-is_apt_package_installed() {
-  local package_name="$1"
-  dpkg -s "${package_name}" >/dev/null 2>&1
-}
 
 update_self_repo() {
   if [[ "${UPDATE_SELF}" != true ]]; then
@@ -166,111 +81,8 @@ update_self_repo() {
   fi
 }
 
-install_external_tools() {
-  if [[ ${#APT_PACKAGES[@]} -eq 0 && ${#GO_PACKAGES[@]} -eq 0 && ${#CARGO_PACKAGES[@]} -eq 0 ]]; then
-    return
-  fi
 
-  if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
-    if ! command -v apt >/dev/null 2>&1; then
-      echo "Skipping apt packages: apt is not available on this system."
-    else
-      echo "Updating apt package lists..."
-      sudo apt-get update -qq
 
-      local apt_to_install=()
-      local apt_entry="" apt_pkg="" apt_bin=""
-
-      for apt_entry in "${APT_PACKAGES[@]}"; do
-        apt_pkg="${apt_entry%%:*}"
-        apt_bin="${apt_entry##*:}"
-        if command -v "${apt_bin}" >/dev/null 2>&1 || is_apt_package_installed "${apt_pkg}"; then
-          continue
-        fi
-        apt_to_install+=("${apt_pkg}")
-      done
-
-      if [[ ${#apt_to_install[@]} -gt 0 ]]; then
-        echo "Installing apt packages: ${apt_to_install[*]}"
-        sudo apt install -y -qq "${apt_to_install[@]}"
-      fi
-    fi
-  fi
-
-  if [[ ${#GO_PACKAGES[@]} -gt 0 ]]; then
-    if ! command -v go >/dev/null 2>&1; then
-      echo "Skipping Go packages: go is not installed."
-    else
-      local go_entry="" go_pkg="" go_bin=""
-      for go_entry in "${GO_PACKAGES[@]}"; do
-        go_pkg="${go_entry%%:*}"
-        go_bin="${go_entry##*:}"
-        if command -v "${go_bin}" >/dev/null 2>&1; then
-          continue
-        fi
-        echo "Installing Go package: ${go_pkg}"
-        go install "${go_pkg}"
-      done
-    fi
-  fi
-
-  if [[ ${#CARGO_PACKAGES[@]} -gt 0 ]]; then
-    if ! command -v cargo >/dev/null 2>&1; then
-      echo "Skipping Cargo packages: cargo is not installed."
-    else
-      local cargo_entry="" cargo_pkg="" cargo_bin=""
-      for cargo_entry in "${CARGO_PACKAGES[@]}"; do
-        cargo_pkg="${cargo_entry%%:*}"
-        cargo_bin="${cargo_entry##*:}"
-        if command -v "${cargo_bin}" >/dev/null 2>&1; then
-          continue
-        fi
-        cargo install --quiet "${cargo_pkg}"
-      done
-    fi
-  fi
-}
-
-setup_git_repo() {
-  local repo_dir="$1"
-  local requirements_rel="$2"
-
-  if [[ -z "${requirements_rel}" ]]; then
-    return
-  fi
-
-  local repo_name
-  repo_name="$(basename "${repo_dir}")"
-  local requirements_file="${repo_dir}/${requirements_rel}"
-
-  if [[ ! -f "${requirements_file}" ]]; then
-    echo "Repo setup skipped (missing requirements): ${requirements_file}"
-    return
-  fi
-
-  local stamp_file="${repo_dir}/.app_setup_$(basename "${requirements_rel}").stamp"
-  if [[ -f "${stamp_file}" && "${stamp_file}" -nt "${requirements_file}" ]]; then
-    echo "Repo already prepared, skipping: ${repo_name}"
-    return
-  fi
-
-  local python_minor
-  python_minor="$(${VENV_DIR}/bin/python3 -c 'import sys; print(sys.version_info.minor)')"
-  if [[ "${repo_name}" == "SubDomainizer" && "${python_minor}" -ge 13 ]]; then
-    echo "Repo setup skipped for ${repo_name}: not compatible with Python 3.13+ (cgi module removed)."
-    echo "Use a Python 3.12 or older venv inside ${repo_dir} if you need it locally."
-    return
-  fi
-
-  echo "Preparing repo: ${repo_name}"
-  if ! "${VENV_DIR}/bin/python3" -m pip --disable-pip-version-check install --quiet --progress-bar off -r "${requirements_file}"; then
-    echo "Repo setup failed for ${repo_name}; continuing."
-    echo "You can run setup manually inside ${repo_dir}."
-    return
-  fi
-
-  touch "${stamp_file}"
-}
 
 ensure_pip_ready() {
   if [[ "${PIP_BOOTSTRAPPED}" == true ]]; then
@@ -367,43 +179,6 @@ install_ollama_model() {
   fi
 }
 
-clone_or_update_git_tools() {
-  if [[ ${#GIT_REPOS[@]} -eq 0 ]]; then
-    return
-  fi
-
-  if ! command -v git >/dev/null 2>&1; then
-    echo "Skipping git repo sync: git is not installed."
-    return
-  fi
-
-  mkdir -p "${GIT_TOOLS_DIR}"
-
-  local repo_entry="" repo_url="" repo_requirements="" repo_name="" repo_dir=""
-
-  for repo_entry in "${GIT_REPOS[@]}"; do
-    IFS='|' read -r repo_url repo_requirements <<< "${repo_entry}"
-    repo_name="$(basename "${repo_url}" .git)"
-    repo_dir="${GIT_TOOLS_DIR}/${repo_name}"
-
-    if [[ -d "${repo_dir}/.git" ]]; then
-      if [[ "${UPDATE_GIT_TOOLS}" == true ]]; then
-        echo "Updating git repo: ${repo_name}"
-        git -C "${repo_dir}" pull --ff-only --quiet
-      fi
-    elif [[ -e "${repo_dir}" ]]; then
-      echo "Path exists and is not a git repo, skipping: ${repo_dir}"
-    else
-      echo "Cloning git repo: ${repo_name}"
-      git clone --quiet "${repo_url}" "${repo_dir}"
-    fi
-
-    if [[ -d "${repo_dir}/.git" ]]; then
-      setup_git_repo "${repo_dir}" "${repo_requirements}"
-    fi
-  done
-}
-
 run_setup() {
   update_self_repo
 
@@ -425,22 +200,17 @@ run_setup() {
   fi
 
   if [[ "${INSTALL_TOOLS}" == true ]]; then
-    echo "[3/4] Installing external tools..."
-    install_external_tools
+    echo "[3/4] Installing external tools via scripts/install_tools.sh..."
+    bash "${ROOT_DIR}/scripts/install_tools.sh"
   else
     echo "[3/4] Skipping external tools (use -t to enable)."
   fi
 
-  if [[ "${INSTALL_TOOLS}" == true ]]; then
-    echo "[4/4] Syncing git tool repositories..."
-    clone_or_update_git_tools
-  else
-    echo "[4/4] Skipping git tool repositories (use -t to enable)."
-  fi
-
   if [[ "${INSTALL_AI_MODEL}" == true ]]; then
-    echo "[5/5] Setting up AI model..."
+    echo "[4/4] Setting up AI model..."
     install_ollama_model
+  else
+    echo "[4/4] Skipping AI model setup (use -ai or -ai-small to enable)."
   fi
 
   echo "Setup complete."
@@ -468,12 +238,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     -b|--install-big-packages)
       INSTALL_BIG_PACKAGES=true
-      INSTALL_TOOLS=true
-      DO_SETUP=true
-      shift
-      ;;
-    -u|--update-git-tools)
-      UPDATE_GIT_TOOLS=true
       INSTALL_TOOLS=true
       DO_SETUP=true
       shift
@@ -529,7 +293,8 @@ while [[ $# -gt 0 ]]; do
       echo "Setup:"
       echo "  -a, --all               Start here — update repo + start server"
       echo "  -s, --update-self       git pull this repo (skips if local changes present)"
-      echo "  -t, --install-tools     Install external apt/go/cargo tools and clone git_tools"
+      echo "  -t, --install-tools     Install security tools via scripts/install_tools.sh"
+      echo "                          (run scripts/install_tools.sh --help for category/dry-run options)"
       echo "  -b, --install-big-packages  Install heavy optional Python extras (implies -t)"
       echo "  -u, --update-git-tools  Pull latest for already-cloned git_tools repos (implies -t)"
       echo "  -y, --update-python-packages  Force reinstall of Python requirements"

@@ -643,6 +643,43 @@ def build_tool_catalog() -> Dict[str, ToolSpec]:
             tech_affinities=set(),
             noise_score=0.05,
         ),
+        # ── Exploitation ────────────────────────────────────────────────────────
+        "metasploit": ToolSpec(
+            name="metasploit",
+            capabilities={"exploitation", "cve_exploitation", "post_exploitation"},
+            target_types={
+                TargetType.NETWORK_HOST.value,
+                TargetType.WEB_APPLICATION.value,
+                TargetType.API_ENDPOINT.value,
+            },
+            objectives={"exploitation", "comprehensive"},
+            tech_affinities=set(),
+            noise_score=0.85,
+        ),
+        "searchsploit": ToolSpec(
+            name="searchsploit",
+            capabilities={"exploitation", "cve_lookup", "exploit_search"},
+            target_types={
+                TargetType.NETWORK_HOST.value,
+                TargetType.WEB_APPLICATION.value,
+                TargetType.API_ENDPOINT.value,
+                TargetType.BINARY_FILE.value,
+            },
+            objectives={"exploitation", "vulnerability_hunting", "comprehensive", "intelligence"},
+            tech_affinities=set(),
+            noise_score=0.05,
+        ),
+        "msfvenom": ToolSpec(
+            name="msfvenom",
+            capabilities={"exploitation", "payload_generation"},
+            target_types={
+                TargetType.NETWORK_HOST.value,
+                TargetType.BINARY_FILE.value,
+            },
+            objectives={"exploitation"},
+            tech_affinities=set(),
+            noise_score=0.10,
+        ),
     }
 
 
@@ -683,6 +720,7 @@ OBJECTIVE_CONFIG: Dict[str, Dict[str, float]] = {
     "api_security": {"max_tools": 7, "noise_weight": 0.15, "cost_weight": 0.10, "min_score": 0.53},
     "internal_network_ad": {"max_tools": 8, "noise_weight": 0.14, "cost_weight": 0.08, "min_score": 0.51},
     "intelligence": {"max_tools": 8, "noise_weight": 0.12, "cost_weight": 0.08, "min_score": 0.51},
+    "exploitation": {"max_tools": 5, "noise_weight": 0.05, "cost_weight": 0.05, "min_score": 0.60},
 }
 
 
@@ -704,6 +742,8 @@ def objective_alias(objective: str) -> str:
         "api": "api_security",
         "internal_network_ad": "internal_network_ad",
         "ad": "internal_network_ad",
+        "exploitation": "exploitation",
+        "exploit": "exploitation",
     }
     return aliases.get(normalized, DEFAULT_OBJECTIVE)
 
@@ -749,6 +789,8 @@ def required_capabilities(target_type: str, objective: str) -> Set[str]:
         if target_type == TargetType.API_ENDPOINT.value:
             return {"surface", "param_discovery"}
         return {"surface", "web_vulnerability"}
+    if obj == "exploitation":
+        return {"exploitation", "cve_exploitation"}
 
     return set()
 
