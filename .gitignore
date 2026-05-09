@@ -5,6 +5,7 @@ app.log
 .nyxstrike_data/
 node_modules/
 git_tools/
+.pytest_cache/
 
 # Web UI build output
 ui/node_modules/
