@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.6.0 - injectlynx (next)
+
 ## 1.5.0 - backdoorbear (2026-05-09)
 
 ### Loot
