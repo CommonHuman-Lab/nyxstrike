@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.0 - backdoorbear (next)
+## 1.5.0 - backdoorbear (2026-05-09)
 
 ### Loot
 - Added Loot page for managing captured credentials and loot items from engagements.
