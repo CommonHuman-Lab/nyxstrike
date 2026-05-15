@@ -15,6 +15,7 @@ import server_core.config_core as config_core
 from server_core.command_executor import execute_command
 from server_core.modern_visual_engine import ModernVisualEngine
 from server_core.singletons import cache, telemetry
+from server_core.tool_binary_resolver import resolve_projectdiscovery_httpx
 
 from server_core.tool_constants import (
     BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_GO_CHECK, REQUIRE_PIP_CHECK,
@@ -74,11 +75,6 @@ def _probe_binary(check_type: str, binary: str) -> bool:
     binary     — executable or package name to probe
     """
 
-    home_path = os.path.expanduser("~")
-    paths_ovrrides = config_core.get("PATHS", {})
-    GO_PATH = paths_ovrrides.get("GO_BINARYS", "{HOME}/go/bin/")
-    GO_BINARYS = GO_PATH.replace("{HOME}", home_path)
-    
     if check_type == "builtin":
         return True
     try:
@@ -107,11 +103,13 @@ def _probe_binary(check_type: str, binary: str) -> bool:
             )
             return binary in r.stdout
         elif check_type == "go":
+            if binary == "httpx":
+                return bool(resolve_projectdiscovery_httpx())
             r = subprocess.run(
-                ["go", "version", "-m", GO_BINARYS],
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                ["which", binary],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             )
-            return binary in r.stdout
+            return r.returncode == 0
         else:  # which (default)
             r = subprocess.run(
                 ["which", binary],
