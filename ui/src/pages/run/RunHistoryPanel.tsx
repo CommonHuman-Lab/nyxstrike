@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { RefreshCw, XCircle, Server } from 'lucide-react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { RunHistoryEntry } from '../../shared/types'
@@ -32,8 +32,8 @@ export function RunHistoryPanel({
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [clearing, setClearing] = React.useState(false)
   const [collapsedDates, setCollapsedDates] = React.useState<Record<string, boolean>>({})
-  const visible = filterHistory(history, histSearch)
-  const grouped = groupHistoryByDate(visible)
+  const visible = useMemo(() => filterHistory(history, histSearch), [history, histSearch])
+  const grouped = useMemo(() => groupHistoryByDate(visible), [visible])
 
   React.useEffect(() => {
     setCollapsedDates(prev => {
