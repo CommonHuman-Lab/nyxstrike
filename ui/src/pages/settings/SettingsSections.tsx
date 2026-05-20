@@ -1,5 +1,7 @@
-import { Save, Plus, Trash2, Eye, EyeOff } from 'lucide-react'
-import type { Settings, WordlistEntry, PersonalityPreset } from '../../api'
+import { Save, Plus, Trash2, Eye, EyeOff, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { useState } from 'react'
+import type { Settings, WordlistEntry, PersonalityPreset, BinaryPathTestResponse } from '../../api'
+import type { BinaryOverrideRow } from './useSettingsData'
 import { ActionButton } from '../../components/ActionButton'
 import { CollapsibleSection } from '../../components/CollapsibleSection'
 import { PAGE_CONFIGS, ALWAYS_VISIBLE_PAGES } from '../../hooks/usePageVisibility'
@@ -99,6 +101,15 @@ export function ServerEnvironmentSection({ settings }: { settings: Settings }) {
   )
 }
 
+type TestStatus = 'idle' | 'testing' | 'ok' | 'fail'
+
+function BinaryTestIcon({ status, title }: { status: TestStatus; title?: string }) {
+  if (status === 'testing') return <Loader size={14} className="spin" style={{ color: 'var(--text-dim)' }} />
+  if (status === 'ok')      return <span title={title}><CheckCircle size={14} style={{ color: 'var(--green)' }} /></span>
+  if (status === 'fail')    return <span title={title}><XCircle size={14} style={{ color: 'var(--red, #e05)' }} /></span>
+  return <span style={{ display: 'inline-block', width: 14 }} />
+}
+
 export function RuntimeConfigSection({
   timeout,
   requestTimeout,
@@ -114,6 +125,11 @@ export function RuntimeConfigSection({
   setCacheSize,
   setCacheTtl,
   setToolTtl,
+  binaryPathOverrides,
+  onAddBinaryOverride,
+  onRemoveBinaryOverride,
+  onUpdateBinaryOverride,
+  onTestBinaryOverride,
   saving,
   onSave,
 }: {
@@ -131,9 +147,43 @@ export function RuntimeConfigSection({
   setCacheSize: (v: string) => void
   setCacheTtl: (v: string) => void
   setToolTtl: (v: string) => void
+  binaryPathOverrides: BinaryOverrideRow[]
+  onAddBinaryOverride: () => void
+  onRemoveBinaryOverride: (index: number) => void
+  onUpdateBinaryOverride: (index: number, field: 'tool' | 'path', value: string) => void
+  onTestBinaryOverride: (tool: string, path: string) => Promise<BinaryPathTestResponse>
   saving: boolean
   onSave: () => Promise<void>
 }) {
+  const [testStatuses, setTestStatuses] = useState<Record<number, TestStatus>>({})
+  const [testTitles, setTestTitles]     = useState<Record<number, string>>({})
+
+  function resetTestStatus(index: number) {
+    setTestStatuses(prev => { const n = { ...prev }; delete n[index]; return n })
+    setTestTitles(prev =>   { const n = { ...prev }; delete n[index]; return n })
+  }
+
+  async function handleTest(index: number, tool: string, path: string) {
+    if (!tool.trim() || !path.trim()) return
+    setTestStatuses(prev => ({ ...prev, [index]: 'testing' }))
+    try {
+      const res = await onTestBinaryOverride(tool, path)
+      const ok = res.success && res.ok
+      setTestStatuses(prev => ({ ...prev, [index]: ok ? 'ok' : 'fail' }))
+      if (res.resolved_path) {
+        const label = ok
+          ? `${res.resolved_path} — exists and executable`
+          : !res.exists
+            ? `${res.resolved_path} — file not found`
+            : `${res.resolved_path} — not executable`
+        setTestTitles(prev => ({ ...prev, [index]: label }))
+      }
+    } catch {
+      setTestStatuses(prev => ({ ...prev, [index]: 'fail' }))
+      setTestTitles(prev => ({ ...prev, [index]: 'Request failed' }))
+    }
+  }
+
   return (
     <CollapsibleSection
       title="Runtime Config"
@@ -176,6 +226,84 @@ export function RuntimeConfigSection({
           value={toolTtl} onChange={setToolTtl}
         />
       </div>
+
+      {/* ── Binary Path Overrides ─────────────────────────────────────── */}
+      <div style={{ marginTop: '1.25rem' }}>
+        <div className="settings-actions" style={{ justifyContent: 'space-between', marginBottom: '8px' }}>
+          <span className="settings-label" style={{ margin: 0, alignSelf: 'center' }}>
+            Tool Binary Path Overrides
+          </span>
+          <ActionButton variant="default" onClick={onAddBinaryOverride} disabled={saving}>
+            <Plus size={14} /> Add Override
+          </ActionButton>
+        </div>
+        {binaryPathOverrides.length > 0 && (
+          <div className="wordlist-table">
+            <div className="wordlist-head" style={{ gridTemplateColumns: '1fr 2fr auto auto auto' }}>
+              <span>Tool Name</span>
+              <span>Binary Path</span>
+              <span />
+              <span>Test</span>
+              <span>Remove</span>
+            </div>
+            {binaryPathOverrides.map((row, index) => (
+              <div
+                key={`binary-override-${index}`}
+                className="wordlist-row editable"
+                style={{ gridTemplateColumns: '1fr 2fr auto auto auto' }}
+              >
+                <input
+                  className="settings-input mono wordlist-input"
+                  name="binary-override-tool"
+                  value={row.tool}
+                  placeholder="tool-name"
+                  onChange={e => {
+                    onUpdateBinaryOverride(index, 'tool', e.target.value)
+                    resetTestStatus(index)
+                  }}
+                />
+                <input
+                  className="settings-input mono wordlist-input"
+                  name="binary-override-path"
+                  value={row.path}
+                  placeholder="/absolute/path/to/binary or {HOME}/go/bin/tool"
+                  onChange={e => {
+                    onUpdateBinaryOverride(index, 'path', e.target.value)
+                    resetTestStatus(index)
+                  }}
+                />
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20 }}>
+                  <BinaryTestIcon
+                    status={testStatuses[index] ?? 'idle'}
+                    title={testTitles[index]}
+                  />
+                </span>
+                <ActionButton
+                  variant="default"
+                  disabled={saving || testStatuses[index] === 'testing' || !row.tool.trim() || !row.path.trim()}
+                  onClick={() => handleTest(index, row.tool, row.path)}
+                  title="Check that the binary exists and is executable on the server"
+                >
+                  {testStatuses[index] === 'testing' ? 'Testing…' : 'Test'}
+                </ActionButton>
+                <ActionButton
+                  variant="danger"
+                  onClick={() => onRemoveBinaryOverride(index)}
+                  disabled={saving}
+                  title="Remove override — tool reverts to system PATH resolution"
+                >
+                  <Trash2 size={14} />
+                </ActionButton>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="settings-hint" style={{ marginTop: '6px' }}>
+          Overrides the executable used for each named tool. Supports <code>{'{HOME}'}</code> substitution.
+          Delete a row to revert that tool to system PATH resolution.
+        </p>
+      </div>
+
       <div className="settings-actions">
         <ActionButton variant="success" onClick={onSave} disabled={saving}>
           <Save size={14} /> {saving ? 'Saving…' : 'Save Runtime'}
