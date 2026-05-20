@@ -37,6 +37,15 @@ _config = {
         "GO_BINARYS": "{HOME}/go/bin/"
     },
 
+    # Per-tool binary path overrides.
+    # When a tool name is present here, the endpoint uses this absolute path
+    # instead of relying on shell PATH resolution.
+    # Supports {HOME} substitution (e.g. "{HOME}/go/bin/httpx").
+    # Delete an entry to revert that tool to system PATH resolution.
+    "BINARY_PATH_OVERRIDES": {
+        "httpx": "{HOME}/go/bin/httpx",
+    },
+
     # ── LLM client ────────────────────────────────────────────────────────────
     "NYXSTRIKE_LLM_PROVIDER": "ollama",                         # ollama | openai | anthropic
     "NYXSTRIKE_LLM_MODEL":    "nyxstrike-ai",                   # Ollama model name or OpenAI/Anthropic model name",

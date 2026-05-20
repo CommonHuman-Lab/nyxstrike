@@ -30,6 +30,7 @@ export interface Settings {
     cache_size: number;
     cache_ttl: number;
     tool_availability_ttl: number;
+    binary_path_overrides: Record<string, string>;
   };
   chat: {
     personality: string;
@@ -61,5 +62,15 @@ export interface PatchWordlistsResponse {
   updated: Record<string, number>;
   wordlists?: WordlistEntry[];
   errors?: Record<string, string>;
+  error?: string;
+}
+
+export interface BinaryPathTestResponse {
+  success: boolean;
+  tool?: string;
+  resolved_path?: string;
+  exists?: boolean;
+  executable?: boolean;
+  ok?: boolean;
   error?: string;
 }

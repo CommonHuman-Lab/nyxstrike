@@ -31,6 +31,7 @@ import type {
   UpdateSessionTemplatePayload,
   LlmSessionsResponse,
   LlmSessionDetailResponse,
+  BinaryPathTestResponse,
   PatchSettingsResponse,
   PatchWordlistsResponse,
   PoolStatsResponse,
@@ -98,6 +99,8 @@ export const api = {
     patch<PatchSettingsResponse>('/api/settings', { runtime, ...(chat ? { chat } : {}) }),
   patchWordlists: (wordlists: WordlistEntry[]) =>
     patch<PatchWordlistsResponse>('/api/settings/wordlists', { wordlists }),
+  testBinaryPathOverride: (tool: string, path: string) =>
+    post<BinaryPathTestResponse>('/api/settings/binary-path-overrides/test', { tool, path }),
 
   logStream: (lines = 100): EventSource => stream('/api/logs/stream', { lines }),
 

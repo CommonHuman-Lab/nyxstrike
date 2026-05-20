@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { api, type Settings, type WordlistEntry, type PersonalityPreset } from '../../api'
+import { api, type Settings, type WordlistEntry, type PersonalityPreset, type BinaryPathTestResponse } from '../../api'
 import { useToast } from '../../components/ToastProvider'
 
 const WORDLIST_TYPE_OPTIONS = ['password', 'directory', 'params', 'subdomain', 'username', 'general']
 const SPEED_OPTIONS = ['fast', 'medium', 'slow']
 const COVERAGE_OPTIONS = ['focused', 'broad', 'comprehensive']
+
+export type BinaryOverrideRow = { tool: string; path: string }
 
 type SettingsCache = {
   settings: Settings
@@ -16,6 +18,7 @@ type SettingsCache = {
   cacheTtl: string
   toolTtl: string
   wordlistsDraft: WordlistEntry[]
+  binaryPathOverrides: BinaryOverrideRow[]
   chatPersonality: string
   customPrompt: string
   personalityPresets: PersonalityPreset[]
@@ -50,6 +53,9 @@ export function useSettingsData() {
   const [cacheTtl, setCacheTtl] = useState(settingsCache?.cacheTtl ?? '')
   const [toolTtl, setToolTtl] = useState(settingsCache?.toolTtl ?? '')
   const [wordlistsDraft, setWordlistsDraft] = useState<WordlistEntry[]>(settingsCache?.wordlistsDraft ?? [])
+  const [binaryPathOverrides, setBinaryPathOverrides] = useState<BinaryOverrideRow[]>(
+    settingsCache?.binaryPathOverrides ?? []
+  )
   const [chatPersonality, setChatPersonality] = useState(settingsCache?.chatPersonality ?? 'nyxstrike')
   const [customPrompt, setCustomPrompt] = useState(settingsCache?.customPrompt ?? '')
   const [personalityPresets, setPersonalityPresets] = useState<PersonalityPreset[]>(settingsCache?.personalityPresets ?? [])
@@ -58,6 +64,7 @@ export function useSettingsData() {
   const [llmThink, setLlmThink] = useState(settingsCache?.llmThink ?? false)
 
   function applySettings(response: Settings) {
+    const rawOverrides = response.runtime.binary_path_overrides ?? {}
     const nextCache: SettingsCache = {
       settings: response,
       timeout: String(response.runtime.command_timeout),
@@ -68,6 +75,7 @@ export function useSettingsData() {
       cacheTtl: String(response.runtime.cache_ttl),
       toolTtl: String(response.runtime.tool_availability_ttl),
       wordlistsDraft: response.wordlists.map(w => ({ ...w })),
+      binaryPathOverrides: Object.entries(rawOverrides).map(([tool, path]) => ({ tool, path })),
       chatPersonality: response.chat?.personality ?? 'nyxstrike',
       customPrompt: response.chat?.custom_prompt ?? '',
       personalityPresets: response.chat?.personality_presets ?? [],
@@ -85,6 +93,7 @@ export function useSettingsData() {
     setCacheTtl(nextCache.cacheTtl)
     setToolTtl(nextCache.toolTtl)
     setWordlistsDraft(nextCache.wordlistsDraft)
+    setBinaryPathOverrides(nextCache.binaryPathOverrides)
     setChatPersonality(nextCache.chatPersonality)
     setCustomPrompt(nextCache.customPrompt)
     setPersonalityPresets(nextCache.personalityPresets)
@@ -118,9 +127,33 @@ export function useSettingsData() {
     setWordlistsDraft(prev => prev.filter((_, i) => i !== index))
   }
 
+  function addBinaryOverride() {
+    setBinaryPathOverrides(prev => [...prev, { tool: '', path: '' }])
+  }
+
+  function removeBinaryOverride(index: number) {
+    setBinaryPathOverrides(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function updateBinaryOverride(index: number, field: 'tool' | 'path', value: string) {
+    setBinaryPathOverrides(prev => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)))
+  }
+
+  async function testBinaryOverride(tool: string, path: string): Promise<BinaryPathTestResponse> {
+    return api.testBinaryPathOverride(tool, path)
+  }
+
   async function saveRuntime() {
     setSaving(true)
     try {
+      // Convert the row array back to the dict the server expects.
+      // Rows with an empty tool name are silently dropped.
+      const overridesMap: Record<string, string> = {}
+      for (const row of binaryPathOverrides) {
+        const key = row.tool.trim()
+        if (key) overridesMap[key] = row.path
+      }
+
       const runtimeRes = await api.patchSettings({
         command_timeout: Number(timeout),
         request_timeout: Number(requestTimeout),
@@ -129,6 +162,7 @@ export function useSettingsData() {
         cache_size: Number(cacheSize),
         cache_ttl: Number(cacheTtl),
         tool_availability_ttl: Number(toolTtl),
+        binary_path_overrides: overridesMap,
       })
       if (!runtimeRes.success) {
         pushToast('error', 'Failed to save runtime settings')
@@ -222,6 +256,7 @@ export function useSettingsData() {
     cacheTtl,
     toolTtl,
     wordlistsDraft,
+    binaryPathOverrides,
     chatPersonality,
     customPrompt,
     personalityPresets,
@@ -243,6 +278,10 @@ export function useSettingsData() {
     addWordlist,
     removeWordlist,
     updateWordlist,
+    addBinaryOverride,
+    removeBinaryOverride,
+    updateBinaryOverride,
+    testBinaryOverride,
     saveRuntime,
     saveWordlists,
     saveChatSettings,

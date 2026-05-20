@@ -15,12 +15,15 @@ def httpx():
     try:
         
         home_path = os.path.expanduser("~")
-        paths_ovrrides = config_core.get("PATHS", {})
-        httpx_bin_template = paths_ovrrides.get("GO_BINARYS", "{HOME}/go/bin/")
-        httpx_bin = httpx_bin_template.replace("{HOME}", home_path) + "httpx"
-
-        if not os.path.isfile(httpx_bin) or not os.access(httpx_bin, os.X_OK):
-            logger.error(f"🚫 httpx binary not found or not executable at {httpx_bin}")    
+        binary_overrides = config_core.get("BINARY_PATH_OVERRIDES", {})
+        httpx_bin_template = binary_overrides.get("httpx", "")
+        if httpx_bin_template:
+            httpx_bin = httpx_bin_template.replace("{HOME}", home_path)
+            if not os.path.isfile(httpx_bin) or not os.access(httpx_bin, os.X_OK):
+                logger.error(f"🚫 httpx binary not found or not executable at {httpx_bin}")
+        else:
+            # No override — fall through to shell PATH resolution
+            httpx_bin = "httpx"
 
         params = request.json
         target = params.get("target", "")
