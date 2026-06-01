@@ -2,6 +2,23 @@
 
 ## 1.6.0 - injectlynx (next)
 
+### New tools
+- Integrated `breachsql` — SQLi detection and exploitation across all major backends with boolean, time-blind, union, error, and OOB techniques; `--exploit` and `--dump` support.
+- Integrated `stingxss` — context-aware XSS scanner covering reflected, DOM, stored, and blind XSS with WAF evasion, probe filtering, and headless browser confirmation.
+- Integrated `phaseaccess` — IDOR/BOLA scanner with dual-session confirmed findings, JWT tampering, method bypass, and parameter pollution checks.
+- Integrated `vaultrip` — post-exploitation credential harvesting across files, process memory, browsers, system keyrings, Kerberos caches, and offline dumps.
+
+### Settings
+- Added per-tool binary path overrides — configure custom executable paths per tool from the Settings UI with a live Test button that validates the path exists and is executable.
+- Fixed `httpx` PATH resolution — falls back to system PATH when no override is set instead of erroring out.
+
+### Performance
+- Optimised `RunHistoryPanel` and `RunPage` rendering to reduce unnecessary re-renders on large run histories.
+
+### Internals
+- Tools using exit code 1 for "findings found" now report `✅ SUCCESS` in logs — no false failure noise.
+- Added `FINDINGS_EXIT_CODE_TOOLS` checks it before logging and setting the success flag.
+
 ## 1.5.0 - backdoorbear (2026-05-09)
 
 ### Loot

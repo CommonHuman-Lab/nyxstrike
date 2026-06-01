@@ -8,7 +8,11 @@ BUILT_IN_TOOLS = ["jwt-analyzer", "api-schema-analyzer", "graphql-scanner",
 REQUIRE_DPKG_CHECK = ["hashcat-utils", "sleuthkit", "impacket-scripts"]
 
 # Tools that require pip check (Python packages)
-REQUIRE_PIP_CHECK = ["pwntools", "one-gadget"]
+REQUIRE_PIP_CHECK = ["pwntools", "one-gadget", "phaseaccess", "stingxss", "breachsql", "vaultrip"]
+
+# Tools that exit with code 1 to signal "findings found" rather than an error.
+# The executor treats these like exit code 0 for logging and success determination.
+FINDINGS_EXIT_CODE_TOOLS = frozenset(["breachsql", "stingxss", "phaseaccess", "vaultrip"])
 
 # Tools that require gem check (Ruby packages)
 REQUIRE_GEM_CHECK = ["zsteg"]
@@ -27,6 +31,7 @@ BINARY_NAME_OVERRIDES = {
 
 # Comprehensive list of tools categorized by functionality for health monitoring and availability checks
 HEALTH_TOOL_CATEGORIES = {
+    "By_NyxStrike": ["phaseaccess", "stingxss", "breachsql", "vaultrip"],
     "essential": ["nmap", "gobuster", "dirb", "nikto", "sqlmap", "hydra", "john", "hashcat"],
     "network_recon": ["rustscan", "masscan", "autorecon", "nbtscan", "arp-scan", "responder",
                 "nxc", "enum4linux-ng", "rpcclient", "enum4linux", "smbmap", "evil-winrm"],

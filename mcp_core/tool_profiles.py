@@ -101,9 +101,10 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_autopsy_tools(mcp, client, logger),
     ],
 
-    #Tools for credential harvesting and network poisoning (e.g., Responder).
+    #Tools for credential harvesting and network poisoning (e.g., Responder, VaultRip).
     "credential_harvest": [
         lambda mcp, client, logger: register_responder_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_vaultrip_tool(mcp, client, logger),
     ],
 
     #Tools for memory forensics analysis (e.g., Volatility, Volatility3).
@@ -208,6 +209,9 @@ TOOL_PROFILES = {
         lambda mcp, client, logger: register_zap_tool(mcp, client, logger),
         lambda mcp, client, logger: register_xsser_tool(mcp, client, logger),
         lambda mcp, client, logger: register_web_scan_interactsh_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_breachsql_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_stingxss_tool(mcp, client, logger),
+        lambda mcp, client, logger: register_phaseaccess_tool(mcp, client, logger),
     ],
 
     "fingerprint": [
