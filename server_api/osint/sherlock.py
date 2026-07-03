@@ -19,7 +19,7 @@ def sherlock():
 
         command = f"sherlock {username} --output sherlock_results/{username}.json --json"
         logger.info(f"🚀 Executing Sherlock: {command}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"✅ Sherlock execution completed for {username}")
         return jsonify({"success": True, "output": result})
     except Exception as e:

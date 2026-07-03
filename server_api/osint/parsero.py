@@ -21,7 +21,7 @@ def parsero():
 
         command = f"parsero -u {target} {additional_args}"
         logger.info(f"🚀 Executing Parsero: {command}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"✅ Parsero execution completed for {target}")
         return jsonify({"success": True, "output": result})
     except Exception as e:

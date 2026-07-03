@@ -23,7 +23,7 @@ def sublist3r():
             command += f" -e {engine}"
         
         logger.info(f"🚀 Executing Sublist3r: {command}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"✅ Sublist3r execution completed for {domain}")
         return jsonify({"success": True, "output": result})
     except Exception as e:

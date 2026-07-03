@@ -188,7 +188,7 @@ def testssl():
         command = " ".join(shlex.quote(arg) for arg in args)
 
         logger.info(f"🔐 Starting testssl.sh analysis: {target or 'standalone mode'}")
-        result = execute_command(command, use_cache=False)
+        result = execute_command(command, use_cache=False, use_recovery=True)
         logger.info(f"📊 testssl.sh analysis completed for {target or 'standalone mode'}")
         return jsonify(result)
     except ValueError as e:

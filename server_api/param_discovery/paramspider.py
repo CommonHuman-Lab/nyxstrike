@@ -34,7 +34,7 @@ def paramspider():
             command += f" {additional_args}"
 
         logger.info(f"🕷️  Starting ParamSpider mining: {domain}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 ParamSpider mining completed for {domain}")
         return jsonify(result)
     except Exception as e:

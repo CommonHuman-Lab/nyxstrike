@@ -35,7 +35,7 @@ def api_fuzzer():
                 for method in methods:
                     test_url = f"{base_url.rstrip('/')}/{endpoint.lstrip('/')}"
                     command = f"curl -s -X {method} -w '%{{http_code}}|%{{size_download}}' '{test_url}'"
-                    result = execute_command(command, use_cache=False)
+                    result = execute_command(command, use_cache=False, use_recovery=True)
                     results.append({
                         "endpoint": endpoint,
                         "method": method,
@@ -53,7 +53,7 @@ def api_fuzzer():
             command = f"ffuf -u {base_url}/FUZZ -w {wordlist} -mc 200,201,202,204,301,302,307,401,403,405 -t 50"
 
             logger.info(f"🔍 Starting API endpoint discovery: {base_url}")
-            result = execute_command(command)
+            result = execute_command(command, use_recovery=True)
             logger.info(f"📊 API endpoint discovery completed")
 
             return jsonify({

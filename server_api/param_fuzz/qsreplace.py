@@ -26,7 +26,7 @@ def qsreplace():
             command += f" {additional_args}"
 
         logger.info("🔄 Starting qsreplace parameter replacement")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info("📊 qsreplace parameter replacement completed")
         return jsonify(result)
     except Exception as e:

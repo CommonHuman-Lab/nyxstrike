@@ -36,7 +36,7 @@ def rustscan():
             command += f" {additional_args}"
 
         logger.info(f"⚡ Starting Rustscan: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Rustscan completed for {target}")
         return jsonify(result)
     except Exception as e:

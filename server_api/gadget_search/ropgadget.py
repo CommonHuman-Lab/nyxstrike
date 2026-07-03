@@ -32,7 +32,7 @@ def ropgadget():
             command += f" {additional_args}"
 
         logger.info(f"🔧 Starting ROPgadget search: {binary}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 ROPgadget search completed for {binary}")
         return jsonify(result)
     except Exception as e:

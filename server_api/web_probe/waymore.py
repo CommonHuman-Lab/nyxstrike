@@ -48,7 +48,7 @@ def run_waymore(input, mode='U', output_urls=None, output_responses=None, **kwar
         logger.info(f"Executing Waymore: {' '.join(shlex.quote(arg) for arg in cmd)}")
 
         command = " ".join(shlex.quote(arg) for arg in cmd)
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"✅ Waymore execution completed for input: {input}")
         return jsonify(result)
  

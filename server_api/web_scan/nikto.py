@@ -27,7 +27,7 @@ def nikto():
             command += f" {additional_args}"
 
         logger.info(f"🔬 Starting Nikto scan: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Nikto scan completed for {target}")
         return jsonify(result)
     except Exception as e:

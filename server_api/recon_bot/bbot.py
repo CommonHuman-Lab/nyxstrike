@@ -29,7 +29,7 @@ def bbot_endpoint():
             if isinstance(value, str) and value:
                 cmd_parts.append(f"-{key} {value}")
 
-        result = execute_command(" ".join(cmd_parts), use_cache=False)
+        result = execute_command(" ".join(cmd_parts), use_cache=False, use_recovery=True)
 
         logger.info(f"BBot scan completed for {target}")
         return jsonify(result)

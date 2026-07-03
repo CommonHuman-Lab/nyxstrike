@@ -34,7 +34,7 @@ def binwalk():
         command += f" {file_path}"
 
         logger.info(f"🔧 Starting Binwalk analysis: {file_path}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Binwalk analysis completed for {file_path}")
         return jsonify(result)
     except Exception as e:

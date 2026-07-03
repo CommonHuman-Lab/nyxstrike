@@ -36,7 +36,7 @@ def objdump():
         command += f" {binary}"
 
         logger.info(f"🔧 Starting Objdump analysis: {binary}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Objdump analysis completed for {binary}")
         return jsonify(result)
     except Exception as e:

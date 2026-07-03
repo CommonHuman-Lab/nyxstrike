@@ -27,7 +27,7 @@ def api_schema_analyzer():
 
         # Fetch schema
         command = f"curl -s '{schema_url}'"
-        result = execute_command(command, use_cache=True)
+        result = execute_command(command, use_cache=True, use_recovery=True)
 
         if not result.get("success"):
             return jsonify({

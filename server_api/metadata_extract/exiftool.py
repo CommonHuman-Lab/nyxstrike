@@ -38,7 +38,7 @@ def exiftool():
         command += f" {file_path}"
 
         logger.info(f"📷 Starting ExifTool analysis: {file_path}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 ExifTool analysis completed")
         return jsonify(result)
     except Exception as e:

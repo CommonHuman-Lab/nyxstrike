@@ -42,7 +42,7 @@ def theharvester():
 
     command = f"theHarvester -d {domain} {additional_args}"
     logger.info(f"🔍 Starting TheHarvester: {domain}")
-    result = execute_command(command, use_cache=True)
+    result = execute_command(command, use_cache=True, use_recovery=True)
     if result.get("success"):
         logger.info(f"✅ TheHarvester completed for {domain}")
     else:

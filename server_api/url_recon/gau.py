@@ -37,7 +37,7 @@ def gau():
             command += f" {additional_args}"
 
         logger.info(f"📡 Starting Gau URL discovery: {domain}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Gau URL discovery completed for {domain}")
         return jsonify(result)
     except Exception as e:

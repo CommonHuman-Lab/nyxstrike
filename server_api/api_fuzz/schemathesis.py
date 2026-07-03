@@ -92,7 +92,7 @@ def schemathesis():
             f"🧪 Starting Schemathesis: schema={schema} workers={workers} "
             f"max_examples={max_examples}"
         )
-        result = execute_command(command, timeout=timeout)
+        result = execute_command(command, timeout=timeout, use_recovery=True)
 
         # Remap success semantics. Schemathesis exit codes:
         #   0 = no findings, 1 = findings, 2 = usage/config error.

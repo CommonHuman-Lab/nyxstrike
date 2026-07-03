@@ -73,22 +73,40 @@ def execute_command(
   tool: Optional[str] = None,
   endpoint: Optional[str] = None,
   params: Optional[Dict[str, Any]] = None,
+  use_recovery: bool = False,
+  target: Optional[str] = None,
 ) -> Dict[str, Any]:
   """
   Execute a shell command with enhanced features.
 
   Args:
-      command:    The command to execute
-      use_cache:  Whether to use caching for this command
-      cache:      Optional cache instance (falls back to the module-level singleton)
-      timeout:    Command execution timeout in seconds (<=0 means no hard timeout)
-      tool:       Reserved — tool name (unused; recording is done in the after_request hook)
-      endpoint:   Reserved — API endpoint (unused; recording is done in the after_request hook)
-      params:     Reserved — request params (unused; recording is done in the after_request hook)
+      command:      The command to execute
+      use_cache:    Whether to use caching for this command
+      cache:        Optional cache instance (falls back to the module-level singleton)
+      timeout:      Command execution timeout in seconds (<=0 means no hard timeout)
+      tool:         Reserved — tool name (unused unless use_recovery=True; recording is done in the after_request hook)
+      endpoint:     Reserved — API endpoint (unused; recording is done in the after_request hook)
+      params:       Reserved — request params (unused unless use_recovery=True; recording is done in the after_request hook)
+      use_recovery: When True, run through RecoveryExecutor — retries, reduced-scope
+                    retries, or alternative-tool swaps are applied on failure.
+      target:       Optional target string forwarded to the error handler for context
+                    (only used when use_recovery=True).
 
   Returns:
       A dictionary containing the stdout, stderr, return code, and metadata
   """
+  if use_recovery:
+    return execute_command_with_recovery(
+      command,
+      use_cache=use_cache,
+      cache=cache,
+      timeout=timeout,
+      tool=tool,
+      endpoint=endpoint,
+      params=params,
+      target=target,
+    )
+
   active_cache = cache if cache is not None else (_cache if use_cache else None)
 
   # Cache key always uses the original command — before any runtime adjustments.

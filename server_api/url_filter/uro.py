@@ -33,7 +33,7 @@ def uro():
             command += f" {additional_args}"
 
         logger.info("🔍 Starting uro URL filtering")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info("📊 uro URL filtering completed")
         return jsonify(result)
     except Exception as e:

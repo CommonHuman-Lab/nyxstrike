@@ -42,7 +42,7 @@ def prowler():
             command += f" {additional_args}"
 
         logger.info(f"Starting Prowler {provider} security assessment")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         result["output_directory"] = output_dir
         logger.info("Prowler assessment completed")
         return jsonify(result)

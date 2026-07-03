@@ -41,7 +41,7 @@ def trivy():
             command += f" {additional_args}"
 
         logger.info(f"Starting Trivy {scan_type} scan: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         if output_file:
             result["output_file"] = output_file
         logger.info(f"Trivy scan completed for {target}")

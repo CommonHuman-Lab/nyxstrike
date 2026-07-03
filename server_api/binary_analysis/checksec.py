@@ -24,7 +24,7 @@ def checksec():
         command = f"checksec --file={binary}"
 
         logger.info(f"🔧 Starting Checksec analysis: {binary}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Checksec analysis completed for {binary}")
         return jsonify(result)
     except Exception as e:

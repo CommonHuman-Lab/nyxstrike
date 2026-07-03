@@ -2,6 +2,11 @@
 
 ## 1.7.0 - phishfalcon (NEXT)
 
+### Fixes
+
+- Fixed `/api/error-handling/execute-with-recovery` raising a server error on every real call.
+- Wired automatic error recovery (retry/backoff, alternative-tool swap) into recon, scanning, fuzzing, and forensics tool executions.
+
 ## 1.6.0 - injectlynx
 
 ### New tools

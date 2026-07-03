@@ -39,7 +39,7 @@ def arjun():
             command += f" {additional_args}"
 
         logger.info(f"🎯 Starting Arjun parameter discovery: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Arjun parameter discovery completed for {url}")
         return jsonify(result)
     except Exception as e:

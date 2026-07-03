@@ -102,7 +102,7 @@ def jwt_analyzer():
                 none_token = f"{none_header}.{none_token_parts[1]}."
 
                 command = f"curl -s -H 'Authorization: Bearer {none_token}' '{target_url}'"
-                none_result = execute_command(command, use_cache=False)
+                none_result = execute_command(command, use_cache=False, use_recovery=True)
 
                 if "200" in none_result.get("stdout", "") or "success" in none_result.get("stdout", "").lower():
                     results["vulnerabilities"].append({

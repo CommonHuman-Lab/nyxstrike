@@ -19,7 +19,7 @@ def spiderfoot():
 
         command = f"spiderfoot -s {target}"
         logger.info(f"🚀 Executing SpiderFoot: {command}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"✅ SpiderFoot execution completed for {target}")
         return jsonify({"success": True, "output": result})
     except Exception as e:

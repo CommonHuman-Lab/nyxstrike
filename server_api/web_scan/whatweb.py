@@ -22,7 +22,7 @@ def whatweb():
         command = f"whatweb -v -a 3 {url}"
 
         logger.info(f"🔍 Starting WhatWeb: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 WhatWeb completed for {url}")
         return jsonify(result)
     except Exception as e:

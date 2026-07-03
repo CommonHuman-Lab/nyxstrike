@@ -45,7 +45,7 @@ def dalfox():
             command += f" {additional_args}"
 
         logger.info(f"🎯 Starting Dalfox XSS scan: {url if url else 'pipe mode'}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Dalfox XSS scan completed")
         return jsonify(result)
     except Exception as e:

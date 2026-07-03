@@ -30,7 +30,7 @@ def dotdotpwn():
         command += " -b"
 
         logger.info(f"🔍 Starting DotDotPwn scan: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 DotDotPwn scan completed for {target}")
         return jsonify(result)
     except Exception as e:

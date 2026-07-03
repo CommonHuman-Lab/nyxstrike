@@ -44,7 +44,7 @@ def kube_hunter():
             command += f" {additional_args}"
 
         logger.info("Starting kube-hunter Kubernetes scan")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info("kube-hunter scan completed")
         return jsonify(result)
     except Exception as e:

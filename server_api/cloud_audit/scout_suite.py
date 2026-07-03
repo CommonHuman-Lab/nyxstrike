@@ -40,7 +40,7 @@ def scout_suite():
             command += f" {additional_args}"
 
         logger.info(f"Starting Scout Suite {provider} assessment")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         result["report_directory"] = report_dir
         logger.info("Scout Suite assessment completed")
         return jsonify(result)

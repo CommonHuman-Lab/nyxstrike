@@ -34,7 +34,7 @@ def clair():
             command += f" {additional_args}"
 
         logger.info(f"Starting Clair vulnerability scan: {image}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"Clair scan completed for {image}")
         return jsonify(result)
     except Exception as e:

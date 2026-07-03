@@ -42,7 +42,7 @@ def libc_database():
             command += f" {additional_args}"
 
         logger.info(f"🔧 Starting libc-database {action}: {symbols or libc_id}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 libc-database {action} completed")
         return jsonify(result)
     except Exception as e:

@@ -31,7 +31,7 @@ def strings():
         command += f" {file_path}"
 
         logger.info(f"🔧 Starting Strings extraction: {file_path}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Strings extraction completed for {file_path}")
         return jsonify(result)
     except Exception as e:

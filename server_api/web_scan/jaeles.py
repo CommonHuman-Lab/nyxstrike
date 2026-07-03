@@ -35,7 +35,7 @@ def jaeles():
             command += f" {additional_args}"
 
         logger.info(f"🔬 Starting Jaeles vulnerability scan: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Jaeles vulnerability scan completed for {url}")
         return jsonify(result)
     except Exception as e:

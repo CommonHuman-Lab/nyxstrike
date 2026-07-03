@@ -12,7 +12,7 @@ _RECORD_TYPES = ["A", "MX", "NS", "TXT"]
 def _dig(target: str, record_type: str, timeout: int) -> str:
     """Run a single dig +short query and return stdout (or stderr on failure)."""
     cmd = f"dig +short {record_type} {target}"
-    result = execute_command(cmd, use_cache=False, timeout=timeout)
+    result = execute_command(cmd, use_cache=False, timeout=timeout, use_recovery=True)
     output = (result.get("stdout") or "").strip()
     if not output and result.get("stderr", "").strip():
         output = result.get("stderr", "").strip()

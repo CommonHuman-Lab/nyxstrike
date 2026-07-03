@@ -35,7 +35,7 @@ def xxd():
         command += f" {file_path}"
 
         logger.info(f"🔧 Starting XXD hex dump: {file_path}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 XXD hex dump completed for {file_path}")
         return jsonify(result)
     except Exception as e:

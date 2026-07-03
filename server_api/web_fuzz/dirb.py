@@ -29,7 +29,7 @@ def dirb():
             command += f" {additional_args}"
 
         logger.info(f"📁 Starting Dirb scan: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Dirb scan completed for {url}")
         return jsonify(result)
     except Exception as e:

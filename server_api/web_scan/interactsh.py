@@ -28,7 +28,7 @@ def interactsh():
             command += f" {additional_args}"
 
         logger.info(f"🔗 Starting interactsh-client (n={n}, poll_interval={poll_interval}s, timeout={timeout}s)")
-        result = execute_command(command, timeout=timeout)
+        result = execute_command(command, timeout=timeout, use_recovery=True)
         logger.info("📊 interactsh-client completed")
         return jsonify(result)
     except Exception as e:

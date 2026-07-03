@@ -7,12 +7,9 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 import logging
 
-from server_core.error_handling import RecoveryAction
 from server_core.recovery_executor import execute_command_with_recovery as _execute_command_with_recovery
 from server_core.command_params import rebuild_command_with_params as _rebuild_command_with_params
 from server_core.operation_types import determine_operation_type as _determine_operation_type
-from server_core.command_executor import execute_command as _execute_command
-from server_core.singletons import cache as _cache, error_handler, degradation_manager
 
 logger = logging.getLogger(__name__)
 
@@ -21,30 +18,20 @@ api_error_handling_execute_with_recovery_bp = Blueprint(
 )
 
 
-def _run_execute_command(command: str, use_cache: bool = True, timeout: int = 300) -> Dict[str, Any]:
-    return _execute_command(command, use_cache=use_cache, cache=_cache, timeout=timeout)
-
-
 def execute_command_with_recovery(
     tool_name: str,
     command: str,
     parameters: Optional[Dict[str, Any]] = None,
     use_cache: bool = True,
-    max_attempts: int = 3,
 ) -> Dict[str, Any]:
+    parameters = parameters or {}
+    full_command = _rebuild_command_with_params(tool_name, command, parameters)
     return _execute_command_with_recovery(
-        tool_name=tool_name,
-        command=command,
-        parameters=parameters,
+        full_command,
         use_cache=use_cache,
-        max_attempts=max_attempts,
-        execute_command_fn=_run_execute_command,
-        error_handler=error_handler,
-        degradation_manager=degradation_manager,
-        rebuild_command_with_params_fn=_rebuild_command_with_params,
-        determine_operation_type_fn=_determine_operation_type,
-        recovery_action_enum=RecoveryAction,
-        logger=logger,
+        tool=tool_name,
+        params=parameters,
+        target=parameters.get("target", ""),
     )
 
 
@@ -58,7 +45,6 @@ def execute_with_recovery_endpoint():
         tool_name = data.get("tool_name", "")
         command = data.get("command", "")
         parameters = data.get("parameters", {})
-        max_attempts = data.get("max_attempts", 3)
         use_cache = data.get("use_cache", True)
 
         if not tool_name or not command:
@@ -69,12 +55,12 @@ def execute_with_recovery_endpoint():
             command=command,
             parameters=parameters,
             use_cache=use_cache,
-            max_attempts=max_attempts,
         )
 
         return jsonify({
             "success": result.get("success", False),
             "result": result,
+            "operation_type": _determine_operation_type(tool_name),
             "timestamp": datetime.now().isoformat()
         })
 

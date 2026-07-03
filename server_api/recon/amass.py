@@ -28,7 +28,7 @@ def amass():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting Amass {mode}: {domain}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Amass completed for {domain}")
         return jsonify(result)
     except Exception as e:

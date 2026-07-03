@@ -37,7 +37,7 @@ def kube_bench():
             command += f" {additional_args}"
 
         logger.info("Starting kube-bench CIS benchmark")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info("kube-bench benchmark completed")
         return jsonify(result)
     except Exception as e:

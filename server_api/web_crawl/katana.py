@@ -38,7 +38,7 @@ def katana():
             command += f" {additional_args}"
 
         logger.info(f"⚔️  Starting Katana crawl: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Katana crawl completed for {url}")
         return jsonify(result)
     except Exception as e:

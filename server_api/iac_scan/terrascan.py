@@ -35,7 +35,7 @@ def terrascan():
             command += f" {additional_args}"
 
         logger.info(f"Starting Terrascan IaC scan: {iac_dir}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info("Terrascan scan completed")
         return jsonify(result)
     except Exception as e:

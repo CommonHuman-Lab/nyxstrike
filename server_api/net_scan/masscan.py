@@ -43,7 +43,7 @@ def masscan():
             command += f" {additional_args}"
 
         logger.info(f"🚀 Starting Masscan: {target} at rate {rate}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Masscan completed for {target}")
         return jsonify(result)
     except Exception as e:

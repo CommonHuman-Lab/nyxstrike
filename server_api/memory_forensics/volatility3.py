@@ -40,7 +40,7 @@ def volatility3():
             command += f" {additional_args}"
 
         logger.info(f"🧠 Starting Volatility3 analysis: {plugin}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Volatility3 analysis completed")
         return jsonify(result)
     except Exception as e:

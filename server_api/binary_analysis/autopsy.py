@@ -28,7 +28,7 @@ def autopsy_analysis():
         }
     """
     logger.info("🔍 Launching Autopsy web server")
-    result = execute_command("autopsy &", use_cache=False)
+    result = execute_command("autopsy &", use_cache=False, use_recovery=True)
     if result.get("success"):
         logger.info(f"✅ Autopsy started successfully")
     else:

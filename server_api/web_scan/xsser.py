@@ -31,7 +31,7 @@ def xsser():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting XSSer scan: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 XSSer scan completed for {url}")
         return jsonify(result)
     except Exception as e:

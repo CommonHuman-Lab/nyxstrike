@@ -52,7 +52,7 @@ def hakrawler():
             command += f" {additional_args}"
 
         logger.info(f"🕷️ Starting Hakrawler crawling: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Hakrawler crawling completed")
         return jsonify(result)
     except Exception as e:

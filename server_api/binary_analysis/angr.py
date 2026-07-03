@@ -86,7 +86,7 @@ for func_addr, func in cfg.functions.items():
             command += f" {additional_args}"
 
         logger.info(f"🔧 Starting angr analysis: {binary}")
-        result = execute_command(command, timeout=600)  # Longer timeout for symbolic execution
+        result = execute_command(command, timeout=600, use_recovery=True)  # Longer timeout for symbolic execution
 
         # Cleanup
         try:

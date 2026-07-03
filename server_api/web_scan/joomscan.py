@@ -26,7 +26,7 @@ def joomscan():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting Joomscan: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Joomscan completed for {url}")
         return jsonify(result)
     except Exception as e:

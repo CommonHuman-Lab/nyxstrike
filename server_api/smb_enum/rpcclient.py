@@ -44,7 +44,7 @@ def rpcclient():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting rpcclient: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 rpcclient completed for {target}")
         return jsonify(result)
     except Exception as e:

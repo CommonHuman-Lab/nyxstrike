@@ -48,7 +48,7 @@ def ropper():
             command += f" {additional_args}"
 
         logger.info(f"🔧 Starting ropper analysis: {binary}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 ropper analysis completed")
         return jsonify(result)
     except Exception as e:

@@ -41,7 +41,7 @@ def nuclei():
 
         logger.info(f"Starting Nuclei vulnerability scan: {target}")
 
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
 
         logger.info(f"Nuclei scan completed for {target}")
         return jsonify(result)

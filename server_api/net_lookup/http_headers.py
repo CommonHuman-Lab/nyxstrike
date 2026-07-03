@@ -49,7 +49,7 @@ def http_headers():
 
     logger.info("http_headers: running %s", cmd)
 
-    result = execute_command(cmd, use_cache=False, timeout=timeout + 5)
+    result = execute_command(cmd, use_cache=False, timeout=timeout + 5, use_recovery=True)
     success = result.get("success", False)
     raw = result.get("stdout", "") or ""
     if not success and result.get("stderr"):

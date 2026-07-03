@@ -38,7 +38,7 @@ def arp_scan():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting arp-scan: {target if target else 'local network'}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 arp-scan completed")
         return jsonify(result)
     except Exception as e:

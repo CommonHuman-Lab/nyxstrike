@@ -18,6 +18,6 @@ def whois():
     if not target:
         return jsonify({"error": "Missing 'target' parameter"}), 400
 
-    result = execute_command(f"whois {target}", use_cache=False, timeout=30)
+    result = execute_command(f"whois {target}", use_cache=False, timeout=30, use_recovery=True)
     output = result.get("stdout") or result.get("stderr") or ""
     return jsonify({"success": result.get("success", False), "output": output})

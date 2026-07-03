@@ -42,7 +42,7 @@ def ghidra():
             command += f" {additional_args}"
 
         logger.info(f"🔧 Starting Ghidra analysis: {binary}")
-        result = execute_command(command, timeout=analysis_timeout)
+        result = execute_command(command, timeout=analysis_timeout, use_recovery=True)
         logger.info(f"📊 Ghidra analysis completed for {binary}")
         return jsonify(result)
     except Exception as e:

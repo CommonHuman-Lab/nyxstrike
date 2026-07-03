@@ -29,7 +29,7 @@ def assetfinder():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting Assetfinder: {domain}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Assetfinder completed for {domain}")
         return jsonify(result)
     except Exception as e:

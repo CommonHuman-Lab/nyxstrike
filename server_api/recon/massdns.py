@@ -127,7 +127,7 @@ def massdns():
         command = " ".join(command_parts)
 
         logger.info("🔍 Starting massdns")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info("📊 massdns completed")
         return jsonify(result)
     except Exception as e:

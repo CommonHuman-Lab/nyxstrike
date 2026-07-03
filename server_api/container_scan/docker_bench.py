@@ -33,7 +33,7 @@ def docker_bench_security():
             command += f" {additional_args}"
 
         logger.info("Starting Docker Bench Security assessment")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         result["output_file"] = output_file
         logger.info("Docker Bench Security completed")
         return jsonify(result)

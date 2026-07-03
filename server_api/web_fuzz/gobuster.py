@@ -38,7 +38,7 @@ def gobuster():
 
         logger.info(f"Starting Gobuster {mode} scan: {url}")
 
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
 
         logger.info(f"Gobuster scan completed for {url}")
         return jsonify(result)

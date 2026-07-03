@@ -39,7 +39,7 @@ def foremost():
         command += f" {input_file}"
 
         logger.info(f"📁 Starting Foremost file carving: {input_file}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         result["output_directory"] = output_dir
         logger.info(f"📊 Foremost carving completed")
         return jsonify(result)

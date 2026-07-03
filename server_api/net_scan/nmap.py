@@ -36,7 +36,7 @@ def nmap():
 
         logger.info(f"Starting Nmap scan: {target}")
 
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
 
         logger.info(f"Nmap scan completed for {target}")
         return jsonify(result)

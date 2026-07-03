@@ -31,7 +31,7 @@ def vulnx():
             command += f" auth --api-key \"{auth}\""
         logger.info(f"Starting vulnx analysis: cve_id={cve_id}, search={search}")
 
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
 
         logger.info("vulnx analysis completed")
         return jsonify(result)

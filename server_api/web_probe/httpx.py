@@ -64,7 +64,7 @@ def httpx():
             command += f" {additional_args}"
 
         logger.info(f"🌍 Starting httpx probe: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 httpx probe completed for {target}")
         return jsonify(result)
     except Exception as e:

@@ -109,7 +109,7 @@ def breachsql():
             command += f" {additional_args}"
 
         logger.info(f"Starting BreachSQL scan: {url}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         # Exit code 1 = findings found (not an error) — treat as success
         if result.get("return_code") == 1:
             result["success"] = True

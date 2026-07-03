@@ -31,7 +31,7 @@ def fierce():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting Fierce DNS recon: {domain}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Fierce completed for {domain}")
         return jsonify(result)
     except Exception as e:

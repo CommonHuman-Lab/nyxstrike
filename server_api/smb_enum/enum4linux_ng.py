@@ -55,7 +55,7 @@ def enum4linux_ng():
             command += f" {additional_args}"
 
         logger.info(f"🔍 Starting Enum4linux-ng: {target}")
-        result = execute_command(command)
+        result = execute_command(command, use_recovery=True)
         logger.info(f"📊 Enum4linux-ng completed for {target}")
         return jsonify(result)
     except Exception as e:

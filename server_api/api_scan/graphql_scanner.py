@@ -54,7 +54,7 @@ def graphql_scanner():
 
             clean_query = introspection_query.replace('\n', ' ').replace('  ', ' ').strip()
             command = f"curl -s -X POST -H 'Content-Type: application/json' -d '{{\"query\":\"{clean_query}\"}}' '{endpoint}'"
-            result = execute_command(command, use_cache=False)
+            result = execute_command(command, use_cache=False, use_recovery=True)
 
             results["tests_performed"].append("introspection_query")
 
@@ -68,7 +68,7 @@ def graphql_scanner():
         # Test 2: Query depth analysis
         deep_query = "{ " * query_depth + "field" + " }" * query_depth
         command = f"curl -s -X POST -H 'Content-Type: application/json' -d '{{\"query\":\"{deep_query}\"}}' {endpoint}"
-        depth_result = execute_command(command, use_cache=False)
+        depth_result = execute_command(command, use_cache=False, use_recovery=True)
 
         results["tests_performed"].append("query_depth_analysis")
 
@@ -82,7 +82,7 @@ def graphql_scanner():
         # Test 3: Batch query testing
         batch_query = '[' + ','.join(['{\"query\":\"{field}\"}' for _ in range(10)]) + ']'
         command = f"curl -s -X POST -H 'Content-Type: application/json' -d '{batch_query}' {endpoint}"
-        batch_result = execute_command(command, use_cache=False)
+        batch_result = execute_command(command, use_cache=False, use_recovery=True)
 
         results["tests_performed"].append("batch_query_testing")
 
