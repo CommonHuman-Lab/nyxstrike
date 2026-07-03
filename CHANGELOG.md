@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.7.0 - phishfalcon (NEXT)
+
 ## 1.6.0 - injectlynx
 
 ### New tools
