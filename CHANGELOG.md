@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0 - injectlynx (next)
+## 1.6.0 - injectlynx
 
 ### New tools
 - Integrated `breachsql` — SQLi detection and exploitation across all major backends with boolean, time-blind, union, error, and OOB techniques; `--exploit` and `--dump` support.
