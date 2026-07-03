@@ -379,8 +379,8 @@ def build_tool_catalog() -> Dict[str, ToolSpec]:
             tech_affinities=set(),
             noise_score=0.35,
         ),
-        "netexec": ToolSpec(
-            name="netexec",
+        "nxc": ToolSpec(
+            name="nxc",
             capabilities={"ad_enum", "auth_assessment"},
             target_types={TargetType.NETWORK_HOST.value},
             objectives={"comprehensive", "internal_network_ad", "intelligence"},
@@ -571,14 +571,6 @@ def build_tool_catalog() -> Dict[str, ToolSpec]:
             tech_affinities=set(),
             noise_score=0.1,
         ),
-        "gdb-peda": ToolSpec(
-            name="gdb-peda",
-            capabilities={"binary_analysis", "binary_exploitation"},
-            target_types={TargetType.BINARY_FILE.value},
-            objectives={"comprehensive", "intelligence", "ctf"},
-            tech_affinities=set(),
-            noise_score=0.1,
-        ),
         "ropgadget": ToolSpec(
             name="ropgadget",
             capabilities={"binary_exploitation"},
@@ -644,8 +636,8 @@ def build_tool_catalog() -> Dict[str, ToolSpec]:
             noise_score=0.05,
         ),
         # ── Exploitation ────────────────────────────────────────────────────────
-        "metasploit": ToolSpec(
-            name="metasploit",
+        "msfconsole": ToolSpec(
+            name="msfconsole",
             capabilities={"exploitation", "cve_exploitation", "post_exploitation"},
             target_types={
                 TargetType.NETWORK_HOST.value,

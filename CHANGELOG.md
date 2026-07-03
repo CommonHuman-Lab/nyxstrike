@@ -10,7 +10,7 @@
 - Fixed the process pool's worker auto-scaling miscounting active workers after scaling down.
 - All tool command execution now runs through the process pool's auto-scaling instead of bypassing it, and pooled task results no longer leak memory on long-running instances.
 
-## 1.6.0 - injectlynx
+## 1.6.0 - injectlynx (2026-07-03)
 
 ### New tools
 - Integrated `breachsql` — SQLi detection and exploitation across all major backends with boolean, time-blind, union, error, and OOB techniques; `--exploit` and `--dump` support.

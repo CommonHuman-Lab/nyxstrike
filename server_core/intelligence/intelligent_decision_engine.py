@@ -758,7 +758,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
                 msf_options["options"] = {"RHOSTS": profile.ip_addresses[0]}
             chain.add_step(
                 AttackStep(
-                    tool="metasploit",
+                    tool="msfconsole",
                     parameters=msf_options,
                     expected_outcome=f"Exploit target via {module_path}",
                     success_probability=prob,

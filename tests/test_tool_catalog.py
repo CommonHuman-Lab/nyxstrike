@@ -179,3 +179,27 @@ class TestCatalogStructure:
     def test_validate_returns_no_issues(self):
         issues = validate_tool_catalog(build_tool_catalog())
         assert issues == []
+
+
+# ---------------------------------------------------------------------------
+# Cross-catalog consistency with the root tool_registry.py
+#
+# The intelligence engine picks tool names from build_tool_catalog() and
+# drops them straight into AttackStep.tool. Anything executed through the
+# mcp_tools gateway's run_tool(tool_name, params) resolves that name via
+# tool_registry.get_tool(), which does an exact-key lookup. A name that
+# exists in the catalog but not the registry silently fails at execution
+# time with "Unknown tool" instead of at import/test time.
+# ---------------------------------------------------------------------------
+
+class TestCatalogRegistryConsistency:
+    def test_every_catalog_tool_is_registered(self):
+        from tool_registry import TOOLS
+
+        catalog = build_tool_catalog()
+        missing = sorted(name for name in catalog if name not in TOOLS)
+        assert missing == [], (
+            f"Tools in build_tool_catalog() with no matching tool_registry.TOOLS "
+            f"entry (run_tool() would fail with 'Unknown tool' if the decision "
+            f"engine ever selects these): {missing}"
+        )
