@@ -1,10 +1,12 @@
 import os
 import shlex
+import uuid
 import psutil
 from typing import Any, Dict, Optional
 from server_core import config_core
 from server_core.enhanced_command_executor import EnhancedCommandExecutor
 from server_core.singletons import cache as _cache
+from server_core.singletons import enhanced_process_manager as _epm
 
 # CPU threshold above which tool commands are niced down.
 _CPU_NICE_THRESHOLD = config_core.get("CPU_NICE_THRESHOLD", 85)
@@ -127,15 +129,39 @@ def execute_command(
   except Exception:
     pass  # never let a psutil hiccup block a tool call
 
-  _executor = EnhancedCommandExecutor(exec_command, timeout=effective_timeout)
-  result = _executor.execute()
+  # Route the actual subprocess through the shared ProcessPool so its
+  # auto-scaling/queueing genuinely gates how many tool commands run
+  # concurrently app-wide.
+  try:
+    task_id = f"exec_{uuid.uuid4().hex}"
+    result = _epm.process_pool.submit_and_wait(
+      task_id,
+      lambda: EnhancedCommandExecutor(exec_command, timeout=effective_timeout).execute(),
+    )
+    if "stdout" not in result:
+      # submit_and_wait's own failure shape ({"success": False, "error": ...})
+      # rather than EnhancedCommandExecutor's — normalize so downstream code
+      # that reads stdout/stderr/return_code never has to special-case this.
+      result = {
+        "stdout": "",
+        "stderr": result.get("error", "process pool execution failed"),
+        "return_code": -1,
+        "success": False,
+        "timed_out": False,
+        "timeout_reason": "",
+        "partial_results": False,
+        "execution_time": 0,
+      }
+  except Exception:
+    # Never let a process-pool hiccup block a tool call — fall back to
+    # running it directly in this thread.
+    result = EnhancedCommandExecutor(exec_command, timeout=effective_timeout).execute()
 
   if active_cache is not None and result.get("success", False):
     active_cache.set(command, {}, result)
 
-  # Record into the performance dashboard (lazy — wakes EnhancedProcessManager)
+  # Record into the performance dashboard
   try:
-    from server_core.singletons import enhanced_process_manager as _epm
     _epm.performance_dashboard.record_execution(exec_command, result)
   except Exception:
     pass  # dashboard recording must never break a tool call

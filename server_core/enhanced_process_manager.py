@@ -40,7 +40,12 @@ class EnhancedProcessManager:
         self.monitor_thread.start()
 
     def execute_command_async(self, command: str, context: Optional[Dict[str, Any]] = None) -> str:
-        """Execute command asynchronously using process pool"""
+        """Execute command asynchronously using process pool.
+
+        Always returns a task_id string — callers (the HTTP endpoint, and
+        get_task_result/get-task-result) treat the return value as an opaque
+        id to poll, never as the result payload itself.
+        """
         task_id = f"cmd_{int(time.time() * 1000)}_{hash(command) % 10000}"
 
         # Check cache first
@@ -48,7 +53,15 @@ class EnhancedProcessManager:
         cached_result = self.cache.get(cache_key)
         if cached_result and context and context.get("use_cache", True):
             logger.info(f"📋 Using cached result for command: {command[:50]}...")
-            return cached_result
+            with self.process_pool.pool_lock:
+                self.process_pool.results[task_id] = {
+                    "status": "completed",
+                    "result": cached_result,
+                    "execution_time": 0.0,
+                    "worker_id": None,
+                    "completed_at": time.time(),
+                }
+            return task_id
 
         # Submit to process pool
         self.process_pool.submit_task(

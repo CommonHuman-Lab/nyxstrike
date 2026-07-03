@@ -7,6 +7,8 @@ from typing import Dict, Any
 import logging
 logger = logging.getLogger(__name__)
 
+_RESULT_TTL_SECONDS = 3600
+
 class ProcessPool:
     """Intelligent process pool with auto-scaling capabilities"""
 
@@ -19,6 +21,7 @@ class ProcessPool:
         self.results = {}
         self.pool_lock = threading.Lock()
         self.active_tasks = {}
+        self.task_events: Dict[str, threading.Event] = {}
         self.performance_metrics = {
             "tasks_completed": 0,
             "tasks_failed": 0,
@@ -52,6 +55,31 @@ class ProcessPool:
         logger.info(f"📋 Task submitted to pool: {task_id}")
         return task_id
 
+    def submit_and_wait(self, task_id: str, func, *args, **kwargs) -> Dict[str, Any]:
+        """Submit a task and block until it completes, returning its outcome.
+
+        Unlike ``submit_task``/``get_task_result`` (fire-and-poll, used by the
+        async HTTP endpoint), this is for callers that need the pool to gate
+        concurrency while still returning a result synchronously — the result
+        is removed from ``self.results`` once collected, so it never lingers.
+        """
+        event = threading.Event()
+        with self.pool_lock:
+            self.task_events[task_id] = event
+
+        self.submit_task(task_id, func, *args, **kwargs)
+        event.wait()
+
+        with self.pool_lock:
+            self.task_events.pop(task_id, None)
+            outcome = self.results.pop(task_id, None)
+
+        if outcome is None:
+            return {"success": False, "error": "process pool task result missing"}
+        if outcome["status"] == "failed":
+            return {"success": False, "error": outcome["error"]}
+        return outcome["result"]
+
     def get_task_result(self, task_id: str) -> Dict[str, Any]:
         """Get result of a submitted task"""
         with self.pool_lock:
@@ -62,6 +90,22 @@ class ProcessPool:
             else:
                 return {"status": "not_found", "result": None}
 
+    def _prune_stale_results(self):
+        """Drop completed/failed results older than _RESULT_TTL_SECONDS.
+
+        Without this, self.results grows without bound for every task
+        submitted via submit_task/get_task_result (the fire-and-poll path) —
+        nothing else ever removes an entry once a client stops polling it.
+        """
+        cutoff = time.time() - _RESULT_TTL_SECONDS
+        with self.pool_lock:
+            stale = [
+                task_id for task_id, outcome in self.results.items()
+                if outcome.get("completed_at", outcome.get("failed_at", 0)) < cutoff
+            ]
+            for task_id in stale:
+                del self.results[task_id]
+
     def _worker_thread(self, worker_id: int):
         """Worker thread that processes tasks"""
         logger.info(f"🔧 Process pool worker {worker_id} started")
@@ -71,6 +115,10 @@ class ProcessPool:
                 # Get task from queue with timeout
                 task = self.task_queue.get(timeout=30)
                 if task is None:  # Shutdown signal
+                    with self.pool_lock:
+                        current = threading.current_thread()
+                        if current in self.workers:
+                            self.workers.remove(current)
                     break
 
                 task_id = task["id"]
@@ -109,6 +157,11 @@ class ProcessPool:
                         if task_id in self.active_tasks:
                             del self.active_tasks[task_id]
 
+                        event = self.task_events.get(task_id)
+
+                    if event is not None:
+                        event.set()
+
                     logger.info(f"✅ Task completed: {task_id} in {execution_time:.2f}s")
 
                 except Exception as e:
@@ -127,6 +180,11 @@ class ProcessPool:
                         if task_id in self.active_tasks:
                             del self.active_tasks[task_id]
 
+                        event = self.task_events.get(task_id)
+
+                    if event is not None:
+                        event.set()
+
                     logger.error(f"❌ Task failed: {task_id} - {str(e)}")
 
                 self.task_queue.task_done()
@@ -142,6 +200,8 @@ class ProcessPool:
         while True:
             try:
                 time.sleep(10)  # Monitor every 10 seconds
+
+                self._prune_stale_results()
 
                 with self.pool_lock:
                     queue_size = self.task_queue.qsize()
@@ -192,15 +252,18 @@ class ProcessPool:
                 self.workers.append(worker)
 
     def _scale_down(self, count: int):
-        """Remove workers from the pool"""
+        """Remove workers from the pool.
+
+        Sentinels are picked up by whichever idle worker dequeues them first,
+        not necessarily the most-recently-started one — so the exiting worker
+        removes itself from ``self.workers`` (see ``_worker_thread``) rather
+        than this method popping an arbitrary (possibly still-alive) entry.
+        """
         with self.pool_lock:
-            for _ in range(count):
-                if len(self.workers) > self.min_workers:
-                    # Signal worker to shutdown by putting None in queue
-                    self.task_queue.put(None)
-                    # Remove from workers list (worker will exit naturally)
-                    if self.workers:
-                        self.workers.pop()
+            current = len([w for w in self.workers if w.is_alive()])
+            to_remove = max(0, min(count, current - self.min_workers))
+            for _ in range(to_remove):
+                self.task_queue.put(None)
 
     def get_pool_stats(self) -> Dict[str, Any]:
         """Get current pool statistics"""
