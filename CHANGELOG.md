@@ -6,6 +6,9 @@
 
 - Fixed `/api/error-handling/execute-with-recovery` raising a server error on every real call.
 - Wired automatic error recovery (retry/backoff, alternative-tool swap) into recon, scanning, fuzzing, and forensics tool executions.
+- Fixed `/api/process/execute-async` returning the cached result payload instead of a task ID on a cache hit, which broke polling it via `/api/process/get-task-result/<task_id>`.
+- Fixed the process pool's worker auto-scaling miscounting active workers after scaling down.
+- All tool command execution now runs through the process pool's auto-scaling instead of bypassing it, and pooled task results no longer leak memory on long-running instances.
 
 ## 1.6.0 - injectlynx
 
