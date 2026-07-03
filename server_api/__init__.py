@@ -184,6 +184,9 @@ def register_blueprints(app):
   app.register_blueprint(api_web_scan_joomscan_bp)
   app.register_blueprint(api_web_scan_whatweb_bp)
   app.register_blueprint(api_web_scan_interactsh_bp)
+  app.register_blueprint(api_web_scan_breachsql_bp)
+  app.register_blueprint(api_web_scan_stingxss_bp)
+  app.register_blueprint(api_web_scan_phaseaccess_bp)
 
   # Web Crawl
   app.register_blueprint(api_web_crawl_katana_bp)
@@ -256,6 +259,7 @@ def register_blueprints(app):
 
   # Credential Harvesting
   app.register_blueprint(api_credential_harvest_responder_bp)
+  app.register_blueprint(api_credential_harvest_vaultrip_bp)
 
   # Memory Forensics
   app.register_blueprint(api_memory_forensics_volatility_bp)

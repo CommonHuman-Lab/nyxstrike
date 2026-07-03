@@ -1,3 +1,5 @@
+import os
+import shlex
 import time
 import threading
 import logging
@@ -10,6 +12,7 @@ from wcwidth import wcswidth as _wcswidth
 import server_core.config_core as config_core
 from server_core.process_manager import ProcessManager
 from server_core.modern_visual_engine import ModernVisualEngine
+from server_core.tool_constants import FINDINGS_EXIT_CODE_TOOLS
 
 _ANSI = _re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
 _BOX_WIDTH = 66  # visible columns between the two │ borders
@@ -300,7 +303,12 @@ class EnhancedCommandExecutor:
                 # Cleanup process from registry (v5.0 enhancement)
                 ProcessManager.cleanup_process(pid)
 
-                if self.return_code == 0:
+                _cmd_parts = shlex.split(self.command) if self.command else []
+                # Skip "nice -n N" prefix if present so we get the actual tool binary
+                _cmd_idx = 3 if len(_cmd_parts) >= 3 and _cmd_parts[0] == "nice" else 0
+                _tool_bin = os.path.basename(_cmd_parts[_cmd_idx]) if _cmd_parts else ""
+                _findings_exit = self.return_code == 1 and _tool_bin in FINDINGS_EXIT_CODE_TOOLS
+                if self.return_code == 0 or _findings_exit:
                     logger.info(f"✅ SUCCESS: Command completed | Exit Code: {self.return_code} | Duration: {execution_time:.2f}s")
                     telemetry.record_execution(True, execution_time)
                 else:
@@ -329,7 +337,7 @@ class EnhancedCommandExecutor:
                 telemetry.record_execution(False, execution_time)
 
             # Always consider it a success if we have output, even with timeout
-            success = True if self.timed_out and (self.stdout_data or self.stderr_data) else (self.return_code == 0)
+            success = True if self.timed_out and (self.stdout_data or self.stderr_data) else (self.return_code == 0 or _findings_exit)
 
             # Normalize noisy terminal output for logs/API consumers
             if config_core.get("CLEAN_TOOL_OUTPUT", True):

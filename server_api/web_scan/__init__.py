@@ -9,3 +9,6 @@ from .zap import *
 from .whatweb import *
 from .joomscan import *
 from .interactsh import *
+from .breachsql import *
+from .stingxss import *
+from .phaseaccess import *

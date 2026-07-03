@@ -14,6 +14,7 @@ export type {
 } from './tools';
 
 export type {
+  BinaryPathTestResponse,
   PatchSettingsResponse,
   PatchWordlistsResponse,
   PersonalityPreset,

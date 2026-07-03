@@ -14,3 +14,10 @@ ui/node_modules/
 .claude/worktrees/
 
 install_log.txt
+
+# Opencode artifacts
+.opencode/node_modules
+.opencode/package.json
+.opencode/package-lock.json
+.opencode/bun.lock
+.opencode/.gitignore

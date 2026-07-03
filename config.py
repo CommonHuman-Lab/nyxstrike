@@ -2,7 +2,7 @@
 
 _config = {
     "APP_NAME": "NyxStrike",
-    "VERSION": "1.5.0",
+    "VERSION": "1.6.0",
     "DATA_DIR_NAME": ".nyxstrike_data",  # Root data directory name (relative to cwd, override with NYXSTRIKE_DATA_DIR env var)
     "COMMAND_TIMEOUT": 500,
     "REQUEST_TIMEOUT": 30,
@@ -35,6 +35,15 @@ _config = {
     "METASPLOIT_SESSION_WAIT": 10,  # Seconds to wait after exploit -j before listing sessions
     "PATHS": {
         "GO_BINARYS": "{HOME}/go/bin/"
+    },
+
+    # Per-tool binary path overrides.
+    # When a tool name is present here, the endpoint uses this absolute path
+    # instead of relying on shell PATH resolution.
+    # Supports {HOME} substitution (e.g. "{HOME}/go/bin/httpx").
+    # Delete an entry to revert that tool to system PATH resolution.
+    "BINARY_PATH_OVERRIDES": {
+        "httpx": "{HOME}/go/bin/httpx",
     },
 
     # ── LLM client ────────────────────────────────────────────────────────────

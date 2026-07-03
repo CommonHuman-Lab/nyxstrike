@@ -25,6 +25,7 @@ _MUTABLE_KEYS = {
     "CHAT_SUMMARIZATION_THRESHOLD",
     "CHAT_CONTEXT_INJECTION_CHARS",
     "NYXSTRIKE_LLM_THINK",
+    "BINARY_PATH_OVERRIDES",
 }
 
 
@@ -49,6 +50,7 @@ def _current_settings() -> dict:
             "cache_size": config_core.get("CACHE_SIZE", 1000),
             "cache_ttl": config_core.get("CACHE_TTL", 3600),
             "tool_availability_ttl": config_core.get("TOOL_AVAILABILITY_TTL", 3600),
+            "binary_path_overrides": config_core.get("BINARY_PATH_OVERRIDES", {}),
         },
         "wordlists": _wordlists_summary(),
         "chat": {
@@ -142,12 +144,53 @@ def patch_settings():
             except (ValueError, TypeError) as exc:
                 errors[f"chat.{field}"] = str(exc)
 
+        # Binary path overrides — whole map replaced on each save
+        if "binary_path_overrides" in runtime:
+            val = runtime["binary_path_overrides"]
+            if isinstance(val, dict) and all(
+                isinstance(k, str) and isinstance(v, str) for k, v in val.items()
+            ):
+                config_core.set_value("BINARY_PATH_OVERRIDES", val)
+                updated["binary_path_overrides"] = val
+            else:
+                errors["binary_path_overrides"] = "must be a dict of string → string"
+
         if errors:
             return jsonify({"success": False, "errors": errors, "updated": updated}), 400
 
         return jsonify({"success": True, "updated": updated, "settings": _current_settings()})
     except Exception as exc:
         logger.error("patch_settings error: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@api_settings_bp.route("/api/settings/binary-path-overrides/test", methods=["POST"])
+def test_binary_path_override():
+    """Test that a binary path override exists and is executable on the server."""
+    try:
+        body = request.get_json(force=True, silent=True) or {}
+        tool = str(body.get("tool", "")).strip()
+        path_template = str(body.get("path", "")).strip()
+
+        if not tool or not path_template:
+            return jsonify({"success": False, "error": "tool and path are required"}), 400
+
+        home_path = os.path.expanduser("~")
+        resolved = path_template.replace("{HOME}", home_path)
+
+        exists     = os.path.isfile(resolved)
+        executable = os.access(resolved, os.X_OK) if exists else False
+
+        return jsonify({
+            "success": True,
+            "tool": tool,
+            "resolved_path": resolved,
+            "exists": exists,
+            "executable": executable,
+            "ok": exists and executable,
+        })
+    except Exception as exc:
+        logger.error("test_binary_path_override error: %s", exc)
         return jsonify({"success": False, "error": str(exc)}), 500
 
 

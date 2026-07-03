@@ -115,6 +115,10 @@ export function RunPage({
   }
 
   useEffect(() => {
+    onRefresh?.()
+  }, [])
+
+  useEffect(() => {
     if (!commandToolRequest) return
     const tool = tools.find(t => t.name === commandToolRequest.toolName)
     if (tool) {

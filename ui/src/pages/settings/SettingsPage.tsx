@@ -68,6 +68,7 @@ export default function SettingsPage({
     cacheTtl,
     toolTtl,
     wordlistsDraft,
+    binaryPathOverrides,
     setTimeout_,
     setRequestTimeout,
     setInactivityTimeout,
@@ -78,6 +79,10 @@ export default function SettingsPage({
     addWordlist,
     removeWordlist,
     updateWordlist,
+    addBinaryOverride,
+    removeBinaryOverride,
+    updateBinaryOverride,
+    testBinaryOverride,
     saveRuntime,
     saveWordlists,
     saveChatSettings,
@@ -213,6 +218,11 @@ export default function SettingsPage({
         setCacheSize={setCacheSize}
         setCacheTtl={setCacheTtl}
         setToolTtl={setToolTtl}
+        binaryPathOverrides={binaryPathOverrides}
+        onAddBinaryOverride={addBinaryOverride}
+        onRemoveBinaryOverride={removeBinaryOverride}
+        onUpdateBinaryOverride={updateBinaryOverride}
+        onTestBinaryOverride={testBinaryOverride}
         saving={saving}
         onSave={saveRuntime}
       />
