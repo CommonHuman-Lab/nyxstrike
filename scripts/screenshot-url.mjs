@@ -30,8 +30,8 @@ const FULL_PAGE = process.env.FULL_PAGE !== "false";
 
 // Keep in sync with ui/src/app/themes.ts THEME_OPTIONS.
 const THEME_IDS = [
-  "dark", "candy", "unicorn", "forest", "solarized-terminal", "ocean-glass",
-  "crimson-night", "retro-crt", "nord-calm", "desert-sand", "minimal-light",
+  "dark", "unicorn", "forest", "solarized", "ocean-glass",
+  "crimson-night", "retro-crt", "nord",
   "dracula", "gruvbox", "folio", "tokyo", "catppuccin", "synthwave", "rose", "frost",
 ];
 const THEME_STORAGE_KEY = "nyxstrike_theme";

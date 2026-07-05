@@ -1,22 +1,6 @@
 /* ── Per-theme background gradient overrides ────────────────────────────── */
 /* Base .layout gradient rule lives in App.css; these are theme-specific overrides. */
 
-:root[data-theme='minimal-light'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 30%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 6%, transparent), transparent 34%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 5%, transparent), transparent 44%),
-    var(--bg);
-}
-
-:root[data-theme='desert-sand'] .layout {
-  background:
-    radial-gradient(circle at 9% 7%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 30%),
-    radial-gradient(circle at 84% 13%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
-    radial-gradient(circle at 56% 96%, color-mix(in srgb, var(--accent-alt) 9%, transparent), transparent 42%),
-    var(--bg);
-}
-
 :root[data-theme='retro-crt'] .layout {
   background:
     repeating-linear-gradient(
@@ -32,7 +16,7 @@
     var(--bg);
 }
 
-:root[data-theme='solarized-terminal'] .layout {
+:root[data-theme='solarized'] .layout {
   background:
     radial-gradient(circle at 8% 7%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 30%),
     radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--accent-alt) 11%, transparent), transparent 34%),
@@ -63,19 +47,11 @@
     var(--bg);
 }
 
-:root[data-theme='nord-calm'] .layout {
+:root[data-theme='nord'] .layout {
   background:
     radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 30%),
     radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 11%, transparent), transparent 34%),
     radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 9%, transparent), transparent 43%),
-    var(--bg);
-}
-
-:root[data-theme='candy'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 19%, transparent), transparent 28%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 16%, transparent), transparent 33%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 14%, transparent), transparent 41%),
     var(--bg);
 }
 
@@ -249,7 +225,6 @@
 
 /* Vivid themes get the faster rainbow-cycling sweep, matching their already-highest glow intensity */
 :root[data-theme='unicorn'] .topbar::after,
-:root[data-theme='candy'] .topbar::after,
 :root[data-theme='synthwave'] .topbar::after {
   animation-name: rainbow-shift;
   animation-duration: 4s;
