@@ -1,0 +1,57 @@
+:root[data-theme='synthwave'] {
+  --bg: #1a0b2e;
+  --bg-card: #211238;
+  --bg-card2: #2c1a47;
+  --border: #4a2d6b;
+
+  --text: #e0aee0;
+  --text-h: #fdeff9;
+  --text-dim: #8b7a9e;
+
+  --green: #72f1b8;
+  --green-dim: rgba(114, 241, 184, 0.2);
+
+  --red: #fe4450;
+  --red-dim: rgba(254, 68, 80, 0.22);
+
+  --amber: #fede5d;
+  --amber-dim: rgba(254, 222, 93, 0.2);
+
+  --blue: #6a8dff;
+  --blue-dim: rgba(106, 141, 255, 0.2);
+
+  --purple: #b967ff;
+  --purple-dim: rgba(185, 103, 255, 0.22);
+
+  --cyan: #36f9f6;
+  --cyan-dim: rgba(54, 249, 246, 0.22);
+
+  --pink: #f92aad;
+  --pink-dim: rgba(249, 42, 173, 0.24);
+
+  --orange: #ff8b39;
+  --orange-dim: rgba(255, 139, 57, 0.2);
+
+  --lime: #baff6b;
+  --lime-dim: rgba(186, 255, 107, 0.2);
+
+  --teal: #4de8c2;
+  --teal-dim: rgba(77, 232, 194, 0.2);
+
+  --indigo: #8a6aff;
+  --indigo-dim: rgba(138, 106, 255, 0.2);
+
+  --gray: #8b7a9e;
+  --gray-dim: rgba(139, 122, 158, 0.16);
+
+  --white-dim: rgba(253, 239, 249, 0.08);
+
+  --accent: #f92aad;
+  --accent-alt: #36f9f6;
+  --accent-warm: #ff8b39;
+
+  --glow-green: 0 0 16px rgba(114, 241, 184, 0.55);
+  --glow-blue: 0 0 16px rgba(106, 141, 255, 0.55);
+  --glow-red: 0 0 16px rgba(254, 68, 80, 0.58);
+  --glow-cyan: 0 0 16px rgba(54, 249, 246, 0.6);
+}

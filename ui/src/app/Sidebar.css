@@ -6,7 +6,8 @@
   width: 13rem;
   background: var(--bg-card);
   border-right: 1px solid var(--border);
-  transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    background-color var(--t-base) ease, border-color var(--t-base) ease;
   overflow-y: auto;
   overflow-x: hidden;
 }

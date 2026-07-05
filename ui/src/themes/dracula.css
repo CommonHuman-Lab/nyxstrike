@@ -1,0 +1,57 @@
+:root[data-theme='dracula'] {
+  --bg: #282a36;
+  --bg-card: #2f3242;
+  --bg-card2: #383a4a;
+  --border: #44475a;
+
+  --text: #cad0e6;
+  --text-h: #f8f8f2;
+  --text-dim: #6272a4;
+
+  --green: #50fa7b;
+  --green-dim: rgba(80, 250, 123, 0.18);
+
+  --red: #ff5555;
+  --red-dim: rgba(255, 85, 85, 0.18);
+
+  --amber: #f1fa8c;
+  --amber-dim: rgba(241, 250, 140, 0.16);
+
+  --blue: #8be9fd;
+  --blue-dim: rgba(139, 233, 253, 0.18);
+
+  --purple: #bd93f9;
+  --purple-dim: rgba(189, 147, 249, 0.2);
+
+  --cyan: #7fdbff;
+  --cyan-dim: rgba(127, 219, 255, 0.18);
+
+  --pink: #ff79c6;
+  --pink-dim: rgba(255, 121, 198, 0.2);
+
+  --orange: #ffb86c;
+  --orange-dim: rgba(255, 184, 108, 0.18);
+
+  --lime: #b5f16d;
+  --lime-dim: rgba(181, 241, 109, 0.18);
+
+  --teal: #69dfc9;
+  --teal-dim: rgba(105, 223, 201, 0.18);
+
+  --indigo: #8a94e8;
+  --indigo-dim: rgba(138, 148, 232, 0.18);
+
+  --gray: #a2a8c3;
+  --gray-dim: rgba(162, 168, 195, 0.14);
+
+  --white-dim: rgba(248, 248, 242, 0.06);
+
+  --accent: #bd93f9;
+  --accent-alt: #8be9fd;
+  --accent-warm: #ffb86c;
+
+  --glow-green: 0 0 14px rgba(80, 250, 123, 0.5);
+  --glow-blue: 0 0 14px rgba(139, 233, 253, 0.5);
+  --glow-red: 0 0 14px rgba(255, 85, 85, 0.5);
+  --glow-cyan: 0 0 14px rgba(127, 219, 255, 0.5);
+}

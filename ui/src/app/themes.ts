@@ -10,6 +10,14 @@ export type ThemeId =
   | 'nord-calm'
   | 'desert-sand'
   | 'minimal-light'
+  | 'dracula'
+  | 'gruvbox'
+  | 'folio'
+  | 'tokyo'
+  | 'catppuccin'
+  | 'synthwave'
+  | 'rose'
+  | 'frost'
 
 export interface ThemeOption {
   id: ThemeId
@@ -31,6 +39,14 @@ export const THEME_OPTIONS: ThemeOption[] = [
   { id: 'nord-calm', label: 'Nord Calm', hint: 'Cool balanced blue-gray palette' },
   { id: 'desert-sand', label: 'Desert Sand', hint: 'Warm light neutral workspace' },
   { id: 'minimal-light', label: 'White Minimalist', hint: 'Clean and bright' },
+  { id: 'dracula', label: 'Dracula', hint: 'Slate purple · Lavender · Classic vampire' },
+  { id: 'gruvbox', label: 'Gruvbox', hint: 'Warm olive · Burnt orange · Retro terminal' },
+  { id: 'folio', label: 'Folio', hint: 'Warm cream · Forest emerald · Paper & ink' },
+  { id: 'tokyo', label: 'Tokyo', hint: 'Deep navy · Electric blue · Pro editor' },
+  { id: 'catppuccin', label: 'Catppuccin', hint: 'Warm dark · Pastel mauve · Soft & calm' },
+  { id: 'synthwave', label: 'Synthwave', hint: 'Outrun purple · Hot magenta · Neon cyan' },
+  { id: 'rose', label: 'Rosé', hint: 'Muted charcoal · Dusty rose · Elegant calm' },
+  { id: 'frost', label: 'Frost', hint: 'Icy white · Glacier blue · Crisp & clinical' },
 ]
 
 export function isThemeId(value: string): value is ThemeId {

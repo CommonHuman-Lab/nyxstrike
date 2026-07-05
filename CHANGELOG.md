@@ -4,6 +4,11 @@
 
 ### Navigation
 - Replaced the top nav tab bar with a collapsible sidebar — collapses to an icon-only rail on desktop (state persists across reloads) and becomes a slide-out overlay drawer on mobile, replacing the old page dropdown.
+- Fixed the Run page's right-hand panels extending past the browser window edge on narrower widths — a side effect of the sidebar's persistent width that the Run page's full-bleed layout hadn't accounted for.
+
+### Themes
+- Added 8 new themes — Dracula, Gruvbox, Folio, Tokyo, Catppuccin, Synthwave, Rosé, and Frost — bringing the total to 19.
+- Switching themes now cross-fades instead of hard-cutting, and every theme has a subtle animated accent sweep across the top bar and sidebar edge; both respect the OS-level "reduce motion" setting.
 
 ### Intelligence
 - The Intelligent Decision Engine now considers the current session's run history when scoring tools — a tool that just failed is deprioritized (not excluded) in favor of alternatives on the next recommendation, instead of being suggested again unchanged.

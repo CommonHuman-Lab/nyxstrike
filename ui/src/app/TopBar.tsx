@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import './TopBar.css'
 import faviconUrl from '../favicon-16x16.png'
 import {
   RefreshCw, Lock, Github, Copy, Check,
@@ -269,7 +270,7 @@ export function TopBar({
             title={`Version: ${health?.version ?? 'unknown'}`}
             aria-label={`NyxStrike version ${health?.version ?? 'unknown'}`}
           >
-            NyxStrike
+            <span className="brand-text-1">Nyx</span><span className="brand-text-2">Strike</span>
           </span>
           {health?.update?.update_available && (
             <button

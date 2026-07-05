@@ -1,0 +1,57 @@
+:root[data-theme='folio'] {
+  --bg: #f4ecdc;
+  --bg-card: #faf5e9;
+  --bg-card2: #efe6d3;
+  --border: #ddd0b8;
+
+  --text: #5b5340;
+  --text-h: #3a342b;
+  --text-dim: #8a8068;
+
+  --green: #1f8a52;
+  --green-dim: rgba(31, 138, 82, 0.14);
+
+  --red: #b3392c;
+  --red-dim: rgba(179, 57, 44, 0.14);
+
+  --amber: #b5780f;
+  --amber-dim: rgba(181, 120, 15, 0.14);
+
+  --blue: #2270a6;
+  --blue-dim: rgba(34, 112, 166, 0.14);
+
+  --purple: #7a5ea8;
+  --purple-dim: rgba(122, 94, 168, 0.14);
+
+  --cyan: #2c8a83;
+  --cyan-dim: rgba(44, 138, 131, 0.14);
+
+  --pink: #a6455a;
+  --pink-dim: rgba(166, 69, 90, 0.14);
+
+  --orange: #c0612b;
+  --orange-dim: rgba(192, 97, 43, 0.14);
+
+  --lime: #8a9b3f;
+  --lime-dim: rgba(138, 155, 63, 0.14);
+
+  --teal: #24756f;
+  --teal-dim: rgba(36, 117, 111, 0.14);
+
+  --indigo: #6a6ab0;
+  --indigo-dim: rgba(106, 106, 176, 0.14);
+
+  --gray: #8a8068;
+  --gray-dim: rgba(138, 128, 104, 0.12);
+
+  --white-dim: rgba(58, 52, 43, 0.03);
+
+  --accent: #0f7a5c;
+  --accent-alt: #2270a6;
+  --accent-warm: #b5780f;
+
+  --glow-green: 0 0 0 rgba(0, 0, 0, 0);
+  --glow-blue: 0 0 0 rgba(0, 0, 0, 0);
+  --glow-red: 0 0 0 rgba(0, 0, 0, 0);
+  --glow-cyan: 0 0 0 rgba(0, 0, 0, 0);
+}

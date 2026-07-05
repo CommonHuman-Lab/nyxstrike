@@ -1,0 +1,73 @@
+/* ── Animations ──────────────────────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes statusBlink {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 6px var(--green);
+  }
+  35% {
+    transform: scale(1.35);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--green) 82%, white);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 6px var(--green);
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin { animation: spin 1s linear infinite; }
+.spin--sm {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: transparent;
+}
+.spin--green {
+  border-color: var(--green);
+  border-top-color: transparent;
+}
+
+/* ── Theme flourish keyframes ────────────────────────────────────────────── */
+@keyframes header-border-shift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 300% 0%; }
+}
+
+@keyframes rainbow-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes flourish-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%   { transform: scale(1)   rotate(0deg);   opacity: 0.7; }
+  33%  { transform: scale(1.3) rotate(120deg); opacity: 1; }
+  66%  { transform: scale(0.9) rotate(240deg); opacity: 0.8; }
+  100% { transform: scale(1)   rotate(360deg); opacity: 0.7; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+/* Honour the OS-level motion preference for every animation/transition in the app. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

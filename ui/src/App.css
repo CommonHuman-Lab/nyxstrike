@@ -10,115 +10,6 @@
     var(--bg);
 }
 
-:root[data-theme='minimal-light'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 30%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 6%, transparent), transparent 34%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 5%, transparent), transparent 44%),
-    var(--bg);
-}
-
-:root[data-theme='desert-sand'] .layout {
-  background:
-    radial-gradient(circle at 9% 7%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 30%),
-    radial-gradient(circle at 84% 13%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
-    radial-gradient(circle at 56% 96%, color-mix(in srgb, var(--accent-alt) 9%, transparent), transparent 42%),
-    var(--bg);
-}
-
-:root[data-theme='retro-crt'] .layout {
-  background:
-    repeating-linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 6%, transparent) 0px,
-      color-mix(in srgb, var(--accent) 6%, transparent) 1px,
-      transparent 1px,
-      transparent 3px
-    ),
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 26%),
-    radial-gradient(circle at 90% 12%, color-mix(in srgb, var(--accent-alt) 13%, transparent), transparent 32%),
-    radial-gradient(circle at 50% 96%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 40%),
-    var(--bg);
-}
-
-:root[data-theme='solarized-terminal'] .layout {
-  background:
-    radial-gradient(circle at 8% 7%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 30%),
-    radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--accent-alt) 11%, transparent), transparent 34%),
-    radial-gradient(circle at 54% 96%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 42%),
-    var(--bg);
-}
-
-:root[data-theme='ocean-glass'] .layout {
-  background:
-    repeating-linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent-alt) 7%, transparent) 0px,
-      color-mix(in srgb, var(--accent-alt) 7%, transparent) 1px,
-      transparent 1px,
-      transparent 9px
-    ),
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 28%),
-    radial-gradient(circle at 89% 10%, color-mix(in srgb, var(--accent-alt) 14%, transparent), transparent 33%),
-    radial-gradient(circle at 50% 96%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 42%),
-    var(--bg);
-}
-
-:root[data-theme='crimson-night'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 17%, transparent), transparent 27%),
-    radial-gradient(circle at 89% 10%, color-mix(in srgb, var(--accent-alt) 12%, transparent), transparent 34%),
-    radial-gradient(circle at 54% 96%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 41%),
-    var(--bg);
-}
-
-:root[data-theme='nord-calm'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 30%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 11%, transparent), transparent 34%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 9%, transparent), transparent 43%),
-    var(--bg);
-}
-
-:root[data-theme='candy'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 19%, transparent), transparent 28%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 16%, transparent), transparent 33%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 14%, transparent), transparent 41%),
-    var(--bg);
-}
-
-:root[data-theme='forest'] .layout {
-  background:
-    repeating-radial-gradient(
-      circle at 0 0,
-      color-mix(in srgb, var(--accent) 5%, transparent) 0px,
-      color-mix(in srgb, var(--accent) 5%, transparent) 1px,
-      transparent 1px,
-      transparent 9px
-    ),
-    radial-gradient(circle at 7% 6%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 28%),
-    radial-gradient(circle at 90% 9%, color-mix(in srgb, var(--accent-alt) 16%, transparent), transparent 33%),
-    radial-gradient(circle at 50% 96%, color-mix(in srgb, var(--accent-warm) 13%, transparent), transparent 42%),
-    var(--bg);
-}
-
-:root[data-theme='unicorn'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 28%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 20%, transparent), transparent 33%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 16%, transparent), transparent 42%),
-    var(--bg);
-}
-
-:root[data-reduce-textures='1'] .layout {
-  background:
-    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 34%),
-    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 4%, transparent), transparent 38%),
-    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 3%, transparent), transparent 46%),
-    var(--bg) !important;
-}
-
 /* ── Demo banner ─────────────────────────────────────────────────────────── */
 .demo-banner {
   display: flex;
@@ -179,6 +70,7 @@
 .main--flush {
   padding: 0;
   max-width: 100%;
+  width: auto;
   margin: 0;
   gap: 0;
   overflow: hidden;
@@ -206,13 +98,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-}
-
-:root[data-theme='unicorn'] .topbar {
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent-alt) 11%, transparent)),
-    var(--bg-card);
-  border-bottom-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  transition: background-color var(--t-base) ease, border-color var(--t-base) ease;
 }
 
 /* When demo banner is visible, push topbar down so it sticks below the banner */
@@ -1155,45 +1041,6 @@
   gap: 20px;
 }
 
-/* ── Animations ──────────────────────────────────────────────────────────── */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-@keyframes statusBlink {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 6px var(--green);
-  }
-  35% {
-    transform: scale(1.35);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--green) 82%, white);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 6px var(--green);
-  }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.spin { animation: spin 1s linear infinite; }
-.spin--sm {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: transparent;
-}
-.spin--green {
-  border-color: var(--green);
-  border-top-color: transparent;
-}
-
 /* ── Code Block ──────────────────────────────────────────────────────────── */
 .code-block {
   border: 1px solid var(--border);
@@ -1393,10 +1240,6 @@
   .modal-body {
     padding-left: 12px;
     padding-right: 12px;
-  }
-
-  .theme-picker-grid {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -1659,68 +1502,6 @@
 }
 
 .modal-table tr:last-child td { border-bottom: none; }
-
-.theme-picker-modal {
-  max-width: 760px;
-}
-
-.theme-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 10px;
-}
-
-.theme-picker-toggle-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  font-size: 12px;
-  color: var(--text-dim);
-}
-
-.theme-picker-toggle-row input {
-  margin: 0;
-}
-
-.theme-picker-toggle-text {
-  color: var(--text);
-}
-
-.theme-picker-card {
-  border: 1px solid var(--border);
-  background: var(--bg-card2);
-  border-radius: 8px;
-  color: var(--text);
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px;
-  cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
-}
-
-.theme-picker-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-card2));
-}
-
-.theme-picker-card.active {
-  border-color: color-mix(in srgb, var(--green) 45%, var(--border));
-  background: color-mix(in srgb, var(--green) 10%, var(--bg-card2));
-}
-
-.theme-picker-card-label {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.theme-picker-card-hint {
-  font-size: 11px;
-  color: var(--text-dim);
-}
 
 /* ── Tasks Page ─────────────────────────────────────────────────────────────── */
 

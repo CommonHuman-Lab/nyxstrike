@@ -1,0 +1,389 @@
+/* ── Per-theme background gradient overrides ────────────────────────────── */
+/* Base .layout gradient rule lives in App.css; these are theme-specific overrides. */
+
+:root[data-theme='minimal-light'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 6%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 5%, transparent), transparent 44%),
+    var(--bg);
+}
+
+:root[data-theme='desert-sand'] .layout {
+  background:
+    radial-gradient(circle at 9% 7%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 30%),
+    radial-gradient(circle at 84% 13%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
+    radial-gradient(circle at 56% 96%, color-mix(in srgb, var(--accent-alt) 9%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='retro-crt'] .layout {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 6%, transparent) 0px,
+      color-mix(in srgb, var(--accent) 6%, transparent) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 26%),
+    radial-gradient(circle at 90% 12%, color-mix(in srgb, var(--accent-alt) 13%, transparent), transparent 32%),
+    radial-gradient(circle at 50% 96%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 40%),
+    var(--bg);
+}
+
+:root[data-theme='solarized-terminal'] .layout {
+  background:
+    radial-gradient(circle at 8% 7%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 30%),
+    radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--accent-alt) 11%, transparent), transparent 34%),
+    radial-gradient(circle at 54% 96%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='ocean-glass'] .layout {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent-alt) 7%, transparent) 0px,
+      color-mix(in srgb, var(--accent-alt) 7%, transparent) 1px,
+      transparent 1px,
+      transparent 9px
+    ),
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 28%),
+    radial-gradient(circle at 89% 10%, color-mix(in srgb, var(--accent-alt) 14%, transparent), transparent 33%),
+    radial-gradient(circle at 50% 96%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='crimson-night'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 17%, transparent), transparent 27%),
+    radial-gradient(circle at 89% 10%, color-mix(in srgb, var(--accent-alt) 12%, transparent), transparent 34%),
+    radial-gradient(circle at 54% 96%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 41%),
+    var(--bg);
+}
+
+:root[data-theme='nord-calm'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 11%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 9%, transparent), transparent 43%),
+    var(--bg);
+}
+
+:root[data-theme='candy'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 19%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 16%, transparent), transparent 33%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 14%, transparent), transparent 41%),
+    var(--bg);
+}
+
+:root[data-theme='forest'] .layout {
+  background:
+    repeating-radial-gradient(
+      circle at 0 0,
+      color-mix(in srgb, var(--accent) 5%, transparent) 0px,
+      color-mix(in srgb, var(--accent) 5%, transparent) 1px,
+      transparent 1px,
+      transparent 9px
+    ),
+    radial-gradient(circle at 7% 6%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 28%),
+    radial-gradient(circle at 90% 9%, color-mix(in srgb, var(--accent-alt) 16%, transparent), transparent 33%),
+    radial-gradient(circle at 50% 96%, color-mix(in srgb, var(--accent-warm) 13%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='unicorn'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 20%, transparent), transparent 33%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 16%, transparent), transparent 42%),
+    radial-gradient(circle at 25% 55%, color-mix(in srgb, var(--purple) 14%, transparent), transparent 30%),
+    radial-gradient(circle at 75% 65%, color-mix(in srgb, var(--pink) 12%, transparent), transparent 32%),
+    var(--bg);
+}
+
+:root[data-theme='unicorn'] .topbar {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent-alt) 11%, transparent)),
+    var(--bg-card);
+  border-bottom-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+/* ── New themes ───────────────────────────────────────────────────────────── */
+
+:root[data-theme='dracula'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 13%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='gruvbox'] .layout {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 5%, transparent) 0px,
+      color-mix(in srgb, var(--accent) 5%, transparent) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 13%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='folio'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 6%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 5%, transparent), transparent 44%),
+    var(--bg);
+}
+
+:root[data-theme='tokyo'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 13%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 11%, transparent), transparent 42%),
+    var(--bg);
+}
+
+:root[data-theme='catppuccin'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 29%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 12%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 10%, transparent), transparent 43%),
+    var(--bg);
+}
+
+:root[data-theme='synthwave'] .layout {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 7%, transparent) 0px,
+      color-mix(in srgb, var(--accent) 7%, transparent) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 26%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 15%, transparent), transparent 32%),
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--accent-warm) 12%, transparent), transparent 38%),
+    var(--bg);
+}
+
+:root[data-theme='rose'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 10%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 9%, transparent), transparent 43%),
+    var(--bg);
+}
+
+:root[data-theme='frost'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 30%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 6%, transparent), transparent 34%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 5%, transparent), transparent 44%),
+    var(--bg);
+}
+
+/* ── Texture opt-out ─────────────────────────────────────────────────────── */
+
+:root[data-reduce-textures='1'] .layout {
+  background:
+    radial-gradient(circle at 8% 6%, color-mix(in srgb, var(--accent) 5%, transparent), transparent 34%),
+    radial-gradient(circle at 88% 10%, color-mix(in srgb, var(--accent-alt) 4%, transparent), transparent 38%),
+    radial-gradient(circle at 52% 95%, color-mix(in srgb, var(--accent-warm) 3%, transparent), transparent 46%),
+    var(--bg) !important;
+}
+
+/* ── Decorative flourishes (all themes) ──────────────────────────────────── */
+/* Every theme already defines --accent/--accent-alt/--accent-warm, so these
+   rules are written once, unscoped to any data-theme, and pick up each
+   theme's own palette automatically. */
+
+/* .topbar is already `position: sticky` in App.css, which already establishes
+   a containing block for absolutely-positioned children — no override needed here. */
+.topbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt), var(--accent-warm), var(--accent-alt), var(--accent));
+  background-size: 300% auto;
+  animation: header-border-shift 7s linear infinite;
+}
+
+.brand-text-1 {
+  color: var(--accent);
+}
+
+.brand-text-2 {
+  color: var(--accent-alt);
+}
+
+/* Sidebar.css sets `position: fixed` under its own @media (max-width: 768px) rule for the
+   mobile off-canvas drawer — guard this to desktop only so it never fights that override. */
+@media (min-width: 769px) {
+  .sidebar {
+    position: relative;
+  }
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 1px;
+  animation: flourish-pulse 4s ease infinite;
+  background: linear-gradient(180deg, transparent, var(--accent), var(--accent-alt), var(--accent), transparent);
+}
+
+/* Vivid themes get the faster rainbow-cycling sweep, matching their already-highest glow intensity */
+:root[data-theme='unicorn'] .topbar::after,
+:root[data-theme='candy'] .topbar::after,
+:root[data-theme='synthwave'] .topbar::after {
+  animation-name: rainbow-shift;
+  animation-duration: 4s;
+  background-position: 0% 50%;
+  background-size: 200% auto;
+}
+
+:root[data-reduce-textures='1'] .topbar::after,
+:root[data-reduce-textures='1'] .sidebar::after {
+  display: none;
+}
+
+/* Rosé is the slow, elegant theme — everything else defaults to a 7s/4s pace, this drifts instead */
+:root[data-theme='rose'] .topbar::after {
+  animation-duration: 14s;
+}
+:root[data-theme='rose'] .sidebar::after {
+  animation-duration: 6s;
+}
+
+/* ── Unicorn — bespoke enhancements ──────────────────────────────────────── */
+
+:root[data-theme='unicorn'] .stat-card,
+:root[data-theme='unicorn'] .registry-card {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme='unicorn'] .stat-card::before,
+:root[data-theme='unicorn'] .registry-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-alt), var(--accent-warm), transparent);
+  animation: flourish-pulse 3.5s ease infinite;
+}
+
+:root[data-theme='unicorn'] .btn-primary {
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt), var(--accent-warm), var(--accent-alt), var(--accent));
+  background-size: 200% auto;
+  animation: rainbow-shift 5s ease infinite;
+  border-color: transparent;
+  color: var(--bg);
+}
+:root[data-theme='unicorn'] .btn-primary:hover {
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt), var(--accent-warm), var(--accent-alt), var(--accent));
+  background-size: 200% auto;
+  filter: brightness(1.12);
+}
+
+:root[data-theme='unicorn'] .status-dot.online {
+  animation: sparkle 3.2s ease infinite;
+}
+:root[data-theme='unicorn'] .status-dot.online.status-dot--pulse {
+  animation: statusBlink 0.7s ease-out;
+}
+
+:root[data-theme='unicorn'] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-alt));
+}
+:root[data-theme='unicorn'] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-alt), var(--accent-warm));
+}
+
+/* ── Rosé — bespoke enhancements ─────────────────────────────────────────── */
+/* Quieter than Unicorn's: a single thin, dim line that fades slowly rather than sweeps. */
+
+:root[data-theme='rose'] .stat-card,
+:root[data-theme='rose'] .registry-card {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme='rose'] .stat-card::before,
+:root[data-theme='rose'] .registry-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-alt), transparent);
+  animation: flourish-pulse 6s ease infinite;
+  opacity: 0.6;
+}
+
+/* ── Synthwave — bespoke enhancements ────────────────────────────────────── */
+/* NyxStrike's other maximal theme alongside Unicorn — same class of touches, punchier pacing. */
+
+:root[data-theme='synthwave'] .stat-card,
+:root[data-theme='synthwave'] .registry-card {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[data-theme='synthwave'] .stat-card::before,
+:root[data-theme='synthwave'] .registry-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-alt), var(--accent-warm), transparent);
+  animation: flourish-pulse 2.5s ease infinite;
+}
+
+:root[data-theme='synthwave'] .btn-primary {
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt), var(--accent-warm), var(--accent-alt), var(--accent));
+  background-size: 200% auto;
+  animation: rainbow-shift 3s ease infinite;
+  border-color: transparent;
+  color: var(--bg);
+}
+:root[data-theme='synthwave'] .btn-primary:hover {
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt), var(--accent-warm), var(--accent-alt), var(--accent));
+  background-size: 200% auto;
+  filter: brightness(1.15);
+}
+
+:root[data-theme='synthwave'] .status-dot.online {
+  animation: flourish-pulse 2s ease infinite;
+  box-shadow: 0 0 10px var(--green), 0 0 4px var(--accent);
+}
+:root[data-theme='synthwave'] .status-dot.online.status-dot--pulse {
+  animation: statusBlink 0.7s ease-out;
+}
+
+:root[data-theme='synthwave'] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-alt));
+}
+:root[data-theme='synthwave'] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-alt), var(--accent-warm));
+}
