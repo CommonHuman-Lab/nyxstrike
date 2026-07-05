@@ -92,7 +92,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  height: 52px;
+  height: 42px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   position: sticky;
