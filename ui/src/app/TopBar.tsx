@@ -2,18 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import faviconUrl from '../favicon-16x16.png'
 import {
   RefreshCw, Lock, Github, Copy, Check,
-  LayoutDashboard, Terminal, Play,
-  Settings as SettingsIcon, HelpCircle,
-  ListTodo, Wrench, FileText, Layers, Palette, PanelBottomOpen, X, Puzzle, KeyRound,
+  Palette, PanelBottomOpen, X, Menu,
 } from 'lucide-react'
 import { clearToken, hasToken, type WebDashboardResponse } from '../api'
-import type { Page } from './routing'
 import { THEME_OPTIONS, type ThemeId } from './themes'
 import { InformationModal } from '../components/InformationModal'
 
 interface TopBarProps {
-  page: Page
-  setPage: (page: Page) => void
   lastRefresh: Date | null
   demo: boolean
   isStreaming: boolean
@@ -28,22 +23,8 @@ interface TopBarProps {
   setReduceTextureEffects: (value: boolean) => void
   onOpenCommandPalette: () => void
   onSignOut: () => void
-  isPageEnabled: (page: Page) => boolean
+  onToggleMobileSidebar: () => void
 }
-
-const MOBILE_PAGE_OPTIONS: Array<{ value: Exclude<Page, 'session-detail'>; label: string }> = [
-  { value: 'dashboard', label: 'Home' },
-  { value: 'run', label: 'Run' },
-  { value: 'logs', label: 'Logs' },
-  { value: 'settings', label: 'Settings' },
-  { value: 'help', label: 'Help' },
-  { value: 'tasks', label: 'Tasks' },
-  { value: 'tools', label: 'Tools' },
-  { value: 'plugins', label: 'Plugins' },
-  { value: 'reports', label: 'Reports' },
-  { value: 'sessions', label: 'Sessions' },
-  { value: 'loot', label: 'Loot' },
-]
 
 function DiscordIcon({ size = 14 }: { size?: number }) {
   return (
@@ -56,8 +37,6 @@ function DiscordIcon({ size = 14 }: { size?: number }) {
 }
 
 export function TopBar({
-  page,
-  setPage,
   lastRefresh,
   demo,
   isStreaming,
@@ -72,7 +51,7 @@ export function TopBar({
   setReduceTextureEffects,
   onOpenCommandPalette,
   onSignOut,
-  isPageEnabled,
+  onToggleMobileSidebar,
 }: TopBarProps) {
   const REFRESH_BUTTON_DELAY_MS = 3500
   const [themeModalOpen, setThemeModalOpen] = useState(false)
@@ -202,8 +181,6 @@ export function TopBar({
     ? `System: ${healthLabel}${refreshPart}`
     : `System: ${healthLabel} | Updates: ${streamLabel}${refreshPart}${streamingError ? ` (${streamingError})` : ''}`
 
-  const mobilePage = page === 'session-detail' ? 'sessions' : page
-
   return (
     <>
       <InformationModal
@@ -277,6 +254,15 @@ export function TopBar({
 
       <header className="topbar">
         <div className="topbar-brand">
+          <button
+            type="button"
+            className="icon-btn topbar-hamburger-btn"
+            onClick={onToggleMobileSidebar}
+            aria-label="Toggle navigation menu"
+            title="Toggle navigation menu"
+          >
+            <Menu size={16} />
+          </button>
           <img src={faviconUrl} width={18} height={18} alt="" />
           <span
             className="brand-text"
@@ -297,78 +283,7 @@ export function TopBar({
           )}
         </div>
 
-      <nav className="topbar-nav">
-        {isPageEnabled('dashboard') && (
-          <button className={`nav-tab ${page === 'dashboard' ? 'active' : ''}`} onClick={() => setPage('dashboard')}>
-            <LayoutDashboard size={13} /> Home
-          </button>
-        )}
-        {isPageEnabled('run') && (
-          <button className={`nav-tab ${page === 'run' ? 'active' : ''}`} onClick={() => setPage('run')}>
-            <Play size={13} /> Run
-          </button>
-        )}
-        {isPageEnabled('logs') && (
-          <button className={`nav-tab ${page === 'logs' ? 'active' : ''}`} onClick={() => setPage('logs')}>
-            <Terminal size={13} /> Logs
-          </button>
-        )}
-        {isPageEnabled('settings') && (
-          <button className={`nav-tab ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')}>
-            <SettingsIcon size={13} /> Settings
-          </button>
-        )}
-        {isPageEnabled('help') && (
-          <button className={`nav-tab ${page === 'help' ? 'active' : ''}`} onClick={() => setPage('help')}>
-            <HelpCircle size={13} /> Help
-          </button>
-        )}
-        {isPageEnabled('tasks') && (
-          <button className={`nav-tab ${page === 'tasks' ? 'active' : ''}`} onClick={() => setPage('tasks')}>
-            <ListTodo size={13} /> Tasks
-          </button>
-        )}
-        {isPageEnabled('tools') && (
-          <button className={`nav-tab ${page === 'tools' ? 'active' : ''}`} onClick={() => setPage('tools')}>
-            <Wrench size={13} /> Tools
-          </button>
-        )}
-        {isPageEnabled('plugins') && (
-          <button className={`nav-tab ${page === 'plugins' ? 'active' : ''}`} onClick={() => setPage('plugins')}>
-            <Puzzle size={13} /> Plugins
-          </button>
-        )}
-        {isPageEnabled('reports') && (
-          <button className={`nav-tab ${page === 'reports' ? 'active' : ''}`} onClick={() => setPage('reports')}>
-            <FileText size={13} /> Reports
-          </button>
-        )}
-        {isPageEnabled('sessions') && (
-          <button className={`nav-tab ${page === 'sessions' || page === 'session-detail' ? 'active' : ''}`} onClick={() => setPage('sessions')}>
-            <Layers size={13} /> Sessions
-          </button>
-        )}
-        {isPageEnabled('loot') && (
-          <button className={`nav-tab ${page === 'loot' ? 'active' : ''}`} onClick={() => setPage('loot')}>
-            <KeyRound size={13} /> Loot
-          </button>
-        )}
-      </nav>
-
         <div className="topbar-right">
-          <label className="topbar-mobile-nav" aria-label="Navigate page">
-            <span className="topbar-mobile-nav-label">Page</span>
-          <select
-            className="topbar-mobile-nav-select"
-            name="mobile-nav"
-            value={mobilePage}
-            onChange={e => setPage(e.target.value as Exclude<Page, 'session-detail'>)}
-          >
-            {MOBILE_PAGE_OPTIONS.filter(o => isPageEnabled(o.value)).map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </label>
         <div
           className={`status-dot ${health?.status === 'healthy' ? (showRefreshButton ? 'polling' : 'online') : error ? 'error' : 'loading'}${statusPulse ? ' status-dot--pulse' : ''}`}
           title={statusTooltip}

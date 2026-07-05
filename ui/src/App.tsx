@@ -23,12 +23,15 @@ function parseDateFromStdout(stdout: string): Date | null {
 import { routeFromHash, type Page } from './app/routing'
 import { getToolsStatusWithParents } from './app/tools'
 import { TopBar } from './app/TopBar'
+import { Sidebar } from './app/Sidebar'
 import { THEME_STORAGE_KEY, isThemeId, type ThemeId } from './app/themes'
 import { MainContent } from './app/MainContent'
 import { CommandPalette } from './components/CommandPalette'
 import { ReportGenerationBubble } from './components/ReportGenerationBubble'
 import { ChatWidget } from './components/ChatWidget'
 import { usePageVisibility } from './hooks/usePageVisibility'
+import { usePersistentState } from './hooks/usePersistentState'
+import { useEscapeClose } from './hooks/useEscapeClose'
 import './App.css'
 
 const POLL_MS = 10_000
@@ -41,18 +44,21 @@ export default function App() {
   const initialRoute = routeFromHash()
   const [page, setPageState] = useState<Page>(initialRoute.page)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(initialRoute.sessionId)
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false)
 
   function setPage(p: Page) {
     if (p === 'session-detail') return
     window.location.hash = `/${p === 'dashboard' ? '' : p}`
     setPageState(p)
     setActiveSessionId(null)
+    setSidebarMobileOpen(false)
   }
 
   function openSessionDetail(sessionId: string) {
     window.location.hash = `/sessions/${sessionId}`
     setPageState('session-detail')
     setActiveSessionId(sessionId)
+    setSidebarMobileOpen(false)
   }
 
   // Keep state in sync if the user presses Back/Forward
@@ -61,6 +67,7 @@ export default function App() {
       const route = routeFromHash()
       setPageState(route.page)
       setActiveSessionId(route.sessionId)
+      setSidebarMobileOpen(false)
     }
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
@@ -74,6 +81,9 @@ export default function App() {
       setPage('dashboard')
     }
   }, [page, isPageEnabled])
+
+  const [sidebarCollapsed, setSidebarCollapsed] = usePersistentState('nyxstrike_sidebar_collapsed', false)
+  useEscapeClose(sidebarMobileOpen, () => setSidebarMobileOpen(false))
 
   const [health, setHealth] = useState<WebDashboardResponse | null>(null)
   const [tools, setTools] = useState<Tool[]>([])
@@ -467,8 +477,6 @@ export default function App() {
         )}
 
         <TopBar
-          page={page}
-          setPage={setPage}
           lastRefresh={lastRefresh}
           demo={demo}
           isStreaming={isStreaming}
@@ -483,7 +491,7 @@ export default function App() {
           setReduceTextureEffects={setReduceTextureEffects}
           onOpenCommandPalette={openCommandPalette}
           onSignOut={() => { setAuthed(false); setNeedsAuth(true) }}
-          isPageEnabled={isPageEnabled}
+          onToggleMobileSidebar={() => setSidebarMobileOpen(v => !v)}
         />
 
         {showPaletteHint && (
@@ -496,41 +504,59 @@ export default function App() {
           </div>
         )}
 
-        <MainContent
-          page={page}
-          demo={demo}
-          tools={tools}
-          health={health}
-          toolsStatusWithParents={toolsStatusWithParents}
-          runHistory={runHistory}
-          setRunHistory={setRunHistory}
-          fetchServerRunHistory={fetchServerRunHistory}
-          clearServerRunHistory={clearServerRunHistory}
-          commandToolRequest={commandToolRequest}
-          onCommandToolHandled={() => setCommandToolRequest(null)}
-          openSessionDetail={openSessionDetail}
-          activeSessionId={activeSessionId}
-          setPage={setPage}
-          addBrowserRunEntry={addBrowserRunEntry}
-          logLines={logLines}
-          logAutoScroll={logAutoScroll}
-          setLogAutoScroll={setLogAutoScroll}
-          logLimit={logLimit}
-          setLogLimit={setLogLimit}
-          logEndRef={logEndRef}
-          loading={loading}
-          error={error}
-          toolCategories={toolCategories}
-          themeId={themeId}
-          setThemeId={setThemeId}
-          reduceTextureEffects={reduceTextureEffects}
-          setReduceTextureEffects={setReduceTextureEffects}
-          demoProcesses={demoProcesses}
-          demoSessions={demoSessions}
-          isPageEnabled={isPageEnabled}
-          togglePage={togglePage}
-          demoCpuHistory={demoCpuHistory}
-        />
+        <div
+          className="app-body"
+          style={{ '--sidebar-w': sidebarCollapsed ? '3.25rem' : '13rem' } as React.CSSProperties}
+        >
+          <Sidebar
+            page={page}
+            setPage={setPage}
+            isPageEnabled={isPageEnabled}
+            collapsed={sidebarCollapsed}
+            onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
+            mobileOpen={sidebarMobileOpen}
+            onCloseMobile={() => setSidebarMobileOpen(false)}
+          />
+          {sidebarMobileOpen && (
+            <div className="sidebar-backdrop" onClick={() => setSidebarMobileOpen(false)} />
+          )}
+
+          <MainContent
+            page={page}
+            demo={demo}
+            tools={tools}
+            health={health}
+            toolsStatusWithParents={toolsStatusWithParents}
+            runHistory={runHistory}
+            setRunHistory={setRunHistory}
+            fetchServerRunHistory={fetchServerRunHistory}
+            clearServerRunHistory={clearServerRunHistory}
+            commandToolRequest={commandToolRequest}
+            onCommandToolHandled={() => setCommandToolRequest(null)}
+            openSessionDetail={openSessionDetail}
+            activeSessionId={activeSessionId}
+            setPage={setPage}
+            addBrowserRunEntry={addBrowserRunEntry}
+            logLines={logLines}
+            logAutoScroll={logAutoScroll}
+            setLogAutoScroll={setLogAutoScroll}
+            logLimit={logLimit}
+            setLogLimit={setLogLimit}
+            logEndRef={logEndRef}
+            loading={loading}
+            error={error}
+            toolCategories={toolCategories}
+            themeId={themeId}
+            setThemeId={setThemeId}
+            reduceTextureEffects={reduceTextureEffects}
+            setReduceTextureEffects={setReduceTextureEffects}
+            demoProcesses={demoProcesses}
+            demoSessions={demoSessions}
+            isPageEnabled={isPageEnabled}
+            togglePage={togglePage}
+            demoCpuHistory={demoCpuHistory}
+          />
+        </div>
       </div>
     </ToastProvider>
   )

@@ -2,6 +2,9 @@
 
 ## 1.7.0 - phishfalcon (NEXT)
 
+### Navigation
+- Replaced the top nav tab bar with a collapsible sidebar — collapses to an icon-only rail on desktop (state persists across reloads) and becomes a slide-out overlay drawer on mobile, replacing the old page dropdown.
+
 ### Intelligence
 - The Intelligent Decision Engine now considers the current session's run history when scoring tools — a tool that just failed is deprioritized (not excluded) in favor of alternatives on the next recommendation, instead of being suggested again unchanged.
 

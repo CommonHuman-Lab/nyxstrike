@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Search } from 'lucide-react'
 import type { Tool } from '../api'
 import type { Page } from '../app/routing'
+import { NAV_ENTRIES } from '../app/navRegistry'
 import { useEscapeClose } from '../hooks/useEscapeClose'
 import './CommandPalette.css'
 
@@ -21,18 +22,10 @@ interface PaletteAction {
   run: () => void
 }
 
-const PAGE_ACTIONS: Array<{ page: Page; label: string }> = [
-  { page: 'dashboard', label: 'Open Home' },
-  { page: 'run', label: 'Open Run' },
-  { page: 'reports', label: 'Open Reports' },
-  { page: 'tasks', label: 'Open Tasks' },
-  { page: 'tools', label: 'Open Tools' },
-  { page: 'sessions', label: 'Open Sessions' },
-  { page: 'loot', label: 'Open Loot' },
-  { page: 'settings', label: 'Open Settings' },
-  { page: 'logs', label: 'Open Logs' },
-  { page: 'help', label: 'Open Help' },
-]
+const PAGE_ACTIONS: Array<{ page: Page; label: string }> = NAV_ENTRIES.map(({ id, paletteLabel }) => ({
+  page: id,
+  label: paletteLabel,
+}))
 
 export function CommandPalette({ open, onClose, setPage, tools, onSelectTool }: CommandPaletteProps) {
   const [query, setQuery] = useState('')

@@ -1,8 +1,9 @@
 import { usePersistentState } from './usePersistentState'
 import type { Page } from '../app/routing'
+import { NAV_ENTRIES, MANDATORY_PAGE_IDS } from '../app/navRegistry'
 
 /** Pages that cannot be disabled (always visible). */
-export const ALWAYS_VISIBLE_PAGES: ReadonlySet<Page> = new Set(['dashboard', 'settings'])
+export const ALWAYS_VISIBLE_PAGES: ReadonlySet<Page> = MANDATORY_PAGE_IDS
 
 export interface PageConfig {
   page: Exclude<Page, 'session-detail'>
@@ -10,20 +11,12 @@ export interface PageConfig {
   description: string
 }
 
-/** All navigable pages with human-readable metadata. */
-export const PAGE_CONFIGS: PageConfig[] = [
-  { page: 'dashboard', label: 'Home', description: 'Overview dashboard with KPIs and live status' },
-  { page: 'run',       label: 'Run',  description: 'Execute security tools interactively' },
-  { page: 'logs',      label: 'Logs', description: 'Live server log stream' },
-  { page: 'tasks',     label: 'Tasks', description: 'Background task queue and progress' },
-  { page: 'tools',     label: 'Tools', description: 'Browse and inspect available tools' },
-  { page: 'plugins',   label: 'Plugins', description: 'Manage skill and plugin extensions' },
-  { page: 'reports',   label: 'Reports', description: 'Generated scan reports' },
-  { page: 'sessions',  label: 'Sessions', description: 'Saved recon/engagement sessions' },
-  { page: 'loot',      label: 'Loot', description: 'Captured credentials and artefacts' },
-  { page: 'help',      label: 'Help', description: 'Documentation and keyboard shortcuts' },
-  { page: 'settings',  label: 'Settings', description: 'Application settings (always visible)' },
-]
+/** All navigable pages with human-readable metadata, derived from the nav registry. */
+export const PAGE_CONFIGS: PageConfig[] = NAV_ENTRIES.map(({ id, label, description }) => ({
+  page: id,
+  label,
+  description,
+}))
 
 const STORAGE_KEY = 'nyxstrike_disabled_pages'
 
