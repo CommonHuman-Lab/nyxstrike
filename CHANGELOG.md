@@ -4,10 +4,9 @@
 
 ### Navigation
 - Replaced the top nav tab bar with a collapsible sidebar — collapses to an icon-only rail on desktop (state persists across reloads) and becomes a slide-out overlay drawer on mobile, replacing the old page dropdown.
-- Fixed the Run page's right-hand panels extending past the browser window edge on narrower widths — a side effect of the sidebar's persistent width that the Run page's full-bleed layout hadn't accounted for.
 
 ### Themes
-- Added 8 new themes — Dracula, Gruvbox, Folio, Tokyo, Catppuccin, Synthwave, Rosé, and Frost — bringing the total to 19.
+- Added new themes — Dracula, Rosé, and more.
 - Switching themes now cross-fades instead of hard-cutting, and every theme has a subtle animated accent sweep across the top bar and sidebar edge; both respect the OS-level "reduce motion" setting.
 
 ### Intelligence

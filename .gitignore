@@ -21,3 +21,8 @@ install_log.txt
 .opencode/package-lock.json
 .opencode/bun.lock
 .opencode/.gitignore
+
+# Screenshot/demo-content tooling output
+/scripts/screenshots/
+/scripts/themes/
+/scripts/content/

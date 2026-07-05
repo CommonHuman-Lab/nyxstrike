@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "playwright": "^1.61.0"
+  },
   "devDependencies": {
     "typescript": "^5.9.3"
   }
