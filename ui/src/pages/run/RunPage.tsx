@@ -47,9 +47,23 @@ export function RunPage({
   const [modalEntry, setModalEntry] = useState<RunHistoryEntry | null>(null)
   const [histSearch, setHistSearch] = useState('')
   const [runError, setRunError] = useState<string | null>(null)
+  const [liveOutput, setLiveOutput] = useState<string | null>(null)
   const [favorites, setFavorites] = usePersistentState<string[]>(RUN_FAVORITES_KEY, [])
   const [recentTargets, setRecentTargets] = usePersistentState<string[]>(RUN_RECENT_TARGETS_KEY, [])
   const runIdRef = useRef(0)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const liveStreamRef = useRef<EventSource | null>(null)
+
+  function stopLiveTracking() {
+    if (pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+    liveStreamRef.current?.close()
+    liveStreamRef.current = null
+  }
+
+  useEffect(() => stopLiveTracking, [])
 
   const cats = getToolCategories(tools)
   const filtered = filterToolsByOptions(tools, {
@@ -97,9 +111,43 @@ export function RunPage({
     setRunError(null)
     setRunning(true)
     setViewEntry(null)
+    setLiveOutput(null)
     const id = ++runIdRef.current
+    stopLiveTracking()
     try {
-      const result = await api.runTool(selected.endpoint, payload)
+      const { task_id } = await api.executeToolAsync(selected.name, payload)
+
+      const liveSource = api.processesStream()
+      liveStreamRef.current = liveSource
+      liveSource.onmessage = e => {
+        try {
+          const streamPayload = JSON.parse(e.data) as { processes?: Record<string, { task_id?: string | null; last_output?: string }> }
+          const match = Object.values(streamPayload.processes ?? {}).find(p => p.task_id === task_id)
+          if (match) setLiveOutput(match.last_output || null)
+        } catch {
+          // ignore malformed SSE frames — the poll loop is the source of truth for completion
+        }
+      }
+
+      const result = await new Promise<import('../../api').ToolExecResponse>((resolve, reject) => {
+        pollRef.current = setInterval(async () => {
+          try {
+            const res = await api.getTaskResult(task_id)
+            const { status } = res.result
+            if (status === 'completed') {
+              stopLiveTracking()
+              resolve(res.result.result as import('../../api').ToolExecResponse)
+            } else if (status === 'failed' || status === 'not_found') {
+              stopLiveTracking()
+              reject(new Error(res.result.error || `Tool execution ${status}`))
+            }
+          } catch (e) {
+            stopLiveTracking()
+            reject(e)
+          }
+        }, 1500)
+      })
+
       const entry: RunHistoryEntry = { id, tool: selected.name, params: payload, result, ts: new Date(), source: 'browser' }
       setHistory(h => [entry, ...h].slice(0, 100)) // Limit to last 100 runs
       setViewEntry(entry)
@@ -110,6 +158,8 @@ export function RunPage({
     } catch (e) {
       setRunError(String(e))
     } finally {
+      stopLiveTracking()
+      setLiveOutput(null)
       setRunning(false)
     }
   }
@@ -183,6 +233,7 @@ export function RunPage({
         setShowOptional={setShowOptional}
         running={running}
         runError={runError}
+        liveOutput={liveOutput}
         isFavorite={selected ? favorites.includes(selected.name) : false}
         onToggleFavorite={toggleFavoriteSelected}
         onRunTool={runTool}

@@ -2,10 +2,18 @@
 
 ## 1.7.0 - phishfalcon (NEXT)
 
-### Fixes
+### Intelligence
+- The Intelligent Decision Engine now considers the current session's run history when scoring tools — a tool that just failed is deprioritized (not excluded) in favor of alternatives on the next recommendation, instead of being suggested again unchanged.
 
+### Run page & live output
+- The Run page no longer blocks on a single long-running request with no feedback — tool execution now streams live output and progress while it runs, instead of only showing results once the command finishes.
+- Fixed the process dashboard and stream showing a fake "Running for Xs" placeholder instead of real command output — `last_output` now carries the tool's actual recent stdout/stderr, visible live on the Tasks page.
+
+### Error recovery
 - Fixed `/api/error-handling/execute-with-recovery` raising a server error on every real call.
 - Wired automatic error recovery (retry/backoff, alternative-tool swap) into recon, scanning, fuzzing, and forensics tool executions.
+
+### Process pool
 - Fixed `/api/process/execute-async` returning the cached result payload instead of a task ID on a cache hit, which broke polling it via `/api/process/get-task-result/<task_id>`.
 - Fixed the process pool's worker auto-scaling miscounting active workers after scaling down.
 - All tool command execution now runs through the process pool's auto-scaling instead of bypassing it, and pooled task results no longer leak memory on long-running instances.

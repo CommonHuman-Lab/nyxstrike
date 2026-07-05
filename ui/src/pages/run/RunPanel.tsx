@@ -17,6 +17,7 @@ interface RunPanelProps {
   setShowOptional: Dispatch<SetStateAction<boolean>>
   running: boolean
   runError: string | null
+  liveOutput: string | null
   isFavorite: boolean
   onToggleFavorite: () => void
   onRunTool: () => Promise<void>
@@ -32,6 +33,7 @@ export function RunPanel({
   setShowOptional,
   running,
   runError,
+  liveOutput,
   isFavorite,
   onToggleFavorite,
   onRunTool,
@@ -145,6 +147,9 @@ export function RunPanel({
                   </>
                 )}
               </div>
+              {running && liveOutput && (
+                <pre className="run-output-pre">{liveOutput}</pre>
+              )}
               {viewEntry && (
                 <pre className="run-output-pre">
                   {viewEntry.result.stdout || viewEntry.result.stderr || '(no output)'}

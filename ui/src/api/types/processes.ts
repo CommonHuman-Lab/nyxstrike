@@ -60,3 +60,24 @@ export interface ProcessesStreamResponse {
   system_load: ProcessSystemLoad;
   pool_stats: Record<string, unknown>;
 }
+
+/** Response from POST /api/intelligence/execute-tool-async. */
+export interface ExecuteToolAsyncResponse {
+  success: boolean;
+  task_id: string;
+  tool: string;
+  error?: string;
+}
+
+/** Response from GET /api/process/get-task-result/<task_id>. */
+export interface TaskResultResponse {
+  success: boolean;
+  task_id: string;
+  result: {
+    status: 'queued' | 'running' | 'completed' | 'failed' | 'not_found';
+    result?: import('./runs').ToolExecResponse & Record<string, unknown>;
+    error?: string;
+    execution_time?: number;
+  };
+  timestamp: string;
+}

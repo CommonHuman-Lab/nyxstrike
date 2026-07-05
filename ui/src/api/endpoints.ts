@@ -20,6 +20,8 @@ import type {
   ChatMessagesResponse,
   ClassifyTaskResponse,
   CreateAttackChainResponse,
+  ExecuteToolAsyncResponse,
+  TaskResultResponse,
   CreateFindingPayload,
   CreateSessionFromTemplatePayload,
   CreateSessionPayload,
@@ -112,6 +114,11 @@ export const api = {
   clearRunHistory: () => post<{ success: boolean }>('/api/runs/clear'),
   runTool: (endpoint: string, params: Record<string, unknown>) =>
     postWithTimeout<ToolExecResponse>(endpoint, params, 86400),
+  /** Submit a tool for async execution — returns a task_id immediately instead of blocking. */
+  executeToolAsync: (tool: string, params: Record<string, unknown>) =>
+    post<ExecuteToolAsyncResponse>('/api/intelligence/execute-tool-async', { tool, params }),
+  getTaskResult: (taskId: string) =>
+    get<TaskResultResponse>(`/api/process/get-task-result/${taskId}`),
 
   processDashboard: () => get<ProcessDashboardResponse>('/api/processes/dashboard'),
   processList: () => get<ProcessListResponse>('/api/processes/list'),

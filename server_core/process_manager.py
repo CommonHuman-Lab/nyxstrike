@@ -13,7 +13,7 @@ class ProcessManager:
     """Enhanced process manager for command termination and monitoring"""
 
     @staticmethod
-    def register_process(pid, command, process_obj):
+    def register_process(pid, command, process_obj, task_id=None):
         """Register a new active process"""
         with process_lock:
             active_processes[pid] = {
@@ -24,7 +24,8 @@ class ProcessManager:
                 "status": "running",
                 "progress": 0.0,
                 "last_output": "",
-                "bytes_processed": 0
+                "bytes_processed": 0,
+                "task_id": task_id or ""
             }
             logger.info(f"🆔 REGISTERED: Process {pid} - {command[:50]}...")
 

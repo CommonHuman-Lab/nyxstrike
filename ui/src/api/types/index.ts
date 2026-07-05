@@ -32,6 +32,7 @@ export type {
 } from './runs';
 
 export type {
+  ExecuteToolAsyncResponse,
   PoolStatsResponse,
   ProcessDashboardResponse,
   ProcessEntry,
@@ -39,6 +40,7 @@ export type {
   ProcessListResponse,
   ProcessesStreamResponse,
   ProcessSystemLoad,
+  TaskResultResponse,
 } from './processes';
 
 export type { CacheStatsResponse } from './cache';

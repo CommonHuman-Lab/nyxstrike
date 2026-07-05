@@ -101,6 +101,23 @@ def _clean_output(text: str, command: str = "") -> str:
     return cleaned
 
 
+_LAST_OUTPUT_MAX_LINES = 12
+_LAST_OUTPUT_MAX_CHARS = 4000
+
+
+def _build_last_output(stdout_chunks: list, stderr_chunks: list, elapsed: float) -> str:
+    """Return a rolling tail of real captured output for live-progress display.
+
+    Falls back to a synthetic elapsed-time string only until the first line
+    of real output has been captured. stdout/stderr chunks are concatenated
+    in append order within each stream, not merged by wall-clock time.
+    """
+    recent_lines = (stdout_chunks + stderr_chunks)[-_LAST_OUTPUT_MAX_LINES:]
+    if recent_lines:
+        return _strip_ansi("".join(recent_lines))[-_LAST_OUTPUT_MAX_CHARS:]
+    return f"Running for {elapsed:.1f}s"
+
+
 def _box_row(content_with_ansi: str) -> str:
     C = ModernVisualEngine.COLORS
     visible = _ANSI.sub('', content_with_ansi)
@@ -121,9 +138,10 @@ COMMAND_MAX_RUNTIME = config_core.get("COMMAND_MAX_RUNTIME", 86400)
 class EnhancedCommandExecutor:
     """Enhanced command executor with caching, progress tracking, and better output handling"""
 
-    def __init__(self, command: str, timeout: Optional[int] = COMMAND_TIMEOUT):
+    def __init__(self, command: str, timeout: Optional[int] = COMMAND_TIMEOUT, task_id: Optional[str] = None):
         self.command = command
         self.timeout = timeout
+        self.task_id = task_id
         self.process = None
         self.stdout_data = ""
         self.stderr_data = ""
@@ -193,11 +211,13 @@ class EnhancedCommandExecutor:
             bytes_processed = sum(len(c) for c in self._stdout_chunks) + sum(len(c) for c in self._stderr_chunks)
             speed = f"{bytes_processed/elapsed:.0f} B/s" if elapsed > 0 else "0 B/s"
 
-            # Update process manager with progress
+            # Update process manager with progress, preferring real captured
+            # output over the synthetic elapsed-time placeholder
+            last_output = _build_last_output(self._stdout_chunks, self._stderr_chunks, elapsed)
             ProcessManager.update_process_progress(
                 self.process.pid,
                 progress_fraction,
-                f"Running for {elapsed:.1f}s",
+                last_output,
                 bytes_processed
             )
 
@@ -252,7 +272,7 @@ class EnhancedCommandExecutor:
             logger.info(f"🆔 PROCESS: PID {pid} started")
 
             # Register process with ProcessManager (v5.0 enhancement)
-            ProcessManager.register_process(pid, self.command, self.process)
+            ProcessManager.register_process(pid, self.command, self.process, task_id=self.task_id)
 
             # Start threads to read output continuously
             self.stdout_thread = threading.Thread(target=self._read_stdout)

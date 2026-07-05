@@ -1,5 +1,6 @@
 import os
 import shlex
+import threading
 import uuid
 import psutil
 from typing import Any, Dict, Optional
@@ -10,6 +11,8 @@ from server_core.singletons import enhanced_process_manager as _epm
 
 # CPU threshold above which tool commands are niced down.
 _CPU_NICE_THRESHOLD = config_core.get("CPU_NICE_THRESHOLD", 85)
+
+_current_task_id = threading.local()
 
 COMMAND_TIMEOUT = config_core.get("COMMAND_TIMEOUT", 300)  # Default to 5 minutes if not set
 
@@ -134,9 +137,10 @@ def execute_command(
   # concurrently app-wide.
   try:
     task_id = f"exec_{uuid.uuid4().hex}"
+    external_task_id = getattr(_current_task_id, "value", None)
     result = _epm.process_pool.submit_and_wait(
       task_id,
-      lambda: EnhancedCommandExecutor(exec_command, timeout=effective_timeout).execute(),
+      lambda: EnhancedCommandExecutor(exec_command, timeout=effective_timeout, task_id=external_task_id).execute(),
     )
     if "stdout" not in result:
       # submit_and_wait's own failure shape ({"success": False, "error": ...})
@@ -155,7 +159,7 @@ def execute_command(
   except Exception:
     # Never let a process-pool hiccup block a tool call — fall back to
     # running it directly in this thread.
-    result = EnhancedCommandExecutor(exec_command, timeout=effective_timeout).execute()
+    result = EnhancedCommandExecutor(exec_command, timeout=effective_timeout, task_id=external_task_id).execute()
 
   if active_cache is not None and result.get("success", False):
     active_cache.set(command, {}, result)

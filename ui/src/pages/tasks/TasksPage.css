@@ -149,6 +149,20 @@
 .tasks-row:last-child { border-bottom: none; }
 .tasks-row:hover { background: var(--bg-card2); }
 
+.tasks-row-output {
+  padding: 6px 12px 8px 84px;
+  border-bottom: 1px solid var(--border);
+  border-top: 1px dashed var(--border);
+  background: var(--bg-card2);
+  color: var(--text-dim);
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 110px;
+  overflow-y: auto;
+}
+.tasks-row-output:last-child { border-bottom: none; }
+
 .tasks-pid { color: var(--text-dim); }
 .tasks-cmd {
   white-space: nowrap;

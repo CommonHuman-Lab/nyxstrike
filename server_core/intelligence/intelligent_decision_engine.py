@@ -63,6 +63,8 @@ API_PATH_HINTS = (
     "/openapi",
 )
 
+SESSION_FAILURE_PENALTY_FACTOR = 0.2
+
 
 class IntelligentDecisionEngine(LegacyParameterOptimizers):
     """AI-powered tool selection and parameter optimization engine."""
@@ -386,24 +388,75 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         objective_norm = objective_alias(objective)
         return f"{profile.target_type.value}|{objective_norm}|{primary_tech}"
 
-    def _effective_score(self, tool: str, target_type_value: str, context_key: Optional[str] = None) -> float:
+    def _session_failure_penalties(self, session_id: Optional[str]) -> Dict[str, float]:
+        """Return {tool: penalty_factor} for tools whose most recent run_log entry
+        in this session ended in failure.
+
+        Best-effort and non-fatal: a missing session, malformed run_log, or any
+        error while reading session state yields an empty dict, i.e. no
+        behavior change. Uses the *last* recorded outcome per tool, so a tool
+        that failed and later succeeded on retry is no longer penalized.
+        """
+        if not session_id:
+            return {}
+        try:
+            import server_core.session_flow as session_flow
+
+            loaded = session_flow.load_session_any(session_id)
+        except Exception:
+            return {}
+        if not loaded:
+            return {}
+        session_dict, _state = loaded
+        run_log = session_dict.get("run_log", [])
+        if not isinstance(run_log, list):
+            return {}
+
+        last_outcome: Dict[str, bool] = {}
+        for entry in run_log:
+            if not isinstance(entry, dict):
+                continue
+            tool = entry.get("tool")
+            if not tool:
+                continue
+            last_outcome[tool] = bool(entry.get("success", False))
+
+        return {tool: SESSION_FAILURE_PENALTY_FACTOR for tool, ok in last_outcome.items() if not ok}
+
+    def _effective_score(
+        self,
+        tool: str,
+        target_type_value: str,
+        context_key: Optional[str] = None,
+        session_penalties: Optional[Dict[str, float]] = None,
+    ) -> float:
         """Return best available effectiveness score for a tool."""
         baseline = self.tool_effectiveness.get(target_type_value, {}).get(tool, 0.5)
         stats_store = _get_tool_stats_store()
         if context_key:
-            return stats_store.blended_effectiveness_contextual(tool, baseline, context_key)
-        return stats_store.blended_effectiveness(tool, baseline)
+            score = stats_store.blended_effectiveness_contextual(tool, baseline, context_key)
+        else:
+            score = stats_store.blended_effectiveness(tool, baseline)
+        if session_penalties:
+            score *= session_penalties.get(tool, 1.0)
+        return score
 
     def select_optimal_tools(
         self,
         profile: TargetProfile,
         objective: str = "comprehensive",
         planner_mode: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> List[str]:
-        """Select optimal tools based on profile with switchable planning modes."""
+        """Select optimal tools based on profile with switchable planning modes.
+
+        When session_id is given, tools that most recently failed in that
+        session are deprioritized (not excluded) relative to alternatives.
+        """
         effective_mode = self._resolve_planner_mode(planner_mode)
+        session_penalties = self._session_failure_penalties(session_id)
         if effective_mode == "legacy":
-            selected_tools = self._select_optimal_tools_legacy(profile, objective)
+            selected_tools = self._select_optimal_tools_legacy(profile, objective, session_penalties)
         else:
             selected_tools = rank_tools_precision_first(
                 profile=profile,
@@ -414,6 +467,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
                     tool,
                     target_type_value,
                     self._build_context_key(profile, objective),
+                    session_penalties,
                 ),
             )
 
@@ -423,14 +477,19 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             fallback_context_key = self._build_context_key(profile, objective)
             fallback = sorted(
                 effectiveness_map.keys(),
-                key=lambda t: self._effective_score(t, target_type, fallback_context_key),
+                key=lambda t: self._effective_score(t, target_type, fallback_context_key, session_penalties),
                 reverse=True,
             )
             selected_tools = fallback[:8]
 
         return selected_tools
 
-    def _select_optimal_tools_legacy(self, profile: TargetProfile, objective: str = "comprehensive") -> List[str]:
+    def _select_optimal_tools_legacy(
+        self,
+        profile: TargetProfile,
+        objective: str = "comprehensive",
+        session_penalties: Optional[Dict[str, float]] = None,
+    ) -> List[str]:
         """Legacy ranking: effectiveness-only sorting with objective size limits."""
         target_type = profile.target_type.value
         effectiveness_map = self.tool_effectiveness.get(target_type, {})
@@ -439,7 +498,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
 
         sorted_tools = sorted(
             effectiveness_map.keys(),
-            key=lambda tool: self._effective_score(tool, target_type),
+            key=lambda tool: self._effective_score(tool, target_type, None, session_penalties),
             reverse=True,
         )
 
@@ -540,11 +599,15 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         objective: str = "comprehensive",
         runtime_context: Optional[Dict[str, Any]] = None,
         planner_mode: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> AttackChain:
         """Create an intelligent attack chain based on target profile."""
         chain = AttackChain(profile)
         if runtime_context is None:
             runtime_context = {}
+
+        if session_id is None and isinstance(runtime_context, dict):
+            session_id = runtime_context.get("session_id")
 
         objective_key = objective_alias(objective)
         objective_overrides = {
@@ -561,8 +624,11 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
         if effective_mode is None and isinstance(runtime_context, dict):
             effective_mode = runtime_context.get("planner_mode")
 
-        ranked_tools = self.select_optimal_tools(profile, objective, planner_mode=effective_mode)
+        ranked_tools = self.select_optimal_tools(
+            profile, objective, planner_mode=effective_mode, session_id=session_id
+        )
         ranked_set = set(ranked_tools)
+        session_penalties = self._session_failure_penalties(session_id)
 
         pattern_tools = [step["tool"] for step in pattern]
         if ranked_tools:
@@ -606,7 +672,7 @@ class IntelligentDecisionEngine(LegacyParameterOptimizers):
             final_params.update(optimizer_params)
             final_params.update(runtime_override)
 
-            effectiveness = self._effective_score(tool, profile.target_type.value, context_key)
+            effectiveness = self._effective_score(tool, profile.target_type.value, context_key, session_penalties)
             success_prob = max(0.01, min(0.99, effectiveness * profile.confidence_score))
             exec_time = TIME_ESTIMATES.get(tool, 180)
             reason = explain_selection_reason(

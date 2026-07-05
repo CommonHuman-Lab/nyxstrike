@@ -267,3 +267,42 @@ class TestErrorHandling:
         proc = _make_process(returncode=1, stdout_lines=[])
         result = _exec(subprocess_mock=_make_subprocess_mock(proc))
         assert result["success"] is False
+
+
+# ---------------------------------------------------------------------------
+# _build_last_output — live progress tail used to feed ProcessManager
+# ---------------------------------------------------------------------------
+
+class TestBuildLastOutput:
+    def test_falls_back_to_synthetic_string_when_no_output_yet(self):
+        from server_core.enhanced_command_executor import _build_last_output
+
+        result = _build_last_output([], [], elapsed=2.3)
+        assert result == "Running for 2.3s"
+
+    def test_returns_real_captured_output_once_available(self):
+        from server_core.enhanced_command_executor import _build_last_output
+
+        result = _build_last_output(["line one\n", "line two\n"], [], elapsed=1.0)
+        assert result == "line one\nline two\n"
+        assert "Running for" not in result
+
+    def test_combines_stdout_and_stderr_chunks(self):
+        from server_core.enhanced_command_executor import _build_last_output
+
+        result = _build_last_output(["out\n"], ["err\n"], elapsed=1.0)
+        assert result == "out\nerr\n"
+
+    def test_truncates_to_max_lines(self):
+        from server_core.enhanced_command_executor import _build_last_output, _LAST_OUTPUT_MAX_LINES
+
+        lines = [f"line {i}\n" for i in range(_LAST_OUTPUT_MAX_LINES + 5)]
+        result = _build_last_output(lines, [], elapsed=1.0)
+        assert "line 0\n" not in result
+        assert f"line {_LAST_OUTPUT_MAX_LINES + 4}\n" in result
+
+    def test_strips_ansi_codes(self):
+        from server_core.enhanced_command_executor import _build_last_output
+
+        result = _build_last_output(["\x1b[32mgreen text\x1b[0m\n"], [], elapsed=1.0)
+        assert result == "green text\n"
