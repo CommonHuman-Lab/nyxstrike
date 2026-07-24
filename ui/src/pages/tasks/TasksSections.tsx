@@ -79,7 +79,6 @@ export function WorkerPoolSection({
 
 export function ProcessesSection({
   processes,
-  actionMsg,
   streamStatus,
   onRefresh,
   onPause,
@@ -88,7 +87,6 @@ export function ProcessesSection({
   onCancelAiTask,
 }: {
   processes: ProcessDashboardResponse['processes']
-  actionMsg: string | null
   streamStatus: StreamStatus
   onRefresh: () => Promise<void>
   onPause: (pid: number) => Promise<void>
@@ -101,7 +99,6 @@ export function ProcessesSection({
       <div className="section-header">
         <h3>Active Processes <span className="badge">{processes.length}</span></h3>
         <div className="section-header-controls">
-          {actionMsg && <span className="section-meta" style={{ color: 'var(--amber)' }}>{actionMsg}</span>}
           {streamStatus !== 'streaming' && (
             <button className="icon-btn" onClick={onRefresh} title="Refresh"><RefreshCw size={14} /></button>
           )}

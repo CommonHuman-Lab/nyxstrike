@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api'
 import type { ProcessDashboardResponse, ProcessesStreamResponse } from '../../api'
+import { useToast } from '../../components/ToastProvider'
 
 export type StreamStatus = 'polling' | 'streaming' | 'error'
 
@@ -9,7 +10,6 @@ interface UseProcessDashboardResult {
   poolStats: Record<string, unknown> | null
   loading: boolean
   error: string | null
-  actionMsg: string | null
   streamStatus: StreamStatus
   fetchData: () => Promise<void>
   pauseProcess: (pid: number) => Promise<void>
@@ -55,8 +55,8 @@ export function useProcessDashboard(
   )
   const [loading, setLoading] = useState(!demoData)
   const [error, setError] = useState<string | null>(null)
-  const [actionMsg, setActionMsg] = useState<string | null>(null)
   const [streamStatus, setStreamStatus] = useState<StreamStatus>(demoData ? 'polling' : 'streaming')
+  const { pushToast } = useToast()
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const streamRef = useRef<EventSource | null>(null)
@@ -180,12 +180,11 @@ export function useProcessDashboard(
   ) => {
     try {
       const result = await fn()
-      setActionMsg(result.success ? (result.message ?? `${label} OK`) : (result.error ?? `${label} failed`))
+      pushToast(result.success ? 'success' : 'error', result.success ? (result.message ?? `${label} OK`) : (result.error ?? `${label} failed`))
     } catch (e) {
-      setActionMsg(String(e))
+      pushToast('error', String(e))
     }
 
-    setTimeout(() => setActionMsg(null), 3000)
     await fetchData()
     if (label === 'Terminated') {
       setData(prev => prev ? {
@@ -193,14 +192,13 @@ export function useProcessDashboard(
         processes: prev.processes.filter(p => p.status !== 'terminated'),
       } : prev)
     }
-  }, [fetchData])
+  }, [fetchData, pushToast])
 
   return {
     data,
     poolStats,
     loading,
     error,
-    actionMsg,
     streamStatus,
     fetchData,
     pauseProcess: (pid: number) => runAction(() => api.pauseProcess(pid), 'Paused'),

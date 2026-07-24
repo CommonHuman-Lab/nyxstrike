@@ -3,6 +3,7 @@ import { Brain, RefreshCw } from 'lucide-react'
 import { api } from '../../api'
 import type { LlmSession, LlmVulnerability } from '../../api/types/llm'
 import { CollapseChevron } from '../../components/CollapseChevron'
+import { useToast } from '../../components/ToastProvider'
 
 const RISK_COLOR: Record<string, string> = {
   CRITICAL: 'var(--red)',
@@ -27,6 +28,7 @@ interface SessionRowProps {
 }
 
 function SessionRow({ session }: SessionRowProps) {
+  const { pushToast } = useToast()
   const [open, setOpen] = useState(false)
   const [vulns, setVulns] = useState<LlmVulnerability[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -37,8 +39,9 @@ function SessionRow({ session }: SessionRowProps) {
       try {
         const detail = await api.llmSessionDetail(session.session_id)
         setVulns(detail.vulnerabilities)
-      } catch {
+      } catch (e) {
         setVulns([])
+        pushToast('error', `Failed to load findings: ${e}`)
       } finally {
         setLoading(false)
       }

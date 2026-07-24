@@ -4,9 +4,11 @@ import { api } from '../../api'
 import type { ManifestPlugin } from '../../api'
 import { StatCard } from '../../components/StatCard'
 import { PluginModal } from '../../components/PluginModal'
+import { useToast } from '../../components/ToastProvider'
 import './PluginsPage.css'
 
 export default function PluginsPage() {
+  const { pushToast } = useToast()
   const [plugins, setPlugins] = useState<ManifestPlugin[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +51,7 @@ export default function PluginsPage() {
       setPlugins(prev =>
         prev.map(p => p.name === plugin.name ? { ...p, enabled: plugin.enabled } : p)
       )
-      setError(`Failed to update '${plugin.name}': ${e}`)
+      pushToast('error', `Failed to update '${plugin.name}': ${e}`)
     }
   }
 
