@@ -7,7 +7,7 @@
 
 ### Themes
 - Added new themes — Dracula, Rosé, and more.
-- Switching themes now cross-fades instead of hard-cutting, and every theme has a subtle animated accent sweep across the top bar and sidebar edge; both respect the OS-level "reduce motion" setting.
+- Every theme has a subtle animated accent sweep across the top bar and sidebar edge; both respect the OS-level "reduce motion" setting.
 
 ### Intelligence
 - The Intelligent Decision Engine now considers the current session's run history when scoring tools — a tool that just failed is deprioritized (not excluded) in favor of alternatives on the next recommendation, instead of being suggested again unchanged.
