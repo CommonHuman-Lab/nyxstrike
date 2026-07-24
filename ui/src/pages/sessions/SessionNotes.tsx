@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   FileText, Folder, FolderOpen, FolderPlus, Plus, Upload,
   Edit2, Trash2, Download, X,
@@ -10,9 +10,10 @@ import { fmtTs, formatBytes } from '../../shared/utils'
 import { ConfirmActionModal } from '../../components/ConfirmActionModal'
 import { CollapseChevron } from '../../components/CollapseChevron'
 import { useToast } from '../../components/ToastProvider'
-import { NoteModal } from './NoteModal'
 import { UploadNoteModal } from './UploadNoteModal'
 import { useFolderManager } from './useFolderManager'
+
+const NoteModal = lazy(() => import('./NoteModal').then(m => ({ default: m.NoteModal })))
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -308,17 +309,25 @@ export function SessionNotes({ sessionId, initialOpenPath, onInitialOpenConsumed
     <div className="session-notes">
       {/* Note modal */}
       {openModal && (
-        <NoteModal
-          sessionId={sessionId}
-          note={openModal.note}
-          isNew={openModal.isNew}
-          initialMode={openModal.mode}
-          allFolders={allFolders}
-          onClose={() => setOpenModal(null)}
-          onSaved={loadNotes}
-          onDelete={note => { setOpenModal(null); setDeleteTarget(note) }}
-          pushToast={pushToast}
-        />
+        <Suspense fallback={
+          <div className="modal-backdrop">
+            <div className="modal">
+              <div className="loading-state"><div className="spin spin--sm spin--green" /></div>
+            </div>
+          </div>
+        }>
+          <NoteModal
+            sessionId={sessionId}
+            note={openModal.note}
+            isNew={openModal.isNew}
+            initialMode={openModal.mode}
+            allFolders={allFolders}
+            onClose={() => setOpenModal(null)}
+            onSaved={loadNotes}
+            onDelete={note => { setOpenModal(null); setDeleteTarget(note) }}
+            pushToast={pushToast}
+          />
+        </Suspense>
       )}
 
       {/* Upload modal */}

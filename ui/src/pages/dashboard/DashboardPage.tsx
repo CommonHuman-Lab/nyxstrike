@@ -1,10 +1,12 @@
+import { lazy, Suspense } from 'react'
 import { XCircle } from 'lucide-react'
 import { type WebDashboardResponse, type Tool } from '../../api'
 import type { RunHistoryEntry, HistoryPoint } from '../../shared/types'
 import { KpiSection } from './KpiSection'
-import { ResourceSection } from './ResourceSection'
 import { ToolAvailabilitySection } from './ToolAvailabilitySection'
 import './DashboardPage.css'
+
+const ResourceSection = lazy(() => import('./ResourceSection').then(m => ({ default: m.ResourceSection })))
 
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
@@ -36,10 +38,12 @@ export function DashboardPage({ health, tools, runHistory, loading, error, toolC
       )}
 
       <KpiSection health={health} tools={tools} runHistory={runHistory} />
-      <ResourceSection
-        demoResources={demo ? health?.resources : undefined}
-        demoHistory={demo ? demoCpuHistory as HistoryPoint[] | undefined : undefined}
-      />
+      <Suspense fallback={<div className="loading-state"><div className="spin spin--sm spin--green" /></div>}>
+        <ResourceSection
+          demoResources={demo ? health?.resources : undefined}
+          demoHistory={demo ? demoCpuHistory as HistoryPoint[] | undefined : undefined}
+        />
+      </Suspense>
       <ToolAvailabilitySection health={health} tools={tools} toolCategories={toolCategories} />
 
       <div className="dashboard-signature-wrap">
