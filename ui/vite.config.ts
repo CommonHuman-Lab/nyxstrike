@@ -16,8 +16,6 @@ export default defineConfig({
             return 'vendor-lucide'
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/react-is') || id.includes('node_modules/scheduler'))
             return 'vendor-react'
-          if (id.includes('node_modules/easymde') || id.includes('node_modules/react-simplemde-editor') || id.includes('node_modules/codemirror'))
-            return 'vendor-easymde'
           if (id.includes('node_modules/react-markdown') || id.includes('node_modules/remark') || id.includes('node_modules/rehype') || id.includes('node_modules/micromark') || id.includes('node_modules/unified') || id.includes('node_modules/mdast') || id.includes('node_modules/hast'))
             return 'vendor-markdown'
         },
