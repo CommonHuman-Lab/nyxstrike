@@ -2,7 +2,7 @@
 
 _config = {
     "APP_NAME": "NyxStrike",
-    "VERSION": "1.9.0",
+    "VERSION": "2.0.0",
     "DATA_DIR_NAME": ".nyxstrike_data",  # Root data directory name (relative to cwd, override with NYXSTRIKE_DATA_DIR env var)
     "COMMAND_TIMEOUT": 500,
     "REQUEST_TIMEOUT": 30,
