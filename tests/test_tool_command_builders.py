@@ -22,6 +22,60 @@ from unittest.mock import patch, MagicMock
 _MOCK_RESULT = {"success": True, "output": "mocked", "returncode": 0}
 
 
+class TestAutoReconCommandBuilder:
+    def test_default_request_uses_supported_flags_and_json_file(self):
+        from backend.server_core.tool_specs.recon import SPECS
+
+        spec = next(spec for spec in SPECS if spec.name == "autorecon")
+        params = {param.name: param.default for param in spec.params}
+        params["target"] = "example.invalid"
+        with patch("backend.server_core.tool_specs.recon.os.makedirs") as mkdir:
+            command = spec.build_command(params)
+        mkdir.assert_called_once_with("/tmp/autorecon", exist_ok=True)
+        assert shlex.split(command) == [
+            "autorecon", "example.invalid", "-f", "-j",
+            "-o", "/tmp/autorecon/autorecon.json",
+        ]
+
+    def test_optional_output_and_arguments_can_be_omitted(self):
+        from backend.server_core.tool_specs.recon import _autorecon_command
+
+        for optional in ({}, {"output_dir": ""}, {"output_dir": None}):
+            with patch("backend.server_core.tool_specs.recon.os.makedirs") as mkdir:
+                command = _autorecon_command({"target": "example.invalid", **optional})
+            mkdir.assert_not_called()
+            assert shlex.split(command) == [
+                "autorecon", "example.invalid", "-f", "-j",
+            ]
+
+    def test_quoted_paths_and_extra_arguments_preserve_argument_boundaries(self, tmp_path):
+        from backend.server_core.tool_specs.recon import _autorecon_command
+
+        output_dir = tmp_path / "recon results" / "nested"
+        command = _autorecon_command({
+            "target": "example.invalid", "output_dir": str(output_dir),
+            "additional_args": '--custom-option "two words"',
+            "heartbeat": 60, "timeout": 300,
+            "port_scans": "top-100-ports", "service_scans": "custom",
+        })
+        assert shlex.split(command) == [
+            "autorecon", "example.invalid", "-f", "-j",
+            "-o", str(output_dir / "autorecon.json"),
+            "--custom-option", "two words",
+        ]
+        assert output_dir.is_dir()
+
+    def test_existing_output_directory_and_results_are_preserved(self, tmp_path):
+        from backend.server_core.tool_specs.recon import _autorecon_command
+
+        result = tmp_path / "autorecon.json"
+        result.write_text('{"previous": true}')
+        params = {"target": "example.invalid", "output_dir": str(tmp_path)}
+        _autorecon_command(params)
+        _autorecon_command(params)
+        assert result.read_text() == '{"previous": true}'
+
+
 @pytest.fixture(scope="module")
 def app():
     import os
