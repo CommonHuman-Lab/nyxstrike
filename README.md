@@ -30,6 +30,60 @@ cd nyxstrike
 
 > Full flag reference: [Wiki — Installation & Flags](https://github.com/CommonHuman-Lab/nyxstrike/wiki/Installation-and-Flags)
 
+### macOS: Apple Silicon and Intel
+
+The launcher and Python lockfile include support for `arm64` and `x86_64` macOS.
+The shell scripts work with macOS's bundled Bash 3.2. A complete tool installation
+on Intel/macOS 12 still needs verification; individual tools may require newer
+macOS releases or features available only on Linux.
+
+Install Xcode Command Line Tools (`xcode-select --install`, if missing) and
+[Homebrew](https://docs.brew.sh/Installation) before setup. Homebrew's
+[support tiers](https://docs.brew.sh/Support-Tiers) affect which packages have
+prebuilt binaries and which need a source build.
+
+| Mac architecture | Homebrew prefix | Terminal / Python architecture |
+| --- | --- | --- |
+| Apple Silicon | `/opt/homebrew` | `arm64` (native terminal) |
+| Intel | `/usr/local` | `x86_64` |
+
+Keep Homebrew and Python on the same architecture. Create `nyxstrike-env` on each
+Mac rather than copying it between machines. Setup uses the same command on both:
+
+```bash
+./nyxstrike.sh -a -t
+```
+
+To select Python explicitly, append `-p 3.12` or pass a Python executable to `-p`.
+Without it, the launcher uses `python3`.
+
+The macOS installer uses a shared tool catalog and checks existing installations
+before deciding whether to repair them. Managed commands take precedence in the
+launcher's PATH, and tools with conflicting dependencies use separate runtimes
+where needed. Re-running the setup command retries failed installations. Details
+are written to `install_log.txt`.
+
+A few platform differences matter:
+
+- On Intel, the launcher prepares Rust 1.91 or newer and OpenSSL for the locked
+  cryptography and angr source builds. An explicit `OPENSSL_DIR` is respected.
+  The angr build also gets the C++ header it needs with Apple's compiler.
+- BBOT uses Homebrew on macOS. Wfuzz, WhatWeb, WAFW00F, Sublist3r and several other
+  tools use managed runtimes under `~/.local/share/nyxstrike-tools`. Additional
+  Python tools cannot replace packages already installed in the server environment;
+  unresolved dependency conflicts are reported as failures.
+- The catalog installs `kube-bench` through Homebrew, but installing its CLI does
+  not provide a Linux Kubernetes host to audit. `docker-bench-security` and other
+  tools without a suitable macOS backend are reported as unsupported.
+- GDB is built from source; on Apple Silicon, it targets x86_64 Darwin. Attaching
+  to macOS processes still requires appropriate code signing. LLDB remains an
+  option for native Apple Silicon debugging.
+
+See [macOS installation notes](MACOS_INSTALLATION_CHANGES.md) for the tool-specific
+recipes and verification limits. The offline installer tests simulate package
+managers and failure cases; they do not establish that every external tool builds
+or runs on either architecture.
+
 ### Verify Setup
 
 Open [http://localhost:8888](http://localhost:8888) to access the dashboard.

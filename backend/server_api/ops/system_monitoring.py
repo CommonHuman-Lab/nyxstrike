@@ -1,10 +1,12 @@
 import os
+from importlib import metadata
 
 from flask import Blueprint, request, jsonify
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Dict, Optional
 import logging
+import shutil
 import subprocess
 import sys
 import threading
@@ -16,7 +18,7 @@ from backend.server_core.modern_visual_engine import ModernVisualEngine
 from backend.server_core.tool_constants import (
     BUILT_IN_TOOLS, REQUIRE_DPKG_CHECK, REQUIRE_GO_CHECK, REQUIRE_PIP_CHECK,
     REQUIRE_GEM_CHECK, REQUIRE_CARGO_CHECK, BINARY_NAME_OVERRIDES,
-    HEALTH_TOOL_CATEGORIES
+    HEALTH_TOOL_CATEGORIES, MACOS_UNSUPPORTED_TOOLS
 )
 
 logger = logging.getLogger(__name__)
@@ -71,55 +73,81 @@ def _probe_binary(check_type: str, binary: str) -> bool:
     binary     — executable or package name to probe
     """
 
-    home_path = os.path.expanduser("~")
-    paths_ovrrides = config_core.get("PATHS", {})
-    GO_PATH = paths_ovrrides.get("GO_BINARYS", "{HOME}/go/bin/")
-    GO_BINARYS = GO_PATH.replace("{HOME}", home_path)
-    binary_path_overrides = config_core.get("BINARY_PATH_OVERRIDES", {})
-
     if check_type == "builtin":
         return True
     try:
+        # Probe the same PATH used by command execution, including managed CLI
+        # wrappers prepared by the launcher. An installed GUI alone is not a CLI.
+        aliases = {
+            "one-gadget": "one_gadget",
+            "testssl": "testssl.sh",
+            "ghidra": "analyzeHeadless",
+        }
+        executable = shutil.which(binary) or shutil.which(aliases.get(binary, binary))
+        if binary == "one-gadget":
+            return executable is not None
         if check_type == "dpkg":
+            if sys.platform == "darwin":
+                representatives = {
+                    "sleuthkit": (("fls",), ("icat",)),
+                    "impacket-scripts": (
+                        ("smbclient.py", "impacket-smbclient"),
+                        ("secretsdump.py", "impacket-secretsdump"),
+                    ),
+                    "hashcat-utils": (("cap2hccapx.bin",), ("combinator.bin",)),
+                }
+                groups = representatives.get(binary, ((binary,),))
+                return all(any(shutil.which(name) for name in group) for group in groups)
             r = subprocess.run(
                 ["dpkg", "-s", binary],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                timeout=10,
             )
             return r.returncode == 0
         elif check_type == "pip":
-            r = subprocess.run(
-                [sys.executable, "-m", "pip", "list"],
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
-            )
-            return binary in r.stdout
+            # Pwntools is imported by generated scripts in the server environment;
+            # a pwn CLI from an isolated environment cannot provide that library.
+            if executable and binary != "pwntools":
+                return True
+            # uv environments need not contain pip. Distribution metadata comes
+            # from the running server's interpreter and matches the exact name.
+            return bool(metadata.version(binary))
         elif check_type == "gem":
+            if executable:
+                return True
             r = subprocess.run(
                 ["gem", "list"],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                timeout=10,
             )
             return binary in r.stdout
         elif check_type == "cargo":
+            if executable:
+                return True
             r = subprocess.run(
                 ["cargo", "install", "--list"],
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                timeout=10,
             )
             return binary in r.stdout
         elif check_type == "go":
-            override = binary_path_overrides.get(binary, "")
+            override = config_core.get("BINARY_PATH_OVERRIDES", {}).get(binary, "")
             if override:
-                resolved = override.replace("{HOME}", home_path)
-                return os.path.isfile(resolved) and os.access(resolved, os.X_OK)
+                executable = shutil.which(override.replace("{HOME}", os.path.expanduser("~")))
+            if not executable:
+                return False
+            if binary != "httpx":
+                return True
+            # Python's unrelated httpx CLI has the same name. Check identity
+            # without scanning or requiring the Go compiler to be installed.
             r = subprocess.run(
-                ["go", "version", "-m", GO_BINARYS],
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True,
+                [executable, "-version"], stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                timeout=5,
             )
-            return binary in r.stdout
+            return r.returncode == 0 and "projectdiscovery.io" in r.stdout.lower()
         else:  # which (default)
-            r = subprocess.run(
-                ["which", binary],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            )
-            return r.returncode == 0
+            return executable is not None
     except Exception:
         return False
 
@@ -165,7 +193,11 @@ def _refresh_tool_availability() -> None:
         lines = ["Tool availability refreshed: %d/%d available" % (
             sum(ok for ok in results.values()), len(results))]
         for tool in missing:
-            lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
+            reason = MACOS_UNSUPPORTED_TOOLS.get(tool) if sys.platform == "darwin" else None
+            if reason:
+                lines.append("%s  %-30s NOT SUPPORTED ON MACOS (%s)%s" % (RED, tool, reason, RESET))
+            else:
+                lines.append("%s  %-30s NOT INSTALLED%s" % (RED, tool, RESET))
         logger.info("\n".join(lines))
     finally:
         with _tool_availability_lock:
