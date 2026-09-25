@@ -1,5 +1,12 @@
+import glob
+import os
+import re
 import shlex
+import socket
+import stat
+import sys
 
+from backend.server_core import config_core
 from backend.server_core.tool_spec import ParamSpec, ToolSpec, ToolValidationError
 
 
@@ -21,7 +28,16 @@ def _arp_scan_command(p: dict) -> str:
 
 
 def _masscan_command(p: dict) -> str:
-    argv = ["masscan", p["target"], f"-p{p['ports']}", f"--rate={p['rate']}"]
+    target = p["target"].strip()
+    # Leave numeric addresses, CIDRs, ranges and target lists for Masscan to parse.
+    if target and not re.fullmatch(r"[0-9.\-]+", target) and not any(
+        char in target for char in "/:, \t\n"
+    ):
+        try:
+            target = socket.gethostbyname(target)
+        except (OSError, UnicodeError) as exc:
+            raise ToolValidationError("Could not resolve the Masscan target to an IPv4 address") from exc
+    argv = ["masscan", target, f"-p{p['ports']}", f"--rate={p['rate']}"]
     if p["interface"]:
         argv.append("-e")
         argv.append(p["interface"])
@@ -55,8 +71,42 @@ def _rustscan_command(p: dict) -> str:
     return shlex.join(argv)
 
 
+def _nmap_binary() -> str:
+    override = config_core.get("BINARY_PATH_OVERRIDES", {}).get("nmap", "")
+    if not override:
+        return "nmap"
+    return os.path.expanduser(override.replace("{HOME}", os.path.expanduser("~")))
+
+
+def _nmap_prefix(scan_type: str, additional_args: str) -> list:
+    argv = [_nmap_binary()]
+    # A custom executable or wrapper remains responsible for its own privileges.
+    if config_core.get("BINARY_PATH_OVERRIDES", {}).get("nmap"):
+        return argv
+    options = shlex.split(scan_type) + shlex.split(additional_args)
+    syn_scan = any(re.fullmatch(r"-s[ACFIMNORSTUVWXYZ]+", option)
+                   and "S" in option[2:] for option in options)
+    if sys.platform != "darwin" or os.geteuid() == 0 or not syn_scan:
+        return argv
+    if "--send-ip" in options or "--unprivileged" in options:
+        raise ToolValidationError("macOS SYN scans without root require BPF access and --send-eth")
+    for device in glob.glob("/dev/bpf[0-9]*"):
+        try:
+            accessible = stat.S_ISCHR(os.stat(device).st_mode) and os.access(device, os.R_OK | os.W_OK)
+        except OSError:
+            continue
+        if accessible:
+            # BPF permits Ethernet I/O without running Nmap or its scripts as root.
+            return argv + ["--privileged", "--send-eth"]
+    raise ToolValidationError(
+        "macOS SYN scans need packet-device access. Run ./nyxstrike.sh -a -t, "
+        "then sign out and back in and restart NyxStrike to activate group membership. "
+        "VPN and other non-Ethernet interfaces may still require root."
+    )
+
+
 def _nmap_command(p: dict) -> str:
-    argv = ["nmap"] + shlex.split(p["scan_type"])
+    argv = _nmap_prefix(p["scan_type"], p["additional_args"]) + shlex.split(p["scan_type"])
     if p["ports"]:
         argv.append("-p")
         argv.append(p["ports"])
@@ -67,7 +117,7 @@ def _nmap_command(p: dict) -> str:
 
 
 def _nmap_advanced_command(p: dict) -> str:
-    argv = ["nmap"] + shlex.split(p["scan_type"]) + [p["target"]]
+    argv = _nmap_prefix(p["scan_type"], p["additional_args"]) + shlex.split(p["scan_type"]) + [p["target"]]
     if p["ports"]:
         argv.append("-p")
         argv.append(p["ports"])

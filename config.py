@@ -42,9 +42,12 @@ _config = {
     # When a tool name is present here, the endpoint uses this absolute path
     # instead of relying on shell PATH resolution.
     # Supports {HOME} substitution (e.g. "{HOME}/go/bin/httpx").
-    # Delete an entry to revert that tool to system PATH resolution.
+    # Leave an entry empty to use normal command discovery.
+    # enum4linux-ng also checks {HOME}/.local/bin when it is absent from PATH.
     "BINARY_PATH_OVERRIDES": {
         "httpx": "{HOME}/go/bin/httpx",
+        "nmap": "",
+        "enum4linux-ng": "",
     },
 
     # ── LLM client ────────────────────────────────────────────────────────────
