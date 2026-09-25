@@ -26,7 +26,9 @@ dependencies = [
 
 [project.optional-dependencies]
 tools = [
-    "bbot>=3.0.2",
+    # macOS uses Homebrew's BBOT build; its PyPI dependency blasthttp cannot
+    # build from the published sdist without a custom OpenSSL installation.
+    "bbot>=3.0.2; sys_platform == 'linux'",
     "httpx>=0.28.1",
     "uro>=1.0.2",
     "dirsearch>=0.4.3",
@@ -51,4 +53,13 @@ dev = [
 
 [tool.uv]
 package = false
-environments = ["sys_platform == 'linux'"]
+environments = ["sys_platform == 'linux'", "sys_platform == 'darwin'"]
+required-environments = [
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'darwin' and platform_machine == 'x86_64'",
+]
+
+[tool.uv.extra-build-variables]
+# angr 9.3.0 omits <string> in unicornlib, exposed by Intel macOS source builds.
+# Scope the include to angr's C++ build and retain its default optimization.
+angr = { CXXFLAGS = "-O3 -include string" }
