@@ -3026,7 +3026,7 @@ requires-dist = [
     { name = "stingxss", specifier = ">=0.1.0,<1.0.0" },
     { name = "uro", marker = "extra == 'tools'", specifier = ">=1.0.2" },
     { name = "vaultrip", specifier = ">=0.1.0,<1.0.0" },
-    { name = "volatility3", marker = "extra == 'tools'", specifier = ">=2.27.0" },
+    { name = "volatility3", marker = "extra == 'tools'", specifier = ">=2.28.2" },
     { name = "waymore", marker = "extra == 'tools'" },
     { name = "wcwidth", specifier = ">=0.8.3,<1.0.0" },
     { name = "webdriver-manager", specifier = ">=4.0.0,<5.0.0" },
@@ -5391,14 +5391,14 @@ wheels = [
 
 [[package]]
 name = "volatility3"
-version = "2.28.0"
+version = "2.28.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pefile" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/d7/4bb5bebbc2b2fd64f88d423c991d410a6bcf3535ac7f9f9c5b0decb37505/volatility3-2.28.0.tar.gz", hash = "sha256:b1d83999fea1281cafb6ba06514f764ddbe443dcdd940f7fdb86ad7d9f825293", size = 1132709, upload-time = "2026-04-30T19:56:57.409Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/12/342025bb34b611970e0ca89e2b622e74a29f60995851cf9dab6a473d0505/volatility3-2.28.2.tar.gz", hash = "sha256:3c54d44100e4a0f222f2e47e4fb2266669d354a55782844ddbfd3f5d9856706e", size = 1136798, upload-time = "2026-09-17T19:48:15.443Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/39/6be7f2f3d67038978edb553050770be4946924ddd87d71bc303c6964c929/volatility3-2.28.0-py3-none-any.whl", hash = "sha256:68ea2257d25d2ab6160bb29203ce9bf3e91a8a852a420cb819ebb4c4115eaa68", size = 1421397, upload-time = "2026-04-30T19:56:55.293Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/26/548439f5192e496fff7f54d41d8762fa8f3712d53c8441b9f57d7c7a8310/volatility3-2.28.2-py3-none-any.whl", hash = "sha256:0461d6dd71b9ddbaf70c96e079c06efdf174ac65383b3dcf10dd165181fbd3c3", size = 1424884, upload-time = "2026-09-17T19:48:14.223Z" },
 ]
 
 [[package]]
