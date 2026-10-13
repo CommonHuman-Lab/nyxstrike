@@ -1,5 +1,8 @@
+import os
 import shlex
+import shutil
 
+from backend.server_core import config_core
 from backend.server_core.tool_spec import ParamSpec, ToolSpec
 
 
@@ -22,7 +25,15 @@ def _enum4linux_command(p: dict) -> str:
 
 
 def _enum4linux_ng_command(p: dict) -> str:
-    argv = ["enum4linux-ng", p["target"]]
+    override = config_core.get("BINARY_PATH_OVERRIDES", {}).get("enum4linux-ng", "")
+    binary = "enum4linux-ng"
+    if override:
+        binary = os.path.expanduser(override.replace("{HOME}", os.path.expanduser("~")))
+    elif not shutil.which(binary):
+        candidate = os.path.expanduser("~/.local/bin/enum4linux-ng")
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            binary = candidate
+    argv = [binary, p["target"]]
     if p["username"]:
         argv.append("-u")
         argv.append(p["username"])
@@ -30,7 +41,7 @@ def _enum4linux_ng_command(p: dict) -> str:
         argv.append("-p")
         argv.append(p["password"])
     if p["domain"]:
-        argv.append("-d")
+        argv.append("-w")
         argv.append(p["domain"])
 
     enum_options = []
@@ -42,9 +53,11 @@ def _enum4linux_ng_command(p: dict) -> str:
         enum_options.append("G")
     if p["policy"]:
         enum_options.append("P")
-    if enum_options:
+    if len(enum_options) == 4:
+        # -A is a switch, not an option accepting a comma-separated module list.
         argv.append("-A")
-        argv.append(",".join(enum_options))
+    else:
+        argv.extend(f"-{option}" for option in enum_options)
 
     if p["additional_args"]:
         argv.extend(shlex.split(p["additional_args"]))

@@ -1,11 +1,14 @@
 import shlex
 
-from backend.server_core.tool_spec import ParamSpec, ToolSpec
+from backend.server_core.tool_spec import ParamSpec, ToolSpec, ToolValidationError
 
 
 def _bbot_command(p: dict) -> str:
+    parameters = p.get("parameters", {})
+    if not isinstance(parameters, dict):
+        raise ToolValidationError("parameters must be an object")
     argv = ["bbot", "-t", p["target"]]
-    for key, value in p["parameters"].items():
+    for key, value in parameters.items():
         if isinstance(value, str) and value:
             argv.append(f"-{key}")
             argv.append(value)
@@ -24,7 +27,7 @@ SPECS = [
             ParamSpec(
                 "parameters",
                 dict,
-                required=True,
+                default={},
                 help_text=(
                     "BBot flags and module options: f (enable flags, e.g. 'subdomain-enum'), "
                     "rf (require module flag, e.g. 'safe'), ef (exclude flags, e.g. 'slow'), "
