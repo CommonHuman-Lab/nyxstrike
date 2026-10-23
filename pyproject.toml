@@ -31,7 +31,7 @@ tools = [
     "uro>=1.0.2",
     "dirsearch>=0.4.3",
     "waymore",
-    "chardet>=3.0.2,<6.0.0",
+    "chardet>=7.7.0,<8.0.0",
     "volatility3>=2.28.2",
     "angr>=9.2.205,<10.0.0",
     "checkov>=3.0.0",
