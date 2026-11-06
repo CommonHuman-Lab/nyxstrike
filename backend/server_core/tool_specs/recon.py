@@ -1,3 +1,4 @@
+import os
 import shlex
 
 from backend.server_core.tool_spec import ParamSpec, ToolSpec, ToolValidationError
@@ -21,17 +22,12 @@ def _assetfinder_command(p: dict) -> str:
 
 
 def _autorecon_command(p: dict) -> str:
-    argv = [
-        "autorecon", p["target"], "-o", p["output_dir"],
-        "--heartbeat", str(p["heartbeat"]), "--timeout", str(p["timeout"]),
-    ]
-    if p["port_scans"] != "default":
-        argv.append("--port-scans")
-        argv.append(p["port_scans"])
-    if p["service_scans"] != "default":
-        argv.append("--service-scans")
-        argv.append(p["service_scans"])
-    if p["additional_args"]:
+    # The installer uses Paul Schubert's PyPI package, whose CLI differs from Tib3rius'.
+    argv = ["autorecon", p["target"], "-f", "-j"]
+    if p.get("output_dir"):
+        os.makedirs(p["output_dir"], exist_ok=True)
+        argv.extend(["-o", p["output_dir"] + "/autorecon.json"])
+    if p.get("additional_args"):
         argv.extend(shlex.split(p["additional_args"]))
     return shlex.join(argv)
 
