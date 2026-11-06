@@ -26,7 +26,6 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${ROOT_DIR}/nyxstrike-env"
 PYTHON_BIN="python3"
-GIT_TOOLS_DIR="${ROOT_DIR}/git_tools"
 EXTRAS_STATE_DIR="${NYXSTRIKE_DATA_DIR:-${ROOT_DIR}/.nyxstrike_data}"
 EXTRAS_STATE_FILE="${EXTRAS_STATE_DIR}/installed_extras"
 
@@ -98,7 +97,8 @@ ensure_uv_ready() {
     echo "uv install failed. Install it manually: https://docs.astral.sh/uv/getting-started/installation/"
     exit 1
   fi
-  export PATH="${HOME}/.local/bin:${PATH}"
+  # Keep verified managed tools ahead of older user-installed executables.
+  export PATH="${PATH}:${HOME}/.local/bin"
 
   if ! command -v uv >/dev/null 2>&1; then
     echo "uv still not found on PATH after install. Install it manually and re-run."
@@ -106,7 +106,61 @@ ensure_uv_ready() {
   fi
 }
 
+rust_supports_macos_builds() {
+  # angr 9.3.0's locked Cranelift 0.129.1 requires Rust 1.91.
+  local version major minor remainder
+  command -v cargo >/dev/null 2>&1 || return 1
+  version="$(rustc --version 2>/dev/null)" || return 1
+  IFS=. read -r major minor remainder <<< "${version#rustc }"
+  [[ "$major" =~ ^[0-9]+$ && "$minor" =~ ^[0-9]+$ ]] || return 1
+  (( major > 1 || (major == 1 && minor >= 91) ))
+}
+
+ensure_macos_build_deps() {
+  [[ "$(uname -s)" == Darwin && "$(uname -m)" == x86_64 ]] || return 0
+
+  # cryptography 49 has no macOS Intel wheel: prepare its source-build tools
+  # before uv runs, including when optional external tools were not requested.
+  if ! xcode-select -p >/dev/null 2>&1; then
+    echo "macOS Intel needs Xcode Command Line Tools. Run: xcode-select --install" >&2
+    return 1
+  fi
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "macOS Intel needs Homebrew to prepare Rust and OpenSSL: https://brew.sh" >&2
+    return 1
+  fi
+
+  local brew_prefix openssl_prefix
+  local -a build_packages=()
+  brew_prefix="$(brew --prefix)" || return 1
+  openssl_prefix="${OPENSSL_DIR:-${brew_prefix}/opt/openssl@3}"
+  if [[ ! -f "${openssl_prefix}/include/openssl/ssl.h" ]]; then
+    if [[ -n "${OPENSSL_DIR:-}" ]]; then
+      echo "OPENSSL_DIR does not contain OpenSSL headers: ${OPENSSL_DIR}" >&2
+      return 1
+    fi
+    build_packages+=(openssl@3)
+  fi
+
+  if ! rust_supports_macos_builds; then
+    build_packages+=(rust)
+  fi
+
+  if (( ${#build_packages[@]} )); then
+    echo "Preparing macOS Intel build dependencies: ${build_packages[*]}"
+    brew install "${build_packages[@]}" || return 1
+    export PATH="${brew_prefix}/opt/rust/bin:${PATH}"
+  fi
+  if [[ ! -f "${openssl_prefix}/include/openssl/ssl.h" ]] ||
+     ! rust_supports_macos_builds; then
+    echo "Rust 1.91+ and OpenSSL are required; Python dependencies were not changed." >&2
+    return 1
+  fi
+  export OPENSSL_DIR="${openssl_prefix}"
+}
+
 sync_python_deps() {
+  ensure_macos_build_deps || return 1
   ensure_uv_ready
 
   # `-t`/`-b` are sticky across runs: once opted into, `uv sync` keeps
@@ -140,7 +194,9 @@ sync_python_deps() {
   fi
 
   echo "Syncing Python deps${extra_flags:+ (${extra_flags[*]})}..."
-  uv sync "${extra_flags[@]}"
+  # Preserve external tools installed into this environment by -t.
+  # Bash 3.2 (the macOS system shell) treats empty arrays as unset with -u.
+  uv sync --inexact ${extra_flags[@]+"${extra_flags[@]}"}
 
   mkdir -p "${EXTRAS_STATE_DIR}"
   : > "${EXTRAS_STATE_FILE}"
@@ -231,7 +287,7 @@ run_setup() {
 
   if [[ "${INSTALL_TOOLS}" == true ]]; then
     echo "[2/3] Installing external tools via ops/scripts/install_tools.sh..."
-    bash "${ROOT_DIR}/ops/scripts/install_tools.sh"
+    VIRTUAL_ENV="${VENV_DIR}" bash "${ROOT_DIR}/ops/scripts/install_tools.sh"
   else
     echo "[2/3] Skipping external tools (use -t to enable)."
   fi
@@ -377,7 +433,20 @@ if [[ ! -x "${VENV_DIR}/bin/python3" ]]; then
   fi
 fi
 
-export PATH="${VENV_DIR}/bin:${PATH}"
+# GUI/MCP launchers may not inherit the interactive shell's Homebrew PATH.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  case "$(uname -m)" in
+    arm64) BREW_PREFIX="/opt/homebrew" ;;
+    x86_64) BREW_PREFIX="/usr/local" ;;
+    *) echo "Unsupported macOS architecture: $(uname -m)" >&2; exit 1 ;;
+  esac
+  export PATH="${BREW_PREFIX}/bin:${BREW_PREFIX}/sbin:${PATH}"
+  if command -v brew >/dev/null 2>&1; then
+    BREW_PREFIX="$(brew --prefix)"
+    export PATH="${BREW_PREFIX}/opt/binutils/bin:${PATH}"
+  fi
+fi
+export PATH="${HOME}/.local/share/nyxstrike-tools/bin:${VENV_DIR}/bin:${HOME}/.local/bin:${HOME}/go/bin:${HOME}/.cargo/bin:${PATH}"
 cd "${ROOT_DIR}"
 
 # ---------------------------------------------------------------------------
