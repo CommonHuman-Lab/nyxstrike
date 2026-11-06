@@ -2394,12 +2394,169 @@ skip_manual_install() {
   log "[MANUAL] $name — $url"
 }
 
+# macOS SYN scans need BPF access, not a root-owned Nmap wrapper.
+_macos_install_nmap_bpf() {
+  local install_user root_command=(/usr/bin/sudo /usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/bash -p)
+  if [[ "$(/usr/bin/id -u)" == 0 ]]; then
+    install_user="${SUDO_USER:-}"
+    root_command=(/usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/bash -p)
+  else
+    install_user="$(/usr/bin/id -un)" || return 1
+  fi
+  # Validate before escalation and again inside the privileged setup.
+  if [[ ! "$install_user" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]] ||
+      [[ "$(/usr/bin/id -u "$install_user" 2>/dev/null)" -le 0 ]]; then
+    echo "Cannot identify the nonroot user who requested BPF access." >&2
+    return 1
+  fi
+  "${root_command[@]}" -s -- "$install_user" <<'NYXSTRIKE_BPF_SETUP'
+set -euo pipefail
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+umask 077
+install_user="$1"
+[[ "$EUID" == 0 && "$install_user" =~ ^[A-Za-z_][A-Za-z0-9_.-]*$ ]]
+[[ "$(/usr/bin/id -u "$install_user")" -gt 0 ]]
+base='/Library/Application Support/NyxStrike'
+plist='/Library/LaunchDaemons/org.nyxstrike.bpf.plist'
+helper="$base/configure-bpf"
+# A same-named group created elsewhere must not inherit packet access.
+group_marker='NyxStrike-managed-BPF-v1'
+group_exists=false
+if group_record="$(/usr/bin/dscl . -read /Groups/nyxstrike_bpf 2>/dev/null)"; then
+  group_exists=true
+  group_values() {
+    printf '%s\n' "$group_record" | /usr/bin/awk -v attribute="$1:" '
+      /^[^[:space:]]/ { active = ($1 == attribute); if (active) $1 = ""; else next }
+      active { for (i = 1; i <= NF; i++) if ($i != "") print $i }
+    '
+  }
+  [[ "$(group_values Comment)" == "$group_marker" ]] || { echo "Existing BPF group is not managed by NyxStrike." >&2; exit 1; }
+  [[ -z "$(group_values NestedGroups)" ]] || { echo "Nested BPF group memberships are not allowed." >&2; exit 1; }
+  user_guid="$(/usr/bin/dscl . -read "/Users/$install_user" GeneratedUID)"
+  user_guid="${user_guid#GeneratedUID: }"
+  [[ "$user_guid" =~ ^[[:xdigit:]]{8}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{4}-[[:xdigit:]]{12}$ ]]
+  for attribute in GroupMembership GroupMembers; do
+    expected="$install_user"
+    [[ "$attribute" != GroupMembers ]] || expected="$user_guid"
+    while IFS= read -r member; do
+      [[ -z "$member" || "$member" == "$expected" ]] || { echo "BPF group includes another user; leaving access unchanged." >&2; exit 1; }
+    done < <(group_values "$attribute")
+  done
+fi
+safe_acl() {
+  local listing
+  listing="$(/bin/ls -lde "$1")" || return 1
+  # Preserve normal deny-delete ACLs, but reject grants that allow replacement.
+  printf '%s\n' "$listing" | /usr/bin/awk '
+    /^[[:space:]]*[0-9]+:.* allow / && /(^|[ ,])(write|write_data|append|append_data|add_file|add_subdirectory|delete|delete_child|writeattr|writeextattr|writesecurity|chown)([ ,]|$)/ { unsafe = 1 }
+    END { exit unsafe }
+  '
+}
+secure_directory() {
+  local mode
+  [[ -d "$1" && ! -L "$1" && "$(/usr/bin/stat -f %u "$1")" == 0 ]] || return 1
+  mode="$(/usr/bin/stat -f %Lp "$1")" || return 1
+  (( (8#$mode & 022) == 0 )) || return 1
+  safe_acl "$1"
+}
+for directory in / /Library '/Library/Application Support' /Library/LaunchDaemons; do
+  secure_directory "$directory" || { echo "Unsafe BPF installation directory: $directory" >&2; exit 1; }
+done
+if [[ ! -e "$base" && ! -L "$base" ]]; then
+  /usr/bin/install -d -o root -g wheel -m 755 "$base"
+fi
+secure_directory "$base" || { echo "Unsafe BPF helper directory." >&2; exit 1; }
+for destination in "$helper" "$plist"; do
+  if [[ -e "$destination" || -L "$destination" ]]; then
+    [[ -f "$destination" && ! -L "$destination" && "$(/usr/bin/stat -f %u "$destination")" == 0 ]] || exit 1
+    mode="$(/usr/bin/stat -f %Lp "$destination")"
+    (( (8#$mode & 022) == 0 )) || exit 1
+    safe_acl "$destination" || { echo "Unsafe BPF destination ACL." >&2; exit 1; }
+  fi
+done
+stage="$(/usr/bin/mktemp -d "$base/.bpf-setup.XXXXXX")"
+trap '/bin/rm -rf "$stage"' EXIT
+/bin/cat > "$stage/configure-bpf" <<'NYXSTRIKE_BPF_HELPER'
+#!/bin/bash -p
+set -euo pipefail
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+[[ "$EUID" == 0 ]]
+# Do not compete with another packet-capture service or take its group away.
+for service in /Library/LaunchDaemons/*[Cc]hmodBPF*.plist; do
+  if [[ -e "$service" || -L "$service" ]]; then
+    echo "Existing Wireshark BPF service detected; NyxStrike did not change device permissions." >&2
+    exit 1
+  fi
+done
+count=0
+for device in /dev/bpf[0-9]*; do
+  [[ "${device#/dev/bpf}" =~ ^[0-9]+$ && -c "$device" && ! -L "$device" ]] || continue
+  group="$(/usr/bin/stat -f %Sg "$device")"
+  case "$group" in
+    wheel|nyxstrike_bpf) ;;
+    *) echo "BPF device uses another group ($group); leaving permissions unchanged." >&2; exit 1 ;;
+  esac
+  count=$((count + 1))
+done
+[[ "$count" -gt 0 ]] || { echo "No BPF devices found." >&2; exit 1; }
+[[ "${1:-}" != --check ]] || exit 0
+for device in /dev/bpf[0-9]*; do
+  [[ "${device#/dev/bpf}" =~ ^[0-9]+$ && -c "$device" && ! -L "$device" ]] || continue
+  /usr/sbin/chown root:nyxstrike_bpf "$device"
+  /bin/chmod 660 "$device"
+done
+NYXSTRIKE_BPF_HELPER
+/usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/bash -p "$stage/configure-bpf" --check
+if [[ "$group_exists" == false ]]; then
+  /usr/sbin/dseditgroup -o create nyxstrike_bpf
+  /usr/bin/dscl . -create /Groups/nyxstrike_bpf Comment "$group_marker"
+fi
+/usr/sbin/dseditgroup -o edit -a "$install_user" -t user nyxstrike_bpf
+/usr/bin/install -o root -g wheel -m 755 "$stage/configure-bpf" "$helper"
+/bin/cat > "$stage/bpf.plist" <<'NYXSTRIKE_BPF_PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>org.nyxstrike.bpf</string>
+  <key>ProgramArguments</key><array><string>/Library/Application Support/NyxStrike/configure-bpf</string></array>
+  <key>RunAtLoad</key><true/>
+  <key>StartInterval</key><integer>60</integer>
+</dict></plist>
+NYXSTRIKE_BPF_PLIST
+/usr/bin/plutil -lint "$stage/bpf.plist"
+/usr/bin/install -o root -g wheel -m 644 "$stage/bpf.plist" "$plist"
+/usr/bin/env -i PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/bash -p "$helper"
+if /bin/launchctl print system/org.nyxstrike.bpf >/dev/null 2>&1; then
+  /bin/launchctl bootout system/org.nyxstrike.bpf
+fi
+/bin/launchctl bootstrap system "$plist"
+/bin/launchctl print system/org.nyxstrike.bpf >/dev/null
+NYXSTRIKE_BPF_SETUP
+}
+
+_macos_setup_nmap_bpf() {
+  [[ "$OS" == macos ]] || return 0
+  if [[ "$DRY_RUN" == true ]]; then
+    dry "Nmap BPF access for the initiating user (nyxstrike_bpf group and boot service)"
+    return 0
+  fi
+  tool_exists nmap || return 0
+  if _macos_install_nmap_bpf >> "$LOG_FILE" 2>&1; then
+    success "Nmap packet access configured; sign out and back in before starting NyxStrike."
+  else
+    warn "Nmap is installed, but packet-access setup failed. See $LOG_FILE; SYN scans may be unavailable."
+    MANUAL_TOOLS+=("Nmap packet access — resolve the permissions/service conflict reported in $LOG_FILE")
+    (( COUNT_MANUAL++ )) || true
+  fi
+}
+
 # ─── Category: Network / Recon ───────────────────────────────────────────────
 install_network() {
   section "🔍 Network Reconnaissance & Scanning Tools"
 
   install_tool_multi "nmap" "nmap" \
     "pkg:nmap"
+  _macos_setup_nmap_bpf
 
   install_tool_multi "masscan" "masscan" \
     "pkg:masscan"
